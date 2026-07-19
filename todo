@@ -122,22 +122,22 @@ LEGEND:
   [ ] Student mobile app / PWA
 
 ================================================================================
-  MODULE 5: TEACHER MANAGEMENT                                           [~] PARTIAL
+  MODULE 5: TEACHER MANAGEMENT                                           [✓] DONE
 ================================================================================
   [✓] Teacher profile (basic)
-  [✓] Teacher list + search
+  [✓] Teacher list + search (Tailwind card grid, department filter)
   [✓] Assign teacher to course/section
-  [ ] Qualification + experience records
-  [ ] Employment contract management + expiry alerts
-  [ ] Department assignment
-  [ ] Payroll processing
-  [ ] Leave management (apply, approve, reject)
-  [ ] Teacher attendance tracking
-  [ ] Performance reviews + appraisals
-  [ ] Document uploads (certificates, degrees)
-  [ ] Training records
-  [ ] Promotion history
-  [ ] Teacher dashboard (my classes, schedule, pending tasks)
+  [✓] Qualification + experience records (degree/diploma/certification, attachments)
+  [✓] Employment contract management + expiry alerts (types, salary, end-date warnings)
+  [✓] Department assignment (CRUD departments, assign/remove teachers, dept head)
+  [✓] Payroll processing (monthly payroll, attendance-linked, mark paid)
+  [✓] Leave management (leave types, apply/approve/reject, balance tracking)
+  [✓] Teacher attendance tracking (daily bulk mark, per-teacher monthly report)
+  [✓] Performance reviews + appraisals (5-criteria ratings, radar chart, goals)
+  [✓] Document uploads (degree certs, national ID, experience letters, verify)
+  [✓] Training records (workshops, seminars, online courses, certifications)
+  [✓] Promotion history (via contract types + status changes)
+  [✓] Teacher dashboard (my classes, schedule, upcoming exams, notices)
 
 ================================================================================
   MODULE 6: PARENT PORTAL                                                [ ] TODO
@@ -1095,7 +1095,7 @@ Drag & Drop	dnd-kit or React DnD
   Module 2  — User Roles             [✓] COMPLETE
   Module 3  — Dashboards             [✓] 100%
   Module 4  — Student Management     [✓] 95%
-  Module 5  — Teacher Management     [~] 25%
+  Module 5  — Teacher Management     [✓] 100%
   Module 6  — Parent Portal          [ ] 0%
   Module 7  — Academic Module        [~] 45%
   Module 8  — Attendance             [~] 20%

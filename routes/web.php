@@ -40,6 +40,15 @@ use App\Http\Controllers\StudentIdCardController;
 use App\Http\Controllers\GraduationController;
 use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\LeaveController;
+use App\Http\Controllers\TeacherAttendanceController;
+use App\Http\Controllers\TeacherContractController;
+use App\Http\Controllers\TeacherDocumentController;
+use App\Http\Controllers\TeacherQualificationController;
+use App\Http\Controllers\TeacherTrainingController;
+use App\Http\Controllers\TeacherPayrollController;
+use App\Http\Controllers\PerformanceReviewController;
 
 /*
 |--------------------------------------------------------------------------
@@ -240,7 +249,56 @@ Route::middleware(['auth'])->group(function () {
         Route::post('disable',     [\App\Http\Controllers\TwoFactorController::class, 'disable'])->name('disable');
     });
 
-    // ── ADMISSIONS ───────────────────────────────────────────────────────────
+    // ── TEACHER MANAGEMENT (Module 5) ────────────────────────────────────────
+    Route::prefix('departments')->name('departments.')->group(function () {
+        Route::get('/',                              [DepartmentController::class, 'index'])->name('index');
+        Route::post('/',                             [DepartmentController::class, 'store'])->name('store');
+        Route::put('/{id}',                          [DepartmentController::class, 'update'])->name('update');
+        Route::delete('/{id}',                       [DepartmentController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/teachers',                [DepartmentController::class, 'assignTeacher'])->name('teacher.assign');
+        Route::delete('/{id}/teachers/{teacherId}',  [DepartmentController::class, 'removeTeacher'])->name('teacher.remove');
+    });
+
+    Route::prefix('teacher/{teacherId}')->name('teacher.')->group(function () {
+        Route::post('qualifications',       [TeacherQualificationController::class, 'store'])->name('qualifications.store');
+        Route::delete('qualifications/{id}',[TeacherQualificationController::class, 'destroy'])->name('qualifications.destroy');
+        Route::post('contracts',            [TeacherContractController::class, 'store'])->name('contracts.store');
+        Route::put('contracts/{id}',        [TeacherContractController::class, 'update'])->name('contracts.update');
+        Route::delete('contracts/{id}',     [TeacherContractController::class, 'destroy'])->name('contracts.destroy');
+        Route::post('documents',            [TeacherDocumentController::class, 'store'])->name('documents.store');
+        Route::post('documents/{id}/verify',[TeacherDocumentController::class, 'verify'])->name('documents.verify');
+        Route::delete('documents/{id}',     [TeacherDocumentController::class, 'destroy'])->name('documents.destroy');
+        Route::post('training',             [TeacherTrainingController::class, 'store'])->name('training.store');
+        Route::delete('training/{id}',      [TeacherTrainingController::class, 'destroy'])->name('training.destroy');
+        Route::post('reviews',              [PerformanceReviewController::class, 'store'])->name('reviews.store');
+    });
+
+    Route::get('teacher/attendance',          [TeacherAttendanceController::class, 'index'])->name('teacher.attendance.index');
+    Route::post('teacher/attendance',         [TeacherAttendanceController::class, 'store'])->name('teacher.attendance.store');
+    Route::get('teacher/{teacherId}/attendance', [TeacherAttendanceController::class, 'show'])->name('teacher.attendance.show');
+
+    Route::prefix('leave')->name('leave.')->group(function () {
+        Route::get('/',              [LeaveController::class, 'index'])->name('index');
+        Route::get('/types',         [LeaveController::class, 'types'])->name('types');
+        Route::post('/types',        [LeaveController::class, 'storeType'])->name('types.store');
+        Route::put('/types/{id}',    [LeaveController::class, 'updateType'])->name('types.update');
+        Route::delete('/types/{id}', [LeaveController::class, 'destroyType'])->name('types.destroy');
+        Route::post('/apply',        [LeaveController::class, 'apply'])->name('apply');
+        Route::post('/{id}/review',  [LeaveController::class, 'review'])->name('review');
+        Route::post('/{id}/cancel',  [LeaveController::class, 'cancel'])->name('cancel');
+    });
+
+    Route::prefix('teacher/payroll')->name('teacher.payroll.')->group(function () {
+        Route::get('/',          [TeacherPayrollController::class, 'index'])->name('index');
+        Route::post('/',         [TeacherPayrollController::class, 'store'])->name('store');
+        Route::post('/{id}/paid',[TeacherPayrollController::class, 'markPaid'])->name('paid');
+        Route::get('/{id}/slip', [TeacherPayrollController::class, 'slip'])->name('slip');
+        Route::delete('/{id}',   [TeacherPayrollController::class, 'destroy'])->name('destroy');
+    });
+
+    Route::get('performance-reviews',      [PerformanceReviewController::class, 'index'])->name('reviews.index');
+    Route::put('performance-reviews/{id}', [PerformanceReviewController::class, 'update'])->name('reviews.update');
+    Route::delete('performance-reviews/{id}', [PerformanceReviewController::class, 'destroy'])->name('reviews.destroy');
     Route::prefix('admissions')->name('admissions.')->group(function () {
         Route::get('/',              [AdmissionController::class, 'index'])->name('index');
         Route::get('/create',        [AdmissionController::class, 'create'])->name('create');

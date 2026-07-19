@@ -8,19 +8,23 @@ use Illuminate\Support\Facades\Storage;
 
 class TeacherContractController extends Controller
 {
-    public function __construct() { $this->middleware(['auth', 'can:view teachers']); }
+    public function __construct()
+    {
+        $this->middleware(['auth', 'can:view teachers']);
+    }
 
     public function store(Request $request, int $teacherId)
     {
         $this->authorize('create teachers');
+
         $data = $request->validate([
             'contract_type' => 'required|in:' . implode(',', array_keys(TeacherContract::TYPES)),
+            'position'      => 'nullable|string|max:255',
             'start_date'    => 'required|date',
             'end_date'      => 'nullable|date|after:start_date',
-            'basic_salary'  => 'nullable|numeric|min:0',
-            'position'      => 'nullable|string|max:100',
-            'terms'         => 'nullable|string|max:3000',
-            'attachment'    => 'nullable|file|max:10240|mimes:pdf,doc,docx',
+            'basic_salary'  => 'required|numeric|min:0',
+            'terms'         => 'nullable|string|max:2000',
+            'attachment'    => 'nullable|file|max:10240|mimes:pdf,jpg,jpeg,png',
         ]);
 
         if ($request->hasFile('attachment')) {
@@ -29,18 +33,13 @@ class TeacherContractController extends Controller
         }
         unset($data['attachment']);
 
-        // Mark previous active contracts as renewed
-        TeacherContract::where('teacher_id', $teacherId)
-            ->where('status', 'active')
-            ->update(['status' => 'renewed']);
-
         TeacherContract::create(array_merge($data, [
             'teacher_id' => $teacherId,
             'status'     => 'active',
             'created_by' => auth()->id(),
         ]));
 
-        return back()->with('status', 'Contract added.');
+        return back()->with('status', 'Contract created.');
     }
 
     public function update(Request $request, int $id)
@@ -48,11 +47,9 @@ class TeacherContractController extends Controller
         $this->authorize('create teachers');
         $contract = TeacherContract::findOrFail($id);
         $contract->update($request->validate([
-            'status'   => 'required|in:active,expired,terminated,renewed',
-            'end_date' => 'nullable|date',
-            'position' => 'nullable|string|max:100',
+            'status' => 'required|in:active,expired,terminated,renewed',
         ]));
-        return back()->with('status', 'Contract updated.');
+        return back()->with('status', 'Contract status updated.');
     }
 
     public function destroy(int $id)

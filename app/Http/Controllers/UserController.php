@@ -232,13 +232,26 @@ class UserController extends Controller
         }
     }
 
-    public function getTeacherList(){
-        $teachers = $this->userRepository->getAllTeachers();
+    public function getTeacherList(Request $request){
+        $search = $request->query('search');
+        $deptId = $request->query('department_id');
 
-        $data = [
-            'teachers' => $teachers,
-        ];
+        $query = \App\Models\User::role(['teacher','class-teacher'])
+            ->with('assignedCourses.course','assignedCourses.section','departments');
 
-        return view('teachers.list', $data);
+        if ($search) {
+            $query->where(fn($q) => $q
+                ->where('first_name','like',"%$search%")
+                ->orWhere('last_name','like',"%$search%")
+                ->orWhere('email','like',"%$search%")
+            );
+        }
+
+        if ($deptId) {
+            $query->whereHas('departments', fn($q) => $q->where('departments.id', $deptId));
+        }
+
+        $teachers = $query->get();
+        return view('teachers.list', compact('teachers'));
     }
 }
