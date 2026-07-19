@@ -1,8 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 // Fonts
-@import url('https://fonts.googleapis.com/css?family=Nunito');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 // Variables
 @import 'variables';
 
 // Bootstrap
 @import '~bootstrap/scss/bootstrap';
+
+// Custom Overrides for Modern UI
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8fafc;
+}

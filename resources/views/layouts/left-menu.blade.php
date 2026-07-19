@@ -1,154 +1,273 @@
-<div class="col-xs-1 col-sm-1 col-md-1 col-lg-2 col-xl-2 col-xxl-2 border-rt-e6 px-0">
-    <div class="d-flex flex-column align-items-center align-items-sm-start ">
-                <ul class="nav flex-column pt-2 w-100">
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('home')? 'active' : '' }}" href="{{url('home')}}"><i class="ms-auto bi bi-grid"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">{{ __('Dashboard') }}</span></a>
-                    </li>
-                    {{-- @if (Auth::user()->role == "teacher")
-                    <li class="nav-item">
-                        <a type="button" href="{{url('attendances')}}" class="d-flex nav-link {{ request()->is('attendances*')? 'active' : '' }}"><i class="bi bi-calendar2-week"></i> <span class="ms-2 d-inline d-sm-none d-md-none d-xl-inline">Attendance</span></a>
-                    </li>
-                    @endif --}}
-                    @can('view classes')
-                    <li class="nav-item">
-                        @php
-                            if (session()->has('browse_session_id')){
-                                $classCount = \App\Models\SchoolClass::where('session_id', session('browse_session_id'))->count();
-                            } else {
-                                $latest_session = \App\Models\SchoolSession::latest()->first();
-                                if($latest_session) {
-                                    $classCount = \App\Models\SchoolClass::where('session_id', $latest_session->id)->count();
-                                } else {
-                                    $classCount = 0;
-                                }
-                            }
-                        @endphp
-                        <a class="nav-link d-flex {{ request()->is('classes')? 'active' : '' }}" href="{{url('classes')}}"><i class="bi bi-diagram-3"></i> <span class="ms-2 d-inline d-sm-none d-md-none d-xl-inline">Classes</span> <span class="ms-auto d-inline d-sm-none d-md-none d-xl-inline">{{ $classCount }}</span></a>
-                    </li>
-                    @endcan
-                    @if(Auth::user()->role != "student")
-                    <li class="nav-item">
-                        <a type="button" href="#student-submenu" data-bs-toggle="collapse" class="d-flex nav-link {{ request()->is('students*')? 'active' : '' }}"><i class="bi bi-person-lines-fill"></i> <span class="ms-2 d-inline d-sm-none d-md-none d-xl-inline">Students</span>
-                            <i class="ms-auto d-inline d-sm-none d-md-none d-xl-inline bi bi-chevron-down"></i>
-                        </a>
-                        <ul class="nav collapse {{ request()->is('students*')? 'show' : 'hide' }} bg-white" id="student-submenu">
-                            <li class="nav-item w-100" {{ request()->routeIs('student.list.show')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('student.list.show')}}"><i class="bi bi-person-video2 me-2"></i> View Students</a></li>
-                            @if (!session()->has('browse_session_id') && Auth::user()->role == "admin")
-                            <li class="nav-item w-100" {{ request()->routeIs('student.create.show')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('student.create.show')}}"><i class="bi bi-person-plus me-2"></i> Add Student</a></li>
-                            @endif
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a type="button" href="#teacher-submenu" data-bs-toggle="collapse" class="d-flex nav-link {{ request()->is('teachers*')? 'active' : '' }}"><i class="bi bi-person-lines-fill"></i> <span class="ms-2 d-inline d-sm-none d-md-none d-xl-inline">Teachers</span>
-                            <i class="ms-auto d-inline d-sm-none d-md-none d-xl-inline bi bi-chevron-down"></i>
-                        </a>
-                        <ul class="nav collapse {{ request()->is('teachers*')? 'show' : 'hide' }} bg-white" id="teacher-submenu">
-                            <li class="nav-item w-100" {{ request()->routeIs('teacher.list.show')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('teacher.list.show')}}"><i class="bi bi-person-video2 me-2"></i> View Teachers</a></li>
-                            @if (!session()->has('browse_session_id') && Auth::user()->role == "admin")
-                            <li class="nav-item w-100" {{ request()->routeIs('teacher.create.show')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('teacher.create.show')}}"><i class="bi bi-person-plus me-2"></i> Add Teacher</a></li>
-                            @endif
-                        </ul>
-                    </li>
-                    @endif
-                    @if(Auth::user()->role == "teacher")
-                    <li class="nav-item">
-                        <a class="nav-link {{ (request()->is('courses/teacher*') || request()->is('courses/assignments*'))? 'active' : '' }}" href="{{route('course.teacher.list.show', ['teacher_id' => Auth::user()->id])}}"><i class="bi bi-journal-medical"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">My Courses</span></a>
-                    </li>
-                    @endif
-                    @if(Auth::user()->role == "student")
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('student.attendance.show')? 'active' : '' }}" href="{{route('student.attendance.show', ['id' => Auth::user()->id])}}"><i class="bi bi-calendar2-week"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Attendance</span></a>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('course.student.list.show')? 'active' : '' }}" href="{{route('course.student.list.show', ['student_id' => Auth::user()->id])}}"><i class="bi bi-journal-medical"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Courses</span></a>
-                    </li>
-                    {{-- <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="bi bi-file-post"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Assignments</span></a>
-                    </li><li class="nav-item">
-                        <a class="nav-link" href="#"><i class="bi bi-cloud-sun"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Marks</span></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#"><i class="bi bi-journal-text"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Syllabus</span></a>
-                    </li> --}}
-                    <li class="nav-item border-bottom">
-                        @php
-                            if (session()->has('browse_session_id')){
-                                $class_info = \App\Models\Promotion::where('session_id', session('browse_session_id'))->where('student_id', Auth::user()->id)->first();
-                            } else {
-                                $latest_session = \App\Models\SchoolSession::latest()->first();
-                                if($latest_session) {
-                                    $class_info = \App\Models\Promotion::where('session_id', $latest_session->id)->where('student_id', Auth::user()->id)->first();
-                                } else {
-                                    $class_info = [];
-                                }
-                            }
-                        @endphp
-                        <a class="nav-link" href="{{route('section.routine.show', [
-                            'class_id'  => $class_info->class_id,
-                            'section_id'=> $class_info->section_id
-                        ])}}"><i class="bi bi-calendar4-range"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Routine</span></a>
-                    </li>
-                    @endif
-                    @if(Auth::user()->role != "student")
-                    <li class="nav-item border-bottom">
-                        <a type="button" href="#exam-grade-submenu" data-bs-toggle="collapse" class="d-flex nav-link {{ request()->is('exams*')? 'active' : '' }}"><i class="bi bi-file-text"></i> <span class="ms-2 d-inline d-sm-none d-md-none d-xl-inline">Exams / Grades</span>
-                            <i class="ms-auto d-inline d-sm-none d-md-none d-xl-inline bi bi-chevron-down"></i>
-                        </a>
-                        <ul class="nav collapse {{ request()->is('exams*')? 'show' : 'hide' }} bg-white" id="exam-grade-submenu">
-                            <li class="nav-item w-100" {{ request()->routeIs('exam.list.show')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('exam.list.show')}}"><i class="bi bi-file-text me-2"></i> View Exams</a></li>
-                            @if (Auth::user()->role == "admin" || Auth::user()->role == "teacher")
-                            <li class="nav-item w-100" {{ request()->routeIs('exam.create.show')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('exam.create.show')}}"><i class="bi bi-file-plus me-2"></i> Create Exams</a></li>
-                            @endif
-                            @if (Auth::user()->role == "admin")
-                            <li class="nav-item w-100" {{ request()->routeIs('exam.grade.system.create')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('exam.grade.system.create')}}"><i class="bi bi-file-plus me-2"></i> Add Grade Systems</a></li>
-                            @endif
-                            <li class="nav-item w-100" {{ request()->routeIs('exam.grade.system.index')? 'style="font-weight:bold;"' : '' }}><a class="nav-link" href="{{route('exam.grade.system.index')}}"><i class="bi bi-file-ruled me-2"></i> View Grade Systems</a></li>
-                        </ul>
-                    </li>
-                    {{-- <li class="nav-item border-bottom">
-                        <a type="button" href="#" class="d-flex nav-link {{ request()->is('marks*')? 'active' : '' }} dropdown-toggle caret-off" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-cloud-sun"></i> <span class="ms-2 d-inline d-sm-none d-md-none d-xl-inline">Marks / Results</span>
-                            <i class="ms-auto d-inline d-sm-none d-md-none d-xl-inline bi bi-chevron-down"></i>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{{url('marks/view')}}">View Marks</a></li>
-                            <li><a class="dropdown-item" href="{{url('marks/results')}}">View Results</a></li>
-                        </ul>
-                    </li> --}}
-                    @endif
-                    @if (Auth::user()->role == "admin")
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('notice*')? 'active' : '' }}" href="{{route('notice.create')}}"><i class="bi bi-megaphone"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Notice</span></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('calendar-event*')? 'active' : '' }}" href="{{route('events.show')}}"><i class="bi bi-calendar-event"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Event</span></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('syllabus*')? 'active' : '' }}" href="{{route('class.syllabus.create')}}"><i class="bi bi-journal-text"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Syllabus</span></a>
-                    </li>
-                    <li class="nav-item border-bottom">
-                        <a class="nav-link {{ request()->is('routine*')? 'active' : '' }}" href="{{route('section.routine.create')}}"><i class="bi bi-calendar4-range"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Routine</span></a>
-                    </li>
-                    @endif
-                    @if (Auth::user()->role == "admin")
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('academics*')? 'active' : '' }}" href="{{url('academics/settings')}}"><i class="bi bi-tools"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Academic</span></a>
-                    </li>
-                    @endif
-                    @if (!session()->has('browse_session_id') && Auth::user()->role == "admin")
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->is('promotions*')? 'active' : '' }}" href="{{url('promotions/index')}}"><i class="bi bi-sort-numeric-up-alt"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Promotion</span></a>
-                    </li>
-                    @endif
-                    <li class="nav-item">
-                        <a class="nav-link disabled" href="#" aria-disabled="true"><i class="bi bi-currency-exchange"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Payment</span></a>
-                    </li>
-                    @if (Auth::user()->role == "admin")
-                    <li class="nav-item">
-                        <a class="nav-link disabled" href="#" aria-disabled="true"><i class="bi bi-person-lines-fill"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Staff</span></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link disabled" href="#" aria-disabled="true"><i class="bi bi-journals"></i> <span class="ms-1 d-inline d-sm-none d-md-none d-xl-inline">Library</span></a>
-                    </li>
-                    @endif
-                </ul>
-            </div>
+<div class="h-full flex flex-col py-4 px-3">
+
+    {{-- User badge --}}
+    <div class="flex items-center gap-3 px-2 py-3 mb-4 bg-slate-50 rounded-xl">
+        <img src="{{ auth()->user()->avatar }}" class="w-9 h-9 rounded-full object-cover flex-shrink-0" alt="">
+        <div class="min-w-0">
+            <p class="text-sm font-semibold text-slate-700 truncate">{{ auth()->user()->full_name }}</p>
+            <p class="text-[11px] text-slate-400 truncate capitalize">{{ str_replace('-', ' ', auth()->user()->primary_role) }}</p>
         </div>
+    </div>
+
+    {{-- Nav --}}
+    <nav class="flex-1 space-y-0.5 overflow-y-auto">
+
+        {{-- Dashboard --}}
+        <a href="{{ url('home') }}" class="nav-item {{ request()->is('home') ? 'active' : '' }}">
+            <i class="bi bi-grid-1x2 nav-icon"></i> Dashboard
+        </a>
+
+        {{-- ── STUDENT section ── --}}
+        @canany(['view students', 'create students'])
+        <p class="nav-section-label">Students</p>
+        <a href="{{ route('student.list.show') }}" class="nav-item {{ request()->is('students/view*') ? 'active' : '' }}">
+            <i class="bi bi-people nav-icon"></i> All Students
+        </a>
+        @can('create students')
+        @unless(session()->has('browse_session_id'))
+        <a href="{{ route('student.create.show') }}" class="nav-item {{ request()->is('students/add') ? 'active' : '' }}">
+            <i class="bi bi-person-plus nav-icon"></i> Add Student
+        </a>
+        @endunless
+        @endcan
+        @endcanany
+
+        {{-- Student self-view --}}
+        @role('student')
+        <p class="nav-section-label">My School</p>
+        <a href="{{ route('student.attendance.show', auth()->id()) }}" class="nav-item {{ request()->routeIs('student.attendance.show') ? 'active' : '' }}">
+            <i class="bi bi-calendar2-check nav-icon"></i> My Attendance
+        </a>
+        <a href="{{ route('course.student.list.show', auth()->id()) }}" class="nav-item {{ request()->routeIs('course.student.list.show') ? 'active' : '' }}">
+            <i class="bi bi-journal-medical nav-icon"></i> My Courses
+        </a>
+        @if($student_routine_info = \App\Models\Promotion::where('student_id', auth()->id())->latest()->first())
+        <a href="{{ route('section.routine.show', ['class_id' => $student_routine_info->class_id, 'section_id' => $student_routine_info->section_id]) }}" class="nav-item">
+            <i class="bi bi-calendar4-range nav-icon"></i> Timetable
+        </a>
+        @endif
+        @endrole
+
+        {{-- ── TEACHER section ── --}}
+        @canany(['view teachers', 'create teachers'])
+        <p class="nav-section-label">Teachers</p>
+        <a href="{{ route('teacher.list.show') }}" class="nav-item {{ request()->is('teachers/view/list') ? 'active' : '' }}">
+            <i class="bi bi-person-badge nav-icon"></i> All Teachers
+        </a>
+        @can('create teachers')
+        @unless(session()->has('browse_session_id'))
+        <a href="{{ route('teacher.create.show') }}" class="nav-item">
+            <i class="bi bi-person-plus nav-icon"></i> Add Teacher
+        </a>
+        @endunless
+        @endcan
+        @endcanany
+
+        {{-- Teacher self-courses --}}
+        @role('teacher|class-teacher')
+        <p class="nav-section-label">Teaching</p>
+        <a href="{{ route('course.teacher.list.show', ['teacher_id' => auth()->id()]) }}" class="nav-item {{ request()->is('courses/teacher*') ? 'active' : '' }}">
+            <i class="bi bi-journal-medical nav-icon"></i> My Courses
+        </a>
+        <a href="{{ route('assignment.list.show') }}" class="nav-item {{ request()->is('courses/assignments*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-text nav-icon"></i> Assignments
+        </a>
+        @endrole
+
+        {{-- ── ACADEMIC section ── --}}
+        @canany(['view classes', 'view courses', 'view routines', 'view syllabi'])
+        <p class="nav-section-label">Academic</p>
+        @can('view classes')
+        <a href="{{ url('classes') }}" class="nav-item {{ request()->is('classes') ? 'active' : '' }}">
+            <i class="bi bi-diagram-3 nav-icon"></i> Classes &amp; Sections
+        </a>
+        @endcan
+        @can('view courses')
+        <a href="{{ route('course.teacher.list.show', ['teacher_id' => auth()->id()]) }}" class="nav-item {{ request()->is('courses*') && !request()->is('courses/teacher*') ? 'active' : '' }}">
+            <i class="bi bi-book nav-icon"></i> Courses
+        </a>
+        @endcan
+        @can('view routines')
+        <a href="{{ route('section.routine.show') }}" class="nav-item {{ request()->is('routine/view') ? 'active' : '' }}">
+            <i class="bi bi-calendar4-range nav-icon"></i> Timetable
+        </a>
+        @endcan
+        @can('view syllabi')
+        <a href="{{ route('course.syllabus.index') }}" class="nav-item {{ request()->is('syllabus*') ? 'active' : '' }}">
+            <i class="bi bi-journal-text nav-icon"></i> Syllabus
+        </a>
+        @endcan
+        @endcanany
+
+        {{-- ── ATTENDANCE section ── --}}
+        @canany(['take attendances', 'view attendances'])
+        <p class="nav-section-label">Attendance</p>
+        @can('take attendances')
+        <a href="{{ route('attendance.create.show') }}" class="nav-item {{ request()->is('attendances/take') ? 'active' : '' }}">
+            <i class="bi bi-check2-square nav-icon"></i> Take Attendance
+        </a>
+        @endcan
+        @can('view attendances')
+        <a href="{{ route('attendance.list.show') }}" class="nav-item {{ request()->is('attendances/view') ? 'active' : '' }}">
+            <i class="bi bi-calendar-week nav-icon"></i> View Attendance
+        </a>
+        @endcan
+        @endcanany
+
+        {{-- ── EXAMS section ── --}}
+        @canany(['view exams', 'create exams', 'view marks', 'save marks', 'view grading systems'])
+        <p class="nav-section-label">Exams & Marks</p>
+        @can('view exams')
+        <a href="{{ route('exam.list.show') }}" class="nav-item {{ request()->is('exams/view') ? 'active' : '' }}">
+            <i class="bi bi-file-text nav-icon"></i> Exams
+        </a>
+        @endcan
+        @can('create exams')
+        <a href="{{ route('exam.create.show') }}" class="nav-item">
+            <i class="bi bi-file-plus nav-icon"></i> Create Exam
+        </a>
+        @endcan
+        @can('save marks')
+        <a href="{{ route('course.mark.create') }}" class="nav-item {{ request()->is('marks/create') ? 'active' : '' }}">
+            <i class="bi bi-pencil-square nav-icon"></i> Enter Marks
+        </a>
+        @endcan
+        @can('view marks')
+        <a href="{{ route('course.mark.show') }}" class="nav-item {{ request()->is('marks/view') ? 'active' : '' }}">
+            <i class="bi bi-clipboard-data nav-icon"></i> View Marks
+        </a>
+        @endcan
+        @canany(['view grading systems', 'create grading systems'])
+        <a href="{{ route('exam.grade.system.index') }}" class="nav-item {{ request()->is('exams/grade*') ? 'active' : '' }}">
+            <i class="bi bi-bar-chart-steps nav-icon"></i> Grading
+        </a>
+        @endcanany
+        @endcanany
+
+        {{-- ── FINANCE section ── --}}
+        @canany(['view invoices', 'create invoices', 'view payments', 'view own invoices'])
+        <p class="nav-section-label">Finance</p>
+        <a href="{{ route('payments.index') }}" class="nav-item {{ request()->is('payments*') ? 'active' : '' }}">
+            <i class="bi bi-credit-card nav-icon"></i> Payments
+        </a>
+        @can('create invoices')
+        <a href="{{ route('payments.create') }}" class="nav-item">
+            <i class="bi bi-receipt nav-icon"></i> New Invoice
+        </a>
+        @endcan
+        @endcanany
+
+        {{-- ── LIBRARY section ── --}}
+        @canany(['view books', 'create books', 'issue books'])
+        <p class="nav-section-label">Library</p>
+        <a href="{{ route('library.index') }}" class="nav-item {{ request()->is('library*') ? 'active' : '' }}">
+            <i class="bi bi-journals nav-icon"></i> Books
+        </a>
+        @can('create books')
+        <a href="{{ route('library.create') }}" class="nav-item">
+            <i class="bi bi-plus-circle nav-icon"></i> Add Book
+        </a>
+        @endcan
+        @endcanany
+
+        {{-- ── STAFF / HR section ── --}}
+        @canany(['view staff', 'create staff'])
+        <p class="nav-section-label">HR & Staff</p>
+        <a href="{{ route('staff.index') }}" class="nav-item {{ request()->is('staff*') ? 'active' : '' }}">
+            <i class="bi bi-person-lines-fill nav-icon"></i> Staff
+        </a>
+        @can('create staff')
+        <a href="{{ route('staff.create') }}" class="nav-item">
+            <i class="bi bi-person-plus nav-icon"></i> Add Staff
+        </a>
+        @endcan
+        @endcanany
+
+        {{-- ── COMMUNICATION section ── --}}
+        @canany(['view notices', 'create notices', 'view events'])
+        <p class="nav-section-label">Communication</p>
+        @can('create notices')
+        <a href="{{ route('notice.create') }}" class="nav-item {{ request()->is('notice*') ? 'active' : '' }}">
+            <i class="bi bi-megaphone nav-icon"></i> Notices
+        </a>
+        @endcan
+        @can('view events')
+        <a href="{{ route('events.show') }}" class="nav-item {{ request()->is('calendar-event*') ? 'active' : '' }}">
+            <i class="bi bi-calendar-event nav-icon"></i> Events
+        </a>
+        @endcan
+        <a href="{{ route('notifications.index') }}" class="nav-item {{ request()->is('notifications*') ? 'active' : '' }}">
+            <i class="bi bi-bell nav-icon"></i> Notifications
+            @php $unread = auth()->user()->unreadNotifications()->count(); @endphp
+            @if($unread > 0)
+            <span class="ml-auto text-[10px] bg-rose-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{{ $unread > 9 ? '9+' : $unread }}</span>
+            @endif
+        </a>
+        @endcanany
+
+        {{-- ── SETTINGS / ADMIN TOOLS section ── --}}
+        @canany(['view academic settings', 'manage roles', 'view audit logs'])
+        <p class="nav-section-label">Administration</p>
+        @can('view academic settings')
+        <a href="{{ url('academics/settings') }}" class="nav-item {{ request()->is('academics/settings') ? 'active' : '' }}">
+            <i class="bi bi-tools nav-icon"></i> Academic Settings
+        </a>
+        @endcan
+        @unless(session()->has('browse_session_id'))
+        @can('promote students')
+        <a href="{{ url('promotions/index') }}" class="nav-item {{ request()->is('promotions*') ? 'active' : '' }}">
+            <i class="bi bi-sort-numeric-up-alt nav-icon"></i> Promotions
+        </a>
+        @endcan
+        @endunless
+        @can('manage roles')
+        <a href="{{ route('roles.index') }}" class="nav-item {{ request()->is('roles*') ? 'active' : '' }}">
+            <i class="bi bi-shield-check nav-icon"></i> Roles & Permissions
+        </a>
+        @endcan
+        @endcanany
+
+    </nav>
+
+    {{-- Bottom: files + profile --}}
+    <div class="mt-4 pt-4 border-t border-slate-100 space-y-0.5">
+        @can('upload files')
+        <a href="{{ route('file.index') }}" class="nav-item {{ request()->is('files*') ? 'active' : '' }}">
+            <i class="bi bi-folder2-open nav-icon"></i> File Manager
+        </a>
+        @endcan
+        <a href="{{ route('two-factor.setup') }}" class="nav-item">
+            <i class="bi bi-shield-lock nav-icon"></i> Security (2FA)
+        </a>
+        <a href="{{ route('password.change') }}" class="nav-item">
+            <i class="bi bi-key nav-icon"></i> Change Password
+        </a>
+    </div>
+
+</div>
+
+<style>
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.625rem;
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #475569;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+.nav-item:hover { background: #f1f5f9; color: #1e293b; }
+.nav-item.active { background: #eef2ff; color: #4f46e5; }
+.nav-icon { font-size: 0.875rem; width: 1rem; flex-shrink: 0; }
+.nav-section-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    padding: 0.75rem 0.625rem 0.25rem;
+}
+</style>

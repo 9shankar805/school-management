@@ -1,0 +1,1120 @@
+================================================================================
+  SCHOOL MANAGEMENT ERP — MASTER TODO
+  Last updated: 2026-07-19
+================================================================================
+
+LEGEND:
+  [✓] Done / complete
+  [~] In progress / partial
+  [ ] Not started
+
+================================================================================
+  MODULE 1: SYSTEM ARCHITECTURE                                          [✓] DONE
+================================================================================
+  [✓] Laravel 8 + PHP 8.3 (upgrade path to Laravel 12 documented)
+  [✓] Packages: Sanctum, Spatie ActivityLog, DomPDF, Maatwebsite Excel, Predis
+  [✓] Redis-ready config (database queue active, Redis queue configured)
+  [✓] Settings table + Setting model (get/set with cache, multi-tenant ready)
+  [✓] Audit logs table + AuditLog model + AuditObserver (auto-trail on models)
+  [✓] Spatie activity_log tables migrated and configured
+  [✓] REST API — routes/api.php with /api/v1/ prefix + Sanctum auth
+  [✓] API controllers: Auth, Dashboard, Students, Teachers, Attendance, Exams,
+      Marks, Notifications, Settings
+  [✓] Redis provider + alias enabled in config/app.php
+  [✓] Spatie role/permission/role_or_permission middleware in Kernel
+  [✓] NotificationController (web) + database notifications table migrated
+  [✓] Notification classes: GeneralNotification, FeeReminderNotification,
+      AttendanceAlertNotification (database + mail, queued)
+  [✓] FileManagerController + MediaFile model + media_files table
+  [✓] TwoFactorController + EnsureTwoFactorEnabled middleware + two_factor_auth table
+  [✓] TwoFactorAuth model
+  [✓] SetSchoolContext middleware (multi-tenancy request scoping)
+  [✓] AppServiceProvider: AuditObserver registered on User, Attendance,
+      Exam, Mark, Invoice, Payment models
+  [✓] Queue jobs table + notifications table migrated
+  [✓] Mail config updated (MAIL_FROM_ADDRESS, MAIL_QUEUE=true)
+  [✓] Web routes: notifications, file manager, 2FA
+  [✓] ARCHITECTURE.md — full system design documentation
+
+================================================================================
+  MODULE 2: USER ROLES & PERMISSIONS                                     [✓] DONE
+================================================================================
+  [✓] Super Admin role + dashboard
+  [✓] Organization Owner role
+  [✓] School Admin (per-school) role
+  [✓] Principal / Vice Principal roles
+  [✓] Academic Coordinator role
+  [✓] Parent role + account creation flow
+  [✓] Accountant role + dashboard
+  [✓] Librarian role + dashboard
+  [✓] Receptionist role
+  [✓] HR Manager role
+  [✓] Transport Manager role
+  [✓] Hostel Manager role
+  [✓] Exam Controller role
+  [✓] Attendance Officer role
+  [✓] Admission Officer role
+  [✓] Guest (read-only) role
+  [✓] Role-specific dashboards for every role (13 dashboard views)
+  [✓] Fine-grained permissions matrix admin UI (roles/matrix.blade.php)
+  [✓] PermissionSeeder: 178 permissions across all 24 modules
+  [✓] RoleSeeder: 20 roles with scoped permissions seeded
+  [✓] UserSeeder: syncRoles() called for all user types
+  [✓] User model: role helper methods + getDashboardView() + avatar/fullName
+  [✓] AuthServiceProvider: Gate::before() super-admin bypass
+  [✓] RoleController: index, create, store, edit, update, destroy, matrix, userRoles
+  [✓] Role management views: index, create, edit, matrix
+  [✓] HomeController: dispatches to correct role dashboard view
+  [✓] left-menu.blade.php: fully role-aware with @can/@role directives
+
+================================================================================
+  MODULE 3: DASHBOARDS                                                    [✓] DONE
+================================================================================
+  [✓] Admin dashboard with KPI cards (students, teachers, revenue, attendance)
+  [✓] Today's attendance summary widget
+  [✓] Today's class schedule widget (timetable for current weekday)
+  [✓] Upcoming exams widget
+  [✓] Upcoming holidays / events widget
+  [✓] Recent admissions widget
+  [✓] Recent payments widget
+  [✓] Fee collection chart (ApexCharts area + bar)
+  [✓] Student performance analytics chart (avg marks per course — horizontal bar)
+  [✓] Gender distribution chart
+  [✓] Attendance trend chart (7-day area chart)
+  [✓] Teacher performance widget (marks entered + attendance days per teacher)
+  [✓] Fee due / overdue alerts (accountant dashboard)
+  [✓] Birthday widget (students/staff — next 7 days)
+  [✓] Announcements feed (notice board on all dashboards)
+  [✓] Recent activity log feed (audit log widget)
+  [✓] Top performers widget (top 8 students by avg marks)
+  [✓] Quick action buttons
+  [✓] Attendance heatmap (70-day ApexCharts heatmap with colour scale)
+  [✓] Role-specific dashboard views (all 20 roles)
+  [✓] Widget toggle personalization (localStorage show/hide per widget)
+
+================================================================================
+  MODULE 4: STUDENT MANAGEMENT                                           [✓] DONE
+================================================================================
+  [✓] Student registration / profile (basic)
+  [✓] Student list + search
+  [✓] Student edit
+  [✓] Academic info (class/section/roll)
+  [✓] Parent/guardian info
+  [✓] Student marks / results
+  [✓] Multi-step admission workflow (application → under_review → approved → enrolled)
+  [✓] Student transfer (inter-class / inter-section / inter-school)
+  [✓] Graduation processing (bulk class graduation + individual status change)
+  [✓] Dropout / withdrawal tracking (status: dropped_out / withdrawn with history)
+  [✓] Alumni management (directory + batch filtering)
+  [✓] Student documents upload (birth cert, national ID, photos, PDF — upload/verify/delete)
+  [✓] Medical records + allergies (single updateOrCreate record per student)
+  [✓] Emergency contact management (multi-contact, primary flag, authorized pickup)
+  [✓] Student ID card generator (PDF with QR code — single + bulk)
+  [✓] QR code per student (in ID card PDF)
+  [✓] Student timeline (full activity history — marks, discipline, docs, scholarships, transfers)
+  [✓] Achievements + awards (category/level/issuing_body, attachment, leaderboard)
+  [✓] Behaviour / disciplinary records (severity, type, resolve/unresolve workflow)
+  [✓] House / sports-house assignment (per session, assign via profile)
+  [✓] Scholarship tracking (merit/need/sports/arts, amount/percentage, status)
+  [ ] Transport allocation (Module 13 dependency)
+  [ ] Hostel allocation (Module 14 dependency)
+  [✓] Certificate generation (PDF — A4 landscape, branded, token rendering, bulk)
+  [ ] Student mobile app / PWA
+
+================================================================================
+  MODULE 5: TEACHER MANAGEMENT                                           [~] PARTIAL
+================================================================================
+  [✓] Teacher profile (basic)
+  [✓] Teacher list + search
+  [✓] Assign teacher to course/section
+  [ ] Qualification + experience records
+  [ ] Employment contract management + expiry alerts
+  [ ] Department assignment
+  [ ] Payroll processing
+  [ ] Leave management (apply, approve, reject)
+  [ ] Teacher attendance tracking
+  [ ] Performance reviews + appraisals
+  [ ] Document uploads (certificates, degrees)
+  [ ] Training records
+  [ ] Promotion history
+  [ ] Teacher dashboard (my classes, schedule, pending tasks)
+
+================================================================================
+  MODULE 6: PARENT PORTAL                                                [ ] TODO
+================================================================================
+  [ ] Parent login + dedicated dashboard
+  [ ] View child's attendance
+  [ ] View child's exam results + marks
+  [ ] View + pay fees online
+  [ ] View homework + assignments
+  [ ] Leave application for child
+  [ ] Teacher-parent messaging
+  [ ] Performance trend graphs
+  [ ] Push + SMS notifications
+  [ ] Online payment history
+  [ ] Multi-child support (parent with 2+ children)
+
+================================================================================
+  MODULE 7: ACADEMIC MODULE                                              [~] PARTIAL
+================================================================================
+  [✓] Academic sessions / years
+  [✓] Semesters
+  [✓] Classes + sections
+  [✓] Courses / subjects
+  [✓] Syllabus management
+  [✓] Basic timetable / routines
+  [✓] Calendar events (FullCalendar)
+  [ ] Departments module
+  [ ] Programs / curriculum tracks
+  [ ] Curriculum management per grade/program
+  [ ] Lesson plans (teacher planning UI)
+  [ ] Advanced timetable with conflict detection
+  [ ] Homework management with file submission + grading
+  [ ] Projects module
+  [ ] Notes / study materials sharing
+  [ ] Online class integration (Google Meet / Zoom / Teams links)
+  [ ] LMS-lite (content delivery per course)
+  [ ] Terms within semesters
+
+================================================================================
+  MODULE 8: ATTENDANCE                                                   [~] PARTIAL
+================================================================================
+  [✓] Manual student attendance (per course)
+  [✓] Student attendance view
+  [ ] QR code attendance (scan to mark present)
+  [ ] Teacher attendance tracking
+  [ ] Staff attendance tracking
+  [ ] Late arrival tracking
+  [ ] Attendance analytics dashboard
+  [ ] Monthly attendance report (PDF / Excel)
+  [ ] Absent notification to parent (auto email/SMS)
+  [ ] Attendance shortage alerts (below 75%)
+  [ ] Bulk attendance import (CSV)
+  [ ] RFID / biometric integration hooks
+
+================================================================================
+  MODULE 9: EXAM MODULE                                                  [~] PARTIAL
+================================================================================
+  [✓] Exam types + definitions
+  [✓] Exam rules (pass mark, weight, full mark)
+  [✓] Grading systems + grade bands
+  [✓] Mark entry + final mark submission
+  [ ] Exam schedule / timetable (dates, rooms, invigilators)
+  [ ] Hall / seat allocation
+  [ ] Result sheet generation (PDF)
+  [ ] Mark sheet / report card (PDF)
+  [ ] Transcript generation (PDF)
+  [ ] CGPA / GPA calculation
+  [ ] Class ranking + merit list
+  [ ] Question bank
+  [ ] Online exam module (MCQ + essay)
+  [ ] Practical exam records
+  [ ] Performance analytics per subject/class
+  [ ] Re-exam / supplementary exam workflow
+  [ ]Build a Complete Question Paper Creation & Template Management Module
+       Objective
+
+Develop a professional Question Paper Creation & Template Management module for a School ERP. The module should allow teachers of any subject (Mathematics, Science, English, Nepali, Computer, Social Studies, etc.) to create, edit, preview, and export professional question papers.
+
+The system should support both simple text-based papers and advanced mathematical papers with equations, diagrams, geometry, graphs, tables, and images.
+
+User Roles
+Admin
+Principal
+HOD
+Teacher
+
+Permissions should be role-based.
+
+Workflow
+
+Teacher
+
+↓
+
+Choose Exam
+
+↓
+
+Choose Class
+
+↓
+
+Choose Section
+
+↓
+
+Choose Subject
+
+↓
+
+Choose Template
+
+↓
+
+Edit Template
+
+↓
+
+Insert Questions
+
+↓
+
+Preview
+
+↓
+
+Save Draft
+
+↓
+
+Submit for Approval (Optional)
+
+↓
+
+Generate PDF / DOCX
+
+↓
+
+Print
+
+Template Management
+
+Admin can create reusable templates.
+
+Each template contains:
+
+School Header
+School Logo
+School Address
+Exam Name
+Subject
+Class
+Time
+Full Marks
+Pass Marks
+Instructions
+Sections
+Footer
+Signature area
+
+Example
+
+ABC Secondary School
+
+First Terminal Examination
+
+Subject: Mathematics
+
+Class: 10
+
+Time: 3 Hours
+
+Full Marks: 100
+
+Templates should support placeholders like:
+
+{{school_name}}
+
+{{exam_name}}
+
+{{subject}}
+
+{{class}}
+
+{{time}}
+
+{{full_marks}}
+
+{{pass_marks}}
+
+{{date}}
+Rich Text Editor
+
+Teachers should have a modern document editor similar to Google Docs or Microsoft Word.
+
+Toolbar:
+
+Bold
+Italic
+Underline
+Font Size
+Font Family
+Colors
+Alignment
+Lists
+Tables
+Images
+Hyperlinks
+Page Break
+Headers
+Footers
+Page Numbers
+
+Recommended:
+
+Tiptap
+
+or
+
+CKEditor 5
+
+Mathematical Equation Support
+
+Teachers should insert equations visually.
+
+Support
+
+Fractions
+Square roots
+Integrals
+Summation
+Matrices
+Greek symbols
+Superscripts
+Subscripts
+
+Examples
+
+x² + 5x + 6 = 0
+
+∫ x² dx
+
+√144
+
+Σx
+
+πr²
+
+Recommended libraries
+
+MathLive
+
+KaTeX
+
+MathJax
+
+Geometry Drawing
+
+Math teachers should draw:
+
+Triangle
+Circle
+Rectangle
+Square
+Polygon
+Angle
+Line
+Ray
+Arc
+Compass construction
+Coordinate geometry
+Labels
+
+Example
+
+      A
+
+     / \
+
+    /   \
+
+   /_____\
+
+  B       C
+
+Recommended
+
+GeoGebra Integration
+
+or
+
+Excalidraw
+
+or
+
+Konva.js
+
+or
+
+Fabric.js
+
+Graph Drawing
+
+Teachers should create
+
+Coordinate graph
+
+Function graph
+
+Bar graph
+
+Pie chart
+
+Line graph
+
+Examples
+
+y=x²
+
+y=sin(x)
+
+y=mx+c
+
+Recommended
+
+Desmos API
+
+or
+
+GeoGebra API
+
+Shape Library
+
+Teacher can drag-and-drop
+
+Triangle
+Circle
+Cube
+Cuboid
+Cone
+Cylinder
+Sphere
+Number Line
+Coordinate Plane
+Grid
+Protractor
+Compass
+Clock
+Venn Diagram
+Flowchart
+Arrows
+
+All shapes should be resizable.
+
+Image Support
+
+Teacher can
+
+Upload
+
+Copy/Paste
+
+Drag Drop
+
+Resize
+
+Crop
+
+Rotate
+
+Compress
+
+Supported
+
+PNG
+
+JPG
+
+SVG
+
+WEBP
+
+Tables
+
+Teacher can insert
+
+Question tables
+
+Science practical tables
+
+Data tables
+
+Mark distribution tables
+
+Editable rows and columns.
+
+Question Types
+
+Support
+
+Essay
+
+MCQ
+
+Fill in the blanks
+
+True False
+
+Match the following
+
+Short Answer
+
+Long Answer
+
+Diagram Based
+
+Case Study
+
+Programming Question
+
+Practical Question
+
+Numerical Question
+
+Question Bank
+
+Teacher can
+
+Save Question
+
+Reuse Question
+
+Duplicate Question
+
+Import Question
+
+Search Question
+
+Filter
+
+Subject
+
+Chapter
+
+Difficulty
+
+Marks
+
+Bloom Taxonomy
+
+Tags
+
+Question Type
+
+Automatic Question Numbering
+
+Automatically number
+
+1
+
+2
+
+3
+
+4
+
+4.1
+
+4.2
+
+A
+
+B
+
+C
+
+I
+
+II
+
+III
+
+Should update automatically when questions move.
+
+Marks Management
+
+Each question stores
+
+Allocated Marks
+
+Difficulty
+
+Chapter
+
+Outcome
+
+Total marks calculated automatically.
+
+Spell Check
+
+English
+
+Nepali
+
+Hindi
+
+Optional grammar suggestions.
+
+Multi-language
+
+Unicode Support
+
+Nepali
+
+English
+
+Hindi
+
+Mathematical symbols
+
+Mixed language typing.
+
+PDF Generation
+
+Export exactly as preview.
+
+Support
+
+A4
+
+Letter
+
+Landscape
+
+Portrait
+
+Headers
+
+Footers
+
+Watermark
+
+School Logo
+
+Page Numbers
+
+Margins
+
+Print Ready
+
+DOCX Export
+
+Editable Word document.
+
+Auto Save
+
+Every few seconds.
+
+Version history.
+
+Undo
+
+Redo
+
+Approval Workflow
+
+Draft
+
+↓
+
+Submitted
+
+↓
+
+Reviewed
+
+↓
+
+Approved
+
+↓
+
+Locked
+
+↓
+
+Printed
+
+Security
+
+Role Permissions
+
+Print Logs
+
+Download Logs
+
+Version History
+
+Audit Logs
+
+PDF Watermark
+
+Prevent editing after approval
+
+Frontend Tech Stack
+
+React
+
+TypeScript
+
+Tiptap Editor
+
+MathLive
+
+KaTeX
+
+GeoGebra API
+
+Desmos API
+
+Fabric.js (optional)
+
+React DnD
+
+React Hook Form
+
+TanStack Query
+
+Tailwind CSS
+
+Backend Tech Stack
+
+Laravel
+
+MySQL
+
+Redis
+
+Laravel Queues
+
+Storage
+
+PDF Generation
+
+DOMPDF or Browsershot (Puppeteer)
+
+DOCX Generation
+
+PHPWord
+
+Image Processing
+
+Intervention Image
+
+Database Tables
+
+question_paper_templates
+
+question_papers
+
+question_sections
+
+question_questions
+
+question_bank
+
+question_categories
+
+question_images
+
+question_versions
+
+question_approvals
+
+question_print_logs
+
+question_download_logs
+
+question_tags
+
+question_marks
+
+Nice-to-Have Features
+AI-assisted question generation from syllabus or chapter.
+Randomized paper generation from the question bank.
+Automatic answer key generation.
+QR code on each paper for verification.
+Difficulty analysis and mark distribution charts.
+Duplicate question detection.
+Offline editing with synchronization when back online.
+Recommended Tool Stack
+Feature	Recommended Tool
+Rich Text Editor	Tiptap (best for customization)
+Math Equations	MathLive + KaTeX
+Geometry	GeoGebra API
+Graphing	Desmos API (functions) + GeoGebra (geometry)
+Drawing/Annotations	Excalidraw or Fabric.js
+PDF Export	Puppeteer/Chromium (highest fidelity)
+DOCX Export	PHPWord
+Image Editing	Cropper.js
+Drag & Drop	dnd-kit or React DnD
+
+================================================================================
+  MODULE 10: FINANCE                                                     [~] PARTIAL
+================================================================================
+  [✓] Basic invoice creation
+  [✓] Cash payment recording
+  [ ] Fee structure builder (per class/program/term)
+  [ ] Fee categories (tuition, transport, hostel, library, etc.)
+  [ ] Discount + scholarship management
+  [ ] Installment / EMI plans
+  [ ] Online payment gateways: Stripe, PayPal, Razorpay, Flutterwave
+  [ ] Bank transfer / cheque recording
+  [ ] Expense management
+  [ ] Income management
+  [ ] Accounting ledger
+  [ ] Balance sheet + P&L
+  [ ] Payroll module (salary slips, tax deductions)
+  [ ] Tax management
+  [ ] Financial reports (PDF / Excel)
+  [ ] Fee due / overdue auto-reminders
+  [ ] PDF payment receipts
+
+================================================================================
+  MODULE 11: HR MODULE                                                   [~] PARTIAL
+================================================================================
+  [✓] Basic staff CRUD
+  [ ] Recruitment / job postings
+  [ ] Interview scheduling
+  [ ] Employee onboarding
+  [ ] Leave types (sick, casual, annual, unpaid)
+  [ ] Leave application + approval workflow
+  [ ] Leave balance tracking
+  [ ] Payroll processing (monthly, with deductions)
+  [ ] Salary slip generation (PDF)
+  [ ] Performance review cycles
+  [ ] Promotion + increment records
+  [ ] Contract management + expiry alerts
+  [ ] Staff document vault
+  [ ] Training records
+  [ ] Exit / resignation management
+
+================================================================================
+  MODULE 12: LIBRARY                                                     [~] PARTIAL
+================================================================================
+  [✓] Book catalog CRUD
+  [ ] Book categories / genres
+  [ ] ISBN + barcode tracking
+  [ ] Book issue workflow (member borrows book)
+  [ ] Book return workflow
+  [ ] Fine calculation for late returns
+  [ ] Book availability / stock tracking
+  [ ] Library member management (students + staff)
+  [ ] QR code scan for issue / return
+  [ ] Digital library / e-books
+  [ ] Library analytics (most issued, overdue list)
+  [ ] Library reports (PDF / Excel)
+
+================================================================================
+  MODULE 13: TRANSPORT                                                   [ ] TODO
+================================================================================
+  [ ] Vehicle management (bus, van, etc.)
+  [ ] Driver management
+  [ ] Route management
+  [ ] Route stops
+  [ ] Student transport allocation
+  [ ] GPS live tracking integration
+  [ ] Fuel + maintenance logs
+  [ ] Transport fee integration with Finance
+  [ ] Transport attendance
+
+================================================================================
+  MODULE 14: HOSTEL                                                      [ ] TODO
+================================================================================
+  [ ] Building / block management
+  [ ] Room management
+  [ ] Bed management + allocation
+  [ ] Student hostel allocation
+  [ ] Hostel attendance
+  [ ] Visitor log
+  [ ] Hostel fee integration with Finance
+  [ ] Maintenance requests
+  [ ] Hostel warden management
+
+================================================================================
+  MODULE 15: INVENTORY                                                   [ ] TODO
+================================================================================
+  [ ] Asset register
+  [ ] Supplier management
+  [ ] Purchase orders
+  [ ] Consumables stock tracking
+  [ ] Asset maintenance logs
+  [ ] Warehouse / store management
+  [ ] Stock shortage alerts
+
+================================================================================
+  MODULE 16: COMMUNICATION                                               [~] PARTIAL
+================================================================================
+  [✓] Notice board (create/view notices)
+  [✓] Database notifications (in-app bell — infrastructure done)
+  [✓] Notification classes: General, FeeReminder, AttendanceAlert
+  [ ] Email notification delivery (queue worker + mail driver configured)
+  [ ] SMS gateway integration (Twilio / Vonage / local gateway)
+  [ ] WhatsApp Business API integration
+  [ ] Push notifications (browser FCM / OneSignal)
+  [ ] Notification center UI (blade view with read/unread/delete)
+  [ ] Bulk announcement system (target by role/class/section)
+  [ ] Real-time chat (teacher ↔ parent, teacher ↔ student)
+  [ ] Discussion forums per course
+  [ ] Notice categories + audience targeting
+  [ ] Message templates
+
+================================================================================
+  MODULE 17: REPORTS                                                     [ ] TODO
+================================================================================
+  [ ] Attendance reports (daily, weekly, monthly) — PDF + Excel
+  [ ] Fee collection reports — PDF + Excel
+  [ ] Admission reports
+  [ ] Revenue reports
+  [ ] Teacher reports
+  [ ] Student reports
+  [ ] Library reports
+  [ ] Payroll reports
+  [ ] Exam / result reports
+  [ ] Custom report builder
+  [ ] Report scheduling (auto-email reports)
+
+================================================================================
+  MODULE 18: ANALYTICS                                                   [ ] TODO
+================================================================================
+  [ ] Interactive charts (ApexCharts)
+  [ ] Attendance trend analysis
+  [ ] Revenue forecast charts
+  [ ] Student performance heatmaps
+  [ ] Dropout risk indicators
+  [ ] Teacher performance comparisons
+  [ ] Department statistics
+  [ ] Year-over-year enrollment comparison
+  [ ] Custom date-range analytics
+
+================================================================================
+  MODULE 19: AI FEATURES                                                 [ ] FUTURE
+================================================================================
+  [ ] AI attendance pattern analysis
+  [ ] AI fee default prediction
+  [ ] AI student performance prediction
+  [ ] AI chatbot for students/parents
+  [ ] AI homework + question paper generator
+  [ ] AI timetable optimizer
+  [ ] AI report summariser
+  [ ] AI email / notice writer
+  [ ] AI recommendation system (remedial classes)
+
+================================================================================
+  MODULE 20: MODERN UI / UX                                              [ ] TODO
+================================================================================
+  [ ] Tailwind CSS 4 + Vite build pipeline
+  [ ] Complete UI component library
+  [ ] Dark mode / light mode toggle
+  [ ] Mobile-first responsive redesign
+  [ ] Modern sidebar navigation
+  [ ] Command palette (Cmd+K)
+  [ ] Global search (students, teachers, invoices)
+  [ ] Notification bell with dropdown
+  [ ] Skeleton loading states
+  [ ] Toast / alert system
+  [ ] Breadcrumb navigation
+  [ ] Modern sortable/filterable data tables
+  [ ] Calendar view upgrade (FullCalendar v6)
+  [ ] Livewire 3 for real-time UI
+  [ ] Floating Action Button
+  [ ] Keyboard shortcuts
+
+================================================================================
+  MODULE 21: DATABASE & ARCHITECTURE GAPS                                [~] PARTIAL
+================================================================================
+  [✓] personal_access_tokens (Sanctum)
+  [✓] settings table (multi-tenant key-value store)
+  [✓] audit_logs table
+  [✓] media_files table (custom file manager)
+  [✓] activity_log table (Spatie)
+  [✓] two_factor_auth table
+  [✓] notifications table (Laravel)
+  [✓] jobs + failed_jobs tables (queue)
+  [ ] school_id on all existing tables (full multi-tenancy)
+  [ ] departments table
+  [ ] fee_structures + fee_categories tables
+  [ ] leave_types + leave_applications + leave_balances tables
+  [ ] payrolls + salary_slips tables
+  [ ] book_issues + book_returns + book_fines tables
+  [ ] vehicles + routes + stops + student_transport tables
+  [ ] hostels + rooms + beds + hostel_allocations tables
+  [ ] assets + inventory_items + suppliers tables
+  [ ] messages + conversations tables (chat)
+  [ ] sms_logs + email_logs tables
+  [ ] Soft deletes added to all existing models
+  [ ] Indexes on all FK columns
+
+================================================================================
+  MODULE 22: SECURITY                                                    [~] PARTIAL
+================================================================================
+  [✓] Session-based auth (web)
+  [✓] Sanctum token auth (API)
+  [✓] Spatie RBAC (roles + permissions)
+  [✓] Rate limiting (60/min public, 600/min authenticated)
+  [✓] CSRF protection (VerifyCsrfToken middleware)
+  [✓] XSS protection (stevebauman/purify)
+  [✓] AuditObserver auto-trails on all key models
+  [✓] 2FA infrastructure (middleware, model, controller)
+  [✓] SetSchoolContext middleware
+  [ ] Email verification enforcement (MustVerifyEmail on User)
+  [ ] Password policy enforcement (min 8 chars, complexity rules)
+  [ ] Session timeout config (currently 120 min)
+  [ ] Row-level security (student sees only own data in API)
+  [ ] File upload validation (MIME type whitelist, size limit, AV scan hook)
+  [ ] Encrypted sensitive fields (national ID, medical info)
+  [ ] 2FA TOTP real implementation (pragmarx/google2fa)
+  [ ] Security headers middleware (CSP, HSTS, X-Frame-Options)
+
+================================================================================
+  MODULE 23: INFRASTRUCTURE                                              [~] PARTIAL
+================================================================================
+  [✓] Dockerfile (existing)
+  [✓] Database queue driver active
+  [✓] Redis configured (predis installed, provider enabled)
+  [ ] Redis activated (needs Redis server)
+  [ ] Supervisor config for queue:work
+  [ ] Laravel Horizon (queue monitoring dashboard)
+  [ ] CI/CD pipeline (GitHub Actions / GitLab CI)
+  [ ] S3 / cloud storage config (AWS_BUCKET in .env)
+  [ ] PWA manifest + service worker
+  [ ] Backup system (spatie/laravel-backup)
+
+================================================================================
+  MODULE 24: API & INTEGRATIONS                                          [~] PARTIAL
+================================================================================
+  [✓] /api/v1/ REST API foundation
+  [✓] Sanctum token authentication
+  [✓] Endpoints: auth, dashboard, students, teachers, attendance, exams,
+      marks, notifications, settings
+  [ ] Full CRUD for all modules via API
+  [ ] API resource classes (JSON transformers)
+  [ ] API documentation (Laravel Scribe or Swagger)
+  [ ] GraphQL layer (optional — lighthouse-php)
+  [ ] Stripe webhook handler
+  [ ] SMS gateway webhooks
+  [ ] Google Calendar / Zoom integration
+  [ ] Mobile app (React Native / Flutter)
+
+================================================================================
+  PROGRESS SUMMARY
+================================================================================
+
+  Module 1  — System Architecture    [✓] COMPLETE
+  Module 2  — User Roles             [✓] COMPLETE
+  Module 3  — Dashboards             [✓] 100%
+  Module 4  — Student Management     [✓] 95%
+  Module 5  — Teacher Management     [~] 25%
+  Module 6  — Parent Portal          [ ] 0%
+  Module 7  — Academic Module        [~] 45%
+  Module 8  — Attendance             [~] 20%
+  Module 9  — Exam Module            [~] 40%
+  Module 10 — Finance                [~] 15%
+  Module 11 — HR Module              [~] 10%
+  Module 12 — Library                [~] 15%
+  Module 13 — Transport              [ ] 0%
+  Module 14 — Hostel                 [ ] 0%
+  Module 15 — Inventory              [ ] 0%
+  Module 16 — Communication          [~] 25%
+  Module 17 — Reports                [ ] 0%
+  Module 18 — Analytics              [ ] 0%
+  Module 19 — AI Features            [ ] 0%
+  Module 20 — Modern UI/UX           [ ] 5%
+  Module 21 — Database Architecture  [~] 40%
+  Module 22 — Security               [~] 50%
+  Module 23 — Infrastructure         [~] 30%
+  Module 24 — API & Integrations     [~] 20%
+
+  OVERALL ESTIMATED COMPLETION: ~18%
+  REMAINING: ~82%

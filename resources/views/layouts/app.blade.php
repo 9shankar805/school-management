@@ -19,6 +19,9 @@
     <!-- Scripts -->
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <!-- <script src="{{ asset('js/app.js') }}" defer></script> -->
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.49.0/dist/apexcharts.min.js" defer></script>
+    @stack('head-scripts')
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
@@ -102,8 +105,6 @@
         </main>
     </div>
 
-    <div id="watermark">
-        <p>Unifiedtransform</p>
-    </div>
+    @stack('scripts')
 </body>
 </html>

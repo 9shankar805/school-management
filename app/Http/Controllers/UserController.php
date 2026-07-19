@@ -82,9 +82,42 @@ class UserController extends Controller
         $promotionRepository = new PromotionRepository();
         $promotion_info = $promotionRepository->getPromotionInfoById($current_school_session_id, $id);
 
+        // Eager-load all extended relationships for the tabbed profile
+        $student->load([
+            'medicalRecord',
+            'emergencyContacts',
+            'studentDocuments',
+            'disciplinaryRecords.reporter',
+            'houseAssignments',
+            'scholarships.awardedBy',
+            'transfers.fromClass', 'transfers.toClass', 'transfers.fromSection', 'transfers.toSection',
+            'marks.exam', 'marks.course',
+            'parent_info',
+            'academic_info',
+            'achievements',
+            'statusHistory.processor',
+            'currentStatus',
+        ]);
+
+        // Gather attendance stats for the timeline
+        $attendanceStats = [
+            'total'   => \App\Models\Attendance::where('student_id', $id)->count(),
+            'present' => \App\Models\Attendance::where('student_id', $id)->where('status', 'present')->count(),
+        ];
+        $attendanceStats['pct'] = $attendanceStats['total'] > 0
+            ? round($attendanceStats['present'] / $attendanceStats['total'] * 100)
+            : 0;
+
+        // House assignment for current session
+        $currentHouse = $student->houseAssignments
+            ->where('session_id', $current_school_session_id)
+            ->first();
+
         $data = [
             'student'           => $student,
             'promotion_info'    => $promotion_info,
+            'attendanceStats'   => $attendanceStats,
+            'currentHouse'      => $currentHouse,
         ];
 
         return view('students.profile', $data);
@@ -92,10 +125,35 @@ class UserController extends Controller
 
     public function showTeacherProfile($id) {
         $teacher = $this->userRepository->findTeacher($id);
-        $data = [
-            'teacher'   => $teacher,
+
+        $teacher->load([
+            'assignedCourses.course','assignedCourses.section',
+            'qualifications',
+            'contracts',
+            'activeContract',
+            'teacherDocuments',
+            'leaveApplications.leaveType','leaveApplications.reviewer',
+            'leaveBalances.leaveType',
+            'teacherAttendance',
+            'performanceReviews.reviewer',
+            'trainingRecords',
+            'payrolls',
+            'departments',
+        ]);
+
+        $activeContract = $teacher->activeContract;
+
+        // This month attendance stats
+        $monthRecords   = $teacher->teacherAttendance->filter(fn($r) => $r->date->month === now()->month && $r->date->year === now()->year);
+        $total          = $monthRecords->count();
+        $presentCount   = $monthRecords->where('status','present')->count();
+        $attendanceStats = [
+            'total'   => $total,
+            'present' => $presentCount,
+            'pct'     => $total > 0 ? round($presentCount / $total * 100) : 0,
         ];
-        return view('teachers.profile', $data);
+
+        return view('teachers.profile', compact('teacher','activeContract','attendanceStats'));
     }
 
 

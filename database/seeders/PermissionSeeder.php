@@ -9,157 +9,318 @@ use Spatie\Permission\PermissionRegistrar;
 class PermissionSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
-     *
-     * @return void
+     * All system permissions grouped by module.
+     * Format: 'action resource'
      */
-    public function run()
+    public static array $permissions = [
+
+        // ------------------------------------------------------------------
+        // SYSTEM / SETTINGS
+        // ------------------------------------------------------------------
+        'view system settings',
+        'edit system settings',
+        'view audit logs',
+        'manage roles',
+        'manage permissions',
+        'view activity logs',
+        'manage schools',           // super-admin only
+
+        // ------------------------------------------------------------------
+        // SCHOOL SESSIONS / ACADEMIC CALENDAR
+        // ------------------------------------------------------------------
+        'create school sessions',
+        'view school sessions',
+        'edit school sessions',
+        'delete school sessions',
+        'update browse by session',
+
+        // ------------------------------------------------------------------
+        // SEMESTERS & TERMS
+        // ------------------------------------------------------------------
+        'create semesters',
+        'view semesters',
+        'edit semesters',
+        'delete semesters',
+
+        // ------------------------------------------------------------------
+        // CLASSES & SECTIONS
+        // ------------------------------------------------------------------
+        'create classes',
+        'view classes',
+        'edit classes',
+        'delete classes',
+        'create sections',
+        'view sections',
+        'edit sections',
+        'delete sections',
+
+        // ------------------------------------------------------------------
+        // DEPARTMENTS
+        // ------------------------------------------------------------------
+        'create departments',
+        'view departments',
+        'edit departments',
+        'delete departments',
+
+        // ------------------------------------------------------------------
+        // COURSES / SUBJECTS
+        // ------------------------------------------------------------------
+        'create courses',
+        'view courses',
+        'edit courses',
+        'delete courses',
+        'assign teachers',
+
+        // ------------------------------------------------------------------
+        // ACADEMIC SETTINGS
+        // ------------------------------------------------------------------
+        'view academic settings',
+        'edit academic settings',
+        'update attendances type',
+        'update marks submission window',
+
+        // ------------------------------------------------------------------
+        // STUDENTS
+        // ------------------------------------------------------------------
+        'create students',
+        'view students',
+        'edit students',
+        'delete students',
+        'promote students',
+        'transfer students',
+        'view student profile',
+        'view own profile',
+
+        // ------------------------------------------------------------------
+        // TEACHERS
+        // ------------------------------------------------------------------
+        'create teachers',
+        'view teachers',
+        'edit teachers',
+        'delete teachers',
+        'view teacher profile',
+
+        // ------------------------------------------------------------------
+        // STAFF / HR
+        // ------------------------------------------------------------------
+        'create staff',
+        'view staff',
+        'edit staff',
+        'delete staff',
+        'manage payroll',
+        'view payroll',
+        'manage leave',
+        'apply leave',
+        'view leave',
+        'approve leave',
+        'manage contracts',
+        'manage recruitment',
+
+        // ------------------------------------------------------------------
+        // PARENTS
+        // ------------------------------------------------------------------
+        'view parent portal',
+        'view child attendance',
+        'view child results',
+        'view child fees',
+        'message teachers',
+
+        // ------------------------------------------------------------------
+        // USERS (general)
+        // ------------------------------------------------------------------
+        'create users',
+        'view users',
+        'edit users',
+        'delete users',
+
+        // ------------------------------------------------------------------
+        // ATTENDANCE
+        // ------------------------------------------------------------------
+        'take attendances',
+        'view attendances',
+        'edit attendances',
+        'delete attendances',
+        'view attendance reports',
+        'export attendance reports',
+
+        // ------------------------------------------------------------------
+        // EXAMS
+        // ------------------------------------------------------------------
+        'create exams',
+        'view exams',
+        'edit exams',
+        'delete exams',
+        'create exams rule',
+        'view exams rule',
+        'edit exams rule',
+        'delete exams rule',
+        'view exams history',
+        'manage exam hall',
+        'manage online exams',
+
+        // ------------------------------------------------------------------
+        // GRADING
+        // ------------------------------------------------------------------
+        'create grading systems',
+        'view grading systems',
+        'edit grading systems',
+        'delete grading systems',
+        'create grading systems rule',
+        'view grading systems rule',
+        'edit grading systems rule',
+        'delete grading systems rule',
+
+        // ------------------------------------------------------------------
+        // MARKS / RESULTS
+        // ------------------------------------------------------------------
+        'save marks',
+        'view marks',
+        'edit marks',
+        'delete marks',
+        'view results',
+        'publish results',
+        'view own marks',
+        'generate report cards',
+        'generate transcripts',
+
+        // ------------------------------------------------------------------
+        // ASSIGNMENTS & SYLLABUS
+        // ------------------------------------------------------------------
+        'create assignments',
+        'view assignments',
+        'edit assignments',
+        'delete assignments',
+        'submit assignments',
+        'grade assignments',
+        'create syllabi',
+        'view syllabi',
+        'edit syllabi',
+        'delete syllabi',
+
+        // ------------------------------------------------------------------
+        // TIMETABLE / ROUTINES
+        // ------------------------------------------------------------------
+        'create routines',
+        'view routines',
+        'edit routines',
+        'delete routines',
+
+        // ------------------------------------------------------------------
+        // NOTICES & EVENTS
+        // ------------------------------------------------------------------
+        'create notices',
+        'view notices',
+        'edit notices',
+        'delete notices',
+        'create events',
+        'view events',
+        'edit events',
+        'delete events',
+
+        // ------------------------------------------------------------------
+        // NOTIFICATIONS
+        // ------------------------------------------------------------------
+        'view notifications',
+        'send notifications',
+        'manage notification templates',
+
+        // ------------------------------------------------------------------
+        // FINANCE
+        // ------------------------------------------------------------------
+        'create invoices',
+        'view invoices',
+        'edit invoices',
+        'delete invoices',
+        'create payments',
+        'view payments',
+        'edit payments',
+        'delete payments',
+        'view own invoices',
+        'view financial reports',
+        'export financial reports',
+        'manage fee structure',
+        'manage discounts',
+        'manage scholarships',
+
+        // ------------------------------------------------------------------
+        // LIBRARY
+        // ------------------------------------------------------------------
+        'create books',
+        'view books',
+        'edit books',
+        'delete books',
+        'issue books',
+        'return books',
+        'view library reports',
+        'manage library members',
+
+        // ------------------------------------------------------------------
+        // TRANSPORT
+        // ------------------------------------------------------------------
+        'manage transport',
+        'view transport',
+        'assign student transport',
+        'view transport routes',
+
+        // ------------------------------------------------------------------
+        // HOSTEL
+        // ------------------------------------------------------------------
+        'manage hostel',
+        'view hostel',
+        'assign hostel beds',
+
+        // ------------------------------------------------------------------
+        // INVENTORY
+        // ------------------------------------------------------------------
+        'manage inventory',
+        'view inventory',
+        'create purchase orders',
+
+        // ------------------------------------------------------------------
+        // FILES / MEDIA
+        // ------------------------------------------------------------------
+        'upload files',
+        'view files',
+        'delete files',
+        'manage media',
+
+        // ------------------------------------------------------------------
+        // REPORTS
+        // ------------------------------------------------------------------
+        'view reports',
+        'export reports',
+        'create custom reports',
+
+        // ------------------------------------------------------------------
+        // ANALYTICS
+        // ------------------------------------------------------------------
+        'view analytics',
+        'view advanced analytics',
+
+        // ------------------------------------------------------------------
+        // COMMUNICATION
+        // ------------------------------------------------------------------
+        'send sms',
+        'send email',
+        'send bulk messages',
+        'manage communication templates',
+        'view chat',
+        'send chat messages',
+
+        // ------------------------------------------------------------------
+        // PROMOTIONS
+        // ------------------------------------------------------------------
+        'promote students',
+    ];
+
+    public function run(): void
     {
-        // Reset cached roles and permissions
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // create permissions
-        Permission::create(['name' => 'create users']);
-        Permission::create(['name' => 'view users']);
-        Permission::create(['name' => 'edit users']);
-        Permission::create(['name' => 'delete users']);
+        foreach (static::$permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
 
-        Permission::create(['name' => 'promote students']);
-
-        Permission::create(['name' => 'create notices']);
-        Permission::create(['name' => 'view notices']);
-        Permission::create(['name' => 'edit notices']);
-        Permission::create(['name' => 'delete notices']);
-
-        Permission::create(['name' => 'create events']);
-        Permission::create(['name' => 'view events']);
-        Permission::create(['name' => 'edit events']);
-        Permission::create(['name' => 'delete events']);
-
-        Permission::create(['name' => 'create syllabi']);
-        Permission::create(['name' => 'view syllabi']);
-        Permission::create(['name' => 'edit syllabi']);
-        Permission::create(['name' => 'delete syllabi']);
-
-        Permission::create(['name' => 'create routines']);
-        Permission::create(['name' => 'view routines']);
-        Permission::create(['name' => 'edit routines']);
-        Permission::create(['name' => 'delete routines']);
-
-        Permission::create(['name' => 'create exams']);
-        Permission::create(['name' => 'view exams']);
-        Permission::create(['name' => 'delete exams']);
-        Permission::create(['name' => 'create exams rule']);
-        Permission::create(['name' => 'view exams rule']);
-        Permission::create(['name' => 'edit exams rule']);
-        Permission::create(['name' => 'delete exams rule']);
-        Permission::create(['name' => 'view exams history']);
-
-        Permission::create(['name' => 'create grading systems']);
-        Permission::create(['name' => 'view grading systems']);
-        Permission::create(['name' => 'edit grading systems']);
-        Permission::create(['name' => 'delete grading systems']);
-        Permission::create(['name' => 'create grading systems rule']);
-        Permission::create(['name' => 'view grading systems rule']);
-        Permission::create(['name' => 'edit grading systems rule']);
-        Permission::create(['name' => 'delete grading systems rule']);
-
-        Permission::create(['name' => 'take attendances']);
-        Permission::create(['name' => 'view attendances']);
-        Permission::create(['name' => 'update attendances type']);
-
-        Permission::create(['name' => 'submit assignments']);
-        Permission::create(['name' => 'create assignments']);
-        Permission::create(['name' => 'view assignments']);
-
-        Permission::create(['name' => 'save marks']);
-        Permission::create(['name' => 'view marks']);
-
-        Permission::create(['name' => 'create school sessions']);
-
-        Permission::create(['name' => 'create semesters']);
-        Permission::create(['name' => 'view semesters']);
-        Permission::create(['name' => 'edit semesters']);
-        Permission::create(['name' => 'assign teachers']);
-        Permission::create(['name' => 'create courses']);
-        Permission::create(['name' => 'view courses']);
-        Permission::create(['name' => 'edit courses']);
-
-        Permission::create(['name' => 'view academic settings']);
-        Permission::create(['name' => 'update marks submission window']);
-        Permission::create(['name' => 'update browse by session']);
-
-        Permission::create(['name' => 'create classes']);
-        Permission::create(['name' => 'view classes']);
-        Permission::create(['name' => 'edit classes']);
-        // Permission::create(['name' => 'delete classes']);
-        
-        Permission::create(['name' => 'create sections']);
-        Permission::create(['name' => 'view sections']);
-        Permission::create(['name' => 'edit sections']);
-        // Permission::create(['name' => 'delete sections']);
-
-        $user = \App\Models\User::factory()->create([
-            'email' => 'admin@ut.com',
-            'first_name' => 'Hasib',
-            'last_name' => 'Mahmud'
-        ]);
-        $user->givePermissionTo(
-            'create school sessions',
-            'update browse by session',
-            'create semesters',
-            'edit semesters',
-            'assign teachers',
-            'create courses',
-            'view courses',
-            'edit courses',
-            'create classes',
-            'view classes',
-            'edit classes',
-            'create sections',
-            'view sections',
-            'edit sections',
-            'create exams',
-            'view exams',
-            'create exams rule',
-            'edit exams rule',
-            'delete exams rule',
-            'view exams rule',
-            'create routines',
-            'view routines',
-            'edit routines',
-            'delete routines',
-            'view marks',
-            'view academic settings',
-            'update marks submission window',
-            'create users',
-            'edit users',
-            'view users',
-            'promote students',
-            'update attendances type',
-            'view attendances',
-            'take attendances',//Teacher only
-            'create grading systems',
-            'view grading systems',
-            'edit grading systems',
-            'delete grading systems',
-            'create grading systems rule',
-            'view grading systems rule',
-            'edit grading systems rule',
-            'delete grading systems rule',
-            'create notices',
-            'view notices',
-            'edit notices',
-            'delete notices',
-            'create events',
-            'view events',
-            'edit events',
-            'delete events',
-            'create syllabi',
-            'view syllabi',
-            'edit syllabi',
-            'delete syllabi',
-            'view assignments'
-        );
+        $this->command?->info('✓ ' . count(static::$permissions) . ' permissions created/verified.');
     }
 }

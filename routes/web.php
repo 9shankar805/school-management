@@ -24,6 +24,22 @@ use App\Http\Controllers\SchoolSessionController;
 use App\Http\Controllers\AcademicSettingController;
 use App\Http\Controllers\AssignedTeacherController;
 use App\Http\Controllers\Auth\UpdatePasswordController;
+use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\StaffController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\RoleController;
+use App\Http\Controllers\AdmissionController;
+use App\Http\Controllers\StudentDocumentController;
+use App\Http\Controllers\MedicalRecordController;
+use App\Http\Controllers\EmergencyContactController;
+use App\Http\Controllers\DisciplinaryRecordController;
+use App\Http\Controllers\HouseAssignmentController;
+use App\Http\Controllers\ScholarshipController;
+use App\Http\Controllers\StudentTransferController;
+use App\Http\Controllers\StudentIdCardController;
+use App\Http\Controllers\GraduationController;
+use App\Http\Controllers\AchievementController;
+use App\Http\Controllers\CertificateController;
 
 /*
 |--------------------------------------------------------------------------
@@ -174,6 +190,148 @@ Route::middleware(['auth'])->group(function () {
     Route::post('courses/assignments/create', [AssignmentController::class, 'store'])->name('assignment.store');
 
     // Update password
-    Route::get('password/edit', [UpdatePasswordController::class, 'edit'])->name('password.edit');
-    Route::post('password/edit', [UpdatePasswordController::class, 'update'])->name('password.update');
+    Route::get('password/edit', [UpdatePasswordController::class, 'edit'])->name('password.change');
+    Route::post('password/edit', [UpdatePasswordController::class, 'update'])->name('password.change.update');
+
+    // Library
+    Route::get('/library', [LibraryController::class, 'index'])->name('library.index');
+    Route::get('/library/create', [LibraryController::class, 'create'])->name('library.create');
+    Route::post('/library/store', [LibraryController::class, 'store'])->name('library.store');
+    Route::get('/library/edit/{id}', [LibraryController::class, 'edit'])->name('library.edit');
+    Route::post('/library/update/{id}', [LibraryController::class, 'update'])->name('library.update');
+    Route::post('/library/delete/{id}', [LibraryController::class, 'destroy'])->name('library.destroy');
+
+    // Staff
+    Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
+    Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
+    Route::post('/staff/store', [StaffController::class, 'store'])->name('staff.store');
+    Route::get('/staff/edit/{id}', [StaffController::class, 'edit'])->name('staff.edit');
+    Route::post('/staff/update/{id}', [StaffController::class, 'update'])->name('staff.update');
+    Route::post('/staff/delete/{id}', [StaffController::class, 'destroy'])->name('staff.destroy');
+
+    // Payment
+    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+    Route::get('/payments/create', [PaymentController::class, 'create'])->name('payments.create');
+    Route::post('/payments/store', [PaymentController::class, 'store'])->name('payments.store');
+    Route::get('/payments/pay/{id}', [PaymentController::class, 'pay'])->name('payments.pay');
+    Route::post('/payments/process/{id}', [PaymentController::class, 'processPayment'])->name('payments.process');
+
+    // Notifications
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/',            [\App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+        Route::post('{id}/read',   [\App\Http\Controllers\NotificationController::class, 'markRead'])->name('read');
+        Route::post('read-all',    [\App\Http\Controllers\NotificationController::class, 'markAllRead'])->name('read-all');
+        Route::delete('{id}',      [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('destroy');
+    });
+
+    // File Manager
+    Route::prefix('files')->name('file.')->group(function () {
+        Route::get('/',            [\App\Http\Controllers\FileManagerController::class, 'index'])->name('index');
+        Route::post('upload',      [\App\Http\Controllers\FileManagerController::class, 'upload'])->name('upload');
+        Route::get('{id}/serve',   [\App\Http\Controllers\FileManagerController::class, 'serve'])->name('serve');
+        Route::delete('{id}',      [\App\Http\Controllers\FileManagerController::class, 'destroy'])->name('destroy');
+    });
+
+    // Two-Factor Authentication
+    Route::prefix('two-factor')->name('two-factor.')->group(function () {
+        Route::get('challenge',    [\App\Http\Controllers\TwoFactorController::class, 'showChallenge'])->name('challenge');
+        Route::post('challenge',   [\App\Http\Controllers\TwoFactorController::class, 'verifyChallenge'])->name('challenge.verify');
+        Route::get('setup',        [\App\Http\Controllers\TwoFactorController::class, 'showSetup'])->name('setup');
+        Route::post('disable',     [\App\Http\Controllers\TwoFactorController::class, 'disable'])->name('disable');
+    });
+
+    // ── ADMISSIONS ───────────────────────────────────────────────────────────
+    Route::prefix('admissions')->name('admissions.')->group(function () {
+        Route::get('/',              [AdmissionController::class, 'index'])->name('index');
+        Route::get('/create',        [AdmissionController::class, 'create'])->name('create');
+        Route::post('/',             [AdmissionController::class, 'store'])->name('store');
+        Route::get('/{id}',          [AdmissionController::class, 'show'])->name('show');
+        Route::post('/{id}/review',  [AdmissionController::class, 'review'])->name('review');
+        Route::post('/{id}/enroll',  [AdmissionController::class, 'enroll'])->name('enroll');
+        Route::delete('/{id}',       [AdmissionController::class, 'destroy'])->name('destroy');
+    });
+
+    // ── STUDENT DOCUMENTS ────────────────────────────────────────────────────
+    Route::prefix('students/{studentId}/documents')->name('student.documents.')->group(function () {
+        Route::post('/',         [StudentDocumentController::class, 'store'])->name('store');
+        Route::post('/{id}/verify', [StudentDocumentController::class, 'verify'])->name('verify');
+        Route::delete('/{id}',   [StudentDocumentController::class, 'destroy'])->name('destroy');
+    });
+
+    // ── MEDICAL RECORDS ──────────────────────────────────────────────────────
+    Route::post('students/{studentId}/medical', [MedicalRecordController::class, 'upsert'])->name('student.medical.upsert');
+
+    // ── EMERGENCY CONTACTS ───────────────────────────────────────────────────
+    Route::prefix('students/{studentId}/contacts')->name('student.contacts.')->group(function () {
+        Route::post('/',         [EmergencyContactController::class, 'store'])->name('store');
+        Route::put('/{id}',      [EmergencyContactController::class, 'update'])->name('update');
+        Route::delete('/{id}',   [EmergencyContactController::class, 'destroy'])->name('destroy');
+    });
+
+    // ── DISCIPLINARY RECORDS ─────────────────────────────────────────────────
+    Route::prefix('students/{studentId}/discipline')->name('student.discipline.')->group(function () {
+        Route::post('/',         [DisciplinaryRecordController::class, 'store'])->name('store');
+    });
+    Route::post('discipline/{id}/resolve', [DisciplinaryRecordController::class, 'resolve'])->name('student.discipline.resolve');
+    Route::delete('discipline/{id}',       [DisciplinaryRecordController::class, 'destroy'])->name('student.discipline.destroy');
+
+    // ── HOUSE ASSIGNMENTS ────────────────────────────────────────────────────
+    Route::post('students/{studentId}/house',   [HouseAssignmentController::class, 'store'])->name('student.house.store');
+    Route::delete('house/{id}',                 [HouseAssignmentController::class, 'destroy'])->name('student.house.destroy');
+
+    // ── SCHOLARSHIPS ─────────────────────────────────────────────────────────
+    Route::post('students/{studentId}/scholarships',     [ScholarshipController::class, 'store'])->name('student.scholarships.store');
+    Route::put('scholarships/{id}',                       [ScholarshipController::class, 'update'])->name('student.scholarships.update');
+    Route::delete('scholarships/{id}',                    [ScholarshipController::class, 'destroy'])->name('student.scholarships.destroy');
+
+    // ── TRANSFERS ────────────────────────────────────────────────────────────
+    Route::get('transfers',                                    [StudentTransferController::class, 'index'])->name('student.transfers.index');
+    Route::get('students/{studentId}/transfer/create',         [StudentTransferController::class, 'create'])->name('student.transfer.create');
+    Route::post('students/{studentId}/transfer',               [StudentTransferController::class, 'store'])->name('student.transfer.store');
+    Route::post('transfers/{id}/approve',                      [StudentTransferController::class, 'approve'])->name('student.transfer.approve');
+    Route::delete('transfers/{id}',                            [StudentTransferController::class, 'destroy'])->name('student.transfer.destroy');
+
+    // ── STUDENT ID CARDS ─────────────────────────────────────────────────────
+    Route::get('students/{studentId}/id-card',   [StudentIdCardController::class, 'generate'])->name('student.id-card');
+    Route::post('students/id-cards/bulk',         [StudentIdCardController::class, 'bulkGenerate'])->name('student.id-card.bulk');
+
+    // ── GRADUATION / STATUS MANAGEMENT ───────────────────────────────────────
+    Route::get('graduation',               [GraduationController::class, 'index'])->name('students.graduation.index');
+    Route::post('graduation/{id}/process', [GraduationController::class, 'process'])->name('students.graduation.process');
+    Route::post('graduation/bulk',         [GraduationController::class, 'bulkGraduate'])->name('students.graduation.bulk');
+    Route::get('alumni',                   [GraduationController::class, 'alumni'])->name('students.alumni');
+
+    // ── ACHIEVEMENTS ─────────────────────────────────────────────────────────
+    Route::post('students/{studentId}/achievements',  [AchievementController::class, 'store'])->name('student.achievements.store');
+    Route::put('achievements/{id}',                   [AchievementController::class, 'update'])->name('student.achievements.update');
+    Route::delete('achievements/{id}',                [AchievementController::class, 'destroy'])->name('student.achievements.destroy');
+    Route::get('achievements/leaderboard',            [AchievementController::class, 'leaderboard'])->name('achievements.leaderboard');
+
+    // ── CERTIFICATE TEMPLATES ─────────────────────────────────────────────────
+    Route::prefix('certificates')->name('certificates.')->group(function () {
+        Route::get('/',         [CertificateController::class, 'index'])->name('index');
+        Route::get('/create',   [CertificateController::class, 'create'])->name('create');
+        Route::post('/',        [CertificateController::class, 'store'])->name('store');
+        Route::get('/{id}/edit',[CertificateController::class, 'edit'])->name('edit');
+        Route::put('/{id}',     [CertificateController::class, 'update'])->name('update');
+        Route::delete('/{id}',  [CertificateController::class, 'destroy'])->name('destroy');
+    });
+
+    // ── CERTIFICATE GENERATION ────────────────────────────────────────────────
+    Route::get('students/{studentId}/certificate',   [CertificateController::class, 'generate'])->name('student.certificate.generate');
+    Route::post('certificates/bulk-generate',        [CertificateController::class, 'bulkGenerate'])->name('certificates.bulk-generate');
+
+    // ── ROLE & PERMISSION MANAGEMENT ────────────────────────────────────────
+    Route::middleware('permission:manage roles')->prefix('roles')->name('roles.')->group(function () {
+        Route::get('/',                         [RoleController::class, 'index'])->name('index');
+        Route::get('/create',                   [RoleController::class, 'create'])->name('create');
+        Route::post('/',                        [RoleController::class, 'store'])->name('store');
+        Route::get('/{role}/edit',              [RoleController::class, 'edit'])->name('edit');
+        Route::put('/{role}',                   [RoleController::class, 'update'])->name('update');
+        Route::delete('/{role}',                [RoleController::class, 'destroy'])->name('destroy');
+        Route::get('/matrix',                   [RoleController::class, 'matrix'])->name('matrix')->withoutMiddleware('permission:manage roles');
+        Route::post('/matrix',                  [RoleController::class, 'matrixUpdate'])->name('matrix.update')->withoutMiddleware('permission:manage roles');
+        Route::get('/users/{user}',             [RoleController::class, 'userRoles'])->name('user-roles');
+        Route::put('/users/{user}',             [RoleController::class, 'updateUserRoles'])->name('user-roles.update');
+    });
 });
