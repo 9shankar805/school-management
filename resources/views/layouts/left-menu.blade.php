@@ -299,14 +299,59 @@
         {{-- ── FINANCE section ── --}}
         @canany(['view invoices', 'create invoices', 'view payments', 'view own invoices'])
         <p class="nav-section-label">Finance</p>
+
+        {{-- Invoices & Payments --}}
         <a href="{{ route('payments.index') }}" class="nav-item {{ request()->is('payments*') ? 'active' : '' }}">
-            <i class="bi bi-credit-card nav-icon"></i> Payments
+            <i class="bi bi-receipt nav-icon"></i> Invoices &amp; Payments
         </a>
         @can('create invoices')
         <a href="{{ route('payments.create') }}" class="nav-item">
-            <i class="bi bi-receipt nav-icon"></i> New Invoice
+            <i class="bi bi-plus-circle nav-icon"></i> New Invoice
         </a>
         @endcan
+
+        {{-- Fee Setup --}}
+        @can('create invoices')
+        <a href="{{ route('finance.categories.index') }}" class="nav-item {{ request()->is('finance/categories*') ? 'active' : '' }}">
+            <i class="bi bi-tags nav-icon"></i> Fee Categories
+        </a>
+        <a href="{{ route('finance.structures.index') }}" class="nav-item {{ request()->is('finance/structures*') ? 'active' : '' }}">
+            <i class="bi bi-layout-text-sidebar nav-icon"></i> Fee Structures
+        </a>
+        <a href="{{ route('finance.discounts.index') }}" class="nav-item {{ request()->is('finance/discounts*') ? 'active' : '' }}">
+            <i class="bi bi-percent nav-icon"></i> Discounts
+        </a>
+        <a href="{{ route('finance.installments.index') }}" class="nav-item {{ request()->is('finance/installments*') ? 'active' : '' }}">
+            <i class="bi bi-calendar-range nav-icon"></i> Installment Plans
+        </a>
+        @endcan
+
+        {{-- Expenses & Income --}}
+        @can('view invoices')
+        <a href="{{ route('finance.expenses.index') }}" class="nav-item {{ request()->is('finance/expenses*') ? 'active' : '' }}">
+            <i class="bi bi-arrow-up-circle nav-icon"></i> Expenses
+        </a>
+        <a href="{{ route('finance.income.index') }}" class="nav-item {{ request()->is('finance/income*') ? 'active' : '' }}">
+            <i class="bi bi-arrow-down-circle nav-icon"></i> Other Income
+        </a>
+        @endcan
+
+        {{-- Accounting --}}
+        @can('view invoices')
+        <a href="{{ route('finance.ledger.index') }}" class="nav-item {{ request()->is('finance/ledger') ? 'active' : '' }}">
+            <i class="bi bi-journal-bookmark nav-icon"></i> Ledger
+        </a>
+        <a href="{{ route('finance.ledger.balance-sheet') }}" class="nav-item {{ request()->is('finance/ledger/balance*') ? 'active' : '' }}">
+            <i class="bi bi-bar-chart-line nav-icon"></i> Balance Sheet
+        </a>
+        <a href="{{ route('finance.ledger.profit-loss') }}" class="nav-item {{ request()->is('finance/ledger/profit*') ? 'active' : '' }}">
+            <i class="bi bi-graph-up-arrow nav-icon"></i> P&amp;L Report
+        </a>
+        <a href="{{ route('finance.reports.index') }}" class="nav-item {{ request()->is('finance/reports*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-spreadsheet nav-icon"></i> Financial Reports
+        </a>
+        @endcan
+
         @endcanany
 
         {{-- ── LIBRARY section ── --}}

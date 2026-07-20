@@ -61,6 +61,11 @@ use App\Http\Controllers\QuestionPaperController;
 use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\QuestionPaperTemplateController;
 use App\Http\Controllers\QuestionApprovalController;
+use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\IncomeController;
+use App\Http\Controllers\LedgerController;
+use App\Http\Controllers\FinanceReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -263,12 +268,98 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/staff/update/{id}', [StaffController::class, 'update'])->name('staff.update');
     Route::post('/staff/delete/{id}', [StaffController::class, 'destroy'])->name('staff.destroy');
 
-    // Payment
-    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
-    Route::get('/payments/create', [PaymentController::class, 'create'])->name('payments.create');
-    Route::post('/payments/store', [PaymentController::class, 'store'])->name('payments.store');
-    Route::get('/payments/pay/{id}', [PaymentController::class, 'pay'])->name('payments.pay');
-    Route::post('/payments/process/{id}', [PaymentController::class, 'processPayment'])->name('payments.process');
+    // ── MODULE 10: FINANCE ────────────────────────────────────────────────────
+
+    // Invoices & Payments (core — kept for backward compat + new features)
+    Route::prefix('payments')->name('payments.')->group(function () {
+        Route::get('/',              [PaymentController::class, 'index'])->name('index');
+        Route::get('/create',        [PaymentController::class, 'create'])->name('create');
+        Route::post('/',             [PaymentController::class, 'store'])->name('store');
+        Route::get('/{id}/pay',      [PaymentController::class, 'pay'])->name('pay');
+        Route::post('/{id}/process', [PaymentController::class, 'processPayment'])->name('process');
+        Route::get('/{id}/edit',     [PaymentController::class, 'edit'])->name('edit');
+        Route::put('/{id}',          [PaymentController::class, 'update'])->name('update');
+        Route::delete('/{id}',       [PaymentController::class, 'destroy'])->name('destroy');
+        Route::get('/receipt/{paymentId}', [PaymentController::class, 'receipt'])->name('receipt');
+    });
+
+    // Backward-compatible old URL aliases
+    Route::get('/payments/pay/{id}',      [PaymentController::class, 'pay'])->name('payments.pay.legacy');
+    Route::post('/payments/process/{id}', [PaymentController::class, 'processPayment'])->name('payments.process.legacy');
+
+    // Fee Categories
+    Route::prefix('finance/categories')->name('finance.categories.')->group(function () {
+        Route::get('/',        [FinanceController::class, 'categoriesIndex'])->name('index');
+        Route::post('/',       [FinanceController::class, 'categoriesStore'])->name('store');
+        Route::put('/{id}',    [FinanceController::class, 'categoriesUpdate'])->name('update');
+        Route::delete('/{id}', [FinanceController::class, 'categoriesDestroy'])->name('destroy');
+    });
+
+    // Fee Structures
+    Route::prefix('finance/structures')->name('finance.structures.')->group(function () {
+        Route::get('/',            [FinanceController::class, 'structuresIndex'])->name('index');
+        Route::get('/create',      [FinanceController::class, 'structuresCreate'])->name('create');
+        Route::post('/',           [FinanceController::class, 'structuresStore'])->name('store');
+        Route::get('/{id}/edit',   [FinanceController::class, 'structuresEdit'])->name('edit');
+        Route::put('/{id}',        [FinanceController::class, 'structuresUpdate'])->name('update');
+        Route::delete('/{id}',     [FinanceController::class, 'structuresDestroy'])->name('destroy');
+        Route::get('/{id}/items',  [FinanceController::class, 'structureItems'])->name('items'); // AJAX
+    });
+
+    // Discounts
+    Route::prefix('finance/discounts')->name('finance.discounts.')->group(function () {
+        Route::get('/',            [FinanceController::class, 'discountsIndex'])->name('index');
+        Route::get('/create',      [FinanceController::class, 'discountsCreate'])->name('create');
+        Route::post('/',           [FinanceController::class, 'discountsStore'])->name('store');
+        Route::put('/{id}',        [FinanceController::class, 'discountsUpdate'])->name('update');
+        Route::delete('/{id}',     [FinanceController::class, 'discountsDestroy'])->name('destroy');
+    });
+
+    // Installment Plans
+    Route::prefix('finance/installments')->name('finance.installments.')->group(function () {
+        Route::get('/',                         [FinanceController::class, 'installmentsIndex'])->name('index');
+        Route::get('/create',                   [FinanceController::class, 'installmentsCreate'])->name('create');
+        Route::post('/',                        [FinanceController::class, 'installmentsStore'])->name('store');
+        Route::get('/{id}',                     [FinanceController::class, 'installmentsShow'])->name('show');
+        Route::delete('/{id}',                  [FinanceController::class, 'installmentsDestroy'])->name('destroy');
+        Route::post('/items/{itemId}/paid',     [FinanceController::class, 'installmentsMarkPaid'])->name('items.paid');
+    });
+
+    // Expenses
+    Route::prefix('finance/expenses')->name('finance.expenses.')->group(function () {
+        Route::get('/',          [ExpenseController::class, 'index'])->name('index');
+        Route::get('/create',    [ExpenseController::class, 'create'])->name('create');
+        Route::post('/',         [ExpenseController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [ExpenseController::class, 'edit'])->name('edit');
+        Route::put('/{id}',      [ExpenseController::class, 'update'])->name('update');
+        Route::delete('/{id}',   [ExpenseController::class, 'destroy'])->name('destroy');
+    });
+
+    // Income
+    Route::prefix('finance/income')->name('finance.income.')->group(function () {
+        Route::get('/',          [IncomeController::class, 'index'])->name('index');
+        Route::get('/create',    [IncomeController::class, 'create'])->name('create');
+        Route::post('/',         [IncomeController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [IncomeController::class, 'edit'])->name('edit');
+        Route::put('/{id}',      [IncomeController::class, 'update'])->name('update');
+        Route::delete('/{id}',   [IncomeController::class, 'destroy'])->name('destroy');
+    });
+
+    // Accounting Ledger & Financial Statements
+    Route::prefix('finance/ledger')->name('finance.ledger.')->group(function () {
+        Route::get('/',             [LedgerController::class, 'index'])->name('index');
+        Route::get('/balance-sheet',[LedgerController::class, 'balanceSheet'])->name('balance-sheet');
+        Route::get('/profit-loss',  [LedgerController::class, 'profitLoss'])->name('profit-loss');
+    });
+
+    // Financial Reports
+    Route::prefix('finance/reports')->name('finance.reports.')->group(function () {
+        Route::get('/',             [FinanceReportController::class, 'index'])->name('index');
+        Route::get('/fee-collection',[FinanceReportController::class, 'feeCollection'])->name('fee-collection');
+        Route::get('/outstanding',  [FinanceReportController::class, 'outstanding'])->name('outstanding');
+        Route::get('/expenses',     [FinanceReportController::class, 'expenseReport'])->name('expenses');
+        Route::get('/income',       [FinanceReportController::class, 'incomeReport'])->name('income');
+    });
 
     // Notifications
     Route::prefix('notifications')->name('notifications.')->group(function () {

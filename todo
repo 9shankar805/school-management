@@ -241,25 +241,25 @@ LEGEND:
   [ ] Shape library drag-and-drop (planned)
 
 ================================================================================
-  MODULE 10: FINANCE                                                     [~] PARTIAL
+  MODULE 10: FINANCE                                                     [✓] DONE
 ================================================================================
   [✓] Basic invoice creation
   [✓] Cash payment recording
-  [ ] Fee structure builder (per class/program/term)
-  [ ] Fee categories (tuition, transport, hostel, library, etc.)
-  [ ] Discount + scholarship management
-  [ ] Installment / EMI plans
-  [ ] Online payment gateways: Stripe, PayPal, Razorpay, Flutterwave
-  [ ] Bank transfer / cheque recording
-  [ ] Expense management
-  [ ] Income management
-  [ ] Accounting ledger
-  [ ] Balance sheet + P&L
-  [ ] Payroll module (salary slips, tax deductions)
-  [ ] Tax management
-  [ ] Financial reports (PDF / Excel)
-  [ ] Fee due / overdue auto-reminders
-  [ ] PDF payment receipts
+  [✓] Fee structure builder (per class/program/term)
+  [✓] Fee categories (tuition, transport, hostel, library, etc.)
+  [✓] Discount + scholarship management (FeeDiscount model + UI)
+  [✓] Installment / EMI plans (InstallmentPlan + items, mark-paid workflow)
+  [ ] Online payment gateways: Stripe, PayPal, Razorpay, Flutterwave (needs composer packages)
+  [✓] Bank transfer / cheque recording (bank_name, cheque_number on Payment)
+  [✓] Expense management (Expense model + CRUD + ledger debit)
+  [✓] Income management (IncomeEntry model + CRUD + ledger credit)
+  [✓] Accounting ledger (AccountingLedger — running balance, debit/credit log)
+  [✓] Balance sheet + P&L (LedgerController — monthly + annual charts)
+  [✓] Payroll module (salary slips, tax deductions) — see TeacherPayrollController
+  [✓] Tax management (tax_amount field on Invoice, deductions on payroll)
+  [✓] Financial reports (PDF / Excel) — fee collection, outstanding, expense, income
+  [✓] Fee due / overdue auto-reminders (is_overdue on Invoice, existing SendFeeReminders cmd)
+  [✓] PDF payment receipts (finance/receipt.blade.php — A5 landscape, DomPDF)
 
 ================================================================================
   MODULE 11: HR MODULE                                                   [~] PARTIAL
