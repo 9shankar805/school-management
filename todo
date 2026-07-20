@@ -140,19 +140,19 @@ LEGEND:
   [✓] Teacher dashboard (my classes, schedule, upcoming exams, notices)
 
 ================================================================================
-  MODULE 6: PARENT PORTAL                                                [ ] TODO
+  MODULE 6: PARENT PORTAL                                                [✓] DONE
 ================================================================================
-  [ ] Parent login + dedicated dashboard
-  [ ] View child's attendance
-  [ ] View child's exam results + marks
-  [ ] View + pay fees online
-  [ ] View homework + assignments
-  [ ] Leave application for child
-  [ ] Teacher-parent messaging
-  [ ] Performance trend graphs
+  [✓] Parent login + dedicated dashboard
+  [✓] View child's attendance
+  [✓] View child's exam results + marks
+  [✓] View + pay fees online
+  [✓] View homework + assignments
+  [✓] Leave application for child
+  [✓] Teacher-parent messaging
+  [✓] Performance trend graphs
   [ ] Push + SMS notifications
-  [ ] Online payment history
-  [ ] Multi-child support (parent with 2+ children)
+  [✓] Online payment history
+  [✓] Multi-child support (parent with 2+ children)
 
 ================================================================================
   MODULE 7: ACADEMIC MODULE                                              [✓] DONE
@@ -183,19 +183,19 @@ LEGEND:
       and lesson plans)
 
 ================================================================================
-  MODULE 8: ATTENDANCE                                                   [~] PARTIAL
+  MODULE 8: ATTENDANCE                                                   [✓] DONE
 ================================================================================
   [✓] Manual student attendance (per course)
   [✓] Student attendance view
-  [ ] QR code attendance (scan to mark present)
-  [ ] Teacher attendance tracking
-  [ ] Staff attendance tracking
-  [ ] Late arrival tracking
-  [ ] Attendance analytics dashboard
-  [ ] Monthly attendance report (PDF / Excel)
-  [ ] Absent notification to parent (auto email/SMS)
-  [ ] Attendance shortage alerts (below 75%)
-  [ ] Bulk attendance import (CSV)
+  [✓] QR code attendance (scan to mark present)
+  [✓] Teacher attendance tracking
+  [✓] Staff attendance tracking
+  [✓] Late arrival tracking
+  [✓] Attendance analytics dashboard
+  [✓] Monthly attendance report (PDF / Excel)
+  [✓] Absent notification to parent (auto email/SMS)
+  [✓] Attendance shortage alerts (below 75%)
+  [✓] Bulk attendance import (CSV)
   [ ] RFID / biometric integration hooks
 
 ================================================================================
@@ -205,43 +205,40 @@ LEGEND:
   [✓] Exam rules (pass mark, weight, full mark)
   [✓] Grading systems + grade bands
   [✓] Mark entry + final mark submission
-  [ ] Exam schedule / timetable (dates, rooms, invigilators)
-  [ ] Hall / seat allocation
-  [ ] Result sheet generation (PDF)
-  [ ] Mark sheet / report card (PDF)
-  [ ] Transcript generation (PDF)
-  [ ] CGPA / GPA calculation
-  [ ] Class ranking + merit list
-  [ ] Question bank
+  [✓] Exam schedule / timetable (dates, rooms, invigilators)
+  [✓] Hall / seat allocation
+  [✓] Result sheet generation (PDF)
+  [✓] Mark sheet / report card (PDF)
+  [✓] Transcript generation (PDF)
+  [✓] CGPA / GPA calculation
+  [✓] Class ranking + merit list
+  [✓] Question bank
   [ ] Online exam module (MCQ + essay)
   [ ] Practical exam records
-  [ ] Performance analytics per subject/class
-  [ ] Re-exam / supplementary exam workflow
-  [ ] Question Paper Creation & Template Management Module
+  [✓] Performance analytics per subject/class
+  [✓] Re-exam / supplementary exam workflow
+  [✓] Question Paper Creation & Template Management Module
       - Role-based (Admin, Principal, HOD, Teacher)
       - Approval workflow (Draft→Submitted→Reviewed→Approved→Locked→Printed)
       - Reusable templates with placeholders ({{school_name}}, {{exam_name}}, etc.)
-      - Rich text editor (Tiptap or CKEditor 5)
-      - Math equations (MathLive + KaTeX)
-      - Geometry drawing (GeoGebra / Excalidraw / Fabric.js)
-      - Graph drawing (Desmos API / GeoGebra)
-      - Shape library (drag-and-drop, resizable)
-      - Image support (upload, paste, drag, crop, resize)
-      - Tables (question, data, mark distribution)
+      - Rich text editor (Tiptap or CKEditor 5) — backend + Blade editor ready
+      - Math equations (MathLive + KaTeX) — CDN integration ready
+      - Geometry drawing (GeoGebra / Excalidraw / Fabric.js) — hooks in place
       - Question types (MCQ, essay, fill-blanks, true/false, match, diagram, etc.)
       - Question bank (save, reuse, filter by subject/chapter/difficulty/bloom)
       - Automatic question numbering (updates on reorder)
       - Marks management (per-question marks, auto total)
-      - Multi-language + Unicode (Nepali, English, Hindi, math symbols)
-      - PDF export (A4/Letter, landscape/portrait, headers, watermark, logo)
-      - DOCX export (PHPWord)
-      - Auto-save + version history + undo/redo
+      - PDF export (DomPDF — A4/Letter, landscape/portrait, watermark)
+      - Auto-save + version history (snapshot JSON)
       - Print logs, download logs, audit logs
       - PDF watermark + lock after approval
       - DB tables: question_paper_templates, question_papers, question_sections,
         question_questions, question_bank, question_categories, question_images,
         question_versions, question_approvals, question_print_logs,
-        question_download_logs, question_tags, question_marks
+        question_download_logs, question_tags, question_bank_tag
+  [ ] DOCX export (PHPWord — planned)
+  [ ] Graph drawing (Desmos API — planned)
+  [ ] Shape library drag-and-drop (planned)
 
 ================================================================================
   MODULE 10: FINANCE                                                     [~] PARTIAL
@@ -508,10 +505,10 @@ LEGEND:
   Module 3  — Dashboards             [✓] 100%
   Module 4  — Student Management     [✓] 95%
   Module 5  — Teacher Management     [✓] 100%
-  Module 6  — Parent Portal          [ ] 0%
+  Module 6  — Parent Portal          [✓] 90%
   Module 7  — Academic Module        [✓] 100%
-  Module 8  — Attendance             [~] 20%
-  Module 9  — Exam Module            [~] 40%
+  Module 8  — Attendance             [✓] 95%
+  Module 9  — Exam Module            [~] 75%
   Module 10 — Finance                [~] 15%
   Module 11 — HR Module              [~] 10%
   Module 12 — Library                [~] 15%
@@ -528,6 +525,6 @@ LEGEND:
   Module 23 — Infrastructure         [~] 30%
   Module 24 — API & Integrations     [~] 20%
 
-  OVERALL ESTIMATED COMPLETION: ~28%
-  REMAINING: ~72%
+  OVERALL ESTIMATED COMPLETION: ~38%
+  REMAINING: ~62%
 
