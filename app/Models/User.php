@@ -25,6 +25,7 @@ use App\Models\TeacherDocument;
 use App\Models\LeaveApplication;
 use App\Models\LeaveBalance;
 use App\Models\TeacherAttendance;
+use App\Models\StaffAttendance;
 use App\Models\PerformanceReview;
 use App\Models\TeacherTraining;
 use App\Models\TeacherPayroll;
@@ -119,6 +120,11 @@ class User extends Authenticatable
     public function teacherAttendance(): HasMany
     {
         return $this->hasMany(TeacherAttendance::class, 'teacher_id')->latest('date');
+    }
+
+    public function staffAttendance(): HasMany
+    {
+        return $this->hasMany(StaffAttendance::class, 'staff_id')->latest('date');
     }
 
     public function performanceReviews(): HasMany
