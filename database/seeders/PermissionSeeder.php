@@ -271,7 +271,15 @@ class PermissionSeeder extends Seeder
         // ------------------------------------------------------------------
         'manage hostel',
         'view hostel',
+        'create hostel',
+        'edit hostel',
+        'delete hostel',
+        'manage hostel rooms',
+        'manage hostel allocations',
         'assign hostel beds',
+        'manage hostel attendance',
+        'manage hostel visitors',
+        'manage hostel maintenance',
 
         // ------------------------------------------------------------------
         // INVENTORY

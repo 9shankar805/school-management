@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\V1\MarkController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\SettingController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\FreeAiController;
+use App\Http\Controllers\Api\V1\AiFeatureController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +32,22 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('login',          [AuthController::class, 'login'])->name('login');
         Route::post('forgot-password',[AuthController::class, 'forgotPassword'])->name('forgot-password');
         Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('reset-password');
+    });
+
+    // AI Chat test endpoint (public for easy testing)
+    Route::post('ai/chat', [FreeAiController::class, 'chat'])->name('ai.chat');
+
+    // Module 19: AI Features
+    Route::prefix('ai-features')->name('ai_features.')->group(function () {
+        Route::post('attendance-analysis', [AiFeatureController::class, 'attendanceAnalysis'])->name('attendance');
+        Route::post('fee-prediction', [AiFeatureController::class, 'feePrediction'])->name('fee');
+        Route::post('performance-prediction', [AiFeatureController::class, 'performancePrediction'])->name('performance');
+        Route::post('chatbot', [AiFeatureController::class, 'chatbot'])->name('chatbot');
+        Route::post('homework-generator', [AiFeatureController::class, 'homeworkGenerator'])->name('homework');
+        Route::post('timetable-optimizer', [AiFeatureController::class, 'timetableOptimizer'])->name('timetable');
+        Route::post('report-summariser', [AiFeatureController::class, 'reportSummariser'])->name('report');
+        Route::post('notice-writer', [AiFeatureController::class, 'noticeWriter'])->name('notice');
+        Route::post('recommend-remedial', [AiFeatureController::class, 'recommendRemedial'])->name('remedial');
     });
 
     // ------------------------------------------------------------------
