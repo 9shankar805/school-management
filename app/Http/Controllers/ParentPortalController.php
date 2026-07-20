@@ -638,9 +638,4 @@ class ParentPortalController extends Controller
 
         return back()->with('status', 'Reply sent.');
     }
-
-    public function adminLinkPage()
-    {
-        return view('parent.admin-link');
-    }
 }

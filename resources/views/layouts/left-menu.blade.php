@@ -17,6 +17,36 @@
             <i class="bi bi-grid-1x2 nav-icon"></i> Dashboard
         </a>
 
+        {{-- ── PARENT PORTAL section ── --}}
+        @role('parent')
+        @php $firstChild = auth()->user()->children->first(); @endphp
+        @if($firstChild)
+        <p class="nav-section-label">My Children</p>
+        <a href="{{ route('parent.attendance', $firstChild->id) }}" class="nav-item {{ request()->is('parent/*/attendance*') ? 'active' : '' }}">
+            <i class="bi bi-calendar2-check nav-icon"></i> Attendance
+        </a>
+        <a href="{{ route('parent.results', $firstChild->id) }}" class="nav-item {{ request()->is('parent/*/results*') ? 'active' : '' }}">
+            <i class="bi bi-clipboard-data nav-icon"></i> Results
+        </a>
+        <a href="{{ route('parent.fees', $firstChild->id) }}" class="nav-item {{ request()->is('parent/*/fees*') ? 'active' : '' }}">
+            <i class="bi bi-credit-card nav-icon"></i> Fees
+        </a>
+        <a href="{{ route('parent.assignments', $firstChild->id) }}" class="nav-item {{ request()->is('parent/*/assignments*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-text nav-icon"></i> Assignments
+        </a>
+        <a href="{{ route('parent.performance', $firstChild->id) }}" class="nav-item {{ request()->is('parent/*/performance*') ? 'active' : '' }}">
+            <i class="bi bi-graph-up nav-icon"></i> Performance
+        </a>
+        <a href="{{ route('parent.leave', $firstChild->id) }}" class="nav-item {{ request()->is('parent/*/leave*') ? 'active' : '' }}">
+            <i class="bi bi-calendar-x nav-icon"></i> Leave
+        </a>
+        <p class="nav-section-label">Messages</p>
+        <a href="{{ route('parent.conversations') }}" class="nav-item {{ request()->is('parent/conversations*') ? 'active' : '' }}">
+            <i class="bi bi-chat-dots nav-icon"></i> Messages
+        </a>
+        @endif
+        @endrole
+
         {{-- ── STUDENT section ── --}}
         @canany(['view students', 'create students'])
         <p class="nav-section-label">Students</p>

@@ -51,6 +51,7 @@ use App\Http\Controllers\TeacherQualificationController;
 use App\Http\Controllers\TeacherTrainingController;
 use App\Http\Controllers\TeacherPayrollController;
 use App\Http\Controllers\PerformanceReviewController;
+use App\Http\Controllers\ParentPortalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -503,6 +504,38 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}',            [\App\Http\Controllers\OnlineClassController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/status',       [\App\Http\Controllers\OnlineClassController::class, 'updateStatus'])->name('status');
     });
+
+    // ── MODULE 6: PARENT PORTAL ───────────────────────────────────────────────
+    Route::prefix('parent')->name('parent.')->middleware('role:parent')->group(function () {
+        // Per-child views
+        Route::get('/{studentId}/attendance', [\App\Http\Controllers\ParentPortalController::class, 'attendance'])->name('attendance');
+        Route::get('/{studentId}/results',    [\App\Http\Controllers\ParentPortalController::class, 'results'])->name('results');
+        Route::get('/{studentId}/fees',       [\App\Http\Controllers\ParentPortalController::class, 'fees'])->name('fees');
+        Route::get('/{studentId}/fees/{invoiceId}/pay', [\App\Http\Controllers\ParentPortalController::class, 'payInvoice'])->name('fees.pay');
+        Route::post('/{studentId}/fees/{invoiceId}/process', [\App\Http\Controllers\ParentPortalController::class, 'processInvoicePayment'])->name('fees.process');
+        Route::get('/{studentId}/assignments', [\App\Http\Controllers\ParentPortalController::class, 'assignments'])->name('assignments');
+        Route::get('/{studentId}/performance', [\App\Http\Controllers\ParentPortalController::class, 'performance'])->name('performance');
+        Route::get('/{studentId}/leave',       [\App\Http\Controllers\ParentPortalController::class, 'leave'])->name('leave');
+        Route::post('/{studentId}/leave',      [\App\Http\Controllers\ParentPortalController::class, 'submitLeave'])->name('leave.submit');
+        Route::post('/{studentId}/leave/{applicationId}/cancel', [\App\Http\Controllers\ParentPortalController::class, 'cancelLeave'])->name('leave.cancel');
+        // Messaging
+        Route::get('/conversations',           [\App\Http\Controllers\ParentPortalController::class, 'conversations'])->name('conversations');
+        Route::get('/conversations/new',       [\App\Http\Controllers\ParentPortalController::class, 'newConversation'])->name('conversation.new');
+        Route::post('/conversations',          [\App\Http\Controllers\ParentPortalController::class, 'storeConversation'])->name('conversation.store');
+        Route::get('/conversations/{id}',      [\App\Http\Controllers\ParentPortalController::class, 'showConversation'])->name('conversation.show');
+        Route::post('/conversations/{id}/reply', [\App\Http\Controllers\ParentPortalController::class, 'sendMessage'])->name('conversation.reply');
+    });
+
+    // Teacher messaging (parent ↔ teacher inbox)
+    Route::get('/teacher/messages',              [\App\Http\Controllers\ParentPortalController::class, 'teacherInbox'])->name('teacher.messages');
+    Route::get('/teacher/messages/{id}',         [\App\Http\Controllers\ParentPortalController::class, 'teacherShowConversation'])->name('teacher.messages.show');
+    Route::post('/teacher/messages/{id}/reply',  [\App\Http\Controllers\ParentPortalController::class, 'teacherReply'])->name('teacher.messages.reply');
+
+    // Admin: link/unlink parent-student
+    Route::get('/admin/parents/link',                            [\App\Http\Controllers\ParentPortalController::class, 'adminLinkPage'])->name('admin.parents.link');
+    Route::get('/admin/parents/search',                          [\App\Http\Controllers\ParentPortalController::class, 'searchStudentsForLink'])->name('admin.parents.search');
+    Route::post('/admin/parents/{parentId}/link',                [\App\Http\Controllers\ParentPortalController::class, 'linkStudent'])->name('admin.parents.link.store');
+    Route::delete('/admin/parents/{parentId}/unlink/{studentId}',[\App\Http\Controllers\ParentPortalController::class, 'unlinkStudent'])->name('admin.parents.unlink');
 
     // ── ROLE & PERMISSION MANAGEMENT ────────────────────────────────────────
     Route::middleware('permission:manage roles')->prefix('roles')->name('roles.')->group(function () {
