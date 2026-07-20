@@ -1,82 +1,140 @@
 @extends('layouts.app')
+
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">@include('layouts.left-menu')</div>
-    <div class="flex-1 p-6 lg:p-8 overflow-auto">
-        <div class="flex flex-wrap justify-between items-start mb-7 gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Hostel Rooms</h1>
-                <div class="flex gap-4 mt-2">
-                    <a href="{{ route('hostel.rooms.index') }}" class="text-sm font-semibold text-indigo-600 border-b-2 border-indigo-600 pb-1">Rooms</a>
-                    <a href="{{ route('hostel.beds.index') }}" class="text-sm font-medium text-slate-500 hover:text-slate-800 pb-1">Beds</a>
-                </div>
-            </div>
-        </div>
-        @if(session('status'))<div class="mb-5 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm"><i class="bi bi-check-circle me-1"></i>{{ session('status') }}</div>@endif
+<div class="container">
+    <div class="row justify-content-start">
+        @include('layouts.left-menu')
+        <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
+            <div class="row pt-2">
+                <div class="col ps-4">
+                    <h1 class="display-6 mb-1"><i class="bi bi-door-closed"></i> Hostel Rooms</h1>
+                    <nav aria-label="breadcrumb" class="mb-3">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('hostel.hostels.index') }}">Hostels</a></li>
+                            <li class="breadcrumb-item active">Rooms</li>
+                        </ol>
+                    </nav>
 
-        @can('manage hostel rooms')
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-6">
-            <p class="text-sm font-semibold text-slate-700 mb-4">Add Room</p>
-            <form method="POST" action="{{ route('hostel.rooms.store') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-                @csrf
-                <div><label class="block text-xs font-medium text-slate-500 mb-1">Hostel *</label>
-                    <select name="hostel_id" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                        @foreach($hostels as $h)<option value="{{ $h->id }}">{{ $h->name }}</option>@endforeach
-                    </select>
-                </div>
-                <div><label class="block text-xs font-medium text-slate-500 mb-1">Room No *</label><input type="text" name="room_number" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"></div>
-                <div><label class="block text-xs font-medium text-slate-500 mb-1">Type *</label>
-                    <select name="room_type" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                        <option value="Non-AC">Non-AC</option><option value="AC">AC</option>
-                    </select>
-                </div>
-                <div><label class="block text-xs font-medium text-slate-500 mb-1">Capacity *</label><input type="number" name="capacity" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"></div>
-                <div><label class="block text-xs font-medium text-slate-500 mb-1">Cost Per Bed *</label>
-                    <div class="flex gap-2">
-                        <input type="number" step="0.01" name="cost_per_bed" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition">Add</button>
+                    @if(session('status'))
+                        <div class="alert alert-success alert-dismissible fade show">{{ session('status') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+                    @endif
+
+                    <div class="row g-4">
+                        {{-- Add Room Form --}}
+                        <div class="col-md-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header fw-semibold">Add Room</div>
+                                <div class="card-body">
+                                    <form method="POST" action="{{ route('hostel.rooms.store') }}">
+                                        @csrf
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Hostel <span class="text-danger">*</span></label>
+                                            <select name="hostel_id" class="form-select" required>
+                                                <option value="">— Select —</option>
+                                                @foreach($hostels as $h)
+                                                    <option value="{{ $h->id }}">{{ $h->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Room Number <span class="text-danger">*</span></label>
+                                            <input type="text" name="room_number" class="form-control" required placeholder="e.g. 101">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Room Type <span class="text-danger">*</span></label>
+                                            <select name="room_type" class="form-select" required>
+                                                <option value="Non-AC">Non-AC</option>
+                                                <option value="AC">AC</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Capacity <span class="text-danger">*</span></label>
+                                            <input type="number" name="capacity" class="form-control" required min="1">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Cost Per Bed ($) <span class="text-danger">*</span></label>
+                                            <input type="number" name="cost_per_bed" class="form-control" required min="0" step="0.01">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Description</label>
+                                            <textarea name="description" class="form-control" rows="2"></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-plus-circle"></i> Add Room</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Rooms Table --}}
+                        <div class="col-md-8">
+                            <div class="card shadow-sm">
+                                <div class="card-body p-0">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr><th>Room</th><th>Hostel</th><th>Type</th><th class="text-center">Capacity</th><th>Fee/Bed</th><th>Actions</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($rooms as $room)
+                                            <tr>
+                                                <td class="fw-semibold">{{ $room->room_number }}</td>
+                                                <td class="small">{{ $room->hostel->name }}</td>
+                                                <td><span class="badge {{ $room->room_type==='AC' ? 'bg-info text-dark' : 'bg-secondary' }}">{{ $room->room_type }}</span></td>
+                                                <td class="text-center">{{ $room->capacity }}</td>
+                                                <td>${{ number_format($room->cost_per_bed,2) }}</td>
+                                                <td>
+                                                    <div class="d-flex gap-1">
+                                                        <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editRoom{{ $room->id }}">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+                                                        <form method="POST" action="{{ route('hostel.rooms.destroy', $room->id) }}" onsubmit="return confirm('Delete room {{ $room->room_number }}?')">
+                                                            @csrf @method('DELETE')
+                                                            <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+
+                                            {{-- Edit modal --}}
+                                            <div class="modal fade" id="editRoom{{ $room->id }}" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <form method="POST" action="{{ route('hostel.rooms.update', $room->id) }}">
+                                                            @csrf @method('PUT')
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Edit Room {{ $room->room_number }}</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <div class="modal-body row g-3">
+                                                                <div class="col-md-6"><label class="form-label">Hostel</label><select name="hostel_id" class="form-select" required>@foreach($hostels as $h)<option value="{{ $h->id }}" @selected($room->hostel_id==$h->id)>{{ $h->name }}</option>@endforeach</select></div>
+                                                                <div class="col-md-6"><label class="form-label">Room Number</label><input type="text" name="room_number" class="form-control" value="{{ $room->room_number }}" required></div>
+                                                                <div class="col-md-4"><label class="form-label">Type</label><select name="room_type" class="form-select" required><option value="Non-AC" @selected($room->room_type==='Non-AC')>Non-AC</option><option value="AC" @selected($room->room_type==='AC')>AC</option></select></div>
+                                                                <div class="col-md-4"><label class="form-label">Capacity</label><input type="number" name="capacity" class="form-control" value="{{ $room->capacity }}" required></div>
+                                                                <div class="col-md-4"><label class="form-label">Cost/Bed ($)</label><input type="number" name="cost_per_bed" class="form-control" value="{{ $room->cost_per_bed }}" step="0.01" required></div>
+                                                                <div class="col-12"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2">{{ $room->description }}</textarea></div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                                <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            @empty
+                                            <tr><td colspan="6" class="text-center text-muted py-4">No rooms yet. Add one on the left.</td></tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </form>
-        </div>
-        @endcan
 
-        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-200 text-sm">
-                    <thead class="bg-slate-50">
-                        <tr>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-700">Hostel</th>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-700">Room No</th>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-700">Type</th>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-700">Capacity</th>
-                            <th class="px-4 py-3 text-left font-semibold text-slate-700">Cost/Bed</th>
-                            <th class="px-4 py-3 text-right font-semibold text-slate-700">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 bg-white">
-                        @forelse($rooms as $r)
-                        <tr class="hover:bg-slate-50">
-                            <td class="px-4 py-3 text-slate-800 font-medium">{{ $r->hostel->name }}</td>
-                            <td class="px-4 py-3 text-slate-600">{{ $r->room_number }}</td>
-                            <td class="px-4 py-3"><span class="px-2 py-1 rounded text-xs {{ $r->room_type=='AC' ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-700' }}">{{ $r->room_type }}</span></td>
-                            <td class="px-4 py-3 text-slate-600">{{ $r->capacity }} beds</td>
-                            <td class="px-4 py-3 text-slate-600">${{ number_format($r->cost_per_bed, 2) }}</td>
-                            <td class="px-4 py-3 text-right">
-                                @can('manage hostel rooms')
-                                <form method="POST" action="{{ route('hostel.rooms.destroy', $r->id) }}" class="inline">
-                                    @csrf @method('DELETE')
-                                    <button class="text-rose-500 hover:text-rose-700" onclick="return confirm('Delete room?')"><i class="bi bi-trash"></i></button>
-                                </form>
-                                @endcan
-                            </td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">No rooms found.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                </div>
             </div>
+            @include('layouts.footer')
         </div>
     </div>
 </div>

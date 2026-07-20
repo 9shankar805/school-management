@@ -805,12 +805,19 @@ Route::middleware(['auth'])->group(function () {
 
     // ── HOSTEL MANAGEMENT (Module 14) ────────────────────────────────────────
     Route::prefix('hostel')->name('hostel.')->group(function () {
-        Route::resource('hostels', \App\Http\Controllers\HostelController::class);
-        Route::resource('rooms', \App\Http\Controllers\HostelRoomController::class);
-        Route::resource('beds', \App\Http\Controllers\HostelBedController::class);
-        Route::resource('allocations', \App\Http\Controllers\HostelAllocationController::class);
-        Route::resource('attendances', \App\Http\Controllers\HostelAttendanceController::class);
-        Route::resource('visitors', \App\Http\Controllers\HostelVisitorController::class);
-        Route::resource('maintenance', \App\Http\Controllers\HostelMaintenanceRequestController::class);
+        Route::resource('hostels',    \App\Http\Controllers\HostelController::class)
+             ->only(['index','store','update','destroy']);
+        Route::resource('rooms',      \App\Http\Controllers\HostelRoomController::class)
+             ->only(['index','store','update','destroy']);
+        Route::resource('beds',       \App\Http\Controllers\HostelBedController::class)
+             ->only(['index','store','update','destroy']);
+        Route::resource('allocations',\App\Http\Controllers\HostelAllocationController::class)
+             ->only(['index','store','update','destroy']);
+        Route::resource('attendances',\App\Http\Controllers\HostelAttendanceController::class)
+             ->only(['index','store']);
+        Route::resource('visitors',   \App\Http\Controllers\HostelVisitorController::class)
+             ->only(['index','store','update','destroy']);
+        Route::resource('maintenance',\App\Http\Controllers\HostelMaintenanceRequestController::class)
+             ->only(['index','store','update','destroy']);
     });
 });

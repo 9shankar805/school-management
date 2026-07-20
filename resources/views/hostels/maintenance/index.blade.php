@@ -1,69 +1,133 @@
 @extends('layouts.app')
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">@include('layouts.left-menu')</div>
-    <div class="flex-1 p-6 lg:p-8 overflow-auto">
-        <h1 class="text-2xl font-bold text-slate-800 tracking-tight mb-7">Maintenance Requests</h1>
-        @if(session('status'))<div class="mb-5 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm"><i class="bi bi-check-circle me-1"></i>{{ session('status') }}</div>@endif
+<div class="container">
+    <div class="row justify-content-start">
+        @include('layouts.left-menu')
+        <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
+            <div class="row pt-2">
+                <div class="col ps-4">
+                    <h1 class="display-6 mb-1"><i class="bi bi-tools"></i> Hostel Maintenance</h1>
+                    <nav aria-label="breadcrumb" class="mb-3">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
+                            <li class="breadcrumb-item"><a href="{{ route('hostel.hostels.index') }}">Hostels</a></li>
+                            <li class="breadcrumb-item active">Maintenance</li>
+                        </ol>
+                    </nav>
+                    @if(session('status'))<div class="alert alert-success alert-dismissible fade show">{{ session('status') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
 
-        @can('manage hostel maintenance')
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-6">
-            <p class="text-sm font-semibold text-slate-700 mb-4">New Request</p>
-            <form method="POST" action="{{ route('hostel.maintenance.store') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-                @csrf
-                <div><label class="block text-xs font-medium text-slate-500 mb-1">Room *</label>
-                    <select name="hostel_room_id" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
-                        @foreach(\App\Models\HostelRoom::with('hostel')->get() as $r)<option value="{{ $r->id }}">{{ $r->hostel->name }} - {{ $r->room_number }}</option>@endforeach
-                    </select>
-                    <!-- controller workaround again -->
-                    <input type="hidden" name="hostel_id" value="1">
-                </div>
-                <div><label class="block text-xs font-medium text-slate-500 mb-1">Issue Type *</label>
-                    <select name="issue_type" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
-                        <option value="Plumbing">Plumbing</option><option value="Electrical">Electrical</option><option value="Carpentry">Carpentry</option><option value="Other">Other</option>
-                    </select>
-                </div>
-                <div><label class="block text-xs font-medium text-slate-500 mb-1">Priority *</label>
-                    <select name="priority" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm">
-                        <option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option>
-                    </select>
-                </div>
-                <div class="md:col-span-3"><label class="block text-xs font-medium text-slate-500 mb-1">Description *</label><input type="text" name="description" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></div>
-                <div><button type="submit" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium">Submit Request</button></div>
-            </form>
-        </div>
-        @endcan
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card shadow-sm">
+                                <div class="card-header fw-semibold">Raise Request</div>
+                                <div class="card-body">
+                                    <form method="POST" action="{{ route('hostel.maintenance.store') }}">
+                                        @csrf
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Hostel <span class="text-danger">*</span></label>
+                                            <select name="hostel_id" id="mHostelSel" class="form-select" required onchange="loadMRooms(this.value)">
+                                                <option value="">— Select —</option>
+                                                @foreach($hostels as $h)
+                                                    <option value="{{ $h->id }}">{{ $h->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Room <span class="text-danger">*</span></label>
+                                            <select name="hostel_room_id" id="mRoomSel" class="form-select" required>
+                                                <option value="">— Select hostel first —</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Issue Type <span class="text-danger">*</span></label>
+                                            <input type="text" name="issue_type" class="form-control" required placeholder="e.g. Plumbing, Electrical">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Priority <span class="text-danger">*</span></label>
+                                            <select name="priority" class="form-select" required>
+                                                <option value="Low">Low</option>
+                                                <option value="Medium">Medium</option>
+                                                <option value="High">High</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
+                                            <textarea name="description" class="form-control" rows="3" required></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-warning btn-sm w-100"><i class="bi bi-exclamation-triangle"></i> Raise Request</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            @forelse($requests as $r)
-            <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
-                <div class="flex justify-between items-start mb-2">
-                    <span class="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-full {{ $r->priority=='High' ? 'bg-rose-100 text-rose-700' : ($r->priority=='Medium' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700') }}">{{ $r->priority }}</span>
-                    <span class="text-xs text-slate-500">{{ $r->created_at->diffForHumans() }}</span>
-                </div>
-                <h4 class="font-bold text-slate-800">{{ $r->issue_type }} in {{ $r->room->hostel->name }} - {{ $r->room->room_number }}</h4>
-                <p class="text-sm text-slate-600 mt-2 mb-4">{{ $r->description }}</p>
-                
-                <div class="flex items-center justify-between border-t border-slate-100 pt-3">
-                    <span class="text-xs font-medium {{ $r->status=='Pending'?'text-rose-500':($r->status=='In Progress'?'text-amber-500':'text-emerald-500') }}"><i class="bi bi-circle-fill me-1 text-[8px]"></i>{{ $r->status }}</span>
-                    
-                    @can('manage hostel maintenance')
-                    <form method="POST" action="{{ route('hostel.maintenance.update', $r->id) }}" class="flex gap-2">
-                        @csrf @method('PUT')
-                        <select name="status" class="text-xs border border-slate-200 rounded px-2 py-1">
-                            <option value="Pending" {{ $r->status=='Pending'?'selected':'' }}>Pending</option>
-                            <option value="In Progress" {{ $r->status=='In Progress'?'selected':'' }}>In Progress</option>
-                            <option value="Resolved" {{ $r->status=='Resolved'?'selected':'' }}>Resolved</option>
-                        </select>
-                        <button class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded text-xs transition">Update</button>
-                    </form>
-                    @endcan
+                        <div class="col-md-8">
+                            <div class="card shadow-sm">
+                                <div class="card-body p-0">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr><th>Hostel</th><th>Room</th><th>Issue</th><th>Priority</th><th>Status</th><th>Reported</th><th>Actions</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            @forelse($requests as $req)
+                                            <tr>
+                                                <td class="small">{{ $req->hostel->name ?? '—' }}</td>
+                                                <td class="small">Room {{ $req->room->room_number ?? '—' }}</td>
+                                                <td>
+                                                    <div class="fw-semibold small">{{ $req->issue_type }}</div>
+                                                    <div class="text-muted" style="font-size:.72rem">{{ Str::limit($req->description,60) }}</div>
+                                                </td>
+                                                <td>
+                                                    @php $pc=match($req->priority){'High'=>'bg-danger','Medium'=>'bg-warning text-dark',default=>'bg-secondary'}; @endphp
+                                                    <span class="badge {{ $pc }}">{{ $req->priority }}</span>
+                                                </td>
+                                                <td>
+                                                    <form method="POST" action="{{ route('hostel.maintenance.update', $req->id) }}" class="d-flex gap-1">
+                                                        @csrf @method('PUT')
+                                                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" style="width:130px">
+                                                            <option value="Pending"     @selected($req->status==='Pending')>Pending</option>
+                                                            <option value="In Progress" @selected($req->status==='In Progress')>In Progress</option>
+                                                            <option value="Resolved"    @selected($req->status==='Resolved')>Resolved</option>
+                                                        </select>
+                                                    </form>
+                                                </td>
+                                                <td class="small text-muted">{{ $req->reporter?->first_name ?? 'N/A' }}</td>
+                                                <td>
+                                                    <form method="POST" action="{{ route('hostel.maintenance.destroy', $req->id) }}" onsubmit="return confirm('Delete request?')">
+                                                        @csrf @method('DELETE')
+                                                        <button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                            @empty
+                                            <tr><td colspan="7" class="text-center text-muted py-4">No maintenance requests.</td></tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            @empty
-            <div class="col-span-full py-12 text-center text-slate-400 bg-white border border-slate-100 rounded-xl">No maintenance requests.</div>
-            @endforelse
+            @include('layouts.footer')
         </div>
     </div>
 </div>
 @endsection
+@push('scripts')
+<script>
+function loadMRooms(hostelId) {
+    const sel = document.getElementById('mRoomSel');
+    sel.innerHTML = '<option value="">Loading…</option>';
+    if (!hostelId) { sel.innerHTML = '<option value="">— —</option>'; return; }
+    const hostels = @json($hostels->load('rooms'));
+    const hostel = hostels.find(h => h.id == hostelId);
+    sel.innerHTML = '<option value="">— Select Room —</option>';
+    (hostel?.rooms || []).forEach(r => {
+        const o = document.createElement('option');
+        o.value = r.id; o.textContent = 'Room ' + r.room_number;
+        sel.appendChild(o);
+    });
+}
+</script>
+@endpush
