@@ -379,6 +379,96 @@ Route::middleware(['auth'])->group(function () {
     Route::get('students/{studentId}/certificate',   [CertificateController::class, 'generate'])->name('student.certificate.generate');
     Route::post('certificates/bulk-generate',        [CertificateController::class, 'bulkGenerate'])->name('certificates.bulk-generate');
 
+    // ── MODULE 7: ACADEMIC — PROGRAMS ────────────────────────────────────────
+    Route::prefix('programs')->name('programs.')->group(function () {
+        Route::get('/',            [\App\Http\Controllers\ProgramController::class, 'index'])->name('index');
+        Route::post('/',           [\App\Http\Controllers\ProgramController::class, 'store'])->name('store');
+        Route::get('/{id}/edit',   [\App\Http\Controllers\ProgramController::class, 'edit'])->name('edit');
+        Route::put('/{id}',        [\App\Http\Controllers\ProgramController::class, 'update'])->name('update');
+        Route::delete('/{id}',     [\App\Http\Controllers\ProgramController::class, 'destroy'])->name('destroy');
+    });
+
+    // ── MODULE 7: ACADEMIC — TERMS ────────────────────────────────────────────
+    Route::prefix('terms')->name('terms.')->group(function () {
+        Route::get('/',         [\App\Http\Controllers\TermController::class, 'index'])->name('index');
+        Route::post('/',        [\App\Http\Controllers\TermController::class, 'store'])->name('store');
+        Route::put('/{id}',     [\App\Http\Controllers\TermController::class, 'update'])->name('update');
+        Route::delete('/{id}',  [\App\Http\Controllers\TermController::class, 'destroy'])->name('destroy');
+    });
+
+    // ── MODULE 7: ACADEMIC — CURRICULUM ──────────────────────────────────────
+    Route::prefix('curriculums')->name('curriculums.')->group(function () {
+        Route::get('/',                              [\App\Http\Controllers\CurriculumController::class, 'index'])->name('index');
+        Route::get('/create',                        [\App\Http\Controllers\CurriculumController::class, 'create'])->name('create');
+        Route::post('/',                             [\App\Http\Controllers\CurriculumController::class, 'store'])->name('store');
+        Route::get('/{id}',                          [\App\Http\Controllers\CurriculumController::class, 'show'])->name('show');
+        Route::put('/{id}',                          [\App\Http\Controllers\CurriculumController::class, 'update'])->name('update');
+        Route::delete('/{id}',                       [\App\Http\Controllers\CurriculumController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/topics',                  [\App\Http\Controllers\CurriculumController::class, 'storeTopic'])->name('topics.store');
+        Route::delete('/topics/{topicId}',           [\App\Http\Controllers\CurriculumController::class, 'destroyTopic'])->name('topics.destroy');
+    });
+
+    // ── MODULE 7: ACADEMIC — LESSON PLANS ────────────────────────────────────
+    Route::prefix('lesson-plans')->name('lesson-plans.')->group(function () {
+        Route::get('/',            [\App\Http\Controllers\LessonPlanController::class, 'index'])->name('index');
+        Route::get('/create',      [\App\Http\Controllers\LessonPlanController::class, 'create'])->name('create');
+        Route::post('/',           [\App\Http\Controllers\LessonPlanController::class, 'store'])->name('store');
+        Route::get('/{id}',        [\App\Http\Controllers\LessonPlanController::class, 'show'])->name('show');
+        Route::get('/{id}/edit',   [\App\Http\Controllers\LessonPlanController::class, 'edit'])->name('edit');
+        Route::put('/{id}',        [\App\Http\Controllers\LessonPlanController::class, 'update'])->name('update');
+        Route::delete('/{id}',     [\App\Http\Controllers\LessonPlanController::class, 'destroy'])->name('destroy');
+    });
+
+    // ── MODULE 7: ACADEMIC — ADVANCED TIMETABLE ───────────────────────────────
+    Route::get('/routine',                     [\App\Http\Controllers\RoutineController::class, 'index'])->name('routine.index');
+    Route::get('/routine/{routine}/edit',      [\App\Http\Controllers\RoutineController::class, 'edit'])->name('routine.edit');
+    Route::put('/routine/{routine}',           [\App\Http\Controllers\RoutineController::class, 'update'])->name('routine.update');
+    Route::delete('/routine/{routine}',        [\App\Http\Controllers\RoutineController::class, 'destroy'])->name('routine.destroy');
+    Route::get('/routine/teacher-timetable',   [\App\Http\Controllers\RoutineController::class, 'teacherTimetable'])->name('routine.teacher-timetable');
+
+    // ── MODULE 7: ACADEMIC — HOMEWORK ─────────────────────────────────────────
+    Route::prefix('homework')->name('homework.')->group(function () {
+        Route::get('/',                          [\App\Http\Controllers\HomeworkController::class, 'index'])->name('index');
+        Route::get('/create',                    [\App\Http\Controllers\HomeworkController::class, 'create'])->name('create');
+        Route::post('/',                         [\App\Http\Controllers\HomeworkController::class, 'store'])->name('store');
+        Route::get('/{id}',                      [\App\Http\Controllers\HomeworkController::class, 'show'])->name('show');
+        Route::delete('/{id}',                   [\App\Http\Controllers\HomeworkController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/submit',              [\App\Http\Controllers\HomeworkController::class, 'submit'])->name('submit');
+        Route::post('/submissions/{id}/grade',   [\App\Http\Controllers\HomeworkController::class, 'grade'])->name('grade');
+        Route::post('/{id}/toggle-status',       [\App\Http\Controllers\HomeworkController::class, 'toggleStatus'])->name('toggle-status');
+    });
+
+    // ── MODULE 7: ACADEMIC — PROJECTS ─────────────────────────────────────────
+    Route::prefix('projects')->name('projects.')->group(function () {
+        Route::get('/',                          [\App\Http\Controllers\ProjectController::class, 'index'])->name('index');
+        Route::get('/create',                    [\App\Http\Controllers\ProjectController::class, 'create'])->name('create');
+        Route::post('/',                         [\App\Http\Controllers\ProjectController::class, 'store'])->name('store');
+        Route::get('/{id}',                      [\App\Http\Controllers\ProjectController::class, 'show'])->name('show');
+        Route::delete('/{id}',                   [\App\Http\Controllers\ProjectController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/submit',              [\App\Http\Controllers\ProjectController::class, 'submit'])->name('submit');
+        Route::post('/submissions/{id}/grade',   [\App\Http\Controllers\ProjectController::class, 'grade'])->name('grade');
+    });
+
+    // ── MODULE 7: ACADEMIC — STUDY NOTES / LMS-LITE ──────────────────────────
+    Route::prefix('study-notes')->name('study-notes.')->group(function () {
+        Route::get('/',            [\App\Http\Controllers\StudyNoteController::class, 'index'])->name('index');
+        Route::get('/create',      [\App\Http\Controllers\StudyNoteController::class, 'create'])->name('create');
+        Route::post('/',           [\App\Http\Controllers\StudyNoteController::class, 'store'])->name('store');
+        Route::delete('/{id}',     [\App\Http\Controllers\StudyNoteController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/toggle',[\App\Http\Controllers\StudyNoteController::class, 'togglePublish'])->name('toggle');
+    });
+
+    // ── MODULE 7: ACADEMIC — ONLINE CLASSES ───────────────────────────────────
+    Route::prefix('online-classes')->name('online-classes.')->group(function () {
+        Route::get('/',                   [\App\Http\Controllers\OnlineClassController::class, 'index'])->name('index');
+        Route::get('/create',             [\App\Http\Controllers\OnlineClassController::class, 'create'])->name('create');
+        Route::post('/',                  [\App\Http\Controllers\OnlineClassController::class, 'store'])->name('store');
+        Route::get('/{id}/edit',          [\App\Http\Controllers\OnlineClassController::class, 'edit'])->name('edit');
+        Route::put('/{id}',               [\App\Http\Controllers\OnlineClassController::class, 'update'])->name('update');
+        Route::delete('/{id}',            [\App\Http\Controllers\OnlineClassController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/status',       [\App\Http\Controllers\OnlineClassController::class, 'updateStatus'])->name('status');
+    });
+
     // ── ROLE & PERMISSION MANAGEMENT ────────────────────────────────────────
     Route::middleware('permission:manage roles')->prefix('roles')->name('roles.')->group(function () {
         Route::get('/',                         [RoleController::class, 'index'])->name('index');

@@ -1,6 +1,6 @@
 ================================================================================
   SCHOOL MANAGEMENT ERP — MASTER TODO
-  Last updated: 2026-07-19
+  Last updated: 2026-07-20
 ================================================================================
 
 LEGEND:
@@ -155,7 +155,7 @@ LEGEND:
   [ ] Multi-child support (parent with 2+ children)
 
 ================================================================================
-  MODULE 7: ACADEMIC MODULE                                              [~] PARTIAL
+  MODULE 7: ACADEMIC MODULE                                              [✓] DONE
 ================================================================================
   [✓] Academic sessions / years
   [✓] Semesters
@@ -164,17 +164,23 @@ LEGEND:
   [✓] Syllabus management
   [✓] Basic timetable / routines
   [✓] Calendar events (FullCalendar)
-  [ ] Departments module
-  [ ] Programs / curriculum tracks
-  [ ] Curriculum management per grade/program
-  [ ] Lesson plans (teacher planning UI)
-  [ ] Advanced timetable with conflict detection
-  [ ] Homework management with file submission + grading
-  [ ] Projects module
-  [ ] Notes / study materials sharing
-  [ ] Online class integration (Google Meet / Zoom / Teams links)
-  [ ] LMS-lite (content delivery per course)
-  [ ] Terms within semesters
+  [✓] Departments module (CRUD, head assignment, teacher assignments)
+  [✓] Programs / curriculum tracks (levels, duration, linked classes, dept)
+  [✓] Curriculum management per grade/program (topics, objectives, outcomes)
+  [✓] Lesson plans (teacher planning UI — objectives, content, methods, resources)
+  [✓] Advanced timetable with conflict detection (section overlap + teacher
+      double-booking, color-coded grid, teacher/room fields)
+  [✓] Homework management with file submission + grading (teacher assign,
+      student submit/resubmit, grade modal, open/close toggle)
+  [✓] Projects module (individual/group, submission + grading workflow)
+  [✓] Notes / study materials sharing (notes, handouts, references, video links,
+      publish toggle, student download)
+  [✓] Online class integration (Google Meet / Zoom / Teams / custom links,
+      schedule, join button, recording URL, status lifecycle)
+  [✓] LMS-lite (study materials per course, homework, projects, online classes
+      all scoped to course/class — full content delivery layer)
+  [✓] Terms within semesters (term CRUD, date ranges, linked to curriculum topics
+      and lesson plans)
 
 ================================================================================
   MODULE 8: ATTENDANCE                                                   [~] PARTIAL
@@ -211,634 +217,31 @@ LEGEND:
   [ ] Practical exam records
   [ ] Performance analytics per subject/class
   [ ] Re-exam / supplementary exam workflow
-  [ ]Build a Complete Question Paper Creation & Template Management Module
-       Objective
-
-Develop a professional Question Paper Creation & Template Management module for a School ERP. The module should allow teachers of any subject (Mathematics, Science, English, Nepali, Computer, Social Studies, etc.) to create, edit, preview, and export professional question papers.
-
-The system should support both simple text-based papers and advanced mathematical papers with equations, diagrams, geometry, graphs, tables, and images.
-
-User Roles
-Admin
-Principal
-HOD
-Teacher
-
-Permissions should be role-based.
-
-Workflow
-
-Teacher
-
-↓
-
-Choose Exam
-
-↓
-
-Choose Class
-
-↓
-
-Choose Section
-
-↓
-
-Choose Subject
-
-↓
-
-Choose Template
-
-↓
-
-Edit Template
-
-↓
-
-Insert Questions
-
-↓
-
-Preview
-
-↓
-
-Save Draft
-
-↓
-
-Submit for Approval (Optional)
-
-↓
-
-Generate PDF / DOCX
-
-↓
-
-Print
-
-Template Management
-
-Admin can create reusable templates.
-
-Each template contains:
-
-School Header
-School Logo
-School Address
-Exam Name
-Subject
-Class
-Time
-Full Marks
-Pass Marks
-Instructions
-Sections
-Footer
-Signature area
-
-Example
-
-ABC Secondary School
-
-First Terminal Examination
-
-Subject: Mathematics
-
-Class: 10
-
-Time: 3 Hours
-
-Full Marks: 100
-
-Templates should support placeholders like:
-
-{{school_name}}
-
-{{exam_name}}
-
-{{subject}}
-
-{{class}}
-
-{{time}}
-
-{{full_marks}}
-
-{{pass_marks}}
-
-{{date}}
-Rich Text Editor
-
-Teachers should have a modern document editor similar to Google Docs or Microsoft Word.
-
-Toolbar:
-
-Bold
-Italic
-Underline
-Font Size
-Font Family
-Colors
-Alignment
-Lists
-Tables
-Images
-Hyperlinks
-Page Break
-Headers
-Footers
-Page Numbers
-
-Recommended:
-
-Tiptap
-
-or
-
-CKEditor 5
-
-Mathematical Equation Support
-
-Teachers should insert equations visually.
-
-Support
-
-Fractions
-Square roots
-Integrals
-Summation
-Matrices
-Greek symbols
-Superscripts
-Subscripts
-
-Examples
-
-x² + 5x + 6 = 0
-
-∫ x² dx
-
-√144
-
-Σx
-
-πr²
-
-Recommended libraries
-
-MathLive
-
-KaTeX
-
-MathJax
-
-Geometry Drawing
-
-Math teachers should draw:
-
-Triangle
-Circle
-Rectangle
-Square
-Polygon
-Angle
-Line
-Ray
-Arc
-Compass construction
-Coordinate geometry
-Labels
-
-Example
-
-      A
-
-     / \
-
-    /   \
-
-   /_____\
-
-  B       C
-
-Recommended
-
-GeoGebra Integration
-
-or
-
-Excalidraw
-
-or
-
-Konva.js
-
-or
-
-Fabric.js
-
-Graph Drawing
-
-Teachers should create
-
-Coordinate graph
-
-Function graph
-
-Bar graph
-
-Pie chart
-
-Line graph
-
-Examples
-
-y=x²
-
-y=sin(x)
-
-y=mx+c
-
-Recommended
-
-Desmos API
-
-or
-
-GeoGebra API
-
-Shape Library
-
-Teacher can drag-and-drop
-
-Triangle
-Circle
-Cube
-Cuboid
-Cone
-Cylinder
-Sphere
-Number Line
-Coordinate Plane
-Grid
-Protractor
-Compass
-Clock
-Venn Diagram
-Flowchart
-Arrows
-
-All shapes should be resizable.
-
-Image Support
-
-Teacher can
-
-Upload
-
-Copy/Paste
-
-Drag Drop
-
-Resize
-
-Crop
-
-Rotate
-
-Compress
-
-Supported
-
-PNG
-
-JPG
-
-SVG
-
-WEBP
-
-Tables
-
-Teacher can insert
-
-Question tables
-
-Science practical tables
-
-Data tables
-
-Mark distribution tables
-
-Editable rows and columns.
-
-Question Types
-
-Support
-
-Essay
-
-MCQ
-
-Fill in the blanks
-
-True False
-
-Match the following
-
-Short Answer
-
-Long Answer
-
-Diagram Based
-
-Case Study
-
-Programming Question
-
-Practical Question
-
-Numerical Question
-
-Question Bank
-
-Teacher can
-
-Save Question
-
-Reuse Question
-
-Duplicate Question
-
-Import Question
-
-Search Question
-
-Filter
-
-Subject
-
-Chapter
-
-Difficulty
-
-Marks
-
-Bloom Taxonomy
-
-Tags
-
-Question Type
-
-Automatic Question Numbering
-
-Automatically number
-
-1
-
-2
-
-3
-
-4
-
-4.1
-
-4.2
-
-A
-
-B
-
-C
-
-I
-
-II
-
-III
-
-Should update automatically when questions move.
-
-Marks Management
-
-Each question stores
-
-Allocated Marks
-
-Difficulty
-
-Chapter
-
-Outcome
-
-Total marks calculated automatically.
-
-Spell Check
-
-English
-
-Nepali
-
-Hindi
-
-Optional grammar suggestions.
-
-Multi-language
-
-Unicode Support
-
-Nepali
-
-English
-
-Hindi
-
-Mathematical symbols
-
-Mixed language typing.
-
-PDF Generation
-
-Export exactly as preview.
-
-Support
-
-A4
-
-Letter
-
-Landscape
-
-Portrait
-
-Headers
-
-Footers
-
-Watermark
-
-School Logo
-
-Page Numbers
-
-Margins
-
-Print Ready
-
-DOCX Export
-
-Editable Word document.
-
-Auto Save
-
-Every few seconds.
-
-Version history.
-
-Undo
-
-Redo
-
-Approval Workflow
-
-Draft
-
-↓
-
-Submitted
-
-↓
-
-Reviewed
-
-↓
-
-Approved
-
-↓
-
-Locked
-
-↓
-
-Printed
-
-Security
-
-Role Permissions
-
-Print Logs
-
-Download Logs
-
-Version History
-
-Audit Logs
-
-PDF Watermark
-
-Prevent editing after approval
-
-Frontend Tech Stack
-
-React
-
-TypeScript
-
-Tiptap Editor
-
-MathLive
-
-KaTeX
-
-GeoGebra API
-
-Desmos API
-
-Fabric.js (optional)
-
-React DnD
-
-React Hook Form
-
-TanStack Query
-
-Tailwind CSS
-
-Backend Tech Stack
-
-Laravel
-
-MySQL
-
-Redis
-
-Laravel Queues
-
-Storage
-
-PDF Generation
-
-DOMPDF or Browsershot (Puppeteer)
-
-DOCX Generation
-
-PHPWord
-
-Image Processing
-
-Intervention Image
-
-Database Tables
-
-question_paper_templates
-
-question_papers
-
-question_sections
-
-question_questions
-
-question_bank
-
-question_categories
-
-question_images
-
-question_versions
-
-question_approvals
-
-question_print_logs
-
-question_download_logs
-
-question_tags
-
-question_marks
-
-Nice-to-Have Features
-AI-assisted question generation from syllabus or chapter.
-Randomized paper generation from the question bank.
-Automatic answer key generation.
-QR code on each paper for verification.
-Difficulty analysis and mark distribution charts.
-Duplicate question detection.
-Offline editing with synchronization when back online.
-Recommended Tool Stack
-Feature	Recommended Tool
-Rich Text Editor	Tiptap (best for customization)
-Math Equations	MathLive + KaTeX
-Geometry	GeoGebra API
-Graphing	Desmos API (functions) + GeoGebra (geometry)
-Drawing/Annotations	Excalidraw or Fabric.js
-PDF Export	Puppeteer/Chromium (highest fidelity)
-DOCX Export	PHPWord
-Image Editing	Cropper.js
-Drag & Drop	dnd-kit or React DnD
+  [ ] Question Paper Creation & Template Management Module
+      - Role-based (Admin, Principal, HOD, Teacher)
+      - Approval workflow (Draft→Submitted→Reviewed→Approved→Locked→Printed)
+      - Reusable templates with placeholders ({{school_name}}, {{exam_name}}, etc.)
+      - Rich text editor (Tiptap or CKEditor 5)
+      - Math equations (MathLive + KaTeX)
+      - Geometry drawing (GeoGebra / Excalidraw / Fabric.js)
+      - Graph drawing (Desmos API / GeoGebra)
+      - Shape library (drag-and-drop, resizable)
+      - Image support (upload, paste, drag, crop, resize)
+      - Tables (question, data, mark distribution)
+      - Question types (MCQ, essay, fill-blanks, true/false, match, diagram, etc.)
+      - Question bank (save, reuse, filter by subject/chapter/difficulty/bloom)
+      - Automatic question numbering (updates on reorder)
+      - Marks management (per-question marks, auto total)
+      - Multi-language + Unicode (Nepali, English, Hindi, math symbols)
+      - PDF export (A4/Letter, landscape/portrait, headers, watermark, logo)
+      - DOCX export (PHPWord)
+      - Auto-save + version history + undo/redo
+      - Print logs, download logs, audit logs
+      - PDF watermark + lock after approval
+      - DB tables: question_paper_templates, question_papers, question_sections,
+        question_questions, question_bank, question_categories, question_images,
+        question_versions, question_approvals, question_print_logs,
+        question_download_logs, question_tags, question_marks
 
 ================================================================================
   MODULE 10: FINANCE                                                     [~] PARTIAL
@@ -1022,8 +425,17 @@ Drag & Drop	dnd-kit or React DnD
   [✓] two_factor_auth table
   [✓] notifications table (Laravel)
   [✓] jobs + failed_jobs tables (queue)
+  [✓] departments + department_user tables
+  [✓] programs + program_class tables
+  [✓] terms table
+  [✓] curriculums + curriculum_topics tables
+  [✓] lesson_plans table
+  [✓] homeworks + homework_submissions tables
+  [✓] projects + project_submissions tables
+  [✓] study_notes table
+  [✓] online_classes table
+  [✓] routines table extended (teacher_id, room, color)
   [ ] school_id on all existing tables (full multi-tenancy)
-  [ ] departments table
   [ ] fee_structures + fee_categories tables
   [ ] leave_types + leave_applications + leave_balances tables
   [ ] payrolls + salary_slips tables
@@ -1097,7 +509,7 @@ Drag & Drop	dnd-kit or React DnD
   Module 4  — Student Management     [✓] 95%
   Module 5  — Teacher Management     [✓] 100%
   Module 6  — Parent Portal          [ ] 0%
-  Module 7  — Academic Module        [~] 45%
+  Module 7  — Academic Module        [✓] 100%
   Module 8  — Attendance             [~] 20%
   Module 9  — Exam Module            [~] 40%
   Module 10 — Finance                [~] 15%
@@ -1111,10 +523,11 @@ Drag & Drop	dnd-kit or React DnD
   Module 18 — Analytics              [ ] 0%
   Module 19 — AI Features            [ ] 0%
   Module 20 — Modern UI/UX           [ ] 5%
-  Module 21 — Database Architecture  [~] 40%
+  Module 21 — Database Architecture  [~] 60%
   Module 22 — Security               [~] 50%
   Module 23 — Infrastructure         [~] 30%
   Module 24 — API & Integrations     [~] 20%
 
-  OVERALL ESTIMATED COMPLETION: ~18%
-  REMAINING: ~82%
+  OVERALL ESTIMATED COMPLETION: ~28%
+  REMAINING: ~72%
+

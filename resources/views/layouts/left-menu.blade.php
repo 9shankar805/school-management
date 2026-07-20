@@ -41,6 +41,18 @@
         <a href="{{ route('course.student.list.show', auth()->id()) }}" class="nav-item {{ request()->routeIs('course.student.list.show') ? 'active' : '' }}">
             <i class="bi bi-journal-medical nav-icon"></i> My Courses
         </a>
+        <a href="{{ route('homework.index') }}" class="nav-item {{ request()->is('homework*') ? 'active' : '' }}">
+            <i class="bi bi-pencil-square nav-icon"></i> Homework
+        </a>
+        <a href="{{ route('projects.index') }}" class="nav-item {{ request()->is('projects*') ? 'active' : '' }}">
+            <i class="bi bi-folder2-open nav-icon"></i> Projects
+        </a>
+        <a href="{{ route('study-notes.index') }}" class="nav-item {{ request()->is('study-notes*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-text nav-icon"></i> Study Materials
+        </a>
+        <a href="{{ route('online-classes.index') }}" class="nav-item {{ request()->is('online-classes*') ? 'active' : '' }}">
+            <i class="bi bi-camera-video nav-icon"></i> Online Classes
+        </a>
         @if($student_routine_info = \App\Models\Promotion::where('student_id', auth()->id())->latest()->first())
         <a href="{{ route('section.routine.show', ['class_id' => $student_routine_info->class_id, 'section_id' => $student_routine_info->section_id]) }}" class="nav-item">
             <i class="bi bi-calendar4-range nav-icon"></i> Timetable
@@ -72,10 +84,25 @@
         <a href="{{ route('assignment.list.show') }}" class="nav-item {{ request()->is('courses/assignments*') ? 'active' : '' }}">
             <i class="bi bi-file-earmark-text nav-icon"></i> Assignments
         </a>
+        <a href="{{ route('lesson-plans.index') }}" class="nav-item {{ request()->is('lesson-plans*') ? 'active' : '' }}">
+            <i class="bi bi-journal-plus nav-icon"></i> Lesson Plans
+        </a>
+        <a href="{{ route('homework.index') }}" class="nav-item {{ request()->is('homework*') ? 'active' : '' }}">
+            <i class="bi bi-pencil-square nav-icon"></i> Homework
+        </a>
+        <a href="{{ route('projects.index') }}" class="nav-item {{ request()->is('projects*') ? 'active' : '' }}">
+            <i class="bi bi-folder2-open nav-icon"></i> Projects
+        </a>
+        <a href="{{ route('study-notes.index') }}" class="nav-item {{ request()->is('study-notes*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-text nav-icon"></i> Study Materials
+        </a>
+        <a href="{{ route('online-classes.index') }}" class="nav-item {{ request()->is('online-classes*') ? 'active' : '' }}">
+            <i class="bi bi-camera-video nav-icon"></i> Online Classes
+        </a>
         @endrole
 
         {{-- ── ACADEMIC section ── --}}
-        @canany(['view classes', 'view courses', 'view routines', 'view syllabi'])
+        @canany(['view classes', 'view courses', 'view routines', 'view syllabi', 'view academic settings'])
         <p class="nav-section-label">Academic</p>
         @can('view classes')
         <a href="{{ url('classes') }}" class="nav-item {{ request()->is('classes') ? 'active' : '' }}">
@@ -87,8 +114,19 @@
             <i class="bi bi-book nav-icon"></i> Courses
         </a>
         @endcan
+        @can('view academic settings')
+        <a href="{{ route('programs.index') }}" class="nav-item {{ request()->is('programs*') ? 'active' : '' }}">
+            <i class="bi bi-mortarboard nav-icon"></i> Programs
+        </a>
+        <a href="{{ route('terms.index') }}" class="nav-item {{ request()->is('terms*') ? 'active' : '' }}">
+            <i class="bi bi-calendar2-range nav-icon"></i> Terms
+        </a>
+        <a href="{{ route('curriculums.index') }}" class="nav-item {{ request()->is('curriculums*') ? 'active' : '' }}">
+            <i class="bi bi-journal-richtext nav-icon"></i> Curriculum
+        </a>
+        @endcan
         @can('view routines')
-        <a href="{{ route('section.routine.show') }}" class="nav-item {{ request()->is('routine/view') ? 'active' : '' }}">
+        <a href="{{ route('routine.index') }}" class="nav-item {{ request()->is('routine*') ? 'active' : '' }}">
             <i class="bi bi-calendar4-range nav-icon"></i> Timetable
         </a>
         @endcan
@@ -98,6 +136,26 @@
         </a>
         @endcan
         @endcanany
+
+        {{-- ── TEACHING TOOLS (teacher + student) ── --}}
+        @canany(['create lesson plans', 'view lesson plans'])
+        <p class="nav-section-label">Teaching</p>
+        <a href="{{ route('lesson-plans.index') }}" class="nav-item {{ request()->is('lesson-plans*') ? 'active' : '' }}">
+            <i class="bi bi-journal-plus nav-icon"></i> Lesson Plans
+        </a>
+        @endcanany
+        <a href="{{ route('homework.index') }}" class="nav-item {{ request()->is('homework*') ? 'active' : '' }}">
+            <i class="bi bi-pencil-square nav-icon"></i> Homework
+        </a>
+        <a href="{{ route('projects.index') }}" class="nav-item {{ request()->is('projects*') ? 'active' : '' }}">
+            <i class="bi bi-folder2-open nav-icon"></i> Projects
+        </a>
+        <a href="{{ route('study-notes.index') }}" class="nav-item {{ request()->is('study-notes*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-text nav-icon"></i> Study Materials
+        </a>
+        <a href="{{ route('online-classes.index') }}" class="nav-item {{ request()->is('online-classes*') ? 'active' : '' }}">
+            <i class="bi bi-camera-video nav-icon"></i> Online Classes
+        </a>
 
         {{-- ── ATTENDANCE section ── --}}
         @canany(['take attendances', 'view attendances'])

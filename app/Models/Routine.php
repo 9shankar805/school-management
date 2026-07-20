@@ -22,6 +22,9 @@ class Routine extends Model
         'section_id',
         'course_id',
         'session_id',
+        'teacher_id',
+        'room',
+        'color',
     ];
 
     /**
@@ -43,5 +46,12 @@ class Routine extends Model
      */
     public function course() {
         return $this->belongsTo(Course::class, 'course_id');
+    }
+
+    /**
+     * Get the assigned teacher.
+     */
+    public function teacher() {
+        return $this->belongsTo(\App\Models\User::class, 'teacher_id');
     }
 }

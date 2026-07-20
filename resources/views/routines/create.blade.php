@@ -1,104 +1,149 @@
 @extends('layouts.app')
-
 @section('content')
-<div class="container">
-    <div class="row justify-content-start">
-        @include('layouts.left-menu')
-        <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
-            <div class="row pt-2">
-                <div class="col ps-4">
-                    <h1 class="display-6 mb-3"><i class="bi bi-plus"></i> Create Routine</h1>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{route('home')}}">Home</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Create Routine</li>
-                        </ol>
-                    </nav>
-                    @include('session-messages')
-                    <div class="row">
-                        <div class="col-md-5 mb-4">
-                            <div class="p-3 border bg-light shadow-sm">
-                                <form action="{{route('section.routine.store')}}" method="POST">
-                                    @csrf
-                                    <input type="hidden" name="session_id" value="{{$current_school_session_id}}">
-                                    <div>
-                                        <p class="mt-2">Select class:<sup><i class="bi bi-asterisk text-primary"></i></sup></p>
-                                        <select onchange="getSectionsAndCourses(this);" class="form-select" name="class_id" required>
-                                            @isset($classes)
-                                                <option selected disabled>Please select a class</option>
-                                                @foreach ($classes as $school_class)
-                                                <option value="{{$school_class->id}}">{{$school_class->class_name}}</option>
-                                                @endforeach
-                                            @endisset
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <p class="mt-2">Select section:<sup><i class="bi bi-asterisk text-primary"></i></sup></p>
-                                        <select class="form-select" id="section-select" name="section_id" required>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <p class="mt-2">Select course:<sup><i class="bi bi-asterisk text-primary"></i></sup></p>
-                                        <select class="form-select" id="course-select" name="course_id" required>
-                                        </select>
-                                    </div>
-                                    <div class="mt-2">
-                                        <p>Week Day<sup><i class="bi bi-asterisk text-primary"></i></sup></p>
-                                        <select class="form-select" id="course-select" name="weekday" required>
-                                            <option value="1">Monday</option>
-                                            <option value="2">Tuesday</option>
-                                            <option value="3">Wednesday</option>
-                                            <option value="4">Thursday</option>
-                                            <option value="5">Friday</option>
-                                            <option value="6">Saturday</option>
-                                            <option value="7">Sunday</option>
-                                        </select>
-                                    </div>
-                                    <div class="mt-2">
-                                        <label for="inputStarts" class="form-label">Starts<sup><i class="bi bi-asterisk text-primary"></i></sup></label>
-                                        <input type="text" class="form-control" id="inputStarts" name="start" placeholder="09:00am" required>
-                                    </div>
-                                    <div class="mt-2">
-                                        <label for="inputEnds" class="form-label">Ends<sup><i class="bi bi-asterisk text-primary"></i></sup></label>
-                                        <input type="text" class="form-control" id="inputEnds" name="end" placeholder="09:50am" required>
-                                    </div>
-                                    <button type="submit" class="mt-3 btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i> Create</button>
-                                </form>
-                            </div>
+<div class="flex min-h-screen bg-slate-50">
+    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">@include('layouts.left-menu')</div>
+    <div class="flex-1 p-6 lg:p-8 overflow-auto">
+
+        <nav class="text-xs text-slate-400 mb-4">
+            <a href="{{ route('routine.index') }}" class="hover:text-indigo-600">Timetable</a>
+            <span class="mx-1">/</span>
+            <span class="text-slate-600">Add Slot</span>
+        </nav>
+
+        <h1 class="text-2xl font-bold text-slate-800 mb-6">Add Timetable Slot</h1>
+
+        @include('session-messages')
+
+        {{-- Conflict alert --}}
+        @if($errors->has('conflict'))
+        <div class="mb-5 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm flex items-start gap-2">
+            <i class="bi bi-exclamation-triangle-fill mt-0.5"></i>
+            <div>
+                <p class="font-semibold">Scheduling Conflict Detected</p>
+                <p>{{ $errors->first('conflict') }}</p>
+            </div>
+        </div>
+        @endif
+
+        <div class="max-w-2xl bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            <form action="{{ route('section.routine.store') }}" method="POST" class="space-y-4">
+                @csrf
+                <input type="hidden" name="session_id" value="{{ $current_school_session_id }}">
+
+                <div>
+                    <label class="text-xs font-medium text-slate-600 block mb-1">Class <span class="text-rose-400">*</span></label>
+                    <select name="class_id" required onchange="loadSectionsAndCourses(this.value)"
+                            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        <option value="">Select class…</option>
+                        @foreach($classes as $cls)
+                        <option value="{{ $cls->id }}" {{ old('class_id') == $cls->id ? 'selected' : '' }}>{{ $cls->class_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-medium text-slate-600 block mb-1">Section <span class="text-rose-400">*</span></label>
+                        <select name="section_id" id="section-select" required
+                                class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            <option value="">Select class first…</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-600 block mb-1">Course <span class="text-rose-400">*</span></label>
+                        <select name="course_id" id="course-select" required
+                                class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            <option value="">Select class first…</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-medium text-slate-600 block mb-1">Day of Week <span class="text-rose-400">*</span></label>
+                    <select name="weekday" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        @foreach([1=>'Monday',2=>'Tuesday',3=>'Wednesday',4=>'Thursday',5=>'Friday',6=>'Saturday',7=>'Sunday'] as $num => $name)
+                        <option value="{{ $num }}" {{ old('weekday') == $num ? 'selected' : '' }}>{{ $name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-medium text-slate-600 block mb-1">Start Time <span class="text-rose-400">*</span></label>
+                        <input type="time" name="start" value="{{ old('start') }}" required
+                               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-600 block mb-1">End Time <span class="text-rose-400">*</span></label>
+                        <input type="time" name="end" value="{{ old('end') }}" required
+                               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    </div>
+                </div>
+
+                {{-- Teacher (optional) --}}
+                <div>
+                    <label class="text-xs font-medium text-slate-600 block mb-1">Assigned Teacher</label>
+                    <select name="teacher_id" id="teacher-select"
+                            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        <option value="">— None / Auto from course —</option>
+                        @foreach(\App\Models\User::whereHas('roles', fn($q)=>$q->whereIn('name',['teacher','class-teacher']))->orderBy('first_name')->get() as $t)
+                        <option value="{{ $t->id }}" {{ old('teacher_id') == $t->id ? 'selected' : '' }}>{{ $t->full_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-medium text-slate-600 block mb-1">Room / Venue</label>
+                        <input type="text" name="room" value="{{ old('room') }}" placeholder="e.g. Room 101"
+                               class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-slate-600 block mb-1">Slot Color</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" name="color" value="{{ old('color', '#6366f1') }}"
+                                   class="h-9 w-14 rounded-lg border border-slate-200 cursor-pointer p-1">
+                            <span class="text-xs text-slate-400">Timetable color</span>
                         </div>
                     </div>
                 </div>
-            </div>
-            @include('layouts.footer')
+
+                {{-- Conflict info banner --}}
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-700 flex items-start gap-2">
+                    <i class="bi bi-shield-check mt-0.5"></i>
+                    <p>Conflict detection is active. The system will block the slot if this section or teacher is already scheduled at the same time on the selected day.</p>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition">
+                        <i class="bi bi-check2 me-1"></i> Save Slot
+                    </button>
+                    <a href="{{ route('section.routine.show') }}" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-50 transition">Cancel</a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
 <script>
-    function getSectionsAndCourses(obj) {
-        var class_id = obj.options[obj.selectedIndex].value;
+function loadSectionsAndCourses(classId) {
+    if (!classId) return;
+    fetch(`/sections?class_id=${classId}`)
+        .then(r => r.json())
+        .then(data => {
+            const sec = document.getElementById('section-select');
+            sec.innerHTML = '<option value="">Select section…</option>';
+            (data.sections || []).forEach(s => sec.innerHTML += `<option value="${s.id}">${s.section_name}</option>`);
 
-        var url = "{{route('get.sections.courses.by.classId')}}?class_id=" + class_id 
-
-        fetch(url)
-        .then((resp) => resp.json())
-        .then(function(data) {
-            var sectionSelect = document.getElementById('section-select');
-            sectionSelect.options.length = 0;
-            data.sections.unshift({'id': 0,'section_name': 'Please select a section'})
-            data.sections.forEach(function(section, key) {
-                sectionSelect[key] = new Option(section.section_name, section.id);
-            });
-
-            var courseSelect = document.getElementById('course-select');
-            courseSelect.options.length = 0;
-            data.courses.unshift({'id': 0,'course_name': 'Please select a course'})
-            data.courses.forEach(function(course, key) {
-                courseSelect[key] = new Option(course.course_name, course.id);
-            });
-        })
-        .catch(function(error) {
-            console.log(error);
+            const crs = document.getElementById('course-select');
+            crs.innerHTML = '<option value="">Select course…</option>';
+            (data.courses || []).forEach(c => crs.innerHTML += `<option value="${c.id}">${c.course_name}</option>`);
         });
-    }
+}
+
+// Re-populate if old input present (after validation fail)
+@if(old('class_id'))
+loadSectionsAndCourses({{ old('class_id') }});
+@endif
 </script>
 @endsection
