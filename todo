@@ -1,10 +1,10 @@
 ================================================================================
   SCHOOL MANAGEMENT ERP — MASTER TODO
-  Last updated: 2026-07-20
+  Last updated: 2026-07-20 (verified against disk)
 ================================================================================
 
 LEGEND:
-  [✓] Done / complete
+  [✓] Done / complete — verified on disk
   [~] In progress / partial
   [ ] Not started
 
@@ -116,8 +116,8 @@ LEGEND:
   [✓] Behaviour / disciplinary records (severity, type, resolve/unresolve workflow)
   [✓] House / sports-house assignment (per session, assign via profile)
   [✓] Scholarship tracking (merit/need/sports/arts, amount/percentage, status)
-  [ ] Transport allocation (Module 13 dependency)
-  [✓] Hostel allocation (Module 14 dependency)
+  [✓] Transport allocation (Module 13 done — StudentTransport model + routes)
+  [✓] Hostel allocation (Module 14 done — HostelAllocation model + routes)
   [✓] Certificate generation (PDF — A4 landscape, branded, token rendering, bulk)
   [ ] Student mobile app / PWA
 
@@ -199,7 +199,7 @@ LEGEND:
   [ ] RFID / biometric integration hooks
 
 ================================================================================
-  MODULE 9: EXAM MODULE                                                  [~] PARTIAL
+  MODULE 9: EXAM MODULE                                                  [~] 85%
 ================================================================================
   [✓] Exam types + definitions
   [✓] Exam rules (pass mark, weight, full mark)
@@ -213,15 +213,13 @@ LEGEND:
   [✓] CGPA / GPA calculation
   [✓] Class ranking + merit list
   [✓] Question bank
-  [ ] Online exam module (MCQ + essay)
-  [ ] Practical exam records
   [✓] Performance analytics per subject/class
   [✓] Re-exam / supplementary exam workflow
   [✓] Question Paper Creation & Template Management Module
       - Role-based (Admin, Principal, HOD, Teacher)
       - Approval workflow (Draft→Submitted→Reviewed→Approved→Locked→Printed)
       - Reusable templates with placeholders ({{school_name}}, {{exam_name}}, etc.)
-      - Rich text editor (Tiptap or CKEditor 5) — backend + Blade editor ready
+      - Rich text editor (Tiptap / CKEditor 5) — backend + Blade editor ready
       - Math equations (MathLive + KaTeX) — CDN integration ready
       - Geometry drawing (GeoGebra / Excalidraw / Fabric.js) — hooks in place
       - Question types (MCQ, essay, fill-blanks, true/false, match, diagram, etc.)
@@ -229,22 +227,22 @@ LEGEND:
       - Automatic question numbering (updates on reorder)
       - Marks management (per-question marks, auto total)
       - PDF export (DomPDF — A4/Letter, landscape/portrait, watermark)
-      - DOCX export (PHPWord 0.18 — A4/Letter, sections/questions, watermark)
+      - DOCX export (PHPWord 0.18)
       - Auto-save + version history (snapshot JSON)
       - Print logs, download logs, audit logs
-      - PDF watermark + lock after approval
       - QuestionPaperInterface + QuestionBankInterface (DI contracts)
-      - QuestionPaperPolicy (viewAny/view/create/update/delete/submit/review/approve/lock)
+      - QuestionPaperPolicy
       - DB tables: question_paper_templates, question_papers, question_sections,
         question_questions, question_bank, question_categories, question_images,
         question_versions, question_approvals, question_print_logs,
         question_download_logs, question_tags, question_bank_tag
-  [✓] DOCX export (PHPWord 0.18 — exportDocx() in QuestionPaperController, route question-papers.docx)
+  [ ] Online exam module (MCQ + essay)
+  [ ] Practical exam records
   [ ] Graph drawing (Desmos API — planned)
   [ ] Shape library drag-and-drop (planned)
 
 ================================================================================
-  MODULE 10: FINANCE                                                     [~] PARTIAL
+  MODULE 10: FINANCE                                                     [~] 15%
 ================================================================================
   [✓] Basic invoice creation
   [✓] Cash payment recording
@@ -265,7 +263,7 @@ LEGEND:
   [ ] PDF payment receipts
 
 ================================================================================
-  MODULE 11: HR MODULE                                                   [~] PARTIAL
+  MODULE 11: HR MODULE                                                   [~] 10%
 ================================================================================
   [✓] Basic staff CRUD
   [ ] Recruitment / job postings
@@ -286,58 +284,75 @@ LEGEND:
 ================================================================================
   MODULE 12: LIBRARY                                                     [✓] DONE
 ================================================================================
-  [✓] Book catalog CRUD
-  [✓] Book categories / genres
+  [✓] Book catalog CRUD (books table + expanded schema)
+  [✓] Book categories / genres (book_categories table)
   [✓] ISBN + barcode tracking
-  [✓] Book issue workflow (member borrows book)
-  [✓] Book return workflow
-  [✓] Fine calculation for late returns
-  [✓] Book availability / stock tracking
-  [✓] Library member management (students + staff)
-  [✓] QR code scan for issue / return
-  [✓] Digital library / e-books
-  [✓] Library analytics (most issued, overdue list)
-  [✓] Library reports (PDF / Excel)
+  [✓] Book issue workflow — BookIssueController, book_issues table
+  [✓] Book return workflow (processReturn with fine calc)
+  [✓] Fine calculation for late returns (overdue days × fine_per_day)
+  [✓] Book availability / stock tracking (available_qty)
+  [✓] Library member management — LibraryMemberController, library_members table
+  [✓] QR code scan for issue / return (scanLookup JSON endpoint)
+  [✓] Digital library / e-books — EbookController, ebooks table
+  [✓] Library analytics (most issued, overdue list, category charts)
+  [✓] Library reports (PDF + Excel — catalog/issued/overdue/fines/members)
 
 ================================================================================
-  MODULE 13: TRANSPORT                                                   [ ] TODO
+  MODULE 13: TRANSPORT                                                   [✓] DONE
 ================================================================================
-  [ ] Vehicle management (bus, van, etc.)
-  [ ] Driver management
-  [ ] Route management
-  [ ] Route stops
-  [ ] Student transport allocation
-  [ ] GPS live tracking integration
-  [ ] Fuel + maintenance logs
-  [ ] Transport fee integration with Finance
-  [ ] Transport attendance
+  [✓] Vehicle management — VehicleController, vehicles table
+  [✓] Driver management — DriverController, drivers table
+  [✓] Route management — TransportRouteController, transport_routes table
+  [✓] Route stops — route_stops table, inline stop CRUD on route show page
+  [✓] Student transport allocation — StudentTransportController, student_transport table
+  [✓] GPS live tracking integration (updateGps endpoint, lat/lng/timestamp columns)
+  [✓] Fuel logs — FuelLog model, fuel_logs table, inline form on vehicle show
+  [✓] Maintenance logs — MaintenanceLog model, maintenance_logs table
+  [✓] Transport attendance — TransportAttendanceController, transport_attendance table
+  [✓] Transport dashboard (KPIs, alerts, fuel chart, route overview)
+  [✓] Analytics (fleet/fuel/maintenance/attendance charts — ApexCharts)
+  [✓] Reports (PDF + Excel — fleet/drivers/routes/students/fuel/maintenance)
+  [✓] Left-menu Transport section (8 links, permission-gated)
+  [ ] Transport fee integration with Finance module (Finance module pending)
 
 ================================================================================
   MODULE 14: HOSTEL                                                      [✓] DONE
 ================================================================================
-  [✓] Building / block management
-  [✓] Room management
-  [✓] Bed management + allocation
-  [✓] Student hostel allocation
-  [✓] Hostel attendance
-  [✓] Visitor log
-  [✓] Hostel fee integration with Finance
-  [✓] Maintenance requests
-  [✓] Hostel warden management
+  [✓] Building / block management — HostelController, hostels table
+  [✓] Room management — HostelRoomController, hostel_rooms table
+  [✓] Bed management — HostelBedController, hostel_beds table
+  [✓] Student hostel allocation — HostelAllocationController, hostel_allocations table
+      (auto-creates Finance invoice on allocation)
+  [✓] Hostel attendance — HostelAttendanceController, hostel_attendances table
+  [✓] Visitor log — HostelVisitorController, hostel_visitors table
+  [✓] Hostel fee integration with Finance (invoice created on allocation)
+  [✓] Maintenance requests — HostelMaintenanceRequestController, hostel_maintenance_requests table
+  [✓] Hostel warden management (warden_id FK on hostels table, role-based)
+  [✓] All views rewritten in Bootstrap (matching app UI framework)
+  [✓] Left-menu Hostel section (7 links, permission-gated)
 
 ================================================================================
-  MODULE 15: INVENTORY                                                   [ ] TODO
+  MODULE 15: INVENTORY                                                   [~] 30%
 ================================================================================
-  [ ] Asset register
-  [ ] Supplier management
-  [ ] Purchase orders
-  [ ] Consumables stock tracking
-  [ ] Asset maintenance logs
-  [ ] Warehouse / store management
+  [~] Asset register — Asset model + assets migration (not migrated yet)
+  [~] Supplier management — Supplier model + suppliers migration (not migrated yet)
+  [~] Purchase orders — PurchaseOrder + PurchaseOrderItem models + migrations (not migrated)
+  [~] Consumables stock tracking — InventoryItem model + inventory_items migration (not migrated)
+  [~] Stock transactions — StockTransaction model + migration (not migrated)
+  [~] Asset categories — AssetCategory model + migration (not migrated)
+  [~] InventoryController (dashboard + reports scaffold — no views yet)
+  [ ] Asset CRUD views + controller
+  [ ] Supplier CRUD views + controller
+  [ ] Inventory items CRUD + stock in/out views + controller
+  [ ] Purchase order CRUD + receive workflow views + controller
   [ ] Stock shortage alerts
+  [ ] Warehouse / store management
+  [ ] InventoryReportExport (PDF + Excel)
+  [ ] Left-menu Inventory section
+  [ ] Run migrations
 
 ================================================================================
-  MODULE 16: COMMUNICATION                                               [~] PARTIAL
+  MODULE 16: COMMUNICATION                                               [~] 25%
 ================================================================================
   [✓] Notice board (create/view notices)
   [✓] Database notifications (in-app bell — infrastructure done)
@@ -354,7 +369,7 @@ LEGEND:
   [ ] Message templates
 
 ================================================================================
-  MODULE 17: REPORTS                                                     [ ] TODO
+  MODULE 17: REPORTS                                                     [ ] 0%
 ================================================================================
   [ ] Attendance reports (daily, weekly, monthly) — PDF + Excel
   [ ] Fee collection reports — PDF + Excel
@@ -362,14 +377,14 @@ LEGEND:
   [ ] Revenue reports
   [ ] Teacher reports
   [ ] Student reports
-  [ ] Library reports
+  [ ] Library reports (done within Module 12)
   [ ] Payroll reports
   [ ] Exam / result reports
   [ ] Custom report builder
   [ ] Report scheduling (auto-email reports)
 
 ================================================================================
-  MODULE 18: ANALYTICS                                                   [ ] TODO
+  MODULE 18: ANALYTICS                                                   [ ] 0%
 ================================================================================
   [ ] Interactive charts (ApexCharts)
   [ ] Attendance trend analysis
@@ -382,20 +397,22 @@ LEGEND:
   [ ] Custom date-range analytics
 
 ================================================================================
-  MODULE 19: AI FEATURES                                                 [✓] DONE
+  MODULE 19: AI FEATURES                                                 [~] 20%
 ================================================================================
-  [✓] AI attendance pattern analysis
-  [✓] AI fee default prediction
-  [✓] AI student performance prediction
-  [✓] AI chatbot for students/parents
-  [✓] AI homework + question paper generator
-  [✓] AI timetable optimizer
-  [✓] AI report summariser
-  [✓] AI email / notice writer
-  [✓] AI recommendation system (remedial classes)
+  [~] FreeAiController + FreeAiService (scaffolded, no views/routes yet)
+  [~] AiFeatureController + AiFeatureService (scaffolded, no views/routes yet)
+  [ ] AI attendance pattern analysis
+  [ ] AI fee default prediction
+  [ ] AI student performance prediction
+  [ ] AI chatbot for students/parents
+  [ ] AI homework + question paper generator
+  [ ] AI timetable optimizer
+  [ ] AI report summariser
+  [ ] AI email / notice writer
+  [ ] AI recommendation system (remedial classes)
 
 ================================================================================
-  MODULE 20: MODERN UI / UX                                              [ ] TODO
+  MODULE 20: MODERN UI / UX                                              [ ] 5%
 ================================================================================
   [ ] Tailwind CSS 4 + Vite build pipeline
   [ ] Complete UI component library
@@ -415,7 +432,7 @@ LEGEND:
   [ ] Keyboard shortcuts
 
 ================================================================================
-  MODULE 21: DATABASE & ARCHITECTURE GAPS                                [~] PARTIAL
+  MODULE 21: DATABASE & ARCHITECTURE GAPS                                [~] 75%
 ================================================================================
   [✓] personal_access_tokens (Sanctum)
   [✓] settings table (multi-tenant key-value store)
@@ -435,21 +452,23 @@ LEGEND:
   [✓] study_notes table
   [✓] online_classes table
   [✓] routines table extended (teacher_id, room, color)
+  [✓] book_categories + books expanded + library_members + book_issues + ebooks tables
+  [✓] vehicles + drivers + transport_routes + route_stops + student_transport tables
+  [✓] transport_attendance + fuel_logs + maintenance_logs tables
+  [✓] hostels + hostel_rooms + hostel_beds + hostel_allocations tables
+  [✓] hostel_attendances + hostel_visitors + hostel_maintenance_requests tables
+  [~] suppliers + asset_categories + assets + inventory_items tables (migrations created, not run)
+  [~] purchase_orders + purchase_order_items + stock_transactions tables (migrations created, not run)
   [ ] school_id on all existing tables (full multi-tenancy)
   [ ] fee_structures + fee_categories tables
-  [ ] leave_types + leave_applications + leave_balances tables
   [ ] payrolls + salary_slips tables
-  [ ] book_issues + book_returns + book_fines tables
-  [ ] vehicles + routes + stops + student_transport tables
-  [ ] hostels + rooms + beds + hostel_allocations tables
-  [ ] assets + inventory_items + suppliers tables
   [ ] messages + conversations tables (chat)
   [ ] sms_logs + email_logs tables
   [ ] Soft deletes added to all existing models
   [ ] Indexes on all FK columns
 
 ================================================================================
-  MODULE 22: SECURITY                                                    [~] PARTIAL
+  MODULE 22: SECURITY                                                    [~] 50%
 ================================================================================
   [✓] Session-based auth (web)
   [✓] Sanctum token auth (API)
@@ -470,7 +489,7 @@ LEGEND:
   [ ] Security headers middleware (CSP, HSTS, X-Frame-Options)
 
 ================================================================================
-  MODULE 23: INFRASTRUCTURE                                              [~] PARTIAL
+  MODULE 23: INFRASTRUCTURE                                              [~] 30%
 ================================================================================
   [✓] Dockerfile (existing)
   [✓] Database queue driver active
@@ -484,7 +503,7 @@ LEGEND:
   [ ] Backup system (spatie/laravel-backup)
 
 ================================================================================
-  MODULE 24: API & INTEGRATIONS                                          [~] PARTIAL
+  MODULE 24: API & INTEGRATIONS                                          [~] 20%
 ================================================================================
   [✓] /api/v1/ REST API foundation
   [✓] Sanctum token authentication
@@ -500,34 +519,48 @@ LEGEND:
   [ ] Mobile app (React Native / Flutter)
 
 ================================================================================
-  PROGRESS SUMMARY
+  PROGRESS SUMMARY  (verified 2026-07-20)
 ================================================================================
 
-  Module 1  — System Architecture    [✓] COMPLETE
-  Module 2  — User Roles             [✓] COMPLETE
+  Module 1  — System Architecture    [✓] 100%
+  Module 2  — User Roles             [✓] 100%
   Module 3  — Dashboards             [✓] 100%
-  Module 4  — Student Management     [✓] 95%
+  Module 4  — Student Management     [✓] 98%  (only PWA remaining)
   Module 5  — Teacher Management     [✓] 100%
-  Module 6  — Parent Portal          [✓] 90%
+  Module 6  — Parent Portal          [✓] 90%  (SMS/push remaining)
   Module 7  — Academic Module        [✓] 100%
-  Module 8  — Attendance             [✓] 95%
-  Module 9  — Exam Module            [~] 75%
+  Module 8  — Attendance             [✓] 97%  (RFID hooks remaining)
+  Module 9  — Exam Module            [~] 85%  (online exam + practical remaining)
   Module 10 — Finance                [~] 15%
   Module 11 — HR Module              [~] 10%
   Module 12 — Library                [✓] 100%
-  Module 13 — Transport              [ ] 0%
+  Module 13 — Transport              [✓] 95%  (fee integration with Finance pending)
   Module 14 — Hostel                 [✓] 100%
-  Module 15 — Inventory              [ ] 0%
+  Module 15 — Inventory              [~] 30%  (models + migrations only; views/routes/controllers pending)
   Module 16 — Communication          [~] 25%
   Module 17 — Reports                [ ] 0%
   Module 18 — Analytics              [ ] 0%
-  Module 19 — AI Features            [✓] 100%
+  Module 19 — AI Features            [~] 20%  (service classes scaffolded; no views/routes)
   Module 20 — Modern UI/UX           [ ] 5%
-  Module 21 — Database Architecture  [~] 60%
+  Module 21 — Database Architecture  [~] 75%
   Module 22 — Security               [~] 50%
   Module 23 — Infrastructure         [~] 30%
   Module 24 — API & Integrations     [~] 20%
 
-  OVERALL ESTIMATED COMPLETION: ~42%
-  REMAINING: ~58%
+  OVERALL ESTIMATED COMPLETION: ~55%
+  REMAINING: ~45%
+
+================================================================================
+  WHAT NEEDS DOING NEXT (priority order)
+================================================================================
+  1. Module 15 — Finish Inventory: run migrations, build controllers + views + routes
+  2. Module 10 — Finance: fee structures, payment gateways, receipts, reports
+  3. Module 11 — HR: payroll, leave workflow, contracts, salary slips
+  4. Module 16 — Communication: notification UI, bulk announcements, chat
+  5. Module 17 — Reports: cross-module PDF/Excel report center
+  6. Module 18 — Analytics: advanced charts and dashboards
+  7. Module 19 — AI: wire up existing services to views/routes
+  8. Module 9  — Finish online exam + practical records
+  9. Module 22 — Security hardening
+  10. Module 23 — Infrastructure (CI/CD, S3, backups)
 
