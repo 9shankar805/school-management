@@ -323,15 +323,36 @@ LEGEND:
   [ ] Hostel warden management
 
 ================================================================================
-  MODULE 15: INVENTORY                                                   [ ] TODO
+  MODULE 15: INVENTORY                                                   [✓] DONE
 ================================================================================
-  [ ] Asset register
-  [ ] Supplier management
-  [ ] Purchase orders
-  [ ] Consumables stock tracking
-  [ ] Asset maintenance logs
-  [ ] Warehouse / store management
-  [ ] Stock shortage alerts
+  [✓] Asset register (asset_code, category, brand/model, serial, condition,
+      status, purchase price/date, warranty expiry, current value, location,
+      assigned_to, warehouse, supplier, photo upload)
+  [✓] Supplier management (CRUD — contact, email, phone, address, tax no,
+      bank account, status)
+  [✓] Purchase orders (PO number auto-gen, supplier, line items with
+      consumable/asset type, unit price, totals, payment method;
+      workflow: draft→submitted→approved→received→cancelled)
+  [✓] Consumables stock tracking (item_code auto-gen, category, unit,
+      quantity_in_stock, reorder_level, unit_price; stock badge: In/Low/Out;
+      quick adjust-stock modal; auto-increment on PO received)
+  [✓] Asset maintenance logs (type, date, status, cost, vendor, description,
+      findings, next_due_date; inline add/delete on asset show page;
+      auto-sets asset status to under_maintenance when scheduled/in_progress)
+  [✓] Warehouse / store management (CRUD — code, type, location, manager,
+      asset/item counts on index)
+  [✓] Stock shortage alerts (banner on items index for low-stock and
+      out-of-stock counts with one-click filter)
+  [✓] Migrations: suppliers, warehouses, assets, inventory_items,
+      purchase_orders, purchase_order_items, asset_maintenance_logs
+  [✓] Models: Supplier, Warehouse, Asset, InventoryItem, PurchaseOrder,
+      PurchaseOrderItem, AssetMaintenanceLog
+  [✓] Controllers: SupplierController, WarehouseController, AssetController,
+      InventoryItemController, PurchaseOrderController
+  [✓] Blade views: 17 views across 5 sub-modules (index/create/edit/show)
+  [✓] Routes: full inventory route block in web.php
+  [✓] Navigation: Inventory section in left-menu.blade.php (role-gated)
+  [✓] Permissions: 10 granular inventory permissions in PermissionSeeder
 
 ================================================================================
   MODULE 16: COMMUNICATION                                               [~] PARTIAL
@@ -439,7 +460,7 @@ LEGEND:
   [ ] book_issues + book_returns + book_fines tables
   [ ] vehicles + routes + stops + student_transport tables
   [ ] hostels + rooms + beds + hostel_allocations tables
-  [ ] assets + inventory_items + suppliers tables
+  [ ] assets + inventory_items + suppliers + warehouses tables  [✓] DONE (Module 15)
   [ ] messages + conversations tables (chat)
   [ ] sms_logs + email_logs tables
   [ ] Soft deletes added to all existing models
@@ -514,7 +535,7 @@ LEGEND:
   Module 12 — Library                [~] 15%
   Module 13 — Transport              [ ] 0%
   Module 14 — Hostel                 [ ] 0%
-  Module 15 — Inventory              [ ] 0%
+  Module 15 — Inventory                 [✓] 100%
   Module 16 — Communication          [~] 25%
   Module 17 — Reports                [ ] 0%
   Module 18 — Analytics              [ ] 0%
@@ -525,6 +546,6 @@ LEGEND:
   Module 23 — Infrastructure         [~] 30%
   Module 24 — API & Integrations     [~] 20%
 
-  OVERALL ESTIMATED COMPLETION: ~38%
-  REMAINING: ~62%
+  OVERALL ESTIMATED COMPLETION: ~42%
+  REMAINING: ~58%
 

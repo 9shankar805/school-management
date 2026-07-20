@@ -276,9 +276,16 @@ class PermissionSeeder extends Seeder
         // ------------------------------------------------------------------
         // INVENTORY
         // ------------------------------------------------------------------
-        'manage inventory',
-        'view inventory',
-        'create purchase orders',
+        'manage inventory',          // full CRUD: assets, items, warehouses, suppliers
+        'view inventory',            // read-only: asset register + stock list
+        'create purchase orders',    // raise & edit POs
+        'approve purchase orders',   // advance PO status to approved
+        'receive purchase orders',   // mark PO as received (auto-updates stock)
+        'manage suppliers',          // supplier CRUD
+        'manage warehouses',         // warehouse/store CRUD
+        'adjust stock',              // manual stock adjustment without a PO
+        'view asset maintenance',    // read maintenance logs
+        'manage asset maintenance',  // add / delete maintenance logs
 
         // ------------------------------------------------------------------
         // FILES / MEDIA

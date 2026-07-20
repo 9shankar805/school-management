@@ -367,6 +367,30 @@
         @endcan
         @endcanany
 
+        {{-- ── INVENTORY section ── --}}
+        @canany(['view inventory', 'manage inventory', 'create purchase orders'])
+        <p class="nav-section-label">Inventory</p>
+        <a href="{{ route('inventory.assets.index') }}" class="nav-item {{ request()->is('inventory/assets*') ? 'active' : '' }}">
+            <i class="bi bi-clipboard-check nav-icon"></i> Asset Register
+        </a>
+        <a href="{{ route('inventory.items.index') }}" class="nav-item {{ request()->is('inventory/items*') ? 'active' : '' }}">
+            <i class="bi bi-box-seam nav-icon"></i> Consumable Stock
+        </a>
+        @canany(['create purchase orders', 'manage inventory'])
+        <a href="{{ route('inventory.purchase-orders.index') }}" class="nav-item {{ request()->is('inventory/purchase-orders*') ? 'active' : '' }}">
+            <i class="bi bi-cart3 nav-icon"></i> Purchase Orders
+        </a>
+        @endcanany
+        @can('manage inventory')
+        <a href="{{ route('inventory.suppliers.index') }}" class="nav-item {{ request()->is('inventory/suppliers*') ? 'active' : '' }}">
+            <i class="bi bi-truck nav-icon"></i> Suppliers
+        </a>
+        <a href="{{ route('inventory.warehouses.index') }}" class="nav-item {{ request()->is('inventory/warehouses*') ? 'active' : '' }}">
+            <i class="bi bi-building nav-icon"></i> Stores &amp; Warehouses
+        </a>
+        @endcan
+        @endcanany
+
         {{-- ── STAFF / HR section ── --}}
         @canany(['view staff', 'create staff'])
         <p class="nav-section-label">HR & Staff</p>

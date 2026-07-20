@@ -66,6 +66,11 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\IncomeController;
 use App\Http\Controllers\LedgerController;
 use App\Http\Controllers\FinanceReportController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\AssetController;
+use App\Http\Controllers\InventoryItemController;
+use App\Http\Controllers\PurchaseOrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -751,5 +756,64 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/matrix',                  [RoleController::class, 'matrixUpdate'])->name('matrix.update')->withoutMiddleware('permission:manage roles');
         Route::get('/users/{user}',             [RoleController::class, 'userRoles'])->name('user-roles');
         Route::put('/users/{user}',             [RoleController::class, 'updateUserRoles'])->name('user-roles.update');
+    });
+
+    // ── INVENTORY (Module 15) ─────────────────────────────────────────────────
+
+    // Suppliers
+    Route::prefix('inventory/suppliers')->name('inventory.suppliers.')->group(function () {
+        Route::get('/',          [SupplierController::class, 'index'])->name('index');
+        Route::get('/create',    [SupplierController::class, 'create'])->name('create');
+        Route::post('/',         [SupplierController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [SupplierController::class, 'edit'])->name('edit');
+        Route::put('/{id}',      [SupplierController::class, 'update'])->name('update');
+        Route::delete('/{id}',   [SupplierController::class, 'destroy'])->name('destroy');
+    });
+
+    // Stores / Warehouses
+    Route::prefix('inventory/warehouses')->name('inventory.warehouses.')->group(function () {
+        Route::get('/',          [WarehouseController::class, 'index'])->name('index');
+        Route::get('/create',    [WarehouseController::class, 'create'])->name('create');
+        Route::post('/',         [WarehouseController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [WarehouseController::class, 'edit'])->name('edit');
+        Route::put('/{id}',      [WarehouseController::class, 'update'])->name('update');
+        Route::delete('/{id}',   [WarehouseController::class, 'destroy'])->name('destroy');
+    });
+
+    // Assets
+    Route::prefix('inventory/assets')->name('inventory.assets.')->group(function () {
+        Route::get('/',          [AssetController::class, 'index'])->name('index');
+        Route::get('/create',    [AssetController::class, 'create'])->name('create');
+        Route::post('/',         [AssetController::class, 'store'])->name('store');
+        Route::get('/{id}',      [AssetController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [AssetController::class, 'edit'])->name('edit');
+        Route::put('/{id}',      [AssetController::class, 'update'])->name('update');
+        Route::delete('/{id}',   [AssetController::class, 'destroy'])->name('destroy');
+        // Maintenance logs (nested under asset)
+        Route::post('/{assetId}/maintenance',   [AssetController::class, 'storeMaintenance'])->name('maintenance.store');
+        Route::delete('/maintenance/{logId}',   [AssetController::class, 'destroyMaintenance'])->name('maintenance.destroy');
+    });
+
+    // Consumable Stock Items
+    Route::prefix('inventory/items')->name('inventory.items.')->group(function () {
+        Route::get('/',                  [InventoryItemController::class, 'index'])->name('index');
+        Route::get('/create',            [InventoryItemController::class, 'create'])->name('create');
+        Route::post('/',                 [InventoryItemController::class, 'store'])->name('store');
+        Route::get('/{id}/edit',         [InventoryItemController::class, 'edit'])->name('edit');
+        Route::put('/{id}',              [InventoryItemController::class, 'update'])->name('update');
+        Route::delete('/{id}',           [InventoryItemController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/adjust-stock',[InventoryItemController::class, 'adjustStock'])->name('adjust-stock');
+    });
+
+    // Purchase Orders
+    Route::prefix('inventory/purchase-orders')->name('inventory.purchase-orders.')->group(function () {
+        Route::get('/',          [PurchaseOrderController::class, 'index'])->name('index');
+        Route::get('/create',    [PurchaseOrderController::class, 'create'])->name('create');
+        Route::post('/',         [PurchaseOrderController::class, 'store'])->name('store');
+        Route::get('/{id}',      [PurchaseOrderController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [PurchaseOrderController::class, 'edit'])->name('edit');
+        Route::put('/{id}',      [PurchaseOrderController::class, 'update'])->name('update');
+        Route::delete('/{id}',   [PurchaseOrderController::class, 'destroy'])->name('destroy');
+        Route::patch('/{id}/status', [PurchaseOrderController::class, 'updateStatus'])->name('status');
     });
 });
