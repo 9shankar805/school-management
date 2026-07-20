@@ -2,37 +2,32 @@
 
 namespace App\Http\Controllers;
 
+use App\Interfaces\QuestionBankInterface;
+use App\Interfaces\QuestionPaperInterface;
+use App\Interfaces\SchoolClassInterface;
+use App\Interfaces\SchoolSessionInterface;
+use App\Interfaces\SemesterInterface;
 use App\Models\QuestionBank;
 use App\Models\QuestionDownloadLog;
 use App\Models\QuestionPaper;
 use App\Models\QuestionPaperTemplate;
 use App\Models\QuestionPrintLog;
-use App\Repositories\QuestionBankRepository;
-use App\Repositories\QuestionPaperRepository;
+use App\Models\QuestionSection;
 use App\Traits\SchoolSession;
-use App\Interfaces\SchoolSessionInterface;
-use App\Interfaces\SchoolClassInterface;
-use App\Interfaces\SemesterInterface;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class QuestionPaperController extends Controller
 {
     use SchoolSession;
 
-    protected $schoolSessionRepository;
-    protected $schoolClassRepository;
-    protected $semesterRepository;
-
     public function __construct(
-        SchoolSessionInterface $schoolSessionRepository,
-        SchoolClassInterface   $schoolClassRepository,
-        SemesterInterface      $semesterRepository
+        protected SchoolSessionInterface $schoolSessionRepository,
+        protected SchoolClassInterface   $schoolClassRepository,
+        protected SemesterInterface      $semesterRepository,
+        protected QuestionPaperInterface $paperRepo,
+        protected QuestionBankInterface  $bankRepo,
     ) {
-        $this->schoolSessionRepository = $schoolSessionRepository;
-        $this->schoolClassRepository   = $schoolClassRepository;
-        $this->semesterRepository      = $semesterRepository;
         $this->middleware(['auth']);
     }
 
@@ -40,16 +35,15 @@ class QuestionPaperController extends Controller
 
     public function index(Request $request)
     {
-        $this->authorize('view exams');
+        $this->authorize('viewAny', QuestionPaper::class);
 
         $sessionId = $this->getSchoolCurrentSession();
-        $repo      = new QuestionPaperRepository();
 
         $userId = auth()->user()->hasAnyRole(['teacher', 'class-teacher'])
             ? auth()->id()
             : null;
 
-        $papers   = $repo->getAll($sessionId, $userId);
+        $papers   = $this->paperRepo->getAll($sessionId, $userId);
         $statuses = QuestionPaper::STATUSES;
 
         return view('question-papers.index', compact('papers', 'statuses', 'sessionId'));
@@ -59,14 +53,14 @@ class QuestionPaperController extends Controller
 
     public function create()
     {
-        $this->authorize('create exams');
+        $this->authorize('create', QuestionPaper::class);
 
-        $sessionId  = $this->getSchoolCurrentSession();
-        $templates  = QuestionPaperTemplate::where('is_active', true)->orderBy('name')->get();
-        $classes    = $this->schoolClassRepository->getAllBySession($sessionId);
-        $semesters  = $this->semesterRepository->getAll($sessionId);
-        $exams      = \App\Models\Exam::where('session_id', $sessionId)->with('course')->get();
-        $courses    = \App\Models\Course::where('session_id', $sessionId)->orderBy('course_name')->get();
+        $sessionId = $this->getSchoolCurrentSession();
+        $templates = QuestionPaperTemplate::where('is_active', true)->orderBy('name')->get();
+        $classes   = $this->schoolClassRepository->getAllBySession($sessionId);
+        $semesters = $this->semesterRepository->getAll($sessionId);
+        $exams     = \App\Models\Exam::where('session_id', $sessionId)->with('course')->get();
+        $courses   = \App\Models\Course::where('session_id', $sessionId)->orderBy('course_name')->get();
 
         return view('question-papers.create', compact(
             'templates', 'classes', 'semesters', 'exams', 'courses', 'sessionId'
@@ -75,7 +69,7 @@ class QuestionPaperController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorize('create exams');
+        $this->authorize('create', QuestionPaper::class);
 
         $data = $request->validate([
             'title'       => 'required|string|max:255',
@@ -97,8 +91,7 @@ class QuestionPaperController extends Controller
 
         $sessionId = $this->getSchoolCurrentSession();
 
-        $repo  = new QuestionPaperRepository();
-        $paper = $repo->create(array_merge($data, [
+        $paper = $this->paperRepo->create(array_merge($data, [
             'session_id' => $sessionId,
             'created_by' => auth()->id(),
             'status'     => 'draft',
@@ -108,20 +101,25 @@ class QuestionPaperController extends Controller
             ->with('status', 'Paper created. Add sections and questions below.');
     }
 
+    public function show(int $id)
+    {
+        $paper = $this->paperRepo->findById($id);
+        $this->authorize('view', $paper);
+
+        return view('question-papers.show', compact('paper'));
+    }
+
     public function edit(int $id)
     {
-        $this->authorize('create exams');
-
-        $repo      = new QuestionPaperRepository();
-        $bankRepo  = new QuestionBankRepository();
-        $paper     = $repo->findById($id);
+        $paper = $this->paperRepo->findById($id);
+        $this->authorize('update', $paper);
 
         if ($paper->is_locked) {
             return redirect()->route('question-papers.show', $id)
-                ->withError('This paper is locked and cannot be edited.');
+                ->withErrors('This paper is locked and cannot be edited.');
         }
 
-        $subjects  = $bankRepo->getSubjects();
+        $subjects  = $this->bankRepo->getSubjects();
         $bankTypes = QuestionBank::QUESTION_TYPES;
         $bankDiffs = QuestionBank::DIFFICULTIES;
         $blooms    = QuestionBank::BLOOM_LEVELS;
@@ -133,12 +131,11 @@ class QuestionPaperController extends Controller
 
     public function update(Request $request, int $id)
     {
-        $this->authorize('create exams');
-
         $paper = QuestionPaper::findOrFail($id);
+        $this->authorize('update', $paper);
 
         if ($paper->is_locked) {
-            return back()->withError('This paper is locked and cannot be edited.');
+            return back()->withErrors('This paper is locked and cannot be edited.');
         }
 
         $data = $request->validate([
@@ -154,72 +151,62 @@ class QuestionPaperController extends Controller
             'orientation' => 'required|in:portrait,landscape',
         ]);
 
-        (new QuestionPaperRepository())->update($id, $data);
+        $this->paperRepo->update($id, $data);
 
         return back()->with('status', 'Paper details saved.');
     }
 
     public function destroy(int $id)
     {
-        $this->authorize('create exams');
-
         $paper = QuestionPaper::findOrFail($id);
+        $this->authorize('delete', $paper);
+
         if ($paper->is_locked) {
-            return back()->withError('Locked papers cannot be deleted.');
+            return back()->withErrors('Locked papers cannot be deleted.');
         }
 
-        (new QuestionPaperRepository())->delete($id);
+        $this->paperRepo->delete($id);
         return redirect()->route('question-papers.index')->with('status', 'Paper deleted.');
-    }
-
-    public function show(int $id)
-    {
-        $this->authorize('view exams');
-
-        $repo  = new QuestionPaperRepository();
-        $paper = $repo->findById($id);
-
-        return view('question-papers.show', compact('paper'));
     }
 
     // ── Section / Question AJAX endpoints ─────────────────────────────────────
 
     public function addSection(Request $request, int $paperId)
     {
-        $this->authorize('create exams');
+        $this->authorize('create', QuestionPaper::class);
 
-        $data = $request->validate([
+        $data    = $request->validate([
             'title'        => 'required|string|max:100',
             'instructions' => 'nullable|string|max:500',
         ]);
+        $section = $this->paperRepo->addSection($paperId, $data);
 
-        $section = (new QuestionPaperRepository())->addSection($paperId, $data);
         return response()->json(['section' => $section, 'success' => true]);
     }
 
     public function updateSection(Request $request, int $sectionId)
     {
-        $this->authorize('create exams');
+        $this->authorize('create', QuestionPaper::class);
 
-        $data = $request->validate([
+        $data    = $request->validate([
             'title'        => 'required|string|max:100',
             'instructions' => 'nullable|string|max:500',
         ]);
+        $section = $this->paperRepo->updateSection($sectionId, $data);
 
-        $section = (new QuestionPaperRepository())->updateSection($sectionId, $data);
         return response()->json(['section' => $section, 'success' => true]);
     }
 
     public function deleteSection(int $sectionId)
     {
-        $this->authorize('create exams');
-        (new QuestionPaperRepository())->deleteSection($sectionId);
+        $this->authorize('create', QuestionPaper::class);
+        $this->paperRepo->deleteSection($sectionId);
         return response()->json(['success' => true]);
     }
 
     public function addQuestion(Request $request, int $sectionId)
     {
-        $this->authorize('create exams');
+        $this->authorize('create', QuestionPaper::class);
 
         $data = $request->validate([
             'question_type'   => 'required|in:' . implode(',', array_keys(QuestionBank::QUESTION_TYPES)),
@@ -233,15 +220,15 @@ class QuestionPaperController extends Controller
             'bank_id'         => 'nullable|integer|exists:question_bank,id',
         ]);
 
-        $question = (new QuestionPaperRepository())->addQuestion($sectionId, $data);
-        (new QuestionPaperRepository())->renumberQuestions($question->section->paper_id);
+        $question = $this->paperRepo->addQuestion($sectionId, $data);
+        $this->paperRepo->renumberQuestions($question->section->paper_id);
 
         return response()->json(['question' => $question->load('images'), 'success' => true]);
     }
 
     public function updateQuestion(Request $request, int $questionId)
     {
-        $this->authorize('create exams');
+        $this->authorize('create', QuestionPaper::class);
 
         $data = $request->validate([
             'question_text'   => 'required|string',
@@ -252,57 +239,53 @@ class QuestionPaperController extends Controller
             'chapter'         => 'nullable|string|max:100',
         ]);
 
-        $q = (new QuestionPaperRepository())->updateQuestion($questionId, $data);
+        $q = $this->paperRepo->updateQuestion($questionId, $data);
         return response()->json(['question' => $q, 'success' => true]);
     }
 
     public function deleteQuestion(int $questionId)
     {
-        $this->authorize('create exams');
-        (new QuestionPaperRepository())->deleteQuestion($questionId);
+        $this->authorize('create', QuestionPaper::class);
+        $this->paperRepo->deleteQuestion($questionId);
         return response()->json(['success' => true]);
     }
 
     public function reorderSections(Request $request, int $paperId)
     {
-        $this->authorize('create exams');
+        $this->authorize('create', QuestionPaper::class);
         $request->validate(['order' => 'required|array']);
-        (new QuestionPaperRepository())->reorderSections($paperId, $request->order);
+        $this->paperRepo->reorderSections($paperId, $request->order);
         return response()->json(['success' => true]);
     }
 
     public function reorderQuestions(Request $request, int $sectionId)
     {
-        $this->authorize('create exams');
+        $this->authorize('create', QuestionPaper::class);
         $request->validate(['order' => 'required|array']);
-        (new QuestionPaperRepository())->reorderQuestions($sectionId, $request->order);
-        (new QuestionPaperRepository())->renumberQuestions(
-            \App\Models\QuestionSection::find($sectionId)?->paper_id ?? 0
+        $this->paperRepo->reorderQuestions($sectionId, $request->order);
+        $this->paperRepo->renumberQuestions(
+            QuestionSection::find($sectionId)?->paper_id ?? 0
         );
         return response()->json(['success' => true]);
     }
 
-    /** GET /question-papers/{paperId}/bank-search — AJAX search for inserting bank questions */
+    /** GET /question-papers/{paperId}/bank-search — AJAX question-bank picker */
     public function bankSearch(Request $request, int $paperId)
     {
-        $repo      = new QuestionBankRepository();
-        $questions = $repo->search($request->only([
-            'subject', 'chapter', 'question_type', 'difficulty', 'search'
+        $questions = $this->bankRepo->search($request->only([
+            'subject', 'chapter', 'question_type', 'difficulty', 'search',
         ]), 20);
 
         return response()->json($questions);
     }
 
-    // ── PDF & DOCX export ─────────────────────────────────────────────────────
+    // ── PDF export ────────────────────────────────────────────────────────────
 
     public function exportPdf(int $id)
     {
-        $this->authorize('view exams');
+        $paper = $this->paperRepo->findById($id);
+        $this->authorize('view', $paper);
 
-        $repo  = new QuestionPaperRepository();
-        $paper = $repo->findById($id);
-
-        // Log the download
         QuestionDownloadLog::create([
             'paper_id'      => $id,
             'downloaded_by' => auth()->id(),
@@ -310,7 +293,6 @@ class QuestionPaperController extends Controller
             'ip_address'    => request()->ip(),
         ]);
 
-        // Mark as printed if locked
         if ($paper->is_locked) {
             $paper->update(['status' => 'printed']);
             QuestionPrintLog::create([
@@ -321,7 +303,7 @@ class QuestionPaperController extends Controller
             ]);
         }
 
-        $template = $paper->template;
+        $template    = $paper->template;
         $orientation = $paper->orientation ?? 'portrait';
         $paperSize   = $paper->paper_size  ?? 'A4';
 
@@ -336,24 +318,164 @@ class QuestionPaperController extends Controller
         return $pdf->stream("question-paper-{$paper->id}.pdf");
     }
 
+    // ── DOCX export ───────────────────────────────────────────────────────────
+
+    public function exportDocx(int $id)
+    {
+        $paper = $this->paperRepo->findById($id);
+        $this->authorize('view', $paper);
+
+        QuestionDownloadLog::create([
+            'paper_id'      => $id,
+            'downloaded_by' => auth()->id(),
+            'format'        => 'docx',
+            'ip_address'    => request()->ip(),
+        ]);
+
+        $phpWord = new \PhpOffice\PhpWord\PhpWord();
+
+        // ── Page setup ───────────────────────────────────────────────────────
+        $isLandscape = ($paper->orientation ?? 'portrait') === 'landscape';
+        $section = $phpWord->addSection([
+            'orientation'  => $isLandscape ? 'landscape' : 'portrait',
+            'paperSize'    => strtoupper($paper->paper_size ?? 'A4'),
+            'marginTop'    => 720,   // ~1.25 cm in twips
+            'marginBottom' => 720,
+            'marginLeft'   => 1000,
+            'marginRight'  => 1000,
+        ]);
+
+        // ── Font + paragraph styles ──────────────────────────────────────────
+        $titleStyle    = ['name' => 'Arial', 'size' => 14, 'bold' => true, 'color' => '000000'];
+        $headingStyle  = ['name' => 'Arial', 'size' => 12, 'bold' => true];
+        $labelStyle    = ['name' => 'Arial', 'size' => 10, 'bold' => true];
+        $normalStyle   = ['name' => 'Arial', 'size' => 10];
+        $centerPara    = ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER];
+        $boldUnderline = ['name' => 'Arial', 'size' => 10, 'bold' => true, 'underline' => 'single'];
+
+        // ── Header block ─────────────────────────────────────────────────────
+        $template = $paper->template;
+        $schoolName = $template?->school_name ?? config('app.name');
+
+        $section->addText($schoolName, $titleStyle, $centerPara);
+        $section->addText($paper->exam_name ?? 'Examination', $headingStyle, $centerPara);
+
+        // Meta row: Subject | Class | Date | Time | Full Marks | Pass Marks
+        $metaTable = $section->addTable(['borderSize' => 0, 'cellMargin' => 60]);
+        $metaTable->addRow();
+        $metaTable->addCell(3000)->addText('Subject: ' . ($paper->subject ?? '—'), $normalStyle);
+        $metaTable->addCell(3000)->addText('Class: '   . ($paper->class_label ?? '—'), $normalStyle);
+        $metaTable->addCell(3000)->addText('Date: '    . ($paper->exam_date?->format('d M Y') ?? '—'), $normalStyle);
+        $metaTable->addRow();
+        $metaTable->addCell(3000)->addText('Time: '       . ($paper->duration   ?? '—'), $normalStyle);
+        $metaTable->addCell(3000)->addText('Full Marks: ' . ($paper->full_marks  ?? '—'), $normalStyle);
+        $metaTable->addCell(3000)->addText('Pass Marks: ' . ($paper->pass_marks  ?? '—'), $normalStyle);
+
+        $section->addTextBreak(1);
+
+        // Instructions
+        if ($template?->instructions_html) {
+            $section->addText('Instructions:', $boldUnderline);
+            // Strip HTML tags for plain-text DOCX output
+            $section->addText(strip_tags($template->instructions_html), $normalStyle);
+            $section->addTextBreak(1);
+        }
+
+        $section->addLine(['weight' => 1, 'color' => '000000', 'width' => 400, 'height' => 0]);
+        $section->addTextBreak(1);
+
+        // ── Sections & Questions ─────────────────────────────────────────────
+        foreach ($paper->sections as $qSection) {
+            $section->addText(
+                strtoupper($qSection->title) . '   [Total: ' . $qSection->total_marks . ' marks]',
+                $headingStyle
+            );
+
+            if ($qSection->instructions) {
+                $section->addText($qSection->instructions, ['name' => 'Arial', 'size' => 9, 'italic' => true]);
+            }
+
+            $section->addTextBreak(1);
+
+            foreach ($qSection->questions as $q) {
+                $prefix   = $q->numbering ? $q->numbering . '. ' : '';
+                $markText = '  [' . $q->allocated_marks . ' mark' . ($q->allocated_marks != 1 ? 's' : '') . ']';
+
+                // Question text (strip HTML)
+                $section->addText(
+                    $prefix . strip_tags($q->question_text) . $markText,
+                    $normalStyle
+                );
+
+                // MCQ options
+                if ($q->question_type === 'mcq' && ! empty($q->options)) {
+                    $optionLetters = ['a', 'b', 'c', 'd', 'e', 'f'];
+                    foreach (array_values($q->options) as $i => $opt) {
+                        $letter = $optionLetters[$i] ?? ($i + 1);
+                        $section->addText(
+                            '    (' . $letter . ')  ' . strip_tags(is_array($opt) ? ($opt['text'] ?? $opt) : $opt),
+                            $normalStyle
+                        );
+                    }
+                }
+
+                // True/False
+                if ($q->question_type === 'true_false') {
+                    $section->addText('    (a) True     (b) False', $normalStyle);
+                }
+
+                $section->addTextBreak(1);
+            }
+
+            $section->addTextBreak(1);
+        }
+
+        // ── Footer / Signature ────────────────────────────────────────────────
+        if ($template?->signature_name) {
+            $section->addTextBreak(2);
+            $section->addText($template->signature_name,  $labelStyle);
+            $section->addText($template->signature_title ?? '', $normalStyle);
+        }
+
+        // ── Watermark (text box in header) ───────────────────────────────────
+        if ($template?->show_watermark && $template->watermark_text) {
+            $header = $section->addHeader();
+            $header->addText(
+                strtoupper($template->watermark_text),
+                ['name' => 'Arial', 'size' => 60, 'bold' => true, 'color' => 'E0E0E0'],
+                $centerPara
+            );
+        }
+
+        // ── Stream response ───────────────────────────────────────────────────
+        $filename  = 'question-paper-' . $paper->id . '.docx';
+        $writer    = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+        $tmpFile   = tempnam(sys_get_temp_dir(), 'qp_');
+        $writer->save($tmpFile);
+
+        return response()->download($tmpFile, $filename, [
+            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ])->deleteFileAfterSend(true);
+    }
+
     // ── Version history ───────────────────────────────────────────────────────
 
     public function versions(int $id)
     {
-        $this->authorize('view exams');
+        $paper = QuestionPaper::findOrFail($id);
+        $this->authorize('view', $paper);
 
-        $repo     = new QuestionPaperRepository();
-        $paper    = QuestionPaper::findOrFail($id);
-        $versions = $repo->getVersions($id);
+        $versions = $this->paperRepo->getVersions($id);
 
         return view('question-papers.versions', compact('paper', 'versions'));
     }
 
     public function restoreVersion(int $versionId)
     {
-        $this->authorize('create exams');
+        $this->authorize('create', QuestionPaper::class);
 
-        $paper = (new QuestionPaperRepository())->restoreVersion($versionId);
+        $paper = $this->paperRepo->restoreVersion($versionId);
 
         return redirect()->route('question-papers.edit', $paper->id)
             ->with('status', 'Version restored successfully.');

@@ -117,7 +117,7 @@ LEGEND:
   [✓] House / sports-house assignment (per session, assign via profile)
   [✓] Scholarship tracking (merit/need/sports/arts, amount/percentage, status)
   [ ] Transport allocation (Module 13 dependency)
-  [ ] Hostel allocation (Module 14 dependency)
+  [✓] Hostel allocation (Module 14 dependency)
   [✓] Certificate generation (PDF — A4 landscape, branded, token rendering, bulk)
   [ ] Student mobile app / PWA
 
@@ -229,14 +229,17 @@ LEGEND:
       - Automatic question numbering (updates on reorder)
       - Marks management (per-question marks, auto total)
       - PDF export (DomPDF — A4/Letter, landscape/portrait, watermark)
+      - DOCX export (PHPWord 0.18 — A4/Letter, sections/questions, watermark)
       - Auto-save + version history (snapshot JSON)
       - Print logs, download logs, audit logs
       - PDF watermark + lock after approval
+      - QuestionPaperInterface + QuestionBankInterface (DI contracts)
+      - QuestionPaperPolicy (viewAny/view/create/update/delete/submit/review/approve/lock)
       - DB tables: question_paper_templates, question_papers, question_sections,
         question_questions, question_bank, question_categories, question_images,
         question_versions, question_approvals, question_print_logs,
         question_download_logs, question_tags, question_bank_tag
-  [ ] DOCX export (PHPWord — planned)
+  [✓] DOCX export (PHPWord 0.18 — exportDocx() in QuestionPaperController, route question-papers.docx)
   [ ] Graph drawing (Desmos API — planned)
   [ ] Shape library drag-and-drop (planned)
 
@@ -281,20 +284,20 @@ LEGEND:
   [ ] Exit / resignation management
 
 ================================================================================
-  MODULE 12: LIBRARY                                                     [~] PARTIAL
+  MODULE 12: LIBRARY                                                     [✓] DONE
 ================================================================================
   [✓] Book catalog CRUD
-  [ ] Book categories / genres
-  [ ] ISBN + barcode tracking
-  [ ] Book issue workflow (member borrows book)
-  [ ] Book return workflow
-  [ ] Fine calculation for late returns
-  [ ] Book availability / stock tracking
-  [ ] Library member management (students + staff)
-  [ ] QR code scan for issue / return
-  [ ] Digital library / e-books
-  [ ] Library analytics (most issued, overdue list)
-  [ ] Library reports (PDF / Excel)
+  [✓] Book categories / genres
+  [✓] ISBN + barcode tracking
+  [✓] Book issue workflow (member borrows book)
+  [✓] Book return workflow
+  [✓] Fine calculation for late returns
+  [✓] Book availability / stock tracking
+  [✓] Library member management (students + staff)
+  [✓] QR code scan for issue / return
+  [✓] Digital library / e-books
+  [✓] Library analytics (most issued, overdue list)
+  [✓] Library reports (PDF / Excel)
 
 ================================================================================
   MODULE 13: TRANSPORT                                                   [ ] TODO
@@ -310,17 +313,17 @@ LEGEND:
   [ ] Transport attendance
 
 ================================================================================
-  MODULE 14: HOSTEL                                                      [ ] TODO
+  MODULE 14: HOSTEL                                                      [✓] DONE
 ================================================================================
-  [ ] Building / block management
-  [ ] Room management
-  [ ] Bed management + allocation
-  [ ] Student hostel allocation
-  [ ] Hostel attendance
-  [ ] Visitor log
-  [ ] Hostel fee integration with Finance
-  [ ] Maintenance requests
-  [ ] Hostel warden management
+  [✓] Building / block management
+  [✓] Room management
+  [✓] Bed management + allocation
+  [✓] Student hostel allocation
+  [✓] Hostel attendance
+  [✓] Visitor log
+  [✓] Hostel fee integration with Finance
+  [✓] Maintenance requests
+  [✓] Hostel warden management
 
 ================================================================================
   MODULE 15: INVENTORY                                                   [ ] TODO
@@ -511,9 +514,9 @@ LEGEND:
   Module 9  — Exam Module            [~] 75%
   Module 10 — Finance                [~] 15%
   Module 11 — HR Module              [~] 10%
-  Module 12 — Library                [~] 15%
+  Module 12 — Library                [✓] 100%
   Module 13 — Transport              [ ] 0%
-  Module 14 — Hostel                 [ ] 0%
+  Module 14 — Hostel                 [✓] 100%
   Module 15 — Inventory              [ ] 0%
   Module 16 — Communication          [~] 25%
   Module 17 — Reports                [ ] 0%
@@ -525,6 +528,6 @@ LEGEND:
   Module 23 — Infrastructure         [~] 30%
   Module 24 — API & Integrations     [~] 20%
 
-  OVERALL ESTIMATED COMPLETION: ~38%
-  REMAINING: ~62%
+  OVERALL ESTIMATED COMPLETION: ~42%
+  REMAINING: ~58%
 

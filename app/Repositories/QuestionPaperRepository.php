@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Interfaces\QuestionPaperInterface;
 use App\Models\QuestionApproval;
 use App\Models\QuestionPaper;
 use App\Models\QuestionQuestion;
@@ -10,7 +11,7 @@ use App\Models\QuestionVersion;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
-class QuestionPaperRepository
+class QuestionPaperRepository implements QuestionPaperInterface
 {
     // ── CRUD ──────────────────────────────────────────────────────────────────
 

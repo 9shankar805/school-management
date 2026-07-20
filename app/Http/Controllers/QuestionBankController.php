@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Interfaces\QuestionBankInterface;
 use App\Models\QuestionBank;
-use App\Repositories\QuestionBankRepository;
 use Illuminate\Http\Request;
 
 class QuestionBankController extends Controller
 {
-    public function __construct()
+    public function __construct(protected QuestionBankInterface $repo)
     {
         $this->middleware(['auth']);
     }
@@ -17,18 +17,17 @@ class QuestionBankController extends Controller
     {
         $this->authorize('view exams');
 
-        $repo    = new QuestionBankRepository();
         $filters = $request->only(['subject', 'chapter', 'question_type', 'difficulty', 'bloom', 'category_id', 'search']);
 
-        // Role filter — teachers see only their own + others' shared questions
+        // Role filter — teachers see only their own questions
         if (auth()->user()->hasAnyRole(['teacher', 'class-teacher'])) {
             $filters['created_by'] = auth()->id();
         }
 
-        $questions  = $repo->search($filters);
-        $categories = $repo->getAllCategories();
-        $subjects   = $repo->getSubjects();
-        $tags       = $repo->getAllTags();
+        $questions  = $this->repo->search($filters);
+        $categories = $this->repo->getAllCategories();
+        $subjects   = $this->repo->getSubjects();
+        $tags       = $this->repo->getAllTags();
         $types      = QuestionBank::QUESTION_TYPES;
         $diffs      = QuestionBank::DIFFICULTIES;
         $blooms     = QuestionBank::BLOOM_LEVELS;
@@ -43,10 +42,9 @@ class QuestionBankController extends Controller
     {
         $this->authorize('create exams');
 
-        $repo       = new QuestionBankRepository();
-        $categories = $repo->getAllCategories();
-        $subjects   = $repo->getSubjects();
-        $tags       = $repo->getAllTags();
+        $categories = $this->repo->getAllCategories();
+        $subjects   = $this->repo->getSubjects();
+        $tags       = $this->repo->getAllTags();
         $types      = QuestionBank::QUESTION_TYPES;
         $diffs      = QuestionBank::DIFFICULTIES;
         $blooms     = QuestionBank::BLOOM_LEVELS;
@@ -77,13 +75,11 @@ class QuestionBankController extends Controller
             'tag_ids.*'        => 'integer|exists:question_tags,id',
         ]);
 
-        $repo     = new QuestionBankRepository();
-        $question = $repo->create($data, $request->input('tag_ids', []));
+        $question = $this->repo->create($data, $request->input('tag_ids', []));
 
-        // Handle image uploads
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $repo->uploadImage($question->id, $image, null);
+                $this->repo->uploadImage($question->id, $image);
             }
         }
 
@@ -94,10 +90,7 @@ class QuestionBankController extends Controller
     public function show(int $id)
     {
         $this->authorize('view exams');
-
-        $repo     = new QuestionBankRepository();
-        $question = $repo->findById($id);
-
+        $question = $this->repo->findById($id);
         return view('question-papers.bank.show', compact('question'));
     }
 
@@ -105,11 +98,10 @@ class QuestionBankController extends Controller
     {
         $this->authorize('create exams');
 
-        $repo       = new QuestionBankRepository();
-        $question   = $repo->findById($id);
-        $categories = $repo->getAllCategories();
-        $subjects   = $repo->getSubjects();
-        $tags       = $repo->getAllTags();
+        $question   = $this->repo->findById($id);
+        $categories = $this->repo->getAllCategories();
+        $subjects   = $this->repo->getSubjects();
+        $tags       = $this->repo->getAllTags();
         $types      = QuestionBank::QUESTION_TYPES;
         $diffs      = QuestionBank::DIFFICULTIES;
         $blooms     = QuestionBank::BLOOM_LEVELS;
@@ -140,7 +132,7 @@ class QuestionBankController extends Controller
             'tag_ids.*'        => 'integer|exists:question_tags,id',
         ]);
 
-        (new QuestionBankRepository())->update($id, $data, $request->input('tag_ids', []));
+        $this->repo->update($id, $data, $request->input('tag_ids', []));
 
         return redirect()->route('question-bank.index')
             ->with('status', 'Question updated.');
@@ -149,33 +141,32 @@ class QuestionBankController extends Controller
     public function destroy(int $id)
     {
         $this->authorize('create exams');
-        (new QuestionBankRepository())->delete($id);
+        $this->repo->delete($id);
         return back()->with('status', 'Question deleted from bank.');
     }
 
     public function duplicate(int $id)
     {
         $this->authorize('create exams');
-        $copy = (new QuestionBankRepository())->duplicate($id);
+        $copy = $this->repo->duplicate($id);
         return redirect()->route('question-bank.edit', $copy->id)
             ->with('status', 'Question duplicated. Edit it below.');
     }
 
-    /** POST /question-bank/{id}/images — upload image to a bank question */
+    /** POST /question-bank/{id}/images */
     public function uploadImage(Request $request, int $id)
     {
         $this->authorize('create exams');
         $request->validate(['image' => 'required|image|max:4096']);
-        $repo  = new QuestionBankRepository();
-        $image = $repo->uploadImage($id, $request->file('image'), $request->input('caption'));
-        return response()->json(['id' => $image->id, 'url' => $image->url]);
+        $image = $this->repo->uploadImage($id, $request->file('image'), $request->input('caption'));
+        return response()->json(['id' => $image->id, 'url' => asset('storage/' . $image->file_path)]);
     }
 
     /** DELETE /question-bank/images/{imageId} */
     public function destroyImage(int $imageId)
     {
         $this->authorize('create exams');
-        (new QuestionBankRepository())->deleteImage($imageId);
+        $this->repo->deleteImage($imageId);
         return response()->json(['success' => true]);
     }
 }

@@ -2,7 +2,8 @@
 
 namespace App\Interfaces;
 
-interface LibraryInterface {
+interface LibraryInterface
+{
     public function getAll();
     public function findById($id);
     public function create($request);

@@ -310,14 +310,128 @@
         @endcanany
 
         {{-- ── LIBRARY section ── --}}
-        @canany(['view books', 'create books', 'issue books'])
+        @canany(['view books', 'create books', 'issue books', 'return books', 'manage library members', 'view library reports'])
         <p class="nav-section-label">Library</p>
-        <a href="{{ route('library.index') }}" class="nav-item {{ request()->is('library*') ? 'active' : '' }}">
-            <i class="bi bi-journals nav-icon"></i> Books
+        @can('view books')
+        <a href="{{ route('library.index') }}" class="nav-item {{ request()->is('library') || request()->is('library?*') && !request()->is('library/issues*') && !request()->is('library/members*') && !request()->is('library/categories*') && !request()->is('library/ebooks*') && !request()->is('library/analytics') && !request()->is('library/reports*') ? 'active' : '' }}">
+            <i class="bi bi-journals nav-icon"></i> Book Catalog
         </a>
+        @endcan
         @can('create books')
         <a href="{{ route('library.create') }}" class="nav-item">
             <i class="bi bi-plus-circle nav-icon"></i> Add Book
+        </a>
+        <a href="{{ route('library.categories.index') }}" class="nav-item {{ request()->is('library/categories*') ? 'active' : '' }}">
+            <i class="bi bi-tags nav-icon"></i> Categories
+        </a>
+        @endcan
+        @canany(['issue books', 'return books'])
+        <a href="{{ route('library.issues.index') }}" class="nav-item {{ request()->is('library/issues*') ? 'active' : '' }}">
+            <i class="bi bi-arrow-left-right nav-icon"></i> Issue / Return
+        </a>
+        @endcanany
+        @can('issue books')
+        <a href="{{ route('library.issues.create') }}" class="nav-item">
+            <i class="bi bi-box-arrow-up-right nav-icon"></i> Issue Book
+        </a>
+        <a href="{{ route('library.issues.return') }}" class="nav-item">
+            <i class="bi bi-box-arrow-in-left nav-icon"></i> Return Book
+        </a>
+        @endcan
+        @can('manage library members')
+        <a href="{{ route('library.members.index') }}" class="nav-item {{ request()->is('library/members*') ? 'active' : '' }}">
+            <i class="bi bi-people nav-icon"></i> Members
+        </a>
+        @endcan
+        @can('view books')
+        <a href="{{ route('library.ebooks.index') }}" class="nav-item {{ request()->is('library/ebooks*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-text nav-icon"></i> Digital Library
+        </a>
+        @endcan
+        @can('view library reports')
+        <a href="{{ route('library.analytics') }}" class="nav-item {{ request()->is('library/analytics') ? 'active' : '' }}">
+            <i class="bi bi-bar-chart-line nav-icon"></i> Analytics
+        </a>
+        <a href="{{ route('library.reports.form') }}" class="nav-item {{ request()->is('library/reports*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-spreadsheet nav-icon"></i> Reports
+        </a>
+        @endcan
+        @endcanany
+
+        {{-- ── HOSTEL section ── --}}
+        @canany(['view hostel', 'manage hostel rooms', 'manage hostel allocations', 'manage hostel attendance', 'manage hostel visitors', 'manage hostel maintenance'])
+        <p class="nav-section-label">Hostel</p>
+        
+        @can('view hostel')
+        <a href="{{ route('hostel.hostels.index') }}" class="nav-item {{ request()->is('hostel/hostels*') ? 'active' : '' }}">
+            <i class="bi bi-building nav-icon"></i> Hostels
+        </a>
+        @endcan
+
+        @can('manage hostel rooms')
+        <a href="{{ route('hostel.rooms.index') }}" class="nav-item {{ request()->is('hostel/rooms*') || request()->is('hostel/beds*') ? 'active' : '' }}">
+            <i class="bi bi-door-open nav-icon"></i> Rooms & Beds
+        </a>
+        @endcan
+
+        @can('manage hostel allocations')
+        <a href="{{ route('hostel.allocations.index') }}" class="nav-item {{ request()->is('hostel/allocations*') ? 'active' : '' }}">
+            <i class="bi bi-person-badge nav-icon"></i> Allocations
+        </a>
+        @endcan
+
+        @can('manage hostel attendance')
+        <a href="{{ route('hostel.attendances.index') }}" class="nav-item {{ request()->is('hostel/attendances*') ? 'active' : '' }}">
+            <i class="bi bi-calendar-check nav-icon"></i> Attendance
+        </a>
+        @endcan
+
+        @can('manage hostel visitors')
+        <a href="{{ route('hostel.visitors.index') }}" class="nav-item {{ request()->is('hostel/visitors*') ? 'active' : '' }}">
+            <i class="bi bi-people nav-icon"></i> Visitors
+        </a>
+        @endcan
+
+        @can('manage hostel maintenance')
+        <a href="{{ route('hostel.maintenance.index') }}" class="nav-item {{ request()->is('hostel/maintenance*') ? 'active' : '' }}">
+            <i class="bi bi-tools nav-icon"></i> Maintenance
+        </a>
+        @endcan
+        @endcanany
+
+        {{-- ── TRANSPORT section ── --}}
+        @canany(['manage transport', 'view transport', 'assign student transport', 'view transport routes'])
+        <p class="nav-section-label">Transport</p>
+        <a href="{{ route('transport.index') }}" class="nav-item {{ request()->is('transport') ? 'active' : '' }}">
+            <i class="bi bi-bus-front nav-icon"></i> Dashboard
+        </a>
+        @canany(['manage transport', 'view transport'])
+        <a href="{{ route('transport.vehicles.index') }}" class="nav-item {{ request()->is('transport/vehicles*') ? 'active' : '' }}">
+            <i class="bi bi-truck nav-icon"></i> Fleet
+        </a>
+        <a href="{{ route('transport.drivers.index') }}" class="nav-item {{ request()->is('transport/drivers*') ? 'active' : '' }}">
+            <i class="bi bi-person-badge nav-icon"></i> Drivers
+        </a>
+        @endcanany
+        @canany(['manage transport', 'view transport routes'])
+        <a href="{{ route('transport.routes.index') }}" class="nav-item {{ request()->is('transport/routes*') ? 'active' : '' }}">
+            <i class="bi bi-signpost-split nav-icon"></i> Routes
+        </a>
+        @endcanany
+        @canany(['manage transport', 'assign student transport'])
+        <a href="{{ route('transport.students.index') }}" class="nav-item {{ request()->is('transport/students*') ? 'active' : '' }}">
+            <i class="bi bi-people nav-icon"></i> Student Allocation
+        </a>
+        @endcanany
+        @can('manage transport')
+        <a href="{{ route('transport.attendance.index') }}" class="nav-item {{ request()->is('transport/attendance*') ? 'active' : '' }}">
+            <i class="bi bi-check2-square nav-icon"></i> Attendance
+        </a>
+        <a href="{{ route('transport.analytics') }}" class="nav-item {{ request()->is('transport/analytics') ? 'active' : '' }}">
+            <i class="bi bi-bar-chart-line nav-icon"></i> Analytics
+        </a>
+        <a href="{{ route('transport.reports.form') }}" class="nav-item {{ request()->is('transport/reports*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-spreadsheet nav-icon"></i> Reports
         </a>
         @endcan
         @endcanany

@@ -22,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(\App\Interfaces\LibraryInterface::class, \App\Repositories\LibraryRepository::class);
         $this->app->bind(\App\Interfaces\StaffInterface::class, \App\Repositories\StaffRepository::class);
         $this->app->bind(\App\Interfaces\PaymentInterface::class, \App\Repositories\PaymentRepository::class);
+
+        // Question Paper module
+        $this->app->bind(\App\Interfaces\QuestionPaperInterface::class, \App\Repositories\QuestionPaperRepository::class);
+        $this->app->bind(\App\Interfaces\QuestionBankInterface::class, \App\Repositories\QuestionBankRepository::class);
     }
 
     /**

@@ -27,6 +27,16 @@ use App\Http\Controllers\AcademicSettingController;
 use App\Http\Controllers\AssignedTeacherController;
 use App\Http\Controllers\Auth\UpdatePasswordController;
 use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\BookCategoryController;
+use App\Http\Controllers\BookIssueController;
+use App\Http\Controllers\LibraryMemberController;
+use App\Http\Controllers\EbookController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\DriverController;
+use App\Http\Controllers\TransportRouteController;
+use App\Http\Controllers\StudentTransportController;
+use App\Http\Controllers\TransportAttendanceController;
+use App\Http\Controllers\TransportController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RoleController;
@@ -127,6 +137,9 @@ Route::middleware(['auth'])->group(function () {
     // Attendance — analytics
     Route::get('/attendances/analytics', [AttendanceController::class, 'analytics'])->name('attendance.analytics');
 
+    // Attendance — analytics dashboard
+    Route::get('/attendances/analytics', [AttendanceController::class, 'analytics'])->name('attendance.analytics');
+
     // Attendance — shortage alerts
     Route::get('/attendances/shortage', [AttendanceController::class, 'shortage'])->name('attendance.shortage');
 
@@ -139,14 +152,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/attendances/import',  [AttendanceController::class, 'importForm'])->name('attendance.import.form');
     Route::post('/attendances/import', [AttendanceController::class, 'import'])->name('attendance.import');
 
-    // Attendance — QR code (teacher side)
+    // Attendance — QR code (teacher side + public scan endpoint)
     Route::prefix('attendance/qr')->name('attendance.qr.')->group(function () {
         Route::get('/',           [QrAttendanceController::class, 'index'])->name('index');
         Route::get('/create',     [QrAttendanceController::class, 'create'])->name('create');
         Route::post('/',          [QrAttendanceController::class, 'store'])->name('store');
         Route::get('/{id}',       [QrAttendanceController::class, 'show'])->name('show');
         Route::delete('/{id}',    [QrAttendanceController::class, 'destroy'])->name('destroy');
-    });
+    }); // QR scan public endpoint is registered at top of file (Route::get attendance/scan/{token})
 
     // Attendance — staff
     Route::get('/staff/attendance',                      [StaffAttendanceController::class, 'index'])->name('staff.attendance.index');
@@ -247,13 +260,140 @@ Route::middleware(['auth'])->group(function () {
     Route::get('password/edit', [UpdatePasswordController::class, 'edit'])->name('password.change');
     Route::post('password/edit', [UpdatePasswordController::class, 'update'])->name('password.change.update');
 
-    // Library
-    Route::get('/library', [LibraryController::class, 'index'])->name('library.index');
-    Route::get('/library/create', [LibraryController::class, 'create'])->name('library.create');
-    Route::post('/library/store', [LibraryController::class, 'store'])->name('library.store');
-    Route::get('/library/edit/{id}', [LibraryController::class, 'edit'])->name('library.edit');
-    Route::post('/library/update/{id}', [LibraryController::class, 'update'])->name('library.update');
-    Route::post('/library/delete/{id}', [LibraryController::class, 'destroy'])->name('library.destroy');
+    // ── LIBRARY (Module 12) ────────────────────────────────────────────────────
+
+    // Book catalog
+    Route::prefix('library')->name('library.')->group(function () {
+        Route::get('/',                [LibraryController::class, 'index'])->name('index');
+        Route::get('/create',          [LibraryController::class, 'create'])->name('create');
+        Route::post('/',               [LibraryController::class, 'store'])->name('store');
+        Route::get('/{id}',            [LibraryController::class, 'show'])->name('show');
+        Route::get('/{id}/edit',       [LibraryController::class, 'edit'])->name('edit');
+        Route::put('/{id}',            [LibraryController::class, 'update'])->name('update');
+        Route::delete('/{id}',         [LibraryController::class, 'destroy'])->name('destroy');
+        Route::get('/analytics',       [LibraryController::class, 'analytics'])->name('analytics');
+        Route::get('/reports',         [LibraryController::class, 'reportForm'])->name('reports.form');
+        Route::get('/reports/export',  [LibraryController::class, 'reportExport'])->name('reports.export');
+
+        // Book categories
+        Route::prefix('categories')->name('categories.')->group(function () {
+            Route::get('/',         [BookCategoryController::class, 'index'])->name('index');
+            Route::post('/',        [BookCategoryController::class, 'store'])->name('store');
+            Route::put('/{id}',     [BookCategoryController::class, 'update'])->name('update');
+            Route::delete('/{id}',  [BookCategoryController::class, 'destroy'])->name('destroy');
+        });
+
+        // Book issue / return
+        Route::prefix('issues')->name('issues.')->group(function () {
+            Route::get('/',                        [BookIssueController::class, 'index'])->name('index');
+            Route::get('/create',                  [BookIssueController::class, 'create'])->name('create');
+            Route::post('/',                       [BookIssueController::class, 'store'])->name('store');
+            Route::get('/return',                  [BookIssueController::class, 'returnForm'])->name('return');
+            Route::post('/{id}/return',            [BookIssueController::class, 'processReturn'])->name('return.process');
+            Route::post('/{id}/lost',              [BookIssueController::class, 'markLost'])->name('lost');
+            Route::get('/scan',                    [BookIssueController::class, 'scanLookup'])->name('scan');
+        });
+
+        // Library members
+        Route::prefix('members')->name('members.')->group(function () {
+            Route::get('/',                        [LibraryMemberController::class, 'index'])->name('index');
+            Route::get('/create',                  [LibraryMemberController::class, 'create'])->name('create');
+            Route::post('/',                       [LibraryMemberController::class, 'store'])->name('store');
+            Route::get('/{id}',                    [LibraryMemberController::class, 'show'])->name('show');
+            Route::get('/{id}/edit',               [LibraryMemberController::class, 'edit'])->name('edit');
+            Route::put('/{id}',                    [LibraryMemberController::class, 'update'])->name('update');
+            Route::delete('/{id}',                 [LibraryMemberController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/fine/settle',       [LibraryMemberController::class, 'settleFine'])->name('fine.settle');
+        });
+
+        // E-books / digital library
+        Route::prefix('ebooks')->name('ebooks.')->group(function () {
+            Route::get('/',                        [EbookController::class, 'index'])->name('index');
+            Route::get('/create',                  [EbookController::class, 'create'])->name('create');
+            Route::post('/',                       [EbookController::class, 'store'])->name('store');
+            Route::get('/{id}',                    [EbookController::class, 'show'])->name('show');
+            Route::get('/{id}/edit',               [EbookController::class, 'edit'])->name('edit');
+            Route::put('/{id}',                    [EbookController::class, 'update'])->name('update');
+            Route::delete('/{id}',                 [EbookController::class, 'destroy'])->name('destroy');
+            Route::get('/{id}/download',           [EbookController::class, 'download'])->name('download');
+            Route::post('/{id}/toggle',            [EbookController::class, 'toggleActive'])->name('toggle');
+        });
+    });
+
+    // ── TRANSPORT (Module 13) ─────────────────────────────────────────────────
+
+    Route::prefix('transport')->name('transport.')->group(function () {
+
+        // Dashboard
+        Route::get('/',          [TransportController::class, 'index'])->name('index');
+        Route::get('/analytics', [TransportController::class, 'analytics'])->name('analytics');
+        Route::get('/reports',   [TransportController::class, 'reportForm'])->name('reports.form');
+        Route::get('/reports/export', [TransportController::class, 'reportExport'])->name('reports.export');
+
+        // Vehicles
+        Route::prefix('vehicles')->name('vehicles.')->group(function () {
+            Route::get('/',           [VehicleController::class, 'index'])->name('index');
+            Route::get('/create',     [VehicleController::class, 'create'])->name('create');
+            Route::post('/',          [VehicleController::class, 'store'])->name('store');
+            Route::get('/{id}',       [VehicleController::class, 'show'])->name('show');
+            Route::get('/{id}/edit',  [VehicleController::class, 'edit'])->name('edit');
+            Route::put('/{id}',       [VehicleController::class, 'update'])->name('update');
+            Route::delete('/{id}',    [VehicleController::class, 'destroy'])->name('destroy');
+            // Fuel logs
+            Route::post('/{id}/fuel',              [VehicleController::class, 'fuelStore'])->name('fuel.store');
+            Route::delete('/{id}/fuel/{logId}',    [VehicleController::class, 'fuelDestroy'])->name('fuel.destroy');
+            // Maintenance logs
+            Route::post('/{id}/maintenance',               [VehicleController::class, 'maintStore'])->name('maintenance.store');
+            Route::put('/{id}/maintenance/{logId}',        [VehicleController::class, 'maintUpdate'])->name('maintenance.update');
+            // GPS hook
+            Route::post('/{id}/gps',               [VehicleController::class, 'updateGps'])->name('gps.update');
+        });
+
+        // Drivers
+        Route::prefix('drivers')->name('drivers.')->group(function () {
+            Route::get('/',          [DriverController::class, 'index'])->name('index');
+            Route::get('/create',    [DriverController::class, 'create'])->name('create');
+            Route::post('/',         [DriverController::class, 'store'])->name('store');
+            Route::get('/{id}',      [DriverController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [DriverController::class, 'edit'])->name('edit');
+            Route::put('/{id}',      [DriverController::class, 'update'])->name('update');
+            Route::delete('/{id}',   [DriverController::class, 'destroy'])->name('destroy');
+        });
+
+        // Routes
+        Route::prefix('routes')->name('routes.')->group(function () {
+            Route::get('/',          [TransportRouteController::class, 'index'])->name('index');
+            Route::get('/create',    [TransportRouteController::class, 'create'])->name('create');
+            Route::post('/',         [TransportRouteController::class, 'store'])->name('store');
+            Route::get('/{id}',      [TransportRouteController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [TransportRouteController::class, 'edit'])->name('edit');
+            Route::put('/{id}',      [TransportRouteController::class, 'update'])->name('update');
+            Route::delete('/{id}',   [TransportRouteController::class, 'destroy'])->name('destroy');
+            // Stops (nested under route)
+            Route::post('/{routeId}/stops',              [TransportRouteController::class, 'stopsStore'])->name('stops.store');
+            Route::put('/{routeId}/stops/{stopId}',      [TransportRouteController::class, 'stopsUpdate'])->name('stops.update');
+            Route::delete('/{routeId}/stops/{stopId}',   [TransportRouteController::class, 'stopsDestroy'])->name('stops.destroy');
+            // AJAX — get stops list for a route
+            Route::get('/{routeId}/stops',               [StudentTransportController::class, 'getStops'])->name('stops.list');
+        });
+
+        // Student allocations
+        Route::prefix('students')->name('students.')->group(function () {
+            Route::get('/',          [StudentTransportController::class, 'index'])->name('index');
+            Route::get('/create',    [StudentTransportController::class, 'create'])->name('create');
+            Route::post('/',         [StudentTransportController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [StudentTransportController::class, 'edit'])->name('edit');
+            Route::put('/{id}',      [StudentTransportController::class, 'update'])->name('update');
+            Route::delete('/{id}',   [StudentTransportController::class, 'destroy'])->name('destroy');
+        });
+
+        // Attendance
+        Route::prefix('attendance')->name('attendance.')->group(function () {
+            Route::get('/',        [TransportAttendanceController::class, 'index'])->name('index');
+            Route::post('/',       [TransportAttendanceController::class, 'store'])->name('store');
+            Route::get('/report',  [TransportAttendanceController::class, 'report'])->name('report');
+        });
+    });
 
     // Staff
     Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
@@ -624,6 +764,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{id}',           [QuestionPaperController::class, 'update'])->name('update');
         Route::delete('/{id}',        [QuestionPaperController::class, 'destroy'])->name('destroy');
         Route::get('/{id}/pdf',       [QuestionPaperController::class, 'exportPdf'])->name('pdf');
+        Route::get('/{id}/docx',      [QuestionPaperController::class, 'exportDocx'])->name('docx');
         Route::get('/{id}/versions',  [QuestionPaperController::class, 'versions'])->name('versions');
         Route::post('/versions/{versionId}/restore', [QuestionPaperController::class, 'restoreVersion'])->name('versions.restore');
         Route::post('/{id}/auto-save',[QuestionPaperController::class, 'autoSave'])->name('auto-save');
@@ -660,5 +801,16 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/matrix',                  [RoleController::class, 'matrixUpdate'])->name('matrix.update')->withoutMiddleware('permission:manage roles');
         Route::get('/users/{user}',             [RoleController::class, 'userRoles'])->name('user-roles');
         Route::put('/users/{user}',             [RoleController::class, 'updateUserRoles'])->name('user-roles.update');
+    });
+
+    // ── HOSTEL MANAGEMENT (Module 14) ────────────────────────────────────────
+    Route::prefix('hostel')->name('hostel.')->group(function () {
+        Route::resource('hostels', \App\Http\Controllers\HostelController::class);
+        Route::resource('rooms', \App\Http\Controllers\HostelRoomController::class);
+        Route::resource('beds', \App\Http\Controllers\HostelBedController::class);
+        Route::resource('allocations', \App\Http\Controllers\HostelAllocationController::class);
+        Route::resource('attendances', \App\Http\Controllers\HostelAttendanceController::class);
+        Route::resource('visitors', \App\Http\Controllers\HostelVisitorController::class);
+        Route::resource('maintenance', \App\Http\Controllers\HostelMaintenanceRequestController::class);
     });
 });

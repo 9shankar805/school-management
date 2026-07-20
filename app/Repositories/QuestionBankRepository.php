@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Interfaces\QuestionBankInterface;
 use App\Models\QuestionBank;
 use App\Models\QuestionCategory;
 use App\Models\QuestionImage;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
-class QuestionBankRepository
+class QuestionBankRepository implements QuestionBankInterface
 {
     // ── Questions ─────────────────────────────────────────────────────────────
 

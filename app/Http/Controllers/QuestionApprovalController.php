@@ -2,24 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Interfaces\QuestionPaperInterface;
 use App\Models\QuestionPaper;
-use App\Repositories\QuestionPaperRepository;
 use Illuminate\Http\Request;
 
 class QuestionApprovalController extends Controller
 {
-    public function __construct()
+    public function __construct(protected QuestionPaperInterface $paperRepo)
     {
         $this->middleware(['auth']);
     }
 
     /**
-     * GET /question-papers/pending
+     * GET /question-papers-pending
      * Approval dashboard — papers awaiting review.
      */
     public function index()
     {
-        $this->authorize('create exams');
+        $this->authorize('review', QuestionPaper::class);
 
         $papers = QuestionPaper::with(['creator', 'course', 'approvals'])
             ->whereIn('status', ['submitted', 'reviewed'])
@@ -36,19 +36,15 @@ class QuestionApprovalController extends Controller
     public function submit(Request $request, int $id)
     {
         $paper = QuestionPaper::findOrFail($id);
-
-        // Only the creator can submit
-        if ($paper->created_by !== auth()->id() && ! auth()->user()->hasRole('admin')) {
-            abort(403);
-        }
+        $this->authorize('submit', $paper);
 
         if ($paper->status !== 'draft') {
-            return back()->withError('Only draft papers can be submitted.');
+            return back()->withErrors('Only draft papers can be submitted.');
         }
 
         $request->validate(['comments' => 'nullable|string|max:500']);
 
-        (new QuestionPaperRepository())->advanceStatus($id, 'submitted', $request->comments);
+        $this->paperRepo->advanceStatus($id, 'submitted', $request->comments);
 
         return back()->with('status', 'Paper submitted for review.');
     }
@@ -59,11 +55,12 @@ class QuestionApprovalController extends Controller
      */
     public function review(Request $request, int $id)
     {
-        $this->authorize('create exams');
+        $paper = QuestionPaper::findOrFail($id);
+        $this->authorize('review', $paper);
 
         $request->validate(['comments' => 'nullable|string|max:500']);
 
-        (new QuestionPaperRepository())->advanceStatus($id, 'reviewed', $request->comments);
+        $this->paperRepo->advanceStatus($id, 'reviewed', $request->comments);
 
         return back()->with('status', 'Paper marked as reviewed.');
     }
@@ -74,11 +71,12 @@ class QuestionApprovalController extends Controller
      */
     public function approve(Request $request, int $id)
     {
-        $this->authorize('create exams');
+        $paper = QuestionPaper::findOrFail($id);
+        $this->authorize('approve', $paper);
 
         $request->validate(['comments' => 'nullable|string|max:500']);
 
-        (new QuestionPaperRepository())->advanceStatus($id, 'approved', $request->comments);
+        $this->paperRepo->advanceStatus($id, 'approved', $request->comments);
 
         return back()->with('status', 'Paper approved.');
     }
@@ -89,13 +87,12 @@ class QuestionApprovalController extends Controller
      */
     public function reject(Request $request, int $id)
     {
-        $this->authorize('create exams');
+        $paper = QuestionPaper::findOrFail($id);
+        $this->authorize('review', $paper);
 
-        $request->validate([
-            'comments' => 'required|string|max:500',
-        ]);
+        $request->validate(['comments' => 'required|string|max:500']);
 
-        (new QuestionPaperRepository())->advanceStatus($id, 'rejected', $request->comments);
+        $this->paperRepo->advanceStatus($id, 'rejected', $request->comments);
 
         return back()->with('status', 'Paper rejected and returned to author for revision.');
     }
@@ -106,11 +103,12 @@ class QuestionApprovalController extends Controller
      */
     public function lock(Request $request, int $id)
     {
-        $this->authorize('create exams');
+        $paper = QuestionPaper::findOrFail($id);
+        $this->authorize('lock', $paper);
 
         $request->validate(['comments' => 'nullable|string|max:500']);
 
-        (new QuestionPaperRepository())->advanceStatus($id, 'locked', $request->comments);
+        $this->paperRepo->advanceStatus($id, 'locked', $request->comments);
 
         return back()->with('status', 'Paper locked. No further edits are permitted.');
     }
