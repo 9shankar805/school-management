@@ -38,5 +38,20 @@ class AppServiceProvider extends ServiceProvider
         foreach ($modelsToAudit as $model) {
             $model::observe(AuditObserver::class);
         }
+
+        // ----------------------------------------------------------------
+        // Share pending question-paper count with every view that
+        // includes the left-menu (avoids raw @php DB calls in blade).
+        // ----------------------------------------------------------------
+        \Illuminate\Support\Facades\View::composer('layouts.left-menu', function ($view) {
+            if (\Illuminate\Support\Facades\Auth::check()) {
+                try {
+                    $pending = \App\Models\QuestionPaper::whereIn('status', ['submitted', 'reviewed'])->count();
+                } catch (\Throwable $e) {
+                    $pending = 0; // table may not exist yet before migrations run
+                }
+                $view->with('pendingPapers', $pending);
+            }
+        });
     }
 }

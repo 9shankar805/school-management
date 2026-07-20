@@ -231,6 +231,12 @@
         <a href="{{ route('exam.list.show') }}" class="nav-item {{ request()->is('exams/view') ? 'active' : '' }}">
             <i class="bi bi-file-text nav-icon"></i> Exams
         </a>
+        <a href="{{ route('exam.schedule.index') }}" class="nav-item {{ request()->is('exam/schedule*') ? 'active' : '' }}">
+            <i class="bi bi-calendar3 nav-icon"></i> Schedule / Timetable
+        </a>
+        <a href="{{ route('exam.hall.index') }}" class="nav-item {{ request()->is('exam/halls*') ? 'active' : '' }}">
+            <i class="bi bi-building nav-icon"></i> Halls &amp; Seats
+        </a>
         @endcan
         @can('create exams')
         <a href="{{ route('exam.create.show') }}" class="nav-item">
@@ -246,11 +252,47 @@
         <a href="{{ route('course.mark.show') }}" class="nav-item {{ request()->is('marks/view') ? 'active' : '' }}">
             <i class="bi bi-clipboard-data nav-icon"></i> View Marks
         </a>
+        <a href="{{ route('results.index') }}" class="nav-item {{ request()->is('results*') ? 'active' : '' }}">
+            <i class="bi bi-award nav-icon"></i> Results &amp; Reports
+        </a>
+        <a href="{{ route('results.analytics') }}" class="nav-item {{ request()->is('results/analytics*') ? 'active' : '' }}">
+            <i class="bi bi-graph-up-arrow nav-icon"></i> Performance Analytics
+        </a>
         @endcan
         @canany(['view grading systems', 'create grading systems'])
         <a href="{{ route('exam.grade.system.index') }}" class="nav-item {{ request()->is('exams/grade*') ? 'active' : '' }}">
             <i class="bi bi-bar-chart-steps nav-icon"></i> Grading
         </a>
+        @endcanany
+        @can('view exams')
+        <a href="{{ route('re-exam.index') }}" class="nav-item {{ request()->is('re-exam*') ? 'active' : '' }}">
+            <i class="bi bi-arrow-repeat nav-icon"></i> Re-Exams
+        </a>
+        @endcan
+
+        {{-- Question Paper Maker --}}
+        @canany(['view exams', 'create exams'])
+        <p class="nav-section-label">Question Papers</p>
+        <a href="{{ route('question-papers.index') }}" class="nav-item {{ request()->is('question-papers') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-text nav-icon"></i> My Papers
+        </a>
+        @can('create exams')
+        <a href="{{ route('question-papers.create') }}" class="nav-item">
+            <i class="bi bi-plus-square nav-icon"></i> New Paper
+        </a>
+        <a href="{{ route('question-bank.index') }}" class="nav-item {{ request()->is('question-bank*') ? 'active' : '' }}">
+            <i class="bi bi-collection nav-icon"></i> Question Bank
+        </a>
+        <a href="{{ route('question-paper-templates.index') }}" class="nav-item {{ request()->is('question-paper-templates*') ? 'active' : '' }}">
+            <i class="bi bi-layout-text-window nav-icon"></i> Templates
+        </a>
+        <a href="{{ route('question-papers.approvals') }}" class="nav-item {{ request()->is('question-papers-pending*') ? 'active' : '' }}">
+            <i class="bi bi-check2-circle nav-icon"></i> Approvals
+            @if(isset($pendingPapers) && $pendingPapers > 0)
+            <span class="ml-auto text-[10px] bg-amber-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{{ $pendingPapers > 9 ? '9+' : $pendingPapers }}</span>
+            @endif
+        </a>
+        @endcan
         @endcanany
         @endcanany
 

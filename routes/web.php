@@ -52,6 +52,15 @@ use App\Http\Controllers\TeacherTrainingController;
 use App\Http\Controllers\TeacherPayrollController;
 use App\Http\Controllers\PerformanceReviewController;
 use App\Http\Controllers\ParentPortalController;
+use App\Http\Controllers\ExamScheduleController;
+use App\Http\Controllers\ExamHallController;
+use App\Http\Controllers\ResultSheetController;
+use App\Http\Controllers\TranscriptController;
+use App\Http\Controllers\ReExamController;
+use App\Http\Controllers\QuestionPaperController;
+use App\Http\Controllers\QuestionBankController;
+use App\Http\Controllers\QuestionPaperTemplateController;
+use App\Http\Controllers\QuestionApprovalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -536,6 +545,108 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/parents/search',                          [\App\Http\Controllers\ParentPortalController::class, 'searchStudentsForLink'])->name('admin.parents.search');
     Route::post('/admin/parents/{parentId}/link',                [\App\Http\Controllers\ParentPortalController::class, 'linkStudent'])->name('admin.parents.link.store');
     Route::delete('/admin/parents/{parentId}/unlink/{studentId}',[\App\Http\Controllers\ParentPortalController::class, 'unlinkStudent'])->name('admin.parents.unlink');
+
+    // ── MODULE 9: EXAM HALLS ──────────────────────────────────────────────────
+    Route::get('/exam/halls',                   [ExamHallController::class, 'index'])->name('exam.hall.index');
+    Route::post('/exam/halls',                  [ExamHallController::class, 'store'])->name('exam.hall.store');
+    Route::put('/exam/halls/{id}',              [ExamHallController::class, 'update'])->name('exam.hall.update');
+    Route::delete('/exam/halls/{id}',           [ExamHallController::class, 'destroy'])->name('exam.hall.destroy');
+    Route::get('/exam/halls/{scheduleId}/seats',      [ExamHallController::class, 'seats'])->name('exam.hall.seats');
+    Route::post('/exam/halls/{scheduleId}/seats/auto',[ExamHallController::class, 'autoAllocate'])->name('exam.hall.seats.auto');
+    Route::post('/exam/halls/{scheduleId}/seats',     [ExamHallController::class, 'saveSeats'])->name('exam.hall.seats.save');
+    Route::delete('/exam/halls/{scheduleId}/seats',   [ExamHallController::class, 'clearSeats'])->name('exam.hall.seats.clear');
+
+    // ── MODULE 9: EXAM SCHEDULE ───────────────────────────────────────────────
+    Route::get('/exam/schedule',                [ExamScheduleController::class, 'index'])->name('exam.schedule.index');
+    Route::get('/exam/schedule/create',         [ExamScheduleController::class, 'create'])->name('exam.schedule.create');
+    Route::post('/exam/schedule',               [ExamScheduleController::class, 'store'])->name('exam.schedule.store');
+    Route::get('/exam/schedule/{id}/edit',      [ExamScheduleController::class, 'edit'])->name('exam.schedule.edit');
+    Route::put('/exam/schedule/{id}',           [ExamScheduleController::class, 'update'])->name('exam.schedule.update');
+    Route::delete('/exam/schedule/{id}',        [ExamScheduleController::class, 'destroy'])->name('exam.schedule.destroy');
+    Route::get('/exam/schedule/exams-for',      [ExamScheduleController::class, 'examsForFilter'])->name('exam.schedule.exams-for');
+
+    // ── MODULE 9: RE-EXAM ─────────────────────────────────────────────────────
+    Route::prefix('re-exam')->name('re-exam.')->group(function () {
+        Route::get('/',               [ReExamController::class, 'index'])->name('index');
+        Route::get('/apply',          [ReExamController::class, 'create'])->name('create');
+        Route::post('/',              [ReExamController::class, 'store'])->name('store');
+        Route::post('/{id}/review',   [ReExamController::class, 'review'])->name('review');
+        Route::post('/{id}/result',   [ReExamController::class, 'enterResult'])->name('result');
+        Route::post('/{id}/complete', [ReExamController::class, 'complete'])->name('complete');
+    });
+
+    // ── MODULE 9: RESULTS & TRANSCRIPTS ──────────────────────────────────────
+    Route::prefix('results')->name('results.')->group(function () {
+        Route::get('/',                                   [ResultSheetController::class, 'index'])->name('index');
+        Route::get('/class',                              [ResultSheetController::class, 'classResult'])->name('class');
+        Route::get('/merit',                              [ResultSheetController::class, 'meritList'])->name('merit');
+        Route::get('/analytics',                          [ResultSheetController::class, 'analytics'])->name('analytics');
+        Route::get('/class/pdf',                          [ResultSheetController::class, 'classResultPdf'])->name('class.pdf');
+        Route::get('/class/excel',                        [ResultSheetController::class, 'classResultExcel'])->name('class.excel');
+        Route::get('/student/{studentId}',                [ResultSheetController::class, 'studentResult'])->name('student');
+        Route::get('/student/{studentId}/report-card',    [ResultSheetController::class, 'reportCard'])->name('report-card');
+        Route::get('/transcript/{studentId}',             [TranscriptController::class, 'show'])->name('transcript');
+        Route::get('/transcript/{studentId}/pdf',         [TranscriptController::class, 'pdf'])->name('transcript.pdf');
+    });
+
+    // ── MODULE 9: QUESTION PAPER TEMPLATES ───────────────────────────────────
+    Route::prefix('question-paper-templates')->name('question-paper-templates.')->group(function () {
+        Route::get('/',           [QuestionPaperTemplateController::class, 'index'])->name('index');
+        Route::get('/create',     [QuestionPaperTemplateController::class, 'create'])->name('create');
+        Route::post('/',          [QuestionPaperTemplateController::class, 'store'])->name('store');
+        Route::get('/{id}',       [QuestionPaperTemplateController::class, 'show'])->name('show');
+        Route::get('/{id}/edit',  [QuestionPaperTemplateController::class, 'edit'])->name('edit');
+        Route::put('/{id}',       [QuestionPaperTemplateController::class, 'update'])->name('update');
+        Route::delete('/{id}',    [QuestionPaperTemplateController::class, 'destroy'])->name('destroy');
+    });
+
+    // ── MODULE 9: QUESTION BANK ───────────────────────────────────────────────
+    Route::prefix('question-bank')->name('question-bank.')->group(function () {
+        Route::get('/',           [QuestionBankController::class, 'index'])->name('index');
+        Route::get('/create',     [QuestionBankController::class, 'create'])->name('create');
+        Route::post('/',          [QuestionBankController::class, 'store'])->name('store');
+        Route::get('/{id}',       [QuestionBankController::class, 'show'])->name('show');
+        Route::get('/{id}/edit',  [QuestionBankController::class, 'edit'])->name('edit');
+        Route::put('/{id}',       [QuestionBankController::class, 'update'])->name('update');
+        Route::delete('/{id}',    [QuestionBankController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/duplicate', [QuestionBankController::class, 'duplicate'])->name('duplicate');
+        Route::post('/{id}/images',    [QuestionBankController::class, 'uploadImage'])->name('images.store');
+        Route::delete('/images/{imageId}', [QuestionBankController::class, 'destroyImage'])->name('images.destroy');
+    });
+
+    // ── MODULE 9: QUESTION PAPERS ─────────────────────────────────────────────
+    Route::prefix('question-papers')->name('question-papers.')->group(function () {
+        Route::get('/',               [QuestionPaperController::class, 'index'])->name('index');
+        Route::get('/create',         [QuestionPaperController::class, 'create'])->name('create');
+        Route::post('/',              [QuestionPaperController::class, 'store'])->name('store');
+        Route::get('/{id}',           [QuestionPaperController::class, 'show'])->name('show');
+        Route::get('/{id}/edit',      [QuestionPaperController::class, 'edit'])->name('edit');
+        Route::put('/{id}',           [QuestionPaperController::class, 'update'])->name('update');
+        Route::delete('/{id}',        [QuestionPaperController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}/pdf',       [QuestionPaperController::class, 'exportPdf'])->name('pdf');
+        Route::get('/{id}/versions',  [QuestionPaperController::class, 'versions'])->name('versions');
+        Route::post('/versions/{versionId}/restore', [QuestionPaperController::class, 'restoreVersion'])->name('versions.restore');
+        Route::post('/{id}/auto-save',[QuestionPaperController::class, 'autoSave'])->name('auto-save');
+        // Approval workflow
+        Route::post('/{id}/submit',   [QuestionApprovalController::class, 'submit'])->name('submit');
+        Route::post('/{id}/review',   [QuestionApprovalController::class, 'review'])->name('review');
+        Route::post('/{id}/approve',  [QuestionApprovalController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject',   [QuestionApprovalController::class, 'reject'])->name('reject');
+        Route::post('/{id}/lock',     [QuestionApprovalController::class, 'lock'])->name('lock');
+        // Section + question AJAX
+        Route::post('/{paperId}/sections',            [QuestionPaperController::class, 'addSection'])->name('sections.store');
+        Route::put('/sections/{sectionId}',           [QuestionPaperController::class, 'updateSection'])->name('sections.update');
+        Route::delete('/sections/{sectionId}',        [QuestionPaperController::class, 'deleteSection'])->name('sections.destroy');
+        Route::post('/sections/{sectionId}/questions',[QuestionPaperController::class, 'addQuestion'])->name('questions.store');
+        Route::put('/questions/{questionId}',         [QuestionPaperController::class, 'updateQuestion'])->name('questions.update');
+        Route::delete('/questions/{questionId}',      [QuestionPaperController::class, 'deleteQuestion'])->name('questions.destroy');
+        Route::post('/{paperId}/reorder-sections',    [QuestionPaperController::class, 'reorderSections'])->name('sections.reorder');
+        Route::post('/sections/{sectionId}/reorder',  [QuestionPaperController::class, 'reorderQuestions'])->name('questions.reorder');
+        Route::get('/{paperId}/bank-search',          [QuestionPaperController::class, 'bankSearch'])->name('bank-search');
+    });
+
+    // Approval dashboard (separate page)
+    Route::get('/question-papers-pending', [QuestionApprovalController::class, 'index'])->name('question-papers.approvals');
 
     // ── ROLE & PERMISSION MANAGEMENT ────────────────────────────────────────
     Route::middleware('permission:manage roles')->prefix('roles')->name('roles.')->group(function () {

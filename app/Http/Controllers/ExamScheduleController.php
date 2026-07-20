@@ -203,4 +203,18 @@ class ExamScheduleController extends Controller
         $schedules = (new ExamScheduleRepository())->getByExam($examId);
         return response()->json($schedules);
     }
+
+    /**
+     * GET /exam/schedule/exams-for?class_id=&semester_id=
+     * JSON: exams for a class+semester (used to populate create form dropdown).
+     */
+    public function examsForFilter(Request $request)
+    {
+        $sessionId  = $this->getSchoolCurrentSession();
+        $classId    = (int) $request->query('class_id',    0);
+        $semesterId = (int) $request->query('semester_id', 0);
+
+        $exams = (new \App\Repositories\ExamRepository())->getAll($sessionId, $semesterId, $classId);
+        return response()->json($exams->load('course'));
+    }
 }
