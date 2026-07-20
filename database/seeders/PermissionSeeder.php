@@ -123,7 +123,11 @@ class PermissionSeeder extends Seeder
         'view child attendance',
         'view child results',
         'view child fees',
+        'pay child fees',
+        'view child assignments',
+        'apply leave for child',
         'message teachers',
+        'view child notifications',
 
         // ------------------------------------------------------------------
         // USERS (general)

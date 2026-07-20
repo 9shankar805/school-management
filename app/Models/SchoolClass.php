@@ -15,6 +15,14 @@ class SchoolClass extends Model
     protected $fillable = ['class_name', 'session_id'];
 
     /**
+     * Convenience accessor so ->name works alongside ->class_name
+     */
+    public function getNameAttribute(): string
+    {
+        return $this->class_name ?? '';
+    }
+
+    /**
      * Get the sections for the class.
      */
     public function sections()

@@ -404,16 +404,10 @@ class HomeController extends Controller
         $noticeRepo = new NoticeRepository();
         $notices    = $noticeRepo->getAll($sessionId);
 
-        // Children linked via StudentParentInfo (parent_id FK)
-        $children = User::role('student')
-            ->whereHas('parent_info', fn($q) => $q->where('guardian_id', $parent->id)
-                ->orWhere('father_id', $parent->id)
-                ->orWhere('mother_id', $parent->id)
-            )
-            ->with('parent_info', 'academic_info')
-            ->get();
+        // Children linked via parent_student pivot table
+        $children = $parent->children()->with('academic_info')->get();
 
-        // Per-child attendance
+        // Per-child attendance + invoice summary
         $childData = $children->map(function ($child) use ($sessionId) {
             $total    = Attendance::where('student_id', $child->id)->count();
             $present  = Attendance::where('student_id', $child->id)->where('status', 'present')->count();

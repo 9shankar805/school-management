@@ -250,13 +250,15 @@ class RoleSeeder extends Seeder
             'view child attendance',
             'view child results',
             'view child fees',
+            'pay child fees',
+            'view child assignments',
+            'apply leave for child',
+            'message teachers',
+            'view child notifications',
             'view own invoices',
             'create payments',
-            'message teachers',
             'view notices', 'view events',
             'view notifications',
-            'view transport routes',
-            'view chat', 'send chat messages',
         ],
 
         // ----------------------------------------------------------------

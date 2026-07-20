@@ -12,6 +12,14 @@ class Section extends Model
 
     protected $fillable = ['section_name', 'room_no', 'class_id', 'session_id'];
 
+    /**
+     * Convenience accessor so ->name works alongside ->section_name
+     */
+    public function getNameAttribute(): string
+    {
+        return $this->section_name ?? '';
+    }
+
     public function schoolClass() {
         return $this->belongsTo(SchoolClass::class, 'class_id');
     }

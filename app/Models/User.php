@@ -30,6 +30,7 @@ use App\Models\PerformanceReview;
 use App\Models\TeacherTraining;
 use App\Models\TeacherPayroll;
 use App\Models\Department;
+use App\Models\Conversation;
 
 class User extends Authenticatable
 {
@@ -202,6 +203,30 @@ class User extends Authenticatable
     public function achievements(): HasMany
     {
         return $this->hasMany(Achievement::class, 'student_id')->latest('awarded_date');
+    }
+
+    // ── Parent–Student relationships ──────────────────────────────────────
+
+    /** Parent → linked children (via parent_student pivot) */
+    public function children()
+    {
+        return $this->belongsToMany(User::class, 'parent_student', 'parent_id', 'student_id')
+                    ->withPivot('relationship', 'is_primary')
+                    ->withTimestamps();
+    }
+
+    /** Student → linked parents (via parent_student pivot) */
+    public function parents()
+    {
+        return $this->belongsToMany(User::class, 'parent_student', 'student_id', 'parent_id')
+                    ->withPivot('relationship', 'is_primary')
+                    ->withTimestamps();
+    }
+
+    /** Parent → conversations */
+    public function parentConversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'parent_id')->latest();
     }
 
     // -----------------------------------------------------------------------

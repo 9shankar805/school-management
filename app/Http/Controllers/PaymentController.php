@@ -36,7 +36,20 @@ class PaymentController extends Controller
             'due_date' => 'nullable|date',
         ]);
 
-        $this->paymentRepository->createInvoice($request);
+        $invoice = $this->paymentRepository->createInvoice($request);
+
+        // Notify all linked parents of the new invoice
+        $student = \App\Models\User::find($request->student_id);
+        if ($student) {
+            foreach ($student->parents as $parent) {
+                $parent->notify(new \App\Notifications\FeeReminderNotification(
+                    invoiceNumber: (string) ($invoice->id ?? 'NEW'),
+                    amount:        number_format($request->amount, 2),
+                    dueDate:       $request->due_date ?? 'N/A',
+                ));
+            }
+        }
+
         return redirect()->route('payments.index')->with('status', 'Invoice created successfully.');
     }
 

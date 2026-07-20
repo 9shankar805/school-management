@@ -33,33 +33,37 @@
                 <div class="flex-1 min-w-0">
                     <p class="font-bold text-slate-800">{{ $cd->child->full_name }}</p>
                     <p class="text-xs text-slate-500">
-                        {{ $cd->child->academic_info?->schoolClass?->name ?? '—' }}
-                        @if($cd->child->academic_info?->section) / {{ $cd->child->academic_info->section->name }} @endif
+                        @php
+                            $promo = \App\Models\Promotion::where('student_id', $cd->child->id)->with('schoolClass','section')->latest()->first();
+                        @endphp
+                        {{ $promo?->schoolClass?->name ?? '—' }}
+                        @if($promo?->section) / {{ $promo->section->name }} @endif
                     </p>
                 </div>
-                <a href="{{ route('student.profile.show', $cd->child->id) }}" class="text-xs text-indigo-600 hover:underline flex-shrink-0">View Profile</a>
+                <a href="{{ route('parent.attendance', $cd->child->id) }}" class="text-xs text-indigo-600 hover:underline flex-shrink-0">View Details</a>
             </div>
 
             {{-- Stats row --}}
             <div class="grid grid-cols-3 divide-x divide-slate-100">
-                <div class="px-5 py-4 text-center">
+                <a href="{{ route('parent.attendance', $cd->child->id) }}" class="px-5 py-4 text-center hover:bg-slate-50 transition">
                     <p class="text-2xl font-bold {{ $cd->pct >= 75 ? 'text-emerald-600' : 'text-rose-600' }}">{{ $cd->pct }}%</p>
                     <p class="text-xs text-slate-400 mt-0.5">Attendance</p>
                     <p class="text-xs text-slate-400">{{ $cd->present }}/{{ $cd->total }} classes</p>
-                </div>
-                <div class="px-5 py-4 text-center">
+                </a>
+                <a href="{{ route('parent.fees', $cd->child->id) }}" class="px-5 py-4 text-center hover:bg-slate-50 transition">
                     <p class="text-2xl font-bold {{ $cd->invoices > 0 ? 'text-rose-600' : 'text-emerald-600' }}">{{ $cd->invoices }}</p>
                     <p class="text-xs text-slate-400 mt-0.5">Unpaid Fees</p>
-                    <a href="{{ route('payments.index') }}" class="text-xs text-indigo-600 hover:underline">View invoices</a>
-                </div>
-                <div class="px-5 py-4 text-center">
+                    <p class="text-xs text-indigo-500">View invoices</p>
+                </a>
+                <a href="{{ route('parent.results', $cd->child->id) }}" class="px-5 py-4 text-center hover:bg-slate-50 transition">
                     <p class="text-2xl font-bold text-blue-600">{{ $cd->marks->count() }}</p>
                     <p class="text-xs text-slate-400 mt-0.5">Marks Recorded</p>
-                </div>
+                    <p class="text-xs text-indigo-500">View results</p>
+                </a>
             </div>
 
             {{-- Attendance progress bar --}}
-            <div class="px-5 pb-4">
+            <div class="px-5 pb-2">
                 <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                     <div class="h-full rounded-full {{ $cd->pct >= 75 ? 'bg-emerald-500' : 'bg-rose-500' }}" style="width:{{ $cd->pct }}%"></div>
                 </div>
@@ -70,23 +74,36 @@
 
             {{-- Recent marks --}}
             @if($cd->marks->count())
-            <div class="px-5 pb-4">
+            <div class="px-5 py-3 border-t border-slate-50">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Recent Results</p>
                 <div class="flex flex-wrap gap-2">
                     @foreach($cd->marks as $mark)
                     <span class="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg font-medium">
-                        {{ $mark->exam->name ?? 'Exam' }}: <span class="font-bold text-slate-900">{{ $mark->mark }}</span>
+                        {{ $mark->exam?->name ?? 'Exam' }}: <span class="font-bold text-slate-900">{{ $mark->marks }}</span>
                     </span>
                     @endforeach
                 </div>
             </div>
             @endif
+
+            {{-- Quick action links --}}
+            <div class="px-5 py-3 border-t border-slate-50 flex flex-wrap gap-2">
+                <a href="{{ route('parent.assignments', $cd->child->id) }}" class="text-xs px-3 py-1.5 bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-lg border border-slate-200 transition">
+                    <i class="bi bi-file-earmark-text me-1"></i>Assignments
+                </a>
+                <a href="{{ route('parent.leave', $cd->child->id) }}" class="text-xs px-3 py-1.5 bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-lg border border-slate-200 transition">
+                    <i class="bi bi-calendar-x me-1"></i>Apply Leave
+                </a>
+                <a href="{{ route('parent.performance', $cd->child->id) }}" class="text-xs px-3 py-1.5 bg-slate-50 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-lg border border-slate-200 transition">
+                    <i class="bi bi-graph-up me-1"></i>Performance
+                </a>
+            </div>
         </div>
         @endforeach
 
         {{-- Notice Board --}}
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div class="px-5 py-3 border-b border-slate-100">
+            <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
                 <p class="text-sm font-semibold text-slate-700"><i class="bi bi-megaphone me-1 text-amber-500"></i>School Notices</p>
             </div>
             @if($notices->count())
