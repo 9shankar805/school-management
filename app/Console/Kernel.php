@@ -13,7 +13,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        //
+        \App\Console\Commands\CheckAttendanceShortage::class,
     ];
 
     /**
@@ -24,7 +24,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Run absence notifications + shortage check every school day at 18:00
+        $schedule->command('attendance:check-shortage')
+                 ->weekdays()
+                 ->dailyAt('18:00')
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/attendance-shortage.log'));
     }
 
     /**

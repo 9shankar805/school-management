@@ -106,12 +106,34 @@
         <a href="{{ route('attendance.create.show') }}" class="nav-item {{ request()->is('attendances/take') ? 'active' : '' }}">
             <i class="bi bi-check2-square nav-icon"></i> Take Attendance
         </a>
+        <a href="{{ route('attendance.qr.index') }}" class="nav-item {{ request()->is('attendance/qr*') ? 'active' : '' }}">
+            <i class="bi bi-qr-code nav-icon"></i> QR Attendance
+        </a>
         @endcan
         @can('view attendances')
         <a href="{{ route('attendance.list.show') }}" class="nav-item {{ request()->is('attendances/view') ? 'active' : '' }}">
             <i class="bi bi-calendar-week nav-icon"></i> View Attendance
         </a>
+        <a href="{{ route('attendance.analytics') }}" class="nav-item {{ request()->is('attendances/analytics') ? 'active' : '' }}">
+            <i class="bi bi-bar-chart-line nav-icon"></i> Analytics
+        </a>
+        <a href="{{ route('attendance.shortage') }}" class="nav-item {{ request()->is('attendances/shortage') ? 'active' : '' }}">
+            <i class="bi bi-exclamation-triangle nav-icon"></i> Shortage Alerts
+        </a>
+        <a href="{{ route('attendance.report.form') }}" class="nav-item {{ request()->is('attendances/report*') ? 'active' : '' }}">
+            <i class="bi bi-file-earmark-spreadsheet nav-icon"></i> Reports
+        </a>
         @endcan
+        @can('take attendances')
+        <a href="{{ route('attendance.import.form') }}" class="nav-item {{ request()->is('attendances/import*') ? 'active' : '' }}">
+            <i class="bi bi-upload nav-icon"></i> Import CSV
+        </a>
+        @endcan
+        @canany(['view staff', 'view teachers'])
+        <a href="{{ route('staff.attendance.index') }}" class="nav-item {{ request()->is('staff/attendance*') ? 'active' : '' }}">
+            <i class="bi bi-people nav-icon"></i> Staff Attendance
+        </a>
+        @endcanany
         @endcanany
 
         {{-- ── EXAMS section ── --}}

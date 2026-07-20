@@ -18,6 +18,8 @@ use App\Http\Controllers\GradeRuleController;
 use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\QrAttendanceController;
+use App\Http\Controllers\StaffAttendanceController;
 use App\Http\Controllers\SchoolClassController;
 use App\Http\Controllers\GradingSystemController;
 use App\Http\Controllers\SchoolSessionController;
@@ -67,6 +69,9 @@ Route::get('/', function () {
 
 Auth::routes();
 
+// QR attendance scan — public endpoint (auth enforced inside controller)
+Route::get('/attendance/scan/{token}', [QrAttendanceController::class, 'scan'])->name('attendance.qr.scan');
+
 Route::middleware(['auth'])->group(function () {
 
     Route::prefix('school')->name('school.')->group(function () {
@@ -103,11 +108,41 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/home', [HomeController::class, 'index'])->name('home');
 
-    // Attendance
+    // Attendance — core (original)
     Route::get('/attendances', [AttendanceController::class, 'index'])->name('attendance.index');
     Route::get('/attendances/view', [AttendanceController::class, 'show'])->name('attendance.list.show');
     Route::get('/attendances/take', [AttendanceController::class, 'create'])->name('attendance.create.show');
     Route::post('/attendances', [AttendanceController::class, 'store'])->name('attendances.store');
+
+    // Attendance — analytics
+    Route::get('/attendances/analytics', [AttendanceController::class, 'analytics'])->name('attendance.analytics');
+
+    // Attendance — shortage alerts
+    Route::get('/attendances/shortage', [AttendanceController::class, 'shortage'])->name('attendance.shortage');
+
+    // Attendance — monthly reports (PDF + Excel)
+    Route::get('/attendances/report',       [AttendanceController::class, 'reportForm'])->name('attendance.report.form');
+    Route::get('/attendances/report/pdf',   [AttendanceController::class, 'monthlyReportPdf'])->name('attendance.report.pdf');
+    Route::get('/attendances/report/excel', [AttendanceController::class, 'monthlyReportExcel'])->name('attendance.report.excel');
+
+    // Attendance — bulk CSV import
+    Route::get('/attendances/import',  [AttendanceController::class, 'importForm'])->name('attendance.import.form');
+    Route::post('/attendances/import', [AttendanceController::class, 'import'])->name('attendance.import');
+
+    // Attendance — QR code (teacher side)
+    Route::prefix('attendance/qr')->name('attendance.qr.')->group(function () {
+        Route::get('/',           [QrAttendanceController::class, 'index'])->name('index');
+        Route::get('/create',     [QrAttendanceController::class, 'create'])->name('create');
+        Route::post('/',          [QrAttendanceController::class, 'store'])->name('store');
+        Route::get('/{id}',       [QrAttendanceController::class, 'show'])->name('show');
+        Route::delete('/{id}',    [QrAttendanceController::class, 'destroy'])->name('destroy');
+    });
+
+    // Attendance — staff
+    Route::get('/staff/attendance',                      [StaffAttendanceController::class, 'index'])->name('staff.attendance.index');
+    Route::post('/staff/attendance',                     [StaffAttendanceController::class, 'store'])->name('staff.attendance.store');
+    Route::get('/staff/{staffId}/attendance',            [StaffAttendanceController::class, 'show'])->name('staff.attendance.show');
+    Route::patch('/staff/attendance/{id}/time',          [StaffAttendanceController::class, 'updateTime'])->name('staff.attendance.time');
 
     // Classes and sections
     Route::get('/classes', [SchoolClassController::class, 'index']);
