@@ -1,15 +1,18 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class ReExamApplication extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'student_id', 'course_id', 'class_id', 'section_id',
         'semester_id', 'session_id', 'status',
         'reason', 'admin_notes',

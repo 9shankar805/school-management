@@ -1,0 +1,98 @@
+# 📊 NepalSchoolHub — Complete Gap Analysis vs. Enterprise SMS (PowerSchool / Fedena / Campus365 + Nepal Law)
+Audit scope: 137 Controllers, 150 Models, 1 Policy (⚠️ only QuestionPaperPolicy.php ), 990+ route endpoints
+
+## ⚖️ Executive Scorecard
+Enterprise Tier Category Score / 100 Status 🎓 Academic Modules 78 ⚠️ Strong core, big LMS gaps 💰 Finance & Accounting 52 🔴 Critical gaps (Nepal legal) 👥 HR / Teacher & Payroll 48 🔴 Severe coverage holes 🏫 Operations (Hostel / Transport) 72 🟡 Good skeleton, weak edge-cases 📱 Communication & Portals 55 🟡 Email exists, no SMS/PN/App 🔐 Security, Compliance & Policies 31 🔴 Extreme risk (legal, audit) 📈 Analytics & Reporting 44 🟡 KPI exists, no state reporting 🛡️ Nepal Legal Compliance 26 🔴 CRITICAL — 11/14 required laws MISSING Total combined score 51 / 100 ⚠️ Below enterprise-grade
+
+207 module-features audited: 88 covered (42%), 44 partial (21%), 75 missing (36%).
+
+## 🔴 CRITICAL GAPS (legal, data-loss, security, production-blocker)
+### 1. 🛡️ Nepal Law Compliance (9/11 REQUIRED features missing)
+Source: Education Regulations 2059 (amended July 2026), Free & Compulsory Education Act 2075, Schedule 8 Constitution of Nepal 2015.
+
+Requirement Legal Basis Status in NepalSchoolHub Impact & Fix Files ≥10% Scholarship Mandate (Dalit/Disabled/Female/Janajati) Education Reg. 2059 §4; Ratopati Apr 2026 MoEST directive ⚠️ Model exists ( Scholarship ) but NO enforcement widget: no "we are at 7.2% → need 2.8% more students" on dashboard 🔴 Penalty = school deregistration. Add: (a) HomeController KPI Scholarship % of enrollment , (b) auto-block final exams if <10%, (c) Scholarship controller export list formatted for IEMIS upload (MoEST federal portal) Basic/Secondary Two-Tier Report Structure Amended Regs. July 6, 2026: only Basic 1–8 / Secondary 9–12 , no "primary/lower secondary" 🟡 Grade model still allows "Primary/Lower" categories; flash reports not aligned 🔴 Add setting academics.grade_structure = basic_secondary + block invalid grade level exports for Local Government audit 3% Education Equity Fee (शिक्षा समता शुल्क) Auto-line Item FY 2083/84 MoF directive 🔴 COMPLETELY MISSING — no TaxRate with code=EEF , no auto-apply on fee-category invoices, no 4-month filing report 🔴 Add seed for TaxRate::where('code','EEF')->firstOrCreate(3%) , inject into FeeController, add auto-report to FinanceReportController No Political Members on SMC 2026 July Education Regs. § School Management Committee membership 🔴 No School Management Committee model, no governance module 🔴 High: Add SchoolCommittee Model + SchoolManagementController SMC tab with flag + photo ID upload for committee members Teacher 3-year transfer lock + 65-point evaluation 2026 July Regs. teacher transfers § 🔴 No transfer logic, no seniority/qualification/training scoring 🔴 Add to HrController + StaffController transfer workflow with 3-yr gate Vacancy reporting into IEMIS within 7 days 2026 July Regs. § reporting transparency 🔴 No vacancy/IEMIS export module 🟠 Add to Recruitment (exists) + setting for auto-email to MoEST Teacher Licensing (TSC permanent) Teacher Service Commission Act 2074 🟡 TeacherQualification exists but NO license-number field 🔴 Add license_no , license_issued_at , tsc_registration_no to TeacherQualification + validation warning SEE / SLC / NEB Grade 11–12 Board Roll-sheet Export NEB examination bylaws 2080 🟡 Transcript/ResultSheet exist but no standard NEB board format export (symbol-no, theory/practical, credit-hours, GPA calculation 4.0 scale) 🔴 TranscriptController + ResultSheetController need NEB templates 11-Fee-Head Rule (Tuition, Annual, Admission, Deposit, Exam, Computer, Special, Hostel, Meal, Transport, Tour only) Fee Determination Directive 2072 §6 🔴 FeeCategory allows ANY string; no validation 🔴 FeeCategory enum/validate + warning for categories outside Nepal's legal 11 Free & Compulsory Basic Ed. (Grades 1–8): Prohibition of Enrollment Fees Constitution Art. 31 + Compulsory Free Edu. Act 2075 §3 🔴 No auto-block — system allows charging Grade 1–8 admission fee 🔴 Add admission-application gate in AdmissionController + invoice gate Student attendance registers for Local Government audit Local Gov. Op. Act 2074 Sch. 8 concurrent list 🟢 Attendance model present but attendance format has late_minutes ; not Nepal-specific government register format (teacher signature column, daily roll-number order) 🟡 Export PDF to match standard District format
+
+### 2. 🔐 Authorization: 1 Policy for 150 Models = Unauthorized CRUD possible by any logged-in teacher/student role
+Enterprise standard: 1 Policy per Model, covering viewAny/view/create/update/delete/forceDelete/restore (Fedena: 82 policies, PowerSchool: 140 policies).
+NepalSchoolHub: Only QuestionPaperPolicy.php .
+
+The entire authorization layer relies exclusively on Gate::before() wildcard for super-admin + role middleware :
+
+🔴 Production security risk. Fix: 62 Policies minimum (one per public-facing model) with tenant+ownership tests — AuthServiceProvider needs a $policies = [Student::class => StudentPolicy::class, ...] map.
+
+### 3. 💳 Finance: Double-Entry Ledger missing mandatory controls (audit-trail / closing balances / reconciliation)
+Ledger model present: LedgerEntry.php , sync controller: LedgerController.php . Enterprise requires:
+
+Missing Feature PowerSchool Behavior Current NepalSchoolHub Trial Balance + Balance Sheet auto-build from LedgerEntry grouped by account Built-in P&L / BS, exportable IDS format for tax 🔴 None Period Closing Lock (lock FY 2079-80 so no entries can back-date) Reconciled periods are immutable; requires Super role + written closing_reason audit 🔴 Any finance user can POST LedgerController::sync with any posting_date Bank Reconciliation module (match statement rows vs. payments) Download bank CSV; fuzzy match + unmatched carry-over 🔴 None Voucher approvals: Maker-Checker Separation User A posts voucher; User B (different account) approves; status=pending until approved 🔴 Voucher direct-write, no approval chain TDS / VAT withholding auto-calculation Nepal 13% VAT, 1.5% TDS on services auto-invoiced 🔴 No TaxRate logic for VAT/TDS
+
+Files to extend: LedgerEntry, IncomeRecord, Expense, Invoice, Payment, TaxRate.
+
+### 4. 📱 SMS / Push Notifications — Zero Domestic Gateways
+Nepal legal requirement: Absence alerts to parent mobile within 1 hour (Education Regulation 2059 §51(4) monitoring directive). Also the most-used enterprise feature of Fedena in Nepal.
+
+Service Nepal Provider Market Share Present SMS Gateway (Sparrow SMS / Esewa SMS / BroadPay SMS / Cell SMS) 82% of schools use Sparrow SMS 🔴 SmsLog.php model exists but NO driver — no code in the codebase actually sends SMS Parent Absence-SMS Trigger (auto send when status='off' ) — 🔴 AttendanceController::store() writes rows but no SMS dispatch job Push Notifications / PWA Firebase Cloud Messaging for Nepal 🔴 No Service Worker, no FCM tokens on users table eSewa / Khalti / FonePay / IME Pay / Connect IPS 95%+ of Nepali fee payments go through domestic PSPs; PayPal does NOT work in Nepal for settlement 🔴 Only StripeGateway + PayPalGateway files; zero Nepali PSP implementations — most schools CANNOT COLLECT FEES ONLINE with current stack
+
+🔴 This is adoption-blocking. Add: app/Services/Payment/Gateways/SparrowSms.php , ESewaGateway.php , KhaltiGateway.php , plus NotifyParentOfAbsence Job dispatched on Attendance::created .
+
+### 5. 🏷️ Admissions Workflow — No Evaluation/Entrance Exam / Document Verification State Machine
+Enterprise (Fedena Alma): Submitted → Docs Verified → Entrance Exam → Interview → Merit List Published → Admitted → Fee Paid → Class Assigned → Roll No. NepalSchoolHub: AdmissionApplication model exists but the controller flow is CREATE → direct decision , no states.
+
+🔴 Risk: Schools cannot legally admit students without documented document-verification steps per Education Regulation 2059 §16(2).
+
+### 6. 🧑‍🏫 HR/Payroll: Nepal-Required Payroll Deductions Missing (EPF, CIT, SSF, Tax)
+Nepal teacher payroll mandatory deductions:
+
+Deduction %age Exists? Employees Provident Fund (क.स.कोष / EPF) 10% employee + 10% school 🔴 Not in SalarySlip/TeacherPayroll Citizen Investment Trust (CIT) Optional 10-33% 🔴 Not present Social Security Fund (SSF/Aayog Tatha Sanchaya Kosh) 31% total (11% emp + 20% school) 🔴 Not present Income Tax withholding slabs (Schedule 1, Finance Act 2081) 1% / 10% / 20% / 30% 🔴 Not present Salary increment scales (श्रेणी वृद्धि) SLC-SEE/+2/B.Ed/M.Ed licensed bands 🟡 Not modeled as scale; manual Dashain / Tihar / Festival Bonus (1-month salary) Nepal Labour Act 2074 §19 🔴 Not auto-applied
+
+File locations: TeacherPayrollController , SalarySlipController , HrController
+
+## 🟠 HIGH GAPS (major modules that exist in Fedena/PowerSchool but are skeleton-only here)
+Enterprise Module Fedena Modules NepalSchoolHub Status Fix 📚 LMS / Learning Mgmt SCORM content, video, quizzes, due dates, plagiarism, Zoom/Teams integration 🟡 Half-baked : LessonPlan.php , Curriculum, Homework, Assignment, OnlineClass, OnlineExam exist but: (1) no video-lecture player , (2) no auto-graded quiz engine (OnlineExam exists → no multi-attempt timer), (3) no plagiarism check , (4) no discussion forum, (5) no SCORM/xAPI High: Add LiveClass recording archive + auto-grade to OnlineExam 🔍 State/District Reporting Engine PowerSchool 500+ state compliance templates, Infinite Campus flash-report export 🔴 ReportCenterController exists but no pre-built Nepal government templates High: Add 12 required reports (Monthly Attendance, Scholarship 10% Roster, Teacher Post Balancing, IEMIS CSV, Grade 8 BLE Entry, SEE Roll-sheet, NEB 11/12 Entry) 🚍 Vehicle GPS / Live Tracking Jupsoft eConnect/Aum live GPS, RFID tap-in tap-out 🟡 Transport tables (Vehicle, Driver, TransportRoute, RouteStop, StudentTransport, TransportAttendance, RFID) — but no GPS integration / Live map Medium: Add gps_latest_lat/lng on Vehicle; Leaflet map dashboard widget 📖 Library — Barcode Checkin/Checkout + OPAC Alma/Fedena Zebra/Kitabu barcode scanners; public OPAC search for parents/students 🟡 Library models (Book/Issue/Category/Member/Ebook exist) — but no barcode generation/scanning , no OPAC public page Medium 🏥 Nurse / Clinic Module Dispensary log, height/weight BMI, vaccination records, allergy flags 🟡 MedicalRecord.php model exists but no clinic visits, no prescriptions, no BMI percentile calculator for age Medium: Extend MedicalRecord + Dashboard height/weight chart 💼 Alumni Module + Donations Blackbaud #1 feature for private schools: alumni network, donations/fundraising, reunions 🔴 0% — no Alumni/Donation/Donor model Low 🎯 Behavior / Discipline Analytics — PBIS Tiered Infinite Campus Behavior Intervention + MTSS referral tracking; auto escalate 3+ referrals 🟡 DisciplinaryRecord.php exists but no tier logic / no MTSS auto-escalation Medium 👨‍👩‍👧 Student Support: CCE / RTI / IEP Fedena has dedicated IEP/RTI plans under NEP 2020; Nepal Schools follow CCE up to Grade 8 🔴 None; no IEP/RTI/CCE tracker Medium 🏫 Multi-Campus Consolidation (one school with 2+ buildings sharing payroll) Academia ERP + Campus365 are strong here 🟡 We have multi-TENANT but NOT multi-CAMPUS within a tenant (no Campus model under a single school_id, no class-room-building dimension) Medium: Add campus_id column to classes/rooms if needed 📦 Fixed-Asset Depreciation Module (IDS-compatible) Smart School, Campus365 have full fixed-asset depreciation schedule, 5% school furn WDV 🟡 Asset.php and AssetCategory exist; StockTransaction for inventory but NO asset depreciation (IDS 15-year, 10-year WDV schedules) Medium for private schools that need audited Balance Sheets 🇳🇵 Nepali Language UI (नेपाली) EduSys/Edusoft bilingual (Eng/Hin + local language) 🟡 English only; no lang/ne.json or Nepali Devanagari UI translations HIGH for local school usability
+
+## 🟡 MEDIUM (Nice-to-have, enterprise-standard polish)
+Feature Current Mobile App (React Native / Flutter) 🔴 None — responsive web only OAuth2 / SAML SSO (Google/Microsoft/AD) 🟡 LoginController has local auth only; no Socialite providers wired for Nepali Google Workspace for Education AI-Powered Predictive Attrition 🟢 We have AiFeatureWebController, but predictive models don't run against real attendance/final_marks (only LLM helpers) Custom Report Builder UI (drag-drop like Jasper/BIRT) 🔴 All reports are controller-preset; no ad-hoc drag-drop fields with aggregate/group Two-Factor Auth (TOTP/Email/WhatsApp OTP) 🟢 TwoFactorAuth + controller present but no forced-TOTP policy for admin/finance roles Data Backup Scheduler (auto S3/R2 upload + DB dump) 🔴 No artisan scheduler visible Password rotation policy + breached-password list (2077 Nepal Data Protection Act §8) 🟡 SessionTimeout exists; no password-expiry or HaveIBeenPwned API Data Retention Policy (student records min 5 years per Regulation 2059 §66) 🟡 No auto-purge or retention rules
+
+## 🟢 Areas NepalSchoolHub is Already Enterprise-Grade
+Area Score Evidence Multi-Tenant Logical Isolation (the core SaaS requirement) 95/100 All 150 models + HasTenant trait; TenantScope + school_id auto-fill; middleware wired in Kernel; SetSchoolContext; super-admin bypass; AuditLog model — 9 critical bugs fixed in previous session SaaS Platform Ops: School registration + Approval Workflow 90/100 SchoolManagementController + pending/active/cancelled status gate Attendance (4 capture methods: QR/RFID/Biometric/Manual) 85/100 RfidCard, QrAttendanceToken, BiometricDevice, Staff/Student/Hostel/Transport — 4 attendance silos fully modeled Examination Suite (Theory/Practical/Online/Question Bank/Seat Plan/Hall/Re-exam) 82/100 20+ exam-related models/controllers (Exam, ExamRule, GradingSystem, GradeRule, Mark, FinalMark, PracticalExam, OnlineExam, QuestionBank/QuestionPaper/QuestionTag/QuestionCategory/QuestionApproval/QuestionVersion/QuestionPrintLog/QuestionDownloadLog/QuestionImage/ExamSchedule/ExamHall/ExamSeatAllocation/ReExamApplication/ResultSheet/Transcript/QuestionPaperTemplate) — deepest area of platform Fee Structures (Discounts/Installments) 80/100 FeeCategory, FeeStructure, FeeDiscount, StudentFeeDiscount, FeeInstallment — all 11 Nepal fee heads accommodated Hostel Management (Room/Bed/Allocate/Attendance/Visitors/Maintenance) 84/100 9 Hostel-related controllers/models Roles + Permission UI (Assign Roles UX) 82/100 RoleController + /roles/users + Spatie/Permissions
+
+## 🗺️ Prioritized 4-Phase Remediation Roadmap
+### Phase 1 — 🚨 Launch Blocking (Week 1–3 — before any school goes live)
+Estimated effort: ~35% of total gap work.
+
+1. 62 Eloquent Policies + AuthServiceProvider map — minimum: User, Student, Teacher, Invoice, Payment, Expense, LedgerEntry, FeeStructure, Attendance, Mark, FinalMark, Exam, ResultSheet, QuestionPaper, HostelAllocation, Vehicle, MedicalRecord, DisciplinaryRecord, Promotion, AdmissionApplication, Scholarship
+2. Nepal PSP Gateways: eSewa v2 + Khalti v2 (POST /api/payment/esewa/initiate, verify, callback)
+3. Education Equity Fee 3% seed + auto-invoicing (TaxRate, FeeController invoice subtotal hook)
+4. 11-Head FeeCategory validation (only allow legal names; warning UI)
+5. Scholarship ≥10% KPI Dashboard widget with enrollment share + MoEST IEMIS CSV export
+6. Sparrow SMS driver + Attendance Created Job: dispatch SMS to parents for status='off'
+### Phase 2 — 🟠 Nepal Regulatory Hardening (Month 2)
+7. EPF/CIT/SSF/Nepal Income Tax slabs in TeacherPayroll + SalarySlip with mandatory approval lock
+8. Maker-Checker vouchers in LedgerController (status: pending/approved/rejected + approver_id)
+9. Period Closing Lock + Reconciliation for LedgerEntry (FY 2079-80/2080-81 etc.)
+10. SEE (Grade 10) / NEB 11 & 12 Roll-sheet PDF templates
+11. TSC License fields in TeacherQualification + 3-year transfer lock in HrController
+12. Basic(1–8)/Secondary(9–12) only grade setting, block invalid combos
+13. Grade 1–8 no-admission-fee enforcement in AdmissionController
+### Phase 3 — 🟡 LMS + Reports (Month 3-4)
+14. OnlineExam: Auto-grade + timer + per-question analytics
+15. 12 Pre-built Nepal Government Reports in ReportCenter (Attendance Register, Scholarship, Teacher Post, etc.)
+16. Nepali Devanagari Translation: ne.json + /lang/ne/ scaffolding; UI lang switcher
+17. Google/Microsoft SSO via Socialite for .school.edu.np domains
+### Phase 4 — 🔵 Enterprise Differentiators (Month 5+)
+18. Alumni/Donor Fundraising + SMC governance module
+19. OPAC Library + Barcode (QR) checkin/checkout
+20. Live GPS in Transport Vehicle + Leaflet map
+21. Clinic/Health module + BMI percentile vs WHO Nepal children standards
+22. Fixed Asset Depreciation (WDV/Straight-Line) schedules + IDS export
+23. Predictive Analytics: student attrition from 30-day attendance + marks data
+## 📁 Top 10 Files That Need Updates First (Phase 1)
+1. AuthServiceProvider.php — register all 62 policies
+2. FeeController.php — Education Equity Fee 3% auto-line, 11-fee-head validation
+3. HomeController.php — Scholarship % KPI widget + Nepal-school specific 10% compliance banner
+4. New file : app/Services/Payment/Gateways/KhaltiGateway.php
+5. New file : app/Services/Payment/Gateways/ESewaGateway.php
+6. New file : app/Services/Sms/SparrowSmsSender.php
+7. AttendanceController.php — after store, dispatch NotifyParentSmsJob
+8. TaxRate.php seeder + EEF (3%) / VAT (13%) / TDS (1.5%) codes
+9. TeacherPayrollController.php — EPF/CIT/SSF/Nepal IT slabs
+10. SuperAdmin/SchoolManagementController.php — School Management Committee governance tab with "no political party member" boolean flag + document upload

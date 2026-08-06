@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -8,9 +9,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InventoryItem extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'name','sku','category_id','supplier_id','unit',
         'quantity_in_stock','reorder_level','unit_price',
         'location','description','is_active',

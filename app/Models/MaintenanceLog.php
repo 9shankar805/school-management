@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -8,9 +9,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MaintenanceLog extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'vehicle_id', 'type', 'title', 'description', 'service_date',
         'next_service_date', 'odometer_reading', 'service_provider',
         'cost', 'status', 'recorded_by', 'notes',

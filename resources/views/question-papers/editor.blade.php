@@ -62,8 +62,6 @@
 #cropperImgWrap img { display:block; max-width:100%; }
 </style>
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-<div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">@include('layouts.left-menu')</div>
 <div class="flex-1 flex flex-col overflow-auto">
 
 {{-- ── Top action bar ─────────────────────────────────────────────────────── --}}

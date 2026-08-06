@@ -1,17 +1,20 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use App\Models\Exam;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Mark extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'marks',
         'student_id',
         'class_id',

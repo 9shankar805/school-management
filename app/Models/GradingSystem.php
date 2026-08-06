@@ -1,17 +1,20 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use App\Models\Semester;
 use App\Models\SchoolClass;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class GradingSystem extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'system_name',
         'class_id',
         'semester_id',

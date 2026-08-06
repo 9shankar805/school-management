@@ -1,5 +1,6 @@
 <?php
 namespace App\Models;
+use App\Traits\HasTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -7,8 +8,9 @@ use Illuminate\Support\Facades\Storage;
 
 class TeacherDocument extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
-    protected $fillable = ['teacher_id','document_type','title','file_path','file_name','mime_type','file_size','is_verified','uploaded_by'];
+    protected $fillable = ['school_id', 'teacher_id','document_type','title','file_path','file_name','mime_type','file_size','is_verified','uploaded_by'];
     protected $casts = ['is_verified'=>'boolean'];
 
     const TYPES = [

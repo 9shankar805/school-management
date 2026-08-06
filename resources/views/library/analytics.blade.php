@@ -3,7 +3,6 @@
 @section('content')
 <div class="container">
     <div class="row justify-content-start">
-        @include('layouts.left-menu')
         <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
             <div class="row pt-2">
                 <div class="col ps-4">
@@ -132,7 +131,7 @@
                                         <td>{{ $member->user->first_name }} {{ $member->user->last_name }}</td>
                                         <td><code>{{ $member->card_number }}</code></td>
                                         <td><span class="badge bg-secondary">{{ ucfirst($member->member_type) }}</span></td>
-                                        <td><span class="text-danger fw-bold">${{ number_format($member->outstanding_fine, 2) }}</span></td>
+                                        <td><span class="text-danger fw-bold">Rs. {{ number_format($member->outstanding_fine, 2) }}</span></td>
                                         <td><a href="{{ route('library.members.show', $member->id) }}" class="btn btn-sm btn-outline-warning">View</a></td>
                                     </tr>
                                     @endforeach

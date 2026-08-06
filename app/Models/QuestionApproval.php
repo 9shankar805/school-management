@@ -1,15 +1,17 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class QuestionApproval extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
-    protected $fillable = ['paper_id', 'reviewer_id', 'action', 'comments', 'actioned_at'];
+    protected $fillable = ['school_id', 'paper_id', 'reviewer_id', 'action', 'comments', 'actioned_at'];
     protected $casts    = ['actioned_at' => 'datetime'];
 
     const ACTIONS = [

@@ -73,6 +73,17 @@ class LeaveController extends Controller
     // ── Leave Applications ────────────────────────────────────────────────
     public function index(Request $request)
     {
+        $user = auth()->user();
+        if ($user && ($user->hasRole('student') || ($user->hasRole(['teacher', 'class-teacher']) && !$user->can('view teachers')))) {
+            $applications = LeaveApplication::with('leaveType', 'reviewer')
+                ->where('user_id', $user->id)
+                ->latest()
+                ->paginate(15);
+            $types = LeaveType::where('is_active', true)->get();
+
+            return view('leave.student', compact('applications', 'types'));
+        }
+
         $this->authorize('view teachers');
         $status  = $request->query('status', 'pending');
         $search  = $request->query('search');

@@ -1,12 +1,15 @@
 <?php
 namespace App\Models;
+use App\Traits\HasTenant;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class PerformanceReview extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
     protected $fillable = [
+        'school_id',
         'teacher_id','reviewer_id','review_period','review_date',
         'teaching_quality','punctuality','student_engagement','communication','professionalism',
         'overall_rating','strengths','areas_for_improvement','goals','reviewer_comments','status',

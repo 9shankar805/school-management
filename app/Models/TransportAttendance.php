@@ -1,17 +1,20 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class TransportAttendance extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     protected $table = 'transport_attendance';
 
     protected $fillable = [
+        'school_id',
         'student_id', 'route_id', 'date', 'trip', 'status', 'actual_time', 'marked_by', 'remarks',
     ];
 

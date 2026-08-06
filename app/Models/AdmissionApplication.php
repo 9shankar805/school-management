@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -8,9 +9,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class AdmissionApplication extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'application_number', 'first_name', 'last_name', 'email', 'phone',
         'birthday', 'gender', 'nationality', 'religion', 'blood_type', 'address',
         'session_id', 'class_id',

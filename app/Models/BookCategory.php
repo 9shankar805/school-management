@@ -1,16 +1,18 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class BookCategory extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
-    protected $fillable = ['name', 'slug', 'description', 'color'];
+    protected $fillable = ['school_id', 'name', 'slug', 'description', 'color'];
 
     // Auto-generate slug from name
     protected static function booted(): void

@@ -1,10 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">
-        @include('layouts.left-menu')
-    </div>
 
     <div class="flex-1 p-6 lg:p-8 overflow-auto">
 
@@ -18,7 +14,7 @@
             <div>
                 <p class="text-xs text-slate-400 uppercase font-semibold tracking-wide">Total Outstanding</p>
                 <p class="text-3xl font-bold {{ $totalOutstanding > 0 ? 'text-rose-600' : 'text-emerald-600' }} mt-1">
-                    {{ number_format($totalOutstanding, 2) }}
+                    NPR {{ number_format($totalOutstanding, 2) }}
                 </p>
             </div>
             @if($totalOutstanding == 0)
@@ -48,9 +44,9 @@
                     <div class="flex-1 min-w-0">
                         <p class="font-semibold text-slate-800 text-sm">{{ $inv->title }}</p>
                         <p class="text-xs text-slate-400 mt-0.5">
-                            Amount: <span class="font-medium text-slate-600">{{ number_format($inv->amount, 2) }}</span>
+                            Amount: <span class="font-medium text-slate-600">NPR {{ number_format($inv->amount, 2) }}</span>
                             @if($inv->due_date) · Due: {{ \Carbon\Carbon::parse($inv->due_date)->format('d M Y') }} @endif
-                            @if($inv->remaining > 0) · Remaining: <span class="text-rose-600 font-medium">{{ number_format($inv->remaining, 2) }}</span> @endif
+                            @if($inv->remaining > 0) · Remaining: <span class="text-rose-600 font-medium">NPR {{ number_format($inv->remaining, 2) }}</span> @endif
                         </p>
                     </div>
                     <div class="flex items-center gap-2">

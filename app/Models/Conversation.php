@@ -1,15 +1,17 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class Conversation extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
-    protected $fillable = ['parent_id', 'teacher_id', 'student_id', 'subject'];
+    protected $fillable = ['school_id', 'parent_id', 'teacher_id', 'student_id', 'subject'];
 
     public function parent()
     {

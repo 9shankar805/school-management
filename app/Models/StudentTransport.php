@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -8,11 +9,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentTransport extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
     protected $table = 'student_transport';
 
     protected $fillable = [
+        'school_id',
         'student_id', 'route_id', 'stop_id', 'start_date', 'end_date',
         'direction', 'monthly_fee', 'status', 'notes',
     ];

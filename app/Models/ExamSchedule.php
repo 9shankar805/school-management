@@ -1,16 +1,19 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class ExamSchedule extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'exam_id', 'hall_id', 'exam_date',
         'start_time', 'end_time', 'invigilator_id',
         'notes', 'session_id',

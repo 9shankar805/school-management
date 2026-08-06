@@ -43,7 +43,39 @@ class ResultSheetController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
         $sessionId = $this->getSchoolCurrentSession();
+
+        if ($user && $user->hasRole('student')) {
+            $promotionRepo = new \App\Repositories\PromotionRepository();
+            $classInfo     = $promotionRepo->getStudentCurrentClass($user->id, $sessionId);
+
+            $classId   = $classInfo?->class_id ?? \App\Models\Promotion::where('student_id', $user->id)->latest()->first()?->class_id ?? $user->academic_info?->class_id;
+            $sectionId = $classInfo?->section_id ?? \App\Models\Promotion::where('student_id', $user->id)->latest()->first()?->section_id ?? $user->academic_info?->section_id ?? 0;
+
+            $semesters = $this->semesterRepository->getAll($sessionId);
+            $semesterId = (int) $request->query('semester_id', $semesters->first()?->id ?? 0);
+
+            $result = null;
+
+            if ($classId && $semesterId) {
+                $repo   = new ResultRepository();
+                $result = $repo->getStudentResult($user->id, $semesterId, $classId, $sectionId, $sessionId);
+
+                request()->merge([
+                    'class_id'    => $classId,
+                    'section_id'  => $sectionId,
+                    'semester_id' => $semesterId
+                ]);
+            }
+
+            if ($result && isset($result['student'])) {
+                return view('results.student', compact('result', 'semesters', 'semesterId', 'sessionId'));
+            }
+
+            return view('results.student-empty', compact('semesters', 'semesterId', 'sessionId'));
+        }
+
         $classes   = $this->schoolClassRepository->getAllBySession($sessionId);
         $semesters = $this->semesterRepository->getAll($sessionId);
 

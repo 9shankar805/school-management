@@ -1,18 +1,21 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use App\Models\Course;
+use App\Models\Promotion;
 use App\Models\Section;
 use App\Models\Syllabus;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class SchoolClass extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
-    protected $fillable = ['class_name', 'session_id'];
+    protected $fillable = ['school_id', 'class_name', 'session_id'];
 
     /**
      * Convenience accessor so ->name works alongside ->class_name
@@ -44,5 +47,13 @@ class SchoolClass extends Model
     public function syllabi()
     {
         return $this->hasMany(Syllabus::class, 'class_id', 'id');
+    }
+
+    /**
+     * Get the promotions (student enrollments) for the class.
+     */
+    public function promotions()
+    {
+        return $this->hasMany(Promotion::class, 'class_id', 'id');
     }
 }

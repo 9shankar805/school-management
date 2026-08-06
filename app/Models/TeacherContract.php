@@ -1,5 +1,6 @@
 <?php
 namespace App\Models;
+use App\Traits\HasTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -7,8 +8,9 @@ use Carbon\Carbon;
 
 class TeacherContract extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
-    protected $fillable = ['teacher_id','contract_type','start_date','end_date','basic_salary','position','terms','attachment_path','status','created_by'];
+    protected $fillable = ['school_id', 'teacher_id','contract_type','start_date','end_date','basic_salary','position','terms','attachment_path','status','created_by'];
     protected $casts = ['start_date'=>'date','end_date'=>'date','basic_salary'=>'decimal:2'];
 
     const TYPES = ['permanent'=>'Permanent','temporary'=>'Temporary','part_time'=>'Part-Time','visiting'=>'Visiting','probation'=>'Probation'];

@@ -1,0 +1,70 @@
+{
+  "name": "NepalSchoolHub ERP",
+  "short_name": "SchoolHub",
+  "description": "Comprehensive school management system — students, teachers, finance, attendance and more.",
+  "start_url": "/home",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "lang": "en",
+  "categories": ["education", "productivity", "business"],
+  "icons": [
+    {
+      "src": "/imgs/logo_icon_512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/imgs/logo_icon_192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/imgs/logo_icon_64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/imgs/logo_icon_32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Home",
+      "description": "Open the main dashboard",
+      "url": "/home",
+      "icons": [{ "src": "/imgs/logo_icon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Students",
+      "short_name": "Students",
+      "description": "View student list",
+      "url": "/students",
+      "icons": [{ "src": "/imgs/logo_icon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Attendance",
+      "short_name": "Attendance",
+      "description": "Mark today's attendance",
+      "url": "/attendances",
+      "icons": [{ "src": "/imgs/logo_icon.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Notifications",
+      "short_name": "Alerts",
+      "description": "View notifications",
+      "url": "/notifications",
+      "icons": [{ "src": "/imgs/logo_icon.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

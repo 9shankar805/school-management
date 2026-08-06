@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -8,9 +9,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Curriculum extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
+    protected $table = 'curriculums';
+
     protected $fillable = [
+        'school_id',
         'title', 'description', 'program_id', 'class_id',
         'course_id', 'session_id', 'status', 'objectives', 'learning_outcomes',
     ];
@@ -32,6 +37,6 @@ class Curriculum extends Model
 
     public function topics()
     {
-        return $this->hasMany(CurriculumTopic::class)->orderBy('order');
+        return $this->hasMany(CurriculumTopic::class, 'curriculum_id')->orderBy('order');
     }
 }

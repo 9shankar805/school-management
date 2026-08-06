@@ -2,36 +2,79 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\School;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\View;
 
+/**
+ * SetSchoolContext (Tenant Middleware)
+ *
+ * Resolves the current school tenant for every request and binds it to:
+ *   - config('tenant.school_id')   — used by TenantScope
+ *   - config('tenant.school')      — the School model instance
+ *   - View::share('currentSchool') — available in all Blade views
+ *
+ * Resolution priority:
+ *   1. Subdomain  — slug.nepalschoolhub.com  → lookup schools.slug
+ *   2. Authenticated user's school_id        → direct FK
+ *   3. Session    — set during login         → fallback
+ *   4. null       — super-admin / platform routes
+ */
 class SetSchoolContext
 {
-    /**
-     * Attach school_id to the current request context so models can
-     * automatically scope queries to the right school (multi-tenancy).
-     *
-     * Reads school_id from:
-     *   1. The authenticated user's academic_info.school_id  (future)
-     *   2. X-School-ID header (for super-admin cross-school access)
-     *   3. Defaults to null (single-school setup)
-     */
     public function handle(Request $request, Closure $next): mixed
     {
+        $school   = null;
         $schoolId = null;
 
-        // Priority 1: explicit header (super-admin only)
-        if ($request->hasHeader('X-School-ID') && $request->user()?->hasRole('super-admin')) {
-            $schoolId = (int) $request->header('X-School-ID');
+        // ── 1. Subdomain resolution ──────────────────────────────────────
+        $host = $request->getHost();
+        // Matches anything like "schoolslug.nepalschoolhub.com"
+        if (preg_match('/^([a-z0-9\-]+)\.(nepalschoolhub\.com|localhost)$/i', $host, $matches)) {
+            $slug = $matches[1];
+            // Ignore www and bare domain
+            if (!in_array($slug, ['www', 'app', 'api'])) {
+                $school = School::where('slug', $slug)
+                                ->where('status', 'active')
+                                ->first();
+            }
         }
 
-        // Priority 2: derive from user's academic/staff record (future use)
-        // $schoolId ??= $request->user()?->academic_info?->school_id;
+        // ── 2. Authenticated user's school_id ────────────────────────────
+        if (!$school && Auth::check()) {
+            $user = Auth::user();
 
-        // Store in config for easy access throughout the request lifecycle
-        Config::set('school.current_id', $schoolId);
-        $request->merge(['_school_id' => $schoolId]);
+            // Super-admins have no school_id — they see everything
+            if ($user->isSuperAdmin()) {
+                // Allow cross-school override via X-School-ID header (super-admin only)
+                if ($request->hasHeader('X-School-ID')) {
+                    $overrideId = (int) $request->header('X-School-ID');
+                    $school     = School::find($overrideId);
+                }
+            } elseif (!empty($user->school_id)) {
+                $school = School::find($user->school_id);
+            }
+        }
+
+        // ── 3. Session fallback ───────────────────────────────────────────
+        if (!$school && session()->has('tenant_school_id')) {
+            $school = School::find(session('tenant_school_id'));
+        }
+
+        // ── Bind to config + view ─────────────────────────────────────────
+        if ($school) {
+            $schoolId = $school->id;
+            session(['tenant_school_id' => $schoolId]);
+        }
+
+        Config::set('tenant.school_id', $schoolId);
+        Config::set('tenant.school',    $school);
+
+        // Share with all Blade views
+        View::share('currentSchool', $school);
 
         return $next($request);
     }

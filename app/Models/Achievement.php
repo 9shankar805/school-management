@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,9 +10,11 @@ use Illuminate\Support\Facades\Storage;
 
 class Achievement extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'student_id', 'category', 'title', 'award_type',
         'description', 'issuing_body', 'level',
         'awarded_date', 'attachment_path', 'recorded_by',

@@ -282,6 +282,11 @@ class ResultRepository
             ->where('final_marks.session_id',  $sessionId)
             ->where('final_marks.semester_id', $semesterId)
             ->where('final_marks.class_id',    $classId)
+            ->when(config('tenant.school_id'), function ($q) {
+                $schoolId = config('tenant.school_id');
+                return $q->where('final_marks.school_id', $schoolId)
+                         ->where('courses.school_id', $schoolId);
+            })
             ->groupBy('courses.id', 'courses.course_name')
             ->orderByDesc('avg_marks')
             ->get()
@@ -342,6 +347,12 @@ class ResultRepository
             ->where('final_marks.session_id',  $sessionId)
             ->where('final_marks.semester_id', $semesterId)
             ->where('final_marks.class_id',    $classId)
+            ->when(config('tenant.school_id'), function ($q) {
+                $schoolId = config('tenant.school_id');
+                return $q->where('final_marks.school_id', $schoolId)
+                         ->where('courses.school_id', $schoolId)
+                         ->where('exam_rules.school_id', $schoolId);
+            })
             ->groupBy('courses.course_name')
             ->get()
             ->toArray();

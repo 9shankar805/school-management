@@ -1,13 +1,16 @@
 <?php
 namespace App\Models;
+use App\Traits\HasTenant;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Carbon\Carbon;
 
 class TeacherPayroll extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
     protected $fillable = [
+        'school_id',
         'teacher_id','month','year','basic_salary','allowances','overtime','gross_salary',
         'tax_deduction','other_deductions','net_salary','working_days','present_days',
         'absent_days','leave_days','notes','status','payment_date','processed_by',

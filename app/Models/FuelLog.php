@@ -1,15 +1,18 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class FuelLog extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'vehicle_id', 'date', 'litres', 'cost_per_litre', 'total_cost',
         'odometer_reading', 'fuel_station', 'recorded_by', 'notes',
     ];

@@ -3,7 +3,6 @@
 @section('content')
 <div class="container">
     <div class="row justify-content-start">
-        @include('layouts.left-menu')
         <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
             <div class="row pt-2">
                 <div class="col ps-4">
@@ -38,7 +37,7 @@
                                         <dt class="col-5">Afternoon Dep.</dt><dd class="col-7">{{ $route->afternoon_departure ?? '—' }}</dd>
                                         <dt class="col-5">Afternoon Arr.</dt><dd class="col-7">{{ $route->afternoon_arrival ?? '—' }}</dd>
                                         <dt class="col-5">Distance</dt><dd class="col-7">{{ $route->distance_km ? $route->distance_km.' km' : '—' }}</dd>
-                                        <dt class="col-5">Monthly Fee</dt><dd class="col-7 fw-semibold">${{ number_format($route->monthly_fee, 2) }}</dd>
+                                        <dt class="col-5">Monthly Fee</dt><dd class="col-7 fw-semibold">Rs. {{ number_format($route->monthly_fee, 2) }}</dd>
                                         <dt class="col-5">Students</dt><dd class="col-7"><span class="badge bg-primary">{{ $route->active_students_count }}</span></dd>
                                     </dl>
                                     @if($route->description)<p class="text-muted small mt-2">{{ $route->description }}</p>@endif
@@ -122,7 +121,7 @@
                                                 <td class="small fw-semibold">{{ $alloc->student->first_name }} {{ $alloc->student->last_name }}</td>
                                                 <td class="small text-muted">{{ $alloc->stop?->name ?? '—' }}</td>
                                                 <td class="small">{{ ucfirst(str_replace('_',' ',$alloc->direction)) }}</td>
-                                                <td class="small">${{ number_format($alloc->monthly_fee,2) }}</td>
+                                                <td class="small">Rs. {{ number_format($alloc->monthly_fee,2) }}</td>
                                                 <td>{!! $alloc->status_badge !!}</td>
                                             </tr>
                                             @empty

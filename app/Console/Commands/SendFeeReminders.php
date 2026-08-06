@@ -9,35 +9,72 @@ use Illuminate\Console\Command;
 
 class SendFeeReminders extends Command
 {
-    protected $signature   = 'fees:send-reminders';
-    protected $description = 'Send fee reminder notifications to parents for invoices due in 3 days';
+    /**
+     * Send fee due / overdue reminders to students and their parents.
+     *
+     * Run daily via Kernel schedule:
+     *   $schedule->command('fees:reminders')->dailyAt('08:00');
+     */
+    protected $signature   = 'fees:reminders
+                                {--days=3 : Send reminder N days before due date}
+                                {--overdue : Also send reminders for already-overdue invoices}';
+
+    protected $description = 'Send fee due-date reminders (and optionally overdue alerts) to students and parents.';
 
     public function handle(): int
     {
-        $targetDate = Carbon::today()->addDays(3)->toDateString();
+        $daysBefore = (int) $this->option('days');
+        $includeOverdue = $this->option('overdue');
 
-        $invoices = Invoice::where('status', 'unpaid')
-            ->whereNotNull('due_date')
+        $targetDate = Carbon::today()->addDays($daysBefore)->toDateString();
+
+        // Upcoming invoices due in N days
+        $upcoming = Invoice::with(['student.parents'])
+            ->where('status', 'unpaid')
             ->whereDate('due_date', $targetDate)
-            ->with('student.parents')
             ->get();
 
-        $count = 0;
-        foreach ($invoices as $invoice) {
-            $student = $invoice->student;
-            if (! $student) { continue; }
+        $this->info("Upcoming invoices due on {$targetDate}: {$upcoming->count()}");
 
-            foreach ($student->parents as $parent) {
-                $parent->notify(new FeeReminderNotification(
-                    invoiceNumber: (string) $invoice->id,
-                    amount:        number_format($invoice->amount, 2),
-                    dueDate:       $invoice->due_date,
-                ));
-                $count++;
+        foreach ($upcoming as $invoice) {
+            $this->sendReminder($invoice, false);
+        }
+
+        if ($includeOverdue) {
+            $overdue = Invoice::with(['student.parents'])
+                ->where('status', 'unpaid')
+                ->where('due_date', '<', today())
+                ->get();
+
+            $this->info("Overdue invoices: {$overdue->count()}");
+
+            foreach ($overdue as $invoice) {
+                $this->sendReminder($invoice, true);
             }
         }
 
-        $this->info("Sent {$count} fee reminder notification(s) for due date: {$targetDate}");
+        $this->info('Fee reminders sent successfully.');
         return self::SUCCESS;
+    }
+
+    private function sendReminder(Invoice $invoice, bool $isOverdue): void
+    {
+        $notification = new FeeReminderNotification(
+            invoiceNumber: (string) $invoice->id,
+            amount:        number_format($invoice->amount, 2),
+            dueDate:       $invoice->due_date?->toDateString() ?? 'N/A',
+        );
+
+        // Notify student
+        if ($invoice->student) {
+            $invoice->student->notify($notification);
+        }
+
+        // Notify parents
+        foreach ($invoice->student?->parents ?? [] as $parent) {
+            $parent->notify($notification);
+        }
+
+        $this->line(($isOverdue ? '[OVERDUE] ' : '') . "Sent reminder for invoice #{$invoice->id}");
     }
 }

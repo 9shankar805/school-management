@@ -1,17 +1,21 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class ExamHall extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'hall_name', 'building', 'floor',
-        'capacity', 'notes', 'is_active', 'session_id',
+        'capacity', 'columns', 'benches_per_column', 'students_per_bench',
+        'notes', 'is_active', 'session_id',
     ];
 
     protected $casts = ['is_active' => 'boolean'];

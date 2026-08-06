@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 
 class MediaFile extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasTenant;
 
     protected $fillable = [
         'school_id', 'uploaded_by', 'model_type', 'model_id', 'collection',

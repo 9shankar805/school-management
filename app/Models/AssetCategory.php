@@ -1,15 +1,17 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class AssetCategory extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
-    protected $fillable = ['name', 'type', 'description'];
+    protected $fillable = ['school_id', 'name', 'type', 'description'];
 
     public function assets()
     {

@@ -1,7 +1,5 @@
 @extends('layouts.app')
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">@include('layouts.left-menu')</div>
     <div class="flex-1 p-6 lg:p-8 overflow-auto">
 
         <div class="flex flex-wrap justify-between items-start mb-7 gap-4">
@@ -24,7 +22,7 @@
         {{-- KPI --}}
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center"><p class="text-2xl font-bold text-slate-800">{{ $payrolls->count() }}</p><p class="text-xs text-slate-400">Slips Generated</p></div>
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center"><p class="text-2xl font-bold text-emerald-600">${{ number_format($totalPaid) }}</p><p class="text-xs text-slate-400">Total Paid</p></div>
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center"><p class="text-2xl font-bold text-emerald-600">Rs. {{ number_format($totalPaid) }}</p><p class="text-xs text-slate-400">Total Paid</p></div>
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center"><p class="text-2xl font-bold text-amber-600">{{ $payrolls->where('status','draft')->count() }}</p><p class="text-xs text-slate-400">Pending</p></div>
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 text-center"><p class="text-2xl font-bold text-indigo-600">{{ $teachers->count() }}</p><p class="text-xs text-slate-400">Total Teachers</p></div>
         </div>
@@ -76,10 +74,10 @@
                                 <a href="{{ route('teacher.profile.show', $p->teacher_id) }}" class="font-medium text-slate-700 hover:text-indigo-600">{{ $p->teacher->full_name }}</a>
                             </div>
                         </td>
-                        <td class="px-5 py-3 text-slate-600">${{ number_format($p->basic_salary) }}</td>
-                        <td class="px-5 py-3 text-slate-600">${{ number_format($p->gross_salary) }}</td>
-                        <td class="px-5 py-3 text-rose-500">-${{ number_format($p->tax_deduction + $p->other_deductions) }}</td>
-                        <td class="px-5 py-3 font-bold text-emerald-600">${{ number_format($p->net_salary) }}</td>
+                        <td class="px-5 py-3 text-slate-600">Rs. {{ number_format($p->basic_salary) }}</td>
+                        <td class="px-5 py-3 text-slate-600">Rs. {{ number_format($p->gross_salary) }}</td>
+                        <td class="px-5 py-3 text-rose-500">-Rs. {{ number_format($p->tax_deduction + $p->other_deductions) }}</td>
+                        <td class="px-5 py-3 font-bold text-emerald-600">Rs. {{ number_format($p->net_salary) }}</td>
                         <td class="px-5 py-3 text-xs text-slate-500">{{ $p->present_days }}/{{ $p->working_days }} days</td>
                         <td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full font-medium {{ $p->status_badge }}">{{ ucfirst($p->status) }}</span></td>
                         <td class="px-5 py-3">

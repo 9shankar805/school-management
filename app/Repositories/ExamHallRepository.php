@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\ExamHall;
 use App\Models\ExamSeatAllocation;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ExamHallRepository
 {
@@ -50,24 +51,59 @@ class ExamHallRepository
     // ── Seat allocation helpers ───────────────────────────────────────────────
 
     /**
-     * Auto-allocate seats for all students in a schedule.
-     * Generates seat numbers like "A-01", "A-02", … up to hall capacity.
+     * Auto-allocate seats for all students in a schedule into Room Columns, Benches & Bench Positions.
+     * Bench capacity can be set to 1, 2, or 3 students per bench.
      *
      * @param  int    $scheduleId
-     * @param  array  $studentIds   Ordered list of student IDs to seat
-     * @param  string $prefix       Seat label prefix (default "A")
+     * @param  array  $studentIds        Ordered list of student IDs to seat
+     * @param  int    $numCols           Number of columns in the hall
+     * @param  int    $benchesPerCol     Number of benches per column
+     * @param  int    $studentsPerBench  Students per bench (1, 2, or 3)
+     * @param  string $strategy          Placement strategy ('alphabetical', 'roll_number', 'staggered')
      * @return int    Number of seats allocated
      */
-    public function autoAllocateSeats(int $scheduleId, array $studentIds, string $prefix = 'A'): int
-    {
+    public function autoAllocateSeats(
+        int $scheduleId,
+        array $studentIds,
+        int $numCols = 4,
+        int $benchesPerCol = 5,
+        int $studentsPerBench = 2,
+        string $strategy = 'alphabetical'
+    ): int {
+        $this->clearAllocations($scheduleId);
         $count = 0;
-        foreach ($studentIds as $i => $studentId) {
-            $seatNumber = $prefix . '-' . str_pad($i + 1, 2, '0', STR_PAD_LEFT);
 
-            ExamSeatAllocation::updateOrCreate(
-                ['schedule_id' => $scheduleId, 'student_id' => $studentId],
-                ['seat_number' => $seatNumber]
-            );
+        $studentsPerBench = max(1, min(3, $studentsPerBench));
+        $benchesPerCol    = max(1, $benchesPerCol);
+        $numCols          = max(1, $numCols);
+
+        foreach ($studentIds as $i => $studentId) {
+            // For staggered: place students in column-skip order (col1-b1, col2-b1, col3-b1, col4-b1, col1-b2...)
+            // to ensure adjacent benches in the same column don't have same-class students
+            if ($strategy === 'staggered') {
+                $totalBenches = $numCols * $benchesPerCol;
+                $benchGlobal  = ($i % $totalBenches);
+                $colNo        = ($benchGlobal % $numCols) + 1;
+                $benchNo      = intdiv($benchGlobal, $numCols) + 1;
+                $pos          = intdiv($i, $totalBenches) + 1;
+                if ($pos > $studentsPerBench) $pos = $studentsPerBench; // clamp
+            } else {
+                $benchIndex = intdiv($i, $studentsPerBench);
+                $pos        = ($i % $studentsPerBench) + 1;
+                $colNo      = intdiv($benchIndex, $benchesPerCol) + 1;
+                $benchNo    = ($benchIndex % $benchesPerCol) + 1;
+            }
+
+            $seatNumber = "C{$colNo}-B{$benchNo}-P{$pos}";
+
+            ExamSeatAllocation::create([
+                'schedule_id'    => $scheduleId,
+                'student_id'     => $studentId,
+                'seat_number'    => $seatNumber,
+                'column_no'      => $colNo,
+                'bench_no'       => $benchNo,
+                'bench_position' => $pos,
+            ]);
             $count++;
         }
         return $count;
@@ -78,14 +114,19 @@ class ExamHallRepository
      */
     public function getAllocations(int $scheduleId): Collection
     {
-        return ExamSeatAllocation::with('student')
+        return ExamSeatAllocation::with([
+                'student',
+                'student.promotions.schoolClass',
+            ])
             ->where('schedule_id', $scheduleId)
-            ->orderBy('seat_number')
+            ->orderByRaw("COALESCE(column_no,1) ASC, COALESCE(bench_no,1) ASC, COALESCE(bench_position,1) ASC")
             ->get();
     }
 
     public function clearAllocations(int $scheduleId): void
     {
-        ExamSeatAllocation::where('schedule_id', $scheduleId)->delete();
+        // Hard-delete all rows (including any soft-deleted ones) for this schedule
+        // so the unique constraints on (schedule_id, student_id) don't block re-allocation
+        \DB::table('exam_seat_allocations')->where('schedule_id', $scheduleId)->delete();
     }
 }

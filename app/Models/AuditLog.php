@@ -1,13 +1,16 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class AuditLog extends Model
 {
+    use SoftDeletes, HasTenant;
     protected $fillable = [
         'user_id', 'user_type', 'event', 'auditable_type', 'auditable_id',
         'old_values', 'new_values', 'url', 'ip_address', 'user_agent', 'tags',

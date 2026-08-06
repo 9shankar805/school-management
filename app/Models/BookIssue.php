@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,9 +10,11 @@ use Carbon\Carbon;
 
 class BookIssue extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'book_id',
         'member_id',
         'issued_by',

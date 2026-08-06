@@ -104,7 +104,7 @@ class LibraryController extends Controller
                          ->with('status', 'Book added to catalog successfully.');
     }
 
-    public function edit(int $id)
+    public function edit($id)
     {
         $this->authorize('edit books');
         $book       = Book::findOrFail($id);
@@ -112,7 +112,7 @@ class LibraryController extends Controller
         return view('library.edit', compact('book', 'categories'));
     }
 
-    public function update(Request $request, int $id)
+    public function update(Request $request, $id)
     {
         $this->authorize('edit books');
         $book = Book::findOrFail($id);
@@ -149,7 +149,7 @@ class LibraryController extends Controller
                          ->with('status', 'Book updated successfully.');
     }
 
-    public function destroy(int $id)
+    public function destroy($id)
     {
         $this->authorize('delete books');
         $book = Book::withCount('activeIssues')->findOrFail($id);
@@ -169,7 +169,7 @@ class LibraryController extends Controller
                          ->with('status', 'Book deleted from catalog.');
     }
 
-    public function show(int $id)
+    public function show($id)
     {
         $this->authorize('view books');
         $book = Book::with([

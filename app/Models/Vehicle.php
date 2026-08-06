@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,9 +10,11 @@ use Carbon\Carbon;
 
 class Vehicle extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'name', 'registration_number', 'type', 'make', 'model', 'year', 'color',
         'capacity', 'fuel_type', 'insurance_expiry', 'fitness_expiry', 'permit_expiry',
         'status', 'gps_device_id', 'current_lat', 'current_lng', 'gps_updated_at', 'notes',

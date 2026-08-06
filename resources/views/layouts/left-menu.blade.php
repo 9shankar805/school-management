@@ -1,539 +1,939 @@
-<div class="h-full flex flex-col py-4 px-3">
+{{-- NepalSchoolHub Sidebar Navigation --}}
+<nav class="sidebar-nav">
 
-    {{-- User badge --}}
-    <div class="flex items-center gap-3 px-2 py-3 mb-4 bg-slate-50 rounded-xl">
-        <img src="{{ auth()->user()->avatar }}" class="w-9 h-9 rounded-full object-cover flex-shrink-0" alt="">
-        <div class="min-w-0">
-            <p class="text-sm font-semibold text-slate-700 truncate">{{ auth()->user()->full_name }}</p>
-            <p class="text-[11px] text-slate-400 truncate capitalize">{{ str_replace('-', ' ', auth()->user()->primary_role) }}</p>
-        </div>
-    </div>
+@role('super-admin')
+{{-- ══════════════════════════════════════
+     SUPER-ADMIN SIDEBAR  (SaaS Platform Owner)
+══════════════════════════════════════ --}}
 
-    {{-- Nav --}}
-    <nav class="flex-1 space-y-0.5 overflow-y-auto">
+    <p class="sidebar-section-label">Main</p>
+    <a href="{{ url('home') }}" class="sidebar-link {{ request()->is('home') || request()->is('super*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-grid-fill"></i></span>
+        <span class="sidebar-link-text">Dashboard</span>
+    </a>
+    <a href="{{ route('central_analytics.index') }}" class="sidebar-link {{ request()->is('analytics*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-pie-chart-fill"></i></span>
+        <span class="sidebar-link-text">Analytics</span>
+    </a>
+    <a href="{{ route('notifications.index') }}" class="sidebar-link {{ request()->is('notifications*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-bell-fill"></i></span>
+        <span class="sidebar-link-text">Notifications</span>
+        @php try { $unread = auth()->user()->unreadNotifications()->count(); } catch(\Throwable $e) { $unread = 0; } @endphp
+        @if($unread > 0)<span class="sidebar-badge">{{ $unread > 99 ? '99+' : $unread }}</span>@endif
+    </a>
 
-        {{-- Dashboard --}}
-        <a href="{{ url('home') }}" class="nav-item {{ request()->is('home') ? 'active' : '' }}">
-            <i class="bi bi-grid-1x2 nav-icon"></i> Dashboard
-        </a>
+    <p class="sidebar-section-label">Schools</p>
+    <a href="{{ route('super.schools.index') }}" class="sidebar-link {{ request()->is('super/schools*') && !request()->get('status') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-building-fill"></i></span>
+        <span class="sidebar-link-text">All Schools</span>
+        @php try { $saasTotal = \App\Models\School::count(); } catch(\Throwable $e) { $saasTotal = 0; } @endphp
+        @if($saasTotal > 0)<span class="sidebar-badge">{{ $saasTotal }}</span>@endif
+    </a>
+    <a href="{{ route('super.schools.index') }}?status=pending" class="sidebar-link {{ request()->get('status') === 'pending' ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-hourglass-split"></i></span>
+        <span class="sidebar-link-text">Pending Approvals</span>
+        @php try { $saasPending = \App\Models\School::where('status','pending')->count(); } catch(\Throwable $e) { $saasPending = 0; } @endphp
+        @if($saasPending > 0)<span class="sidebar-badge">{{ $saasPending }}</span>@endif
+    </a>
 
-        {{-- ── PARENT PORTAL section ── --}}
-        @role('parent')
-        @php $firstChild = auth()->user()->children->first(); @endphp
-        @if($firstChild)
-        <p class="nav-section-label">My Children</p>
-        <a href="{{ route('parent.attendance', $firstChild->id) }}" class="nav-item {{ request()->is('parent/*/attendance*') ? 'active' : '' }}">
-            <i class="bi bi-calendar2-check nav-icon"></i> Attendance
-        </a>
-        <a href="{{ route('parent.results', $firstChild->id) }}" class="nav-item {{ request()->is('parent/*/results*') ? 'active' : '' }}">
-            <i class="bi bi-clipboard-data nav-icon"></i> Results
-        </a>
-        <a href="{{ route('parent.fees', $firstChild->id) }}" class="nav-item {{ request()->is('parent/*/fees*') ? 'active' : '' }}">
-            <i class="bi bi-credit-card nav-icon"></i> Fees
-        </a>
-        <a href="{{ route('parent.assignments', $firstChild->id) }}" class="nav-item {{ request()->is('parent/*/assignments*') ? 'active' : '' }}">
-            <i class="bi bi-file-earmark-text nav-icon"></i> Assignments
-        </a>
-        <a href="{{ route('parent.performance', $firstChild->id) }}" class="nav-item {{ request()->is('parent/*/performance*') ? 'active' : '' }}">
-            <i class="bi bi-graph-up nav-icon"></i> Performance
-        </a>
-        <a href="{{ route('parent.leave', $firstChild->id) }}" class="nav-item {{ request()->is('parent/*/leave*') ? 'active' : '' }}">
-            <i class="bi bi-calendar-x nav-icon"></i> Leave
-        </a>
-        <p class="nav-section-label">Messages</p>
-        <a href="{{ route('parent.conversations') }}" class="nav-item {{ request()->is('parent/conversations*') ? 'active' : '' }}">
-            <i class="bi bi-chat-dots nav-icon"></i> Messages
-        </a>
+    <p class="sidebar-section-label">Finance</p>
+    <a href="{{ route('finance.overview') }}" class="sidebar-link {{ request()->is('finance') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-graph-up-arrow"></i></span>
+        <span class="sidebar-link-text">Revenue Overview</span>
+    </a>
+    <a href="{{ route('payments.index') }}" class="sidebar-link {{ request()->is('payments*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-receipt-cutoff"></i></span>
+        <span class="sidebar-link-text">Invoices & Payments</span>
+    </a>
+    <a href="{{ route('finance.expenses') }}" class="sidebar-link {{ request()->is('finance/expenses*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-arrow-up-circle-fill"></i></span>
+        <span class="sidebar-link-text">Expenses</span>
+    </a>
+
+    <p class="sidebar-section-label">Communication</p>
+    <a href="{{ route('super.contact-messages.index') }}" class="sidebar-link {{ request()->is('super/contact-messages*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-envelope-fill"></i></span>
+        <span class="sidebar-link-text">Contact Inbox</span>
+        @php try { $unreadMsgs = \App\Models\ContactMessage::where('status','unread')->count(); } catch(\Throwable $e) { $unreadMsgs = 0; } @endphp
+        @if($unreadMsgs > 0)<span class="sidebar-badge">{{ $unreadMsgs }}</span>@endif
+    </a>
+    <a href="{{ route('communication.bulk') }}" class="sidebar-link {{ request()->is('communication/bulk*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-megaphone-fill"></i></span>
+        <span class="sidebar-link-text">Broadcast</span>
+    </a>
+    <a href="{{ route('notice.create') }}" class="sidebar-link {{ request()->is('notice*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-pin-angle-fill"></i></span>
+        <span class="sidebar-link-text">Notices</span>
+    </a>
+
+    <p class="sidebar-section-label">System</p>
+    <a href="{{ route('roles.index') }}" class="sidebar-link {{ request()->is('roles') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-shield-fill-check"></i></span>
+        <span class="sidebar-link-text">Roles & Permissions</span>
+    </a>
+    <a href="{{ route('two-factor.setup') }}" class="sidebar-link {{ request()->is('two-factor*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-shield-lock-fill"></i></span>
+        <span class="sidebar-link-text">Security (2FA)</span>
+    </a>
+    <a href="{{ url('academics/settings') }}" class="sidebar-link {{ request()->is('academics/settings') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-gear-fill"></i></span>
+        <span class="sidebar-link-text">Settings</span>
+    </a>
+    @if(class_exists(\Laravel\Horizon\Horizon::class))
+    <a href="{{ url(config('horizon.path', 'horizon')) }}" target="_blank" class="sidebar-link {{ request()->is('horizon*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-speedometer2"></i></span>
+        <span class="sidebar-link-text">Queue Monitor</span>
+    </a>
+    @endif
+
+    @if(session('impersonating_as'))
+    <p class="sidebar-section-label" style="color:#fbbf24">⚠ Impersonating</p>
+    <a href="{{ route('super.impersonate.stop') }}" class="sidebar-link" style="color:#fbbf24">
+        <span class="sidebar-link-icon"><i class="bi bi-person-x-fill"></i></span>
+        <span class="sidebar-link-text">Stop Impersonating</span>
+    </a>
+    @endif
+
+@else
+{{-- ══════════════════════════════════════
+     SCHOOL SIDEBAR — all other roles
+══════════════════════════════════════ --}}
+
+    <p class="sidebar-section-label">Main</p>
+
+    <a href="{{ url('home') }}" class="sidebar-link {{ request()->is('home') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-grid-fill"></i></span>
+        <span class="sidebar-link-text">Dashboard</span>
+    </a>
+    @role('admin|principal')
+    <a href="{{ route('school.profile.edit') }}" class="sidebar-link {{ request()->is('school/profile*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-building-fill"></i></span>
+        <span class="sidebar-link-text">School Profile</span>
+    </a>
+    @endrole
+    @role('admin|principal')
+    <a href="{{ route('central_analytics.index') }}" class="sidebar-link {{ request()->is('analytics*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-pie-chart-fill"></i></span>
+        <span class="sidebar-link-text">Analytics</span>
+    </a>
+    <a href="{{ route('reports.index') }}" class="sidebar-link {{ request()->is('reports*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-bar-graph-fill"></i></span>
+        <span class="sidebar-link-text">Reports</span>
+    </a>
+    @endrole
+    <a href="{{ route('notifications.index') }}" class="sidebar-link {{ request()->is('notifications*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-bell-fill"></i></span>
+        <span class="sidebar-link-text">Notifications</span>
+        @php try { $unread = auth()->user()->unreadNotifications()->count(); } catch(\Throwable $e) { $unread = 0; } @endphp
+        @if($unread > 0)
+        <span class="sidebar-badge">{{ $unread > 99 ? '99+' : $unread }}</span>
         @endif
-        @endrole
+    </a>
 
-        {{-- ── STUDENT section ── --}}
-        @canany(['view students', 'create students'])
-        <p class="nav-section-label">Students</p>
-        <a href="{{ route('student.list.show') }}" class="nav-item {{ request()->is('students/view*') ? 'active' : '' }}">
-            <i class="bi bi-people nav-icon"></i> All Students
-        </a>
-        @can('create students')
-        @unless(session()->has('browse_session_id'))
-        <a href="{{ route('student.create.show') }}" class="nav-item {{ request()->is('students/add') ? 'active' : '' }}">
-            <i class="bi bi-person-plus nav-icon"></i> Add Student
-        </a>
-        @endunless
-        @endcan
-        @endcanany
+    {{-- Students --}}
+    @unlessrole('student|parent')
+    @canany(['view students','create students'])
+    <p class="sidebar-section-label">Students & Admissions</p>
+    <a href="{{ route('student.list.show') }}" class="sidebar-link {{ request()->is('students/view*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-people-fill"></i></span>
+        <span class="sidebar-link-text">All Students</span>
+    </a>
+    @can('create students')
+    @unless(session()->has('browse_session_id'))
+    <a href="{{ route('student.create.show') }}" class="sidebar-link {{ request()->is('students/add') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-plus-fill"></i></span>
+        <span class="sidebar-link-text">Add Student</span>
+    </a>
+    @endunless
+    @endcan
+    <a href="{{ route('admissions.index') }}" class="sidebar-link {{ request()->is('admissions*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-vcard-fill"></i></span>
+        <span class="sidebar-link-text">Admissions & Enquiries</span>
+    </a>
+    <a href="{{ route('student.transfers.index') }}" class="sidebar-link {{ request()->is('transfers*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-arrow-left-right"></i></span>
+        <span class="sidebar-link-text">Student Transfers</span>
+    </a>
+    @endcanany
+    @endunlessrole
 
-        {{-- Student self-view --}}
-        @role('student')
-        <p class="nav-section-label">My School</p>
-        <a href="{{ route('student.attendance.show', auth()->id()) }}" class="nav-item {{ request()->routeIs('student.attendance.show') ? 'active' : '' }}">
-            <i class="bi bi-calendar2-check nav-icon"></i> My Attendance
-        </a>
-        <a href="{{ route('course.student.list.show', auth()->id()) }}" class="nav-item {{ request()->routeIs('course.student.list.show') ? 'active' : '' }}">
-            <i class="bi bi-journal-medical nav-icon"></i> My Courses
-        </a>
-        <a href="{{ route('homework.index') }}" class="nav-item {{ request()->is('homework*') ? 'active' : '' }}">
-            <i class="bi bi-pencil-square nav-icon"></i> Homework
-        </a>
-        <a href="{{ route('projects.index') }}" class="nav-item {{ request()->is('projects*') ? 'active' : '' }}">
-            <i class="bi bi-folder2-open nav-icon"></i> Projects
-        </a>
-        <a href="{{ route('study-notes.index') }}" class="nav-item {{ request()->is('study-notes*') ? 'active' : '' }}">
-            <i class="bi bi-file-earmark-text nav-icon"></i> Study Materials
-        </a>
-        <a href="{{ route('online-classes.index') }}" class="nav-item {{ request()->is('online-classes*') ? 'active' : '' }}">
-            <i class="bi bi-camera-video nav-icon"></i> Online Classes
-        </a>
-        @if($student_routine_info = \App\Models\Promotion::where('student_id', auth()->id())->latest()->first())
-        <a href="{{ route('section.routine.show', ['class_id' => $student_routine_info->class_id, 'section_id' => $student_routine_info->section_id]) }}" class="nav-item">
-            <i class="bi bi-calendar4-range nav-icon"></i> Timetable
-        </a>
+    {{-- Parents --}}
+    @unlessrole('student|parent|teacher|class-teacher')
+    <p class="sidebar-section-label">Parents</p>
+    <a href="{{ route('parents.index') }}" class="sidebar-link {{ request()->is('parents*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-people"></i></span>
+        <span class="sidebar-link-text">Manage Parents</span>
+    </a>
+    @endunlessrole
+
+    {{-- Student self --}}
+    @role('student')
+    <p class="sidebar-section-label">My School</p>
+    <a href="{{ route('student.attendance.show', auth()->id()) }}" class="sidebar-link {{ request()->is('students/view/attendance*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-check-fill"></i></span>
+        <span class="sidebar-link-text">My Attendance</span>
+    </a>
+    <a href="{{ route('results.index') }}" class="sidebar-link {{ request()->is('results*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-award-fill"></i></span>
+        <span class="sidebar-link-text">My Results</span>
+    </a>
+    <a href="{{ route('homework.index') }}" class="sidebar-link {{ request()->is('homework*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-pencil-fill"></i></span>
+        <span class="sidebar-link-text">Homework</span>
+        @php
+            try {
+                $sessionId = app(\App\Interfaces\SchoolSessionInterface::class)->getLatestSession()?->id;
+                $studentPromo = \App\Models\Promotion::where('student_id', auth()->id())->where('session_id', $sessionId)->latest()->first();
+                $hwDue = $studentPromo
+                    ? \App\Models\Homework::where('class_id', $studentPromo->class_id)
+                        ->where('section_id', $studentPromo->section_id)
+                        ->where('session_id', $sessionId)
+                        ->where('status', 'active')
+                        ->where('due_date', '>=', now()->toDateString())
+                        ->whereDoesntHave('submissions', fn($q) => $q->where('student_id', auth()->id()))
+                        ->count()
+                    : 0;
+            } catch(\Throwable $e) { $hwDue = 0; }
+        @endphp
+        @if($hwDue > 0)
+        <span class="sidebar-badge">{{ $hwDue }}</span>
         @endif
-        @endrole
+    </a>
+    <a href="{{ route('projects.index') }}" class="sidebar-link {{ request()->is('projects*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-folder-fill"></i></span>
+        <span class="sidebar-link-text">Projects</span>
+    </a>
+    <a href="{{ route('online-exams.student.index') }}" class="sidebar-link {{ request()->is('online-exams/my-exams*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-laptop-fill"></i></span>
+        <span class="sidebar-link-text">Online Exams</span>
+    </a>
+    <a href="{{ route('study-notes.index') }}" class="sidebar-link {{ request()->is('study-notes*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-text-fill"></i></span>
+        <span class="sidebar-link-text">Study Materials</span>
+    </a>
+    <a href="{{ route('online-classes.index') }}" class="sidebar-link {{ request()->is('online-classes*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-camera-video-fill"></i></span>
+        <span class="sidebar-link-text">Online Classes</span>
+    </a>
+    <a href="{{ route('section.routine.show') }}" class="sidebar-link {{ request()->is('routine/view*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar4-week"></i></span>
+        <span class="sidebar-link-text">My Timetable</span>
+    </a>
+    <a href="{{ route('library.index') }}" class="sidebar-link {{ request()->is('library*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-journals"></i></span>
+        <span class="sidebar-link-text">Library Catalog</span>
+    </a>
 
-        {{-- ── TEACHER section ── --}}
-        @canany(['view teachers', 'create teachers'])
-        <p class="nav-section-label">Teachers</p>
-        <a href="{{ route('teacher.list.show') }}" class="nav-item {{ request()->is('teachers/view/list') ? 'active' : '' }}">
-            <i class="bi bi-person-badge nav-icon"></i> All Teachers
-        </a>
-        @can('create teachers')
-        @unless(session()->has('browse_session_id'))
-        <a href="{{ route('teacher.create.show') }}" class="nav-item">
-            <i class="bi bi-person-plus nav-icon"></i> Add Teacher
-        </a>
-        @endunless
-        @endcan
-        @endcanany
+    <p class="sidebar-section-label">Exams & Results</p>
+    <a href="{{ route('re-exam.create') }}" class="sidebar-link {{ request()->is('re-exam/apply*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-arrow-repeat"></i></span>
+        <span class="sidebar-link-text">Apply Re-Exam</span>
+    </a>
+    <a href="{{ route('achievements.leaderboard') }}" class="sidebar-link {{ request()->is('achievements*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-trophy-fill"></i></span>
+        <span class="sidebar-link-text">Leaderboard</span>
+    </a>
 
-        {{-- Teacher self-courses --}}
-        @role('teacher|class-teacher')
-        <p class="nav-section-label">Teaching</p>
-        <a href="{{ route('course.teacher.list.show', ['teacher_id' => auth()->id()]) }}" class="nav-item {{ request()->is('courses/teacher*') ? 'active' : '' }}">
-            <i class="bi bi-journal-medical nav-icon"></i> My Courses
-        </a>
-        <a href="{{ route('assignment.list.show') }}" class="nav-item {{ request()->is('courses/assignments*') ? 'active' : '' }}">
-            <i class="bi bi-file-earmark-text nav-icon"></i> Assignments
-        </a>
-        <a href="{{ route('lesson-plans.index') }}" class="nav-item {{ request()->is('lesson-plans*') ? 'active' : '' }}">
-            <i class="bi bi-journal-plus nav-icon"></i> Lesson Plans
-        </a>
-        <a href="{{ route('homework.index') }}" class="nav-item {{ request()->is('homework*') ? 'active' : '' }}">
-            <i class="bi bi-pencil-square nav-icon"></i> Homework
-        </a>
-        <a href="{{ route('projects.index') }}" class="nav-item {{ request()->is('projects*') ? 'active' : '' }}">
-            <i class="bi bi-folder2-open nav-icon"></i> Projects
-        </a>
-        <a href="{{ route('study-notes.index') }}" class="nav-item {{ request()->is('study-notes*') ? 'active' : '' }}">
-            <i class="bi bi-file-earmark-text nav-icon"></i> Study Materials
-        </a>
-        <a href="{{ route('online-classes.index') }}" class="nav-item {{ request()->is('online-classes*') ? 'active' : '' }}">
-            <i class="bi bi-camera-video nav-icon"></i> Online Classes
-        </a>
-        @endrole
+    <p class="sidebar-section-label">My Account</p>
+    <a href="{{ route('payments.index') }}" class="sidebar-link {{ request()->is('payments*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-receipt-cutoff"></i></span>
+        <span class="sidebar-link-text">Fees & Invoices</span>
+    </a>
+    <a href="{{ route('leave.index') }}" class="sidebar-link {{ request()->is('leave*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-x-fill"></i></span>
+        <span class="sidebar-link-text">Leave Requests</span>
+        @php
+            try {
+                $myStudentPendingLeaves = \App\Models\LeaveApplication::where('user_id', auth()->id())->where('status','pending')->count();
+            } catch(\Throwable $e) { $myStudentPendingLeaves = 0; }
+        @endphp
+        @if($myStudentPendingLeaves > 0)
+        <span class="sidebar-badge">{{ $myStudentPendingLeaves }}</span>
+        @endif
+    </a>
+    @endrole
 
-        {{-- ── ACADEMIC section ── --}}
-        @canany(['view classes', 'view courses', 'view routines', 'view syllabi', 'view academic settings'])
-        <p class="nav-section-label">Academic</p>
-        @can('view classes')
-        <a href="{{ url('classes') }}" class="nav-item {{ request()->is('classes') ? 'active' : '' }}">
-            <i class="bi bi-diagram-3 nav-icon"></i> Classes &amp; Sections
-        </a>
-        @endcan
-        @can('view courses')
-        <a href="{{ route('course.teacher.list.show', ['teacher_id' => auth()->id()]) }}" class="nav-item {{ request()->is('courses*') && !request()->is('courses/teacher*') ? 'active' : '' }}">
-            <i class="bi bi-book nav-icon"></i> Courses
-        </a>
-        @endcan
-        @can('view academic settings')
-        <a href="{{ route('programs.index') }}" class="nav-item {{ request()->is('programs*') ? 'active' : '' }}">
-            <i class="bi bi-mortarboard nav-icon"></i> Programs
-        </a>
-        <a href="{{ route('terms.index') }}" class="nav-item {{ request()->is('terms*') ? 'active' : '' }}">
-            <i class="bi bi-calendar2-range nav-icon"></i> Terms
-        </a>
-        <a href="{{ route('curriculums.index') }}" class="nav-item {{ request()->is('curriculums*') ? 'active' : '' }}">
-            <i class="bi bi-journal-richtext nav-icon"></i> Curriculum
-        </a>
-        @endcan
-        @can('view routines')
-        <a href="{{ route('routine.index') }}" class="nav-item {{ request()->is('routine*') ? 'active' : '' }}">
-            <i class="bi bi-calendar4-range nav-icon"></i> Timetable
-        </a>
-        @endcan
-        @can('view syllabi')
-        <a href="{{ route('course.syllabus.index') }}" class="nav-item {{ request()->is('syllabus*') ? 'active' : '' }}">
-            <i class="bi bi-journal-text nav-icon"></i> Syllabus
-        </a>
-        @endcan
-        @endcanany
+    {{-- Parent --}}
+    @role('parent')
+    @php
+        try { $parentChildren = auth()->user()->children()->get(); } catch(\Throwable $e) { $parentChildren = collect(); }
+    @endphp
+    <p class="sidebar-section-label">My Children</p>
+    @forelse($parentChildren as $__child)
+    <p class="px-3 pt-2 pb-0.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">{{ $__child->first_name }}</p>
+    <a href="{{ route('parent.attendance',  $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/attendance*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-check-fill"></i></span>
+        <span class="sidebar-link-text">Attendance</span>
+    </a>
+    <a href="{{ route('parent.results',     $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/results*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-award-fill"></i></span>
+        <span class="sidebar-link-text">Results</span>
+    </a>
+    <a href="{{ route('parent.homework',    $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/homework*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-pencil-fill"></i></span>
+        <span class="sidebar-link-text">Homework</span>
+    </a>
+    <a href="{{ route('parent.assignments', $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/assignments*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-check-fill"></i></span>
+        <span class="sidebar-link-text">Assignments</span>
+    </a>
+    <a href="{{ route('parent.timetable',   $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/timetable*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar4-week"></i></span>
+        <span class="sidebar-link-text">Timetable</span>
+    </a>
+    <a href="{{ route('parent.fees',        $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/fees*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-receipt-cutoff"></i></span>
+        <span class="sidebar-link-text">Fees</span>
+    </a>
+    <a href="{{ route('parent.transport',   $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/transport*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-bus-front-fill"></i></span>
+        <span class="sidebar-link-text">Transport</span>
+    </a>
+    <a href="{{ route('parent.leave',       $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/leave*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-x-fill"></i></span>
+        <span class="sidebar-link-text">Leave</span>
+    </a>
+    <a href="{{ route('parent.performance', $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/performance*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-graph-up"></i></span>
+        <span class="sidebar-link-text">Performance</span>
+    </a>
+    <a href="{{ route('parent.teachers', $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/teachers*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-badge"></i></span>
+        <span class="sidebar-link-text">Teachers</span>
+    </a>
+    <a href="{{ route('parent.meetings', $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/meetings*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-event"></i></span>
+        <span class="sidebar-link-text">Meetings</span>
+    </a>
+    <a href="{{ route('parent.events', $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/events*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-star"></i></span>
+        <span class="sidebar-link-text">Events</span>
+    </a>
+    <a href="{{ route('parent.health', $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/health*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-heart-pulse"></i></span>
+        <span class="sidebar-link-text">Health</span>
+    </a>
+    <a href="{{ route('parent.behavior', $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/behavior*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-shield-exclamation"></i></span>
+        <span class="sidebar-link-text">Behavior</span>
+    </a>
+    <a href="{{ route('parent.documents', $__child->id) }}" class="sidebar-link {{ request()->is('parent/'.$__child->id.'/documents*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-folder2-open"></i></span>
+        <span class="sidebar-link-text">Documents</span>
+    </a>
+    @empty
+    @endforelse
 
-        {{-- ── TEACHING TOOLS (teacher + student) ── --}}
-        @canany(['create lesson plans', 'view lesson plans'])
-        <p class="nav-section-label">Teaching</p>
-        <a href="{{ route('lesson-plans.index') }}" class="nav-item {{ request()->is('lesson-plans*') ? 'active' : '' }}">
-            <i class="bi bi-journal-plus nav-icon"></i> Lesson Plans
-        </a>
-        @endcanany
-        <a href="{{ route('homework.index') }}" class="nav-item {{ request()->is('homework*') ? 'active' : '' }}">
-            <i class="bi bi-pencil-square nav-icon"></i> Homework
-        </a>
-        <a href="{{ route('projects.index') }}" class="nav-item {{ request()->is('projects*') ? 'active' : '' }}">
-            <i class="bi bi-folder2-open nav-icon"></i> Projects
-        </a>
-        <a href="{{ route('study-notes.index') }}" class="nav-item {{ request()->is('study-notes*') ? 'active' : '' }}">
-            <i class="bi bi-file-earmark-text nav-icon"></i> Study Materials
-        </a>
-        <a href="{{ route('online-classes.index') }}" class="nav-item {{ request()->is('online-classes*') ? 'active' : '' }}">
-            <i class="bi bi-camera-video nav-icon"></i> Online Classes
-        </a>
+    <p class="sidebar-section-label">Communication</p>
+    <a href="{{ route('parent.conversations') }}" class="sidebar-link {{ request()->is('parent/conversations*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-chat-dots-fill"></i></span>
+        <span class="sidebar-link-text">Messages</span>
+        @php
+            try {
+                $parentUnread = \App\Models\Conversation::where('parent_id', auth()->id())
+                    ->withCount(['messages as um' => fn($q) => $q->where('sender_id', '!=', auth()->id())->whereNull('read_at')])
+                    ->get()->sum('um');
+            } catch(\Throwable $e) { $parentUnread = 0; }
+        @endphp
+        @if($parentUnread > 0)
+        <span class="sidebar-badge">{{ $parentUnread > 99 ? '99+' : $parentUnread }}</span>
+        @endif
+    </a>
+    <a href="{{ route('events.show') }}" class="sidebar-link {{ request()->is('calendar-event*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-event-fill"></i></span>
+        <span class="sidebar-link-text">School Calendar</span>
+    </a>
+    @endrole
 
-        {{-- ── ATTENDANCE section ── --}}
-        @canany(['take attendances', 'view attendances'])
-        <p class="nav-section-label">Attendance</p>
-        @can('take attendances')
-        <a href="{{ route('attendance.create.show') }}" class="nav-item {{ request()->is('attendances/take') ? 'active' : '' }}">
-            <i class="bi bi-check2-square nav-icon"></i> Take Attendance
-        </a>
-        <a href="{{ route('attendance.qr.index') }}" class="nav-item {{ request()->is('attendance/qr*') ? 'active' : '' }}">
-            <i class="bi bi-qr-code nav-icon"></i> QR Attendance
-        </a>
-        @endcan
-        @can('view attendances')
-        <a href="{{ route('attendance.list.show') }}" class="nav-item {{ request()->is('attendances/view') ? 'active' : '' }}">
-            <i class="bi bi-calendar-week nav-icon"></i> View Attendance
-        </a>
-        <a href="{{ route('attendance.analytics') }}" class="nav-item {{ request()->is('attendances/analytics') ? 'active' : '' }}">
-            <i class="bi bi-bar-chart-line nav-icon"></i> Analytics
-        </a>
-        <a href="{{ route('attendance.shortage') }}" class="nav-item {{ request()->is('attendances/shortage') ? 'active' : '' }}">
-            <i class="bi bi-exclamation-triangle nav-icon"></i> Shortage Alerts
-        </a>
-        <a href="{{ route('attendance.report.form') }}" class="nav-item {{ request()->is('attendances/report*') ? 'active' : '' }}">
-            <i class="bi bi-file-earmark-spreadsheet nav-icon"></i> Reports
-        </a>
-        @endcan
-        @can('take attendances')
-        <a href="{{ route('attendance.import.form') }}" class="nav-item {{ request()->is('attendances/import*') ? 'active' : '' }}">
-            <i class="bi bi-upload nav-icon"></i> Import CSV
-        </a>
-        @endcan
-        @canany(['view staff', 'view teachers'])
-        <a href="{{ route('staff.attendance.index') }}" class="nav-item {{ request()->is('staff/attendance*') ? 'active' : '' }}">
-            <i class="bi bi-people nav-icon"></i> Staff Attendance
-        </a>
-        @endcanany
-        @endcanany
+    {{-- Teachers --}}
+    @unlessrole('student|parent')
+    @canany(['view teachers','create teachers'])
+    <p class="sidebar-section-label">Teachers</p>
+    <a href="{{ route('teacher.list.show') }}" class="sidebar-link {{ request()->is('teachers/view/list') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-badge-fill"></i></span>
+        <span class="sidebar-link-text">All Teachers</span>
+    </a>
+    @can('create teachers')
+    @unless(session()->has('browse_session_id'))
+    <a href="{{ route('teacher.create.show') }}" class="sidebar-link">
+        <span class="sidebar-link-icon"><i class="bi bi-person-plus-fill"></i></span>
+        <span class="sidebar-link-text">Add Teacher</span>
+    </a>
+    @endunless
+    @endcan
+    @endcanany
+    @endunlessrole
 
-        {{-- ── EXAMS section ── --}}
-        @canany(['view exams', 'create exams', 'view marks', 'save marks', 'view grading systems'])
-        <p class="nav-section-label">Exams & Marks</p>
-        @can('view exams')
-        <a href="{{ route('exam.list.show') }}" class="nav-item {{ request()->is('exams/view') ? 'active' : '' }}">
-            <i class="bi bi-file-text nav-icon"></i> Exams
-        </a>
-        <a href="{{ route('exam.schedule.index') }}" class="nav-item {{ request()->is('exam/schedule*') ? 'active' : '' }}">
-            <i class="bi bi-calendar3 nav-icon"></i> Schedule / Timetable
-        </a>
-        <a href="{{ route('exam.hall.index') }}" class="nav-item {{ request()->is('exam/halls*') ? 'active' : '' }}">
-            <i class="bi bi-building nav-icon"></i> Halls &amp; Seats
-        </a>
-        @endcan
-        @can('create exams')
-        <a href="{{ route('exam.create.show') }}" class="nav-item">
-            <i class="bi bi-file-plus nav-icon"></i> Create Exam
-        </a>
-        @endcan
-        @can('save marks')
-        <a href="{{ route('course.mark.create') }}" class="nav-item {{ request()->is('marks/create') ? 'active' : '' }}">
-            <i class="bi bi-pencil-square nav-icon"></i> Enter Marks
-        </a>
-        @endcan
-        @can('view marks')
-        <a href="{{ route('course.mark.show') }}" class="nav-item {{ request()->is('marks/view') ? 'active' : '' }}">
-            <i class="bi bi-clipboard-data nav-icon"></i> View Marks
-        </a>
-        <a href="{{ route('results.index') }}" class="nav-item {{ request()->is('results*') ? 'active' : '' }}">
-            <i class="bi bi-award nav-icon"></i> Results &amp; Reports
-        </a>
-        <a href="{{ route('results.analytics') }}" class="nav-item {{ request()->is('results/analytics*') ? 'active' : '' }}">
-            <i class="bi bi-graph-up-arrow nav-icon"></i> Performance Analytics
-        </a>
-        @endcan
-        @canany(['view grading systems', 'create grading systems'])
-        <a href="{{ route('exam.grade.system.index') }}" class="nav-item {{ request()->is('exams/grade*') ? 'active' : '' }}">
-            <i class="bi bi-bar-chart-steps nav-icon"></i> Grading
-        </a>
-        @endcanany
-        @can('view exams')
-        <a href="{{ route('re-exam.index') }}" class="nav-item {{ request()->is('re-exam*') ? 'active' : '' }}">
-            <i class="bi bi-arrow-repeat nav-icon"></i> Re-Exams
-        </a>
-        @endcan
+    {{-- Teacher self --}}
+    @role('teacher|class-teacher')
+    <p class="sidebar-section-label">Teaching</p>
+    <a href="{{ route('course.teacher.list.show', ['teacher_id' => auth()->id()]) }}" class="sidebar-link {{ request()->is('courses/teacher*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-journal-richtext"></i></span>
+        <span class="sidebar-link-text">My Courses</span>
+    </a>
+    <a href="{{ route('routine.teacher-timetable') }}" class="sidebar-link {{ request()->is('routine/teacher-timetable*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar4-week"></i></span>
+        <span class="sidebar-link-text">My Timetable</span>
+    </a>
+    <a href="{{ route('lesson-plans.index') }}" class="sidebar-link {{ request()->is('lesson-plans*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-journal-plus"></i></span>
+        <span class="sidebar-link-text">Lesson Plans</span>
+    </a>
+    <a href="{{ route('homework.index') }}" class="sidebar-link {{ request()->is('homework*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-pencil-fill"></i></span>
+        <span class="sidebar-link-text">Homework</span>
+    </a>
+    <a href="{{ route('assignment.teacher.index') }}" class="sidebar-link {{ request()->is('assignments*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-check-fill"></i></span>
+        <span class="sidebar-link-text">Assignments</span>
+    </a>
+    <a href="{{ route('projects.index') }}" class="sidebar-link {{ request()->is('projects*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-folder-fill"></i></span>
+        <span class="sidebar-link-text">Projects</span>
+    </a>
+    <a href="{{ route('study-notes.index') }}" class="sidebar-link {{ request()->is('study-notes*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-text-fill"></i></span>
+        <span class="sidebar-link-text">Study Materials</span>
+    </a>
+    <a href="{{ route('class.syllabus.create') }}" class="sidebar-link {{ request()->is('syllabus*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-journal-bookmark-fill"></i></span>
+        <span class="sidebar-link-text">Syllabus</span>
+    </a>
+    <a href="{{ route('online-classes.index') }}" class="sidebar-link {{ request()->is('online-classes*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-camera-video-fill"></i></span>
+        <span class="sidebar-link-text">Online Classes</span>
+    </a>
 
-        {{-- Question Paper Maker --}}
-        @canany(['view exams', 'create exams'])
-        <p class="nav-section-label">Question Papers</p>
-        <a href="{{ route('question-papers.index') }}" class="nav-item {{ request()->is('question-papers') ? 'active' : '' }}">
-            <i class="bi bi-file-earmark-text nav-icon"></i> My Papers
-        </a>
-        @can('create exams')
-        <a href="{{ route('question-papers.create') }}" class="nav-item">
-            <i class="bi bi-plus-square nav-icon"></i> New Paper
-        </a>
-        <a href="{{ route('question-bank.index') }}" class="nav-item {{ request()->is('question-bank*') ? 'active' : '' }}">
-            <i class="bi bi-collection nav-icon"></i> Question Bank
-        </a>
-        <a href="{{ route('question-paper-templates.index') }}" class="nav-item {{ request()->is('question-paper-templates*') ? 'active' : '' }}">
-            <i class="bi bi-layout-text-window nav-icon"></i> Templates
-        </a>
-        <a href="{{ route('question-papers.approvals') }}" class="nav-item {{ request()->is('question-papers-pending*') ? 'active' : '' }}">
-            <i class="bi bi-check2-circle nav-icon"></i> Approvals
-            @if(isset($pendingPapers) && $pendingPapers > 0)
-            <span class="ml-auto text-[10px] bg-amber-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{{ $pendingPapers > 9 ? '9+' : $pendingPapers }}</span>
-            @endif
-        </a>
-        @endcan
-        @endcanany
-        @endcanany
+    <p class="sidebar-section-label">Assessments</p>
+    <a href="{{ route('online-exams.index') }}" class="sidebar-link {{ request()->is('online-exams*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-laptop-fill"></i></span>
+        <span class="sidebar-link-text">Online Exams</span>
+    </a>
+    <a href="{{ route('practical-exams.index') }}" class="sidebar-link {{ request()->is('practical-exams*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-nut-fill"></i></span>
+        <span class="sidebar-link-text">Practical Exams</span>
+    </a>
+    <a href="{{ route('exam.schedule.index') }}" class="sidebar-link {{ request()->is('exam/schedule*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar2-week-fill"></i></span>
+        <span class="sidebar-link-text">Exam Schedule</span>
+    </a>
+    <a href="{{ route('attendance.qr.index') }}" class="sidebar-link {{ request()->is('attendance/qr*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-qr-code"></i></span>
+        <span class="sidebar-link-text">QR Attendance</span>
+    </a>
 
-        {{-- ── FINANCE section ── --}}
-        @canany(['view invoices', 'create invoices', 'view payments', 'view own invoices'])
-        <p class="nav-section-label">Finance</p>
-        <a href="{{ route('payments.index') }}" class="nav-item {{ request()->is('payments*') ? 'active' : '' }}">
-            <i class="bi bi-credit-card nav-icon"></i> Payments
-        </a>
-        @can('create invoices')
-        <a href="{{ route('payments.create') }}" class="nav-item">
-            <i class="bi bi-receipt nav-icon"></i> New Invoice
-        </a>
-        @endcan
-        @endcanany
+    <p class="sidebar-section-label">Resources</p>
+    <a href="{{ route('gradebook.index') }}" class="sidebar-link {{ request()->is('gradebook*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-table"></i></span>
+        <span class="sidebar-link-text">Gradebook</span>
+    </a>
+    <a href="{{ route('student.discipline.index') }}" class="sidebar-link {{ request()->is('discipline*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-shield-exclamation"></i></span>
+        <span class="sidebar-link-text">Conduct Log</span>
+    </a>
+    <a href="{{ route('library.ebooks.index') }}" class="sidebar-link {{ request()->is('library/ebooks*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-book-half"></i></span>
+        <span class="sidebar-link-text">E-books</span>
+    </a>
+    <a href="{{ route('events.show') }}" class="sidebar-link {{ request()->is('calendar-event*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-event-fill"></i></span>
+        <span class="sidebar-link-text">School Calendar</span>
+    </a>
+    @role('admin|principal|teacher|class-teacher')
+    <a href="{{ route('ai_features.web.index') }}" class="sidebar-link {{ request()->is('ai-features') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-robot"></i></span>
+        <span class="sidebar-link-text">AI Tools</span>
+        <span class="ml-1 text-[9px] bg-indigo-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
+    </a>
+    @endrole
 
-        {{-- ── LIBRARY section ── --}}
-        @canany(['view books', 'create books', 'issue books', 'return books', 'manage library members', 'view library reports'])
-        <p class="nav-section-label">Library</p>
-        @can('view books')
-        <a href="{{ route('library.index') }}" class="nav-item {{ request()->is('library') || request()->is('library?*') && !request()->is('library/issues*') && !request()->is('library/members*') && !request()->is('library/categories*') && !request()->is('library/ebooks*') && !request()->is('library/analytics') && !request()->is('library/reports*') ? 'active' : '' }}">
-            <i class="bi bi-journals nav-icon"></i> Book Catalog
-        </a>
-        @endcan
-        @can('create books')
-        <a href="{{ route('library.create') }}" class="nav-item">
-            <i class="bi bi-plus-circle nav-icon"></i> Add Book
-        </a>
-        <a href="{{ route('library.categories.index') }}" class="nav-item {{ request()->is('library/categories*') ? 'active' : '' }}">
-            <i class="bi bi-tags nav-icon"></i> Categories
-        </a>
-        @endcan
-        @canany(['issue books', 'return books'])
-        <a href="{{ route('library.issues.index') }}" class="nav-item {{ request()->is('library/issues*') ? 'active' : '' }}">
-            <i class="bi bi-arrow-left-right nav-icon"></i> Issue / Return
-        </a>
-        @endcanany
-        @can('issue books')
-        <a href="{{ route('library.issues.create') }}" class="nav-item">
-            <i class="bi bi-box-arrow-up-right nav-icon"></i> Issue Book
-        </a>
-        <a href="{{ route('library.issues.return') }}" class="nav-item">
-            <i class="bi bi-box-arrow-in-left nav-icon"></i> Return Book
-        </a>
-        @endcan
-        @can('manage library members')
-        <a href="{{ route('library.members.index') }}" class="nav-item {{ request()->is('library/members*') ? 'active' : '' }}">
-            <i class="bi bi-people nav-icon"></i> Members
-        </a>
-        @endcan
-        @can('view books')
-        <a href="{{ route('library.ebooks.index') }}" class="nav-item {{ request()->is('library/ebooks*') ? 'active' : '' }}">
-            <i class="bi bi-file-earmark-text nav-icon"></i> Digital Library
-        </a>
-        @endcan
-        @can('view library reports')
-        <a href="{{ route('library.analytics') }}" class="nav-item {{ request()->is('library/analytics') ? 'active' : '' }}">
-            <i class="bi bi-bar-chart-line nav-icon"></i> Analytics
-        </a>
-        <a href="{{ route('library.reports.form') }}" class="nav-item {{ request()->is('library/reports*') ? 'active' : '' }}">
-            <i class="bi bi-file-earmark-spreadsheet nav-icon"></i> Reports
-        </a>
-        @endcan
-        @endcanany
+    <p class="sidebar-section-label">My Work</p>
+    <a href="{{ route('teacher.messages') }}" class="sidebar-link {{ request()->is('teacher/messages*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-chat-dots-fill"></i></span>
+        <span class="sidebar-link-text">Parent Messages</span>
+        @php
+            try {
+                $teacherUnreadMsgs = \App\Models\Conversation::where('teacher_id', auth()->id())
+                    ->withCount(['messages as um' => fn($q) => $q->where('sender_id', '!=', auth()->id())->whereNull('read_at')])
+                    ->get()->sum('um');
+            } catch(\Throwable $e) { $teacherUnreadMsgs = 0; }
+        @endphp
+        @if($teacherUnreadMsgs > 0)
+        <span class="sidebar-badge">{{ $teacherUnreadMsgs > 99 ? '99+' : $teacherUnreadMsgs }}</span>
+        @endif
+    </a>
+    @can('create notices')
+    <a href="{{ route('notice.create') }}" class="sidebar-link {{ request()->is('notice*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-megaphone-fill"></i></span>
+        <span class="sidebar-link-text">Post Notice</span>
+    </a>
+    @endcan
+    <a href="{{ route('leave.index') }}" class="sidebar-link {{ request()->is('leave*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-x-fill"></i></span>
+        <span class="sidebar-link-text">Leave Requests</span>
+        @php
+            try {
+                $myPendingLeaves = \App\Models\LeaveApplication::where('user_id', auth()->id())->where('status','pending')->count();
+            } catch(\Throwable $e) { $myPendingLeaves = 0; }
+        @endphp
+        @if($myPendingLeaves > 0)
+        <span class="sidebar-badge">{{ $myPendingLeaves }}</span>
+        @endif
+    </a>
+    <a href="{{ route('teacher.payroll.index') }}" class="sidebar-link {{ request()->is('teacher/payroll*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-cash-stack"></i></span>
+        <span class="sidebar-link-text">My Payslips</span>
+    </a>
+    <a href="{{ route('teacher.profile.show', auth()->id()) }}" class="sidebar-link {{ request()->is('teachers/view/profile/'.auth()->id()) ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-circle"></i></span>
+        <span class="sidebar-link-text">My Profile</span>
+    </a>
+    @endrole
 
-        {{-- ── HOSTEL section ── --}}
-        @canany(['view hostel', 'manage hostel rooms', 'manage hostel allocations', 'manage hostel attendance', 'manage hostel visitors', 'manage hostel maintenance'])
-        <p class="nav-section-label">Hostel</p>
-        
-        @can('view hostel')
-        <a href="{{ route('hostel.hostels.index') }}" class="nav-item {{ request()->is('hostel/hostels*') ? 'active' : '' }}">
-            <i class="bi bi-building nav-icon"></i> Hostels
-        </a>
-        @endcan
+    {{-- Academic — hide for teacher/class-teacher/student/parent --}}
+    @unlessrole('teacher|class-teacher|student|parent')
+    @canany(['view classes','view courses','view routines','view syllabi','view academic settings'])
+    <p class="sidebar-section-label">Academic</p>
+    @can('view classes')
+    <a href="{{ url('classes') }}" class="sidebar-link {{ request()->is('classes') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-diagram-3-fill"></i></span>
+        <span class="sidebar-link-text">Classes & Sections</span>
+    </a>
+    @endcan
+    @can('view routines')
+    <a href="{{ route('routine.index') }}" class="sidebar-link {{ request()->is('routine*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar4-range"></i></span>
+        <span class="sidebar-link-text">Timetable</span>
+    </a>
+    @endcan
+    @can('view academic settings')
+    <a href="{{ route('programs.index') }}" class="sidebar-link {{ request()->is('programs*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-mortarboard-fill"></i></span>
+        <span class="sidebar-link-text">Academic Programs</span>
+    </a>
+    <a href="{{ route('departments.index') }}" class="sidebar-link {{ request()->is('departments*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-building"></i></span>
+        <span class="sidebar-link-text">Departments</span>
+    </a>
+    <a href="{{ route('terms.index') }}" class="sidebar-link {{ request()->is('terms*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-range"></i></span>
+        <span class="sidebar-link-text">Academic Terms</span>
+    </a>
+    <a href="{{ route('curriculums.index') }}" class="sidebar-link {{ request()->is('curriculums*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-journal-richtext"></i></span>
+        <span class="sidebar-link-text">Curriculum</span>
+    </a>
+    <a href="{{ route('course.syllabus.index') }}" class="sidebar-link {{ request()->is('syllabus*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-journal-bookmark-fill"></i></span>
+        <span class="sidebar-link-text">Syllabus</span>
+    </a>
+    <a href="{{ route('lesson-plans.index') }}" class="sidebar-link {{ request()->is('lesson-plans*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-journal-plus"></i></span>
+        <span class="sidebar-link-text">Lesson Plans</span>
+    </a>
+    <a href="{{ route('online-classes.index') }}" class="sidebar-link {{ request()->is('online-classes*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-camera-video-fill"></i></span>
+        <span class="sidebar-link-text">Online Classes</span>
+    </a>
+    <a href="{{ route('promotions.index') }}" class="sidebar-link {{ request()->is('promotions*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-graph-up-arrow"></i></span>
+        <span class="sidebar-link-text">Promotions</span>
+    </a>
+    @endcan
+    @endcanany
+    @endunlessrole
 
-        @can('manage hostel rooms')
-        <a href="{{ route('hostel.rooms.index') }}" class="nav-item {{ request()->is('hostel/rooms*') || request()->is('hostel/beds*') ? 'active' : '' }}">
-            <i class="bi bi-door-open nav-icon"></i> Rooms & Beds
-        </a>
-        @endcan
+    {{-- Attendance — hide for teacher/class-teacher/student/parent --}}
+    @unlessrole('teacher|class-teacher|student|parent')
+    @canany(['take attendances','view attendances'])
+    <p class="sidebar-section-label">Attendance</p>
+    @can('take attendances')
+    <a href="{{ route('attendance.create.show') }}" class="sidebar-link {{ request()->is('attendances/take') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-check2-square"></i></span>
+        <span class="sidebar-link-text">Take Attendance</span>
+    </a>
+    @endcan
+    @can('view attendances')
+    <a href="{{ route('attendance.list.show') }}" class="sidebar-link {{ request()->is('attendances/view') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-week-fill"></i></span>
+        <span class="sidebar-link-text">View Attendance</span>
+    </a>
+    <a href="{{ route('attendance.analytics') }}" class="sidebar-link {{ request()->is('attendances/analytics') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-bar-chart-fill"></i></span>
+        <span class="sidebar-link-text">Analytics</span>
+    </a>
+    <a href="{{ route('rfid.scans') }}" class="sidebar-link {{ request()->is('rfid*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-qr-code-scan"></i></span>
+        <span class="sidebar-link-text">RFID Gate Scans</span>
+    </a>
+    @endcan
+    @endcanany
+    @endunlessrole
 
-        @can('manage hostel allocations')
-        <a href="{{ route('hostel.allocations.index') }}" class="nav-item {{ request()->is('hostel/allocations*') ? 'active' : '' }}">
-            <i class="bi bi-person-badge nav-icon"></i> Allocations
-        </a>
-        @endcan
+    {{-- Exams & Marks — hide for teacher/class-teacher/student/parent --}}
+    @unlessrole('teacher|class-teacher|student|parent')
+    @canany(['view exams','create exams','save marks','view marks'])
+    <p class="sidebar-section-label">Exams & Marks</p>
+    @can('view exams')
+    <a href="{{ route('exam.list.show') }}" class="sidebar-link {{ request()->is('exams/view') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-text-fill"></i></span>
+        <span class="sidebar-link-text">Exams</span>
+    </a>
+    @endcan
+    @can('save marks')
+    <a href="{{ route('course.mark.create') }}" class="sidebar-link {{ request()->is('marks/create') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-pencil-square"></i></span>
+        <span class="sidebar-link-text">Enter Marks</span>
+    </a>
+    @endcan
+    @can('view marks')
+    <a href="{{ route('results.index') }}" class="sidebar-link {{ request()->is('results') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-award-fill"></i></span>
+        <span class="sidebar-link-text">Results</span>
+    </a>
+    @endcan
+    @canany(['view exams','create exams'])
+    <a href="{{ route('exam.grade.system.index') }}" class="sidebar-link {{ request()->is('exams/grade*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-award-fill"></i></span>
+        <span class="sidebar-link-text">Grading Systems</span>
+    </a>
+    <a href="{{ route('online-exams.index') }}" class="sidebar-link {{ request()->is('online-exams*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-pc-display"></i></span>
+        <span class="sidebar-link-text">Online Exams</span>
+    </a>
+    <a href="{{ route('practical-exams.index') }}" class="sidebar-link {{ request()->is('practical-exams*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-nut-fill"></i></span>
+        <span class="sidebar-link-text">Practical Exams</span>
+    </a>
+    <a href="{{ route('exam.schedule.index') }}" class="sidebar-link {{ request()->is('exam/schedule*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar2-week-fill"></i></span>
+        <span class="sidebar-link-text">Exam Schedule</span>
+    </a>
+    <a href="{{ route('exam.hall.index') }}" class="sidebar-link {{ request()->is('exam/halls*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+        <span class="sidebar-link-text">Halls & Seat Planning</span>
+    </a>
+    <a href="{{ route('question-bank.index') }}" class="sidebar-link {{ request()->is('question-bank*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-journal-code"></i></span>
+        <span class="sidebar-link-text">Question Bank</span>
+    </a>
+    <a href="{{ route('question-paper-templates.index') }}" class="sidebar-link {{ request()->is('question-paper-templates*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-diff"></i></span>
+        <span class="sidebar-link-text">Paper Blueprints</span>
+    </a>
+    <a href="{{ route('question-papers.index') }}" class="sidebar-link {{ request()->is('question-papers*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-richtext-fill"></i></span>
+        <span class="sidebar-link-text">Question Papers</span>
+        @if(isset($pendingPapers) && $pendingPapers > 0)
+        <span class="sidebar-badge">{{ $pendingPapers }}</span>
+        @endif
+    </a>
+    @endcanany
+    @endcanany
+    @endunlessrole
 
-        @can('manage hostel attendance')
-        <a href="{{ route('hostel.attendances.index') }}" class="nav-item {{ request()->is('hostel/attendances*') ? 'active' : '' }}">
-            <i class="bi bi-calendar-check nav-icon"></i> Attendance
-        </a>
-        @endcan
+    {{-- Finance --}}
+    @unlessrole('student|parent')
+    @canany(['manage finance','view invoices','create invoices','view payments','view own invoices'])
+    <p class="sidebar-section-label">Finance</p>
+    @can('manage finance')
+    <a href="{{ route('finance.overview') }}" class="sidebar-link {{ request()->is('finance') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-graph-up-arrow"></i></span>
+        <span class="sidebar-link-text">Overview</span>
+    </a>
+    <a href="{{ route('finance.fee-types.index') }}" class="sidebar-link {{ request()->is('finance/fee-types*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-list-ul"></i></span>
+        <span class="sidebar-link-text">Fee Types</span>
+    </a>
+    <a href="{{ route('finance.categories.index') }}" class="sidebar-link {{ request()->is('finance/categories*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-tags"></i></span>
+        <span class="sidebar-link-text">Fee Categories</span>
+    </a>
+    <a href="{{ route('finance.structures') }}" class="sidebar-link {{ request()->is('finance/structures*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-table"></i></span>
+        <span class="sidebar-link-text">Fee Structures</span>
+    </a>
+    <a href="{{ route('finance.discounts') }}" class="sidebar-link {{ request()->is('finance/discounts*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-percent"></i></span>
+        <span class="sidebar-link-text">Discounts</span>
+    </a>
+    @endcan
+    <a href="{{ route('payments.index') }}" class="sidebar-link {{ request()->is('payments*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-receipt-cutoff"></i></span>
+        <span class="sidebar-link-text">Invoices & Payments</span>
+    </a>
+    @can('manage finance')
+    <a href="{{ route('finance.expenses') }}" class="sidebar-link {{ request()->is('finance/expenses*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-arrow-up-circle-fill"></i></span>
+        <span class="sidebar-link-text">Expenses</span>
+    </a>
+    <a href="{{ route('finance.income') }}" class="sidebar-link {{ request()->is('finance/income*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-arrow-down-circle-fill"></i></span>
+        <span class="sidebar-link-text">Income</span>
+    </a>
+    <a href="{{ route('finance.salary.index') }}" class="sidebar-link {{ request()->is('finance/salary*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-cash-stack"></i></span>
+        <span class="sidebar-link-text">Salary Slips</span>
+    </a>
+    <a href="{{ route('finance.salary.components') }}" class="sidebar-link {{ request()->is('finance/salary/components*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-sliders"></i></span>
+        <span class="sidebar-link-text">Salary Components</span>
+    </a>
+    <a href="{{ route('finance.tax.index') }}" class="sidebar-link {{ request()->is('finance/tax*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calculator-fill"></i></span>
+        <span class="sidebar-link-text">Tax Rates</span>
+    </a>
+    <a href="{{ route('finance.ledger') }}" class="sidebar-link {{ request()->is('finance/ledger*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-journal-bookmark-fill"></i></span>
+        <span class="sidebar-link-text">Accounting Ledger</span>
+    </a>
+    <a href="{{ route('finance.profit-loss') }}" class="sidebar-link {{ request()->is('finance/profit-loss*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-bar-chart-fill"></i></span>
+        <span class="sidebar-link-text">Profit & Loss</span>
+    </a>
+    <a href="{{ url('finance/reports') }}" class="sidebar-link {{ request()->is('finance/reports*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-bar-graph-fill"></i></span>
+        <span class="sidebar-link-text">Finance Reports</span>
+    </a>
+    @endcan
+    @endcanany
+    @endunlessrole
 
-        @can('manage hostel visitors')
-        <a href="{{ route('hostel.visitors.index') }}" class="nav-item {{ request()->is('hostel/visitors*') ? 'active' : '' }}">
-            <i class="bi bi-people nav-icon"></i> Visitors
-        </a>
-        @endcan
+    {{-- Library --}}
+    @unlessrole('student|parent')
+    @canany(['view books','create books','issue books','return books'])
+    <p class="sidebar-section-label">Library</p>
+    <a href="{{ route('library.index') }}" class="sidebar-link {{ request()->is('library') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-journals"></i></span>
+        <span class="sidebar-link-text">Book Catalog</span>
+    </a>
+    @canany(['issue books','return books'])
+    <a href="{{ route('library.issues.index') }}" class="sidebar-link {{ request()->is('library/issues*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-arrow-left-right"></i></span>
+        <span class="sidebar-link-text">Issue / Return</span>
+    </a>
+    @endcanany
+    @can('manage library members')
+    <a href="{{ route('library.members.index') }}" class="sidebar-link {{ request()->is('library/members*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-lines-fill"></i></span>
+        <span class="sidebar-link-text">Members</span>
+    </a>
+    @endcan
+    @endcanany
+    @endunlessrole
 
-        @can('manage hostel maintenance')
-        <a href="{{ route('hostel.maintenance.index') }}" class="nav-item {{ request()->is('hostel/maintenance*') ? 'active' : '' }}">
-            <i class="bi bi-tools nav-icon"></i> Maintenance
-        </a>
-        @endcan
-        @endcanany
+    {{-- Hostel --}}
+    @unlessrole('student|parent')
+    <p class="sidebar-section-label">Hostel Management</p>
+    <a href="{{ route('hostel.hostels.index') }}" class="sidebar-link {{ request()->is('hostel/hostels*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-building-fill"></i></span>
+        <span class="sidebar-link-text">Hostel Buildings</span>
+    </a>
+    <a href="{{ route('hostel.rooms.index') }}" class="sidebar-link {{ request()->is('hostel/rooms*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-door-closed-fill"></i></span>
+        <span class="sidebar-link-text">Hostel Rooms</span>
+    </a>
+    <a href="{{ route('hostel.beds.index') }}" class="sidebar-link {{ request()->is('hostel/beds*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-lamp-fill"></i></span>
+        <span class="sidebar-link-text">Beds Inventory</span>
+    </a>
+    <a href="{{ route('hostel.allocations.index') }}" class="sidebar-link {{ request()->is('hostel/allocations*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-badge-fill"></i></span>
+        <span class="sidebar-link-text">Student Allocations</span>
+    </a>
+    <a href="{{ route('hostel.attendances.index') }}" class="sidebar-link {{ request()->is('hostel/attendances*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-clipboard-check-fill"></i></span>
+        <span class="sidebar-link-text">Night Roll Call</span>
+    </a>
+    <a href="{{ route('hostel.visitors.index') }}" class="sidebar-link {{ request()->is('hostel/visitors*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-lines-fill"></i></span>
+        <span class="sidebar-link-text">Visitor Log</span>
+    </a>
+    <a href="{{ route('hostel.maintenance.index') }}" class="sidebar-link {{ request()->is('hostel/maintenance*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-tools"></i></span>
+        <span class="sidebar-link-text">Maintenance Requests</span>
+    </a>
+    @endunlessrole
 
-        {{-- ── TRANSPORT section ── --}}
-        @canany(['manage transport', 'view transport', 'assign student transport', 'view transport routes'])
-        <p class="nav-section-label">Transport</p>
-        <a href="{{ route('transport.index') }}" class="nav-item {{ request()->is('transport') ? 'active' : '' }}">
-            <i class="bi bi-bus-front nav-icon"></i> Dashboard
-        </a>
-        @canany(['manage transport', 'view transport'])
-        <a href="{{ route('transport.vehicles.index') }}" class="nav-item {{ request()->is('transport/vehicles*') ? 'active' : '' }}">
-            <i class="bi bi-truck nav-icon"></i> Fleet
-        </a>
-        <a href="{{ route('transport.drivers.index') }}" class="nav-item {{ request()->is('transport/drivers*') ? 'active' : '' }}">
-            <i class="bi bi-person-badge nav-icon"></i> Drivers
-        </a>
-        @endcanany
-        @canany(['manage transport', 'view transport routes'])
-        <a href="{{ route('transport.routes.index') }}" class="nav-item {{ request()->is('transport/routes*') ? 'active' : '' }}">
-            <i class="bi bi-signpost-split nav-icon"></i> Routes
-        </a>
-        @endcanany
-        @canany(['manage transport', 'assign student transport'])
-        <a href="{{ route('transport.students.index') }}" class="nav-item {{ request()->is('transport/students*') ? 'active' : '' }}">
-            <i class="bi bi-people nav-icon"></i> Student Allocation
-        </a>
-        @endcanany
-        @can('manage transport')
-        <a href="{{ route('transport.attendance.index') }}" class="nav-item {{ request()->is('transport/attendance*') ? 'active' : '' }}">
-            <i class="bi bi-check2-square nav-icon"></i> Attendance
-        </a>
-        <a href="{{ route('transport.analytics') }}" class="nav-item {{ request()->is('transport/analytics') ? 'active' : '' }}">
-            <i class="bi bi-bar-chart-line nav-icon"></i> Analytics
-        </a>
-        <a href="{{ route('transport.reports.form') }}" class="nav-item {{ request()->is('transport/reports*') ? 'active' : '' }}">
-            <i class="bi bi-file-earmark-spreadsheet nav-icon"></i> Reports
-        </a>
-        @endcan
-        @endcanany
+    {{-- Transport --}}
+    @unlessrole('student|parent')
+    <p class="sidebar-section-label">Transport Management</p>
+    <a href="{{ route('transport.index') }}" class="sidebar-link {{ request()->is('transport') && !request()->is('transport/*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-speedometer2"></i></span>
+        <span class="sidebar-link-text">Transport Overview</span>
+    </a>
+    <a href="{{ route('transport.vehicles.index') }}" class="sidebar-link {{ request()->is('transport/vehicles*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-bus-front-fill"></i></span>
+        <span class="sidebar-link-text">Fleet Vehicles</span>
+    </a>
+    <a href="{{ route('transport.drivers.index') }}" class="sidebar-link {{ request()->is('transport/drivers*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-badge-fill"></i></span>
+        <span class="sidebar-link-text">Drivers Directory</span>
+    </a>
+    <a href="{{ route('transport.routes.index') }}" class="sidebar-link {{ request()->is('transport/routes*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-map-fill"></i></span>
+        <span class="sidebar-link-text">Routes & Bus Stops</span>
+    </a>
+    <a href="{{ route('transport.students.index') }}" class="sidebar-link {{ request()->is('transport/students*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-workspace"></i></span>
+        <span class="sidebar-link-text">Student Transport</span>
+    </a>
+    <a href="{{ route('transport.attendance.index') }}" class="sidebar-link {{ request()->is('transport/attendance*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-clipboard-check-fill"></i></span>
+        <span class="sidebar-link-text">Bus Attendance</span>
+    </a>
+    <a href="{{ route('transport.analytics') }}" class="sidebar-link {{ request()->is('transport/analytics*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-graph-up-arrow"></i></span>
+        <span class="sidebar-link-text">Analytics & Fuel</span>
+    </a>
+    <a href="{{ route('transport.reports.form') }}" class="sidebar-link {{ request()->is('transport/reports*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-bar-graph-fill"></i></span>
+        <span class="sidebar-link-text">Transport Reports</span>
+    </a>
+    @endunlessrole
 
-        {{-- ── STAFF / HR section ── --}}
-        @canany(['view staff', 'create staff'])
-        <p class="nav-section-label">HR & Staff</p>
-        <a href="{{ route('staff.index') }}" class="nav-item {{ request()->is('staff*') ? 'active' : '' }}">
-            <i class="bi bi-person-lines-fill nav-icon"></i> Staff
-        </a>
-        @can('create staff')
-        <a href="{{ route('staff.create') }}" class="nav-item">
-            <i class="bi bi-person-plus nav-icon"></i> Add Staff
-        </a>
-        @endcan
-        @endcanany
+    {{-- Certificates --}}
+    @unlessrole('student|parent')
+    @canany(['view students','create students'])
+    <p class="sidebar-section-label">Certificates</p>
+    <a href="{{ route('certificates.index') }}" class="sidebar-link {{ request()->is('certificates') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-award-fill"></i></span>
+        <span class="sidebar-link-text">Templates</span>
+    </a>
+    <a href="{{ route('certificates.issued') }}" class="sidebar-link {{ request()->is('certificates/issued*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-journal-text"></i></span>
+        <span class="sidebar-link-text">Issued Ledger</span>
+    </a>
+    <a href="{{ route('certificates.bulk') }}" class="sidebar-link {{ request()->is('certificates/bulk*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-people-fill"></i></span>
+        <span class="sidebar-link-text">Bulk Issue</span>
+    </a>
+    @endcanany
+    @endunlessrole
 
-        {{-- ── COMMUNICATION section ── --}}
-        @canany(['view notices', 'create notices', 'view events'])
-        <p class="nav-section-label">Communication</p>
-        @can('create notices')
-        <a href="{{ route('notice.create') }}" class="nav-item {{ request()->is('notice*') ? 'active' : '' }}">
-            <i class="bi bi-megaphone nav-icon"></i> Notices
-        </a>
-        @endcan
-        @can('view events')
-        <a href="{{ route('events.show') }}" class="nav-item {{ request()->is('calendar-event*') ? 'active' : '' }}">
-            <i class="bi bi-calendar-event nav-icon"></i> Events
-        </a>
-        @endcan
-        <a href="{{ route('notifications.index') }}" class="nav-item {{ request()->is('notifications*') ? 'active' : '' }}">
-            <i class="bi bi-bell nav-icon"></i> Notifications
-            @php $unread = auth()->user()->unreadNotifications()->count(); @endphp
-            @if($unread > 0)
-            <span class="ml-auto text-[10px] bg-rose-500 text-white rounded-full w-4 h-4 flex items-center justify-center">{{ $unread > 9 ? '9+' : $unread }}</span>
-            @endif
-        </a>
-        @endcanany
+    {{-- HR --}}
+    @unlessrole('student|parent|teacher|class-teacher')
+    @canany(['view staff','create staff'])
+    <p class="sidebar-section-label">HR & Staff</p>
+    <a href="{{ route('hr.dashboard') }}" class="sidebar-link {{ request()->is('hr') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-people-fill"></i></span>
+        <span class="sidebar-link-text">HR Dashboard</span>
+    </a>
+    <a href="{{ route('staff.attendance.index') }}" class="sidebar-link {{ request()->is('staff/attendance*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-check-fill"></i></span>
+        <span class="sidebar-link-text">Staff Attendance</span>
+    </a>
+    <a href="{{ route('hr.leaves') }}" class="sidebar-link {{ request()->is('hr/leaves') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-x-fill"></i></span>
+        <span class="sidebar-link-text">Leave Approvals</span>
+    </a>
+    <a href="{{ route('hr.payroll') }}" class="sidebar-link {{ request()->is('hr/payroll') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-cash-stack"></i></span>
+        <span class="sidebar-link-text">Payroll</span>
+    </a>
+    <a href="{{ route('staff.recruitment.postings') }}" class="sidebar-link {{ request()->is('staff/recruitment*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-briefcase-fill"></i></span>
+        <span class="sidebar-link-text">Recruitment & Postings</span>
+    </a>
+    <a href="{{ route('staff.contracts.index') }}" class="sidebar-link {{ request()->is('staff/contracts*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-text-fill"></i></span>
+        <span class="sidebar-link-text">Staff Contracts</span>
+    </a>
+    <a href="{{ route('staff.training.index') }}" class="sidebar-link {{ request()->is('staff/training*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-award-fill"></i></span>
+        <span class="sidebar-link-text">Staff Training</span>
+    </a>
+    <a href="{{ route('staff.exit.index') }}" class="sidebar-link {{ request()->is('staff/exit*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-x-fill"></i></span>
+        <span class="sidebar-link-text">Staff Offboarding</span>
+    </a>
+    @endcanany
+    @endunlessrole
 
-        {{-- ── SETTINGS / ADMIN TOOLS section ── --}}
-        @canany(['view academic settings', 'manage roles', 'view audit logs'])
-        <p class="nav-section-label">Administration</p>
-        @can('view academic settings')
-        <a href="{{ url('academics/settings') }}" class="nav-item {{ request()->is('academics/settings') ? 'active' : '' }}">
-            <i class="bi bi-tools nav-icon"></i> Academic Settings
-        </a>
-        @endcan
-        @unless(session()->has('browse_session_id'))
-        @can('promote students')
-        <a href="{{ url('promotions/index') }}" class="nav-item {{ request()->is('promotions*') ? 'active' : '' }}">
-            <i class="bi bi-sort-numeric-up-alt nav-icon"></i> Promotions
-        </a>
-        @endcan
-        @endunless
-        @can('manage roles')
-        <a href="{{ route('roles.index') }}" class="nav-item {{ request()->is('roles*') ? 'active' : '' }}">
-            <i class="bi bi-shield-check nav-icon"></i> Roles & Permissions
-        </a>
-        @endcan
-        @endcanany
+    {{-- Inventory --}}
+    @unlessrole('student|parent|teacher|class-teacher')
+    @canany(['view inventory','manage inventory'])
+    <p class="sidebar-section-label">Inventory</p>
+    <a href="{{ route('inventory.dashboard') }}" class="sidebar-link {{ request()->is('inventory') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-boxes"></i></span>
+        <span class="sidebar-link-text">Inventory</span>
+    </a>
+    @endcanany
+    @endunlessrole
 
-    </nav>
+    {{-- Communication --}}
+    @unlessrole('student|parent')
+    @canany(['view notices','create notices','view events'])
+    <p class="sidebar-section-label">Communication</p>
+    @can('create notices')
+    <a href="{{ route('notice.create') }}" class="sidebar-link {{ request()->is('notice*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-megaphone-fill"></i></span>
+        <span class="sidebar-link-text">Notices</span>
+    </a>
+    <a href="{{ route('communication.bulk') }}" class="sidebar-link {{ request()->is('communication/bulk*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-whatsapp"></i></span>
+        <span class="sidebar-link-text">WhatsApp & Bulk Alerts</span>
+    </a>
+    <a href="{{ route('communication.index') }}" class="sidebar-link {{ request()->is('communication') && !request()->is('communication/*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-chat-left-text-fill"></i></span>
+        <span class="sidebar-link-text">Communication Hub</span>
+    </a>
+    <a href="{{ route('communication.settings') }}" class="sidebar-link {{ request()->is('communication/settings*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-sliders"></i></span>
+        <span class="sidebar-link-text">Gateway Settings</span>
+    </a>
+    @endcan
+    @endcanany
+    @endunlessrole
 
-    {{-- Bottom: files + profile --}}
-    <div class="mt-4 pt-4 border-t border-slate-100 space-y-0.5">
-        @can('upload files')
-        <a href="{{ route('file.index') }}" class="nav-item {{ request()->is('files*') ? 'active' : '' }}">
-            <i class="bi bi-folder2-open nav-icon"></i> File Manager
-        </a>
-        @endcan
-        <a href="{{ route('two-factor.setup') }}" class="nav-item">
-            <i class="bi bi-shield-lock nav-icon"></i> Security (2FA)
-        </a>
-        <a href="{{ route('password.change') }}" class="nav-item">
-            <i class="bi bi-key nav-icon"></i> Change Password
-        </a>
-    </div>
+    {{-- AI (for admin/principal only - teachers have it in their own section) --}}
+    @role('admin|principal')
+    <p class="sidebar-section-label">AI Tools <span class="ml-1 text-[9px] bg-indigo-500 text-white px-1.5 py-0.5 rounded-full">Beta</span></p>
+    <a href="{{ route('ai_features.web.index') }}" class="sidebar-link {{ request()->is('ai-features') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-robot"></i></span>
+        <span class="sidebar-link-text">AI Dashboard</span>
+    </a>
+    @endrole
 
+    {{-- Administration --}}
+    @unlessrole('student|parent|teacher|class-teacher')
+    @canany(['view academic settings','manage roles','promote students'])
+    <p class="sidebar-section-label">Administration</p>
+    @can('view academic settings')
+    <a href="{{ url('academics/settings') }}" class="sidebar-link {{ request()->is('academics/settings') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-gear-fill"></i></span>
+        <span class="sidebar-link-text">Settings</span>
+    </a>
+    @endcan
+    @can('manage roles')
+    <a href="{{ route('roles.index') }}" class="sidebar-link {{ request()->is('roles') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-shield-fill-check"></i></span>
+        <span class="sidebar-link-text">Roles & Permissions</span>
+    </a>
+    <a href="{{ route('roles.assignable-users') }}" class="sidebar-link {{ request()->is('roles/users*') ? 'active' : '' }} ps-10" style="font-size:0.82rem">
+        <span class="sidebar-link-icon"><i class="bi bi-person-check"></i></span>
+        <span class="sidebar-link-text">Assign Roles</span>
+    </a>
+    <a href="{{ route('roles.matrix') }}" class="sidebar-link {{ request()->is('roles/matrix') ? 'active' : '' }} ps-10" style="font-size:0.82rem">
+        <span class="sidebar-link-icon"><i class="bi bi-grid-3x3"></i></span>
+        <span class="sidebar-link-text">Permission Matrix</span>
+    </a>
+    @endcan
+    @endcanany
+    @endunlessrole
+
+@endrole
+
+</nav>
+
+{{-- Sidebar footer --}}
+<div class="sidebar-footer">
+    <a href="{{ route('two-factor.setup') }}" class="sidebar-link {{ request()->is('two-factor*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-shield-lock-fill"></i></span>
+        <span class="sidebar-link-text">Security (2FA)</span>
+    </a>
+    <a href="{{ route('password.change') }}" class="sidebar-link">
+        <span class="sidebar-link-icon"><i class="bi bi-key-fill"></i></span>
+        <span class="sidebar-link-text">Change Password</span>
+    </a>
 </div>
-
-<style>
-.nav-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 0.625rem;
-    border-radius: 0.5rem;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: #475569;
-    text-decoration: none;
-    transition: background 0.15s, color 0.15s;
-}
-.nav-item:hover { background: #f1f5f9; color: #1e293b; }
-.nav-item.active { background: #eef2ff; color: #4f46e5; }
-.nav-icon { font-size: 0.875rem; width: 1rem; flex-shrink: 0; }
-.nav-section-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #94a3b8;
-    padding: 0.75rem 0.625rem 0.25rem;
-}
-</style>

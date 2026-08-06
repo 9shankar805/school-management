@@ -1,2 +1,22 @@
 User-agent: *
-Disallow:
+Allow: /
+Allow: /sitemap.xml
+Allow: /robots.txt
+Disallow: /home
+Disallow: /admin
+Disallow: /super
+Disallow: /api/
+Disallow: /storage/
+Disallow: /nova
+Disallow: /telescope
+
+# Allow search engine crawlers explicitly
+User-agent: Googlebot
+Allow: /
+Allow: /sitemap.xml
+
+User-agent: Bingbot
+Allow: /
+Allow: /sitemap.xml
+
+Sitemap: https://nepalschoolhub.techprocod.com.np/sitemap.xml

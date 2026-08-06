@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -8,9 +9,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Scholarship extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'student_id', 'name', 'type', 'amount', 'percentage',
         'awarded_date', 'expiry_date', 'status', 'criteria', 'notes', 'awarded_by',
     ];

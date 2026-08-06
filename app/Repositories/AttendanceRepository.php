@@ -27,12 +27,13 @@ class AttendanceRepository implements AttendanceInterface
 
     public function prepareInput($request): array
     {
-        $input = [];
-        $now   = Carbon::now()->toDateTimeString();
-        $date  = Carbon::today()->toDateString();
+        $input    = [];
+        $now      = Carbon::now()->toDateTimeString();
+        $date     = Carbon::today()->toDateString();
+        $schoolId = config('tenant.school_id');
 
         foreach ($request['student_ids'] as $student_id) {
-            $input[] = [
+            $row = [
                 'status'        => isset($request['status'][$student_id]) ? $request['status'][$student_id] : 'off',
                 'class_id'      => $request['class_id'],
                 'student_id'    => $student_id,
@@ -44,6 +45,10 @@ class AttendanceRepository implements AttendanceInterface
                 'created_at'    => $now,
                 'updated_at'    => $now,
             ];
+            if ($schoolId) {
+                $row['school_id'] = $schoolId;
+            }
+            $input[] = $row;
         }
 
         return $input;
@@ -143,6 +148,7 @@ class AttendanceRepository implements AttendanceInterface
                 DB::raw("SUM(CASE WHEN status = 'on' THEN 1 ELSE 0 END) as present")
             )
             ->where('session_id', $sessionId)
+            ->when(config('tenant.school_id'), fn($q) => $q->where('school_id', config('tenant.school_id')))
             ->groupBy('student_id', 'class_id')
             ->havingRaw('(SUM(CASE WHEN status = \'on\' THEN 1 ELSE 0 END) / COUNT(*)) * 100 < ?', [$threshold])
             ->get();
@@ -177,6 +183,7 @@ class AttendanceRepository implements AttendanceInterface
             ->where('session_id', $sessionId)
             ->where('class_id', $classId)
             ->whereBetween('date', [$from, $to])
+            ->when(config('tenant.school_id'), fn($q) => $q->where('school_id', config('tenant.school_id')))
             ->groupByRaw('DATE(date)')
             ->orderByRaw('DATE(date)')
             ->get()
@@ -211,6 +218,7 @@ class AttendanceRepository implements AttendanceInterface
             )
             ->where('session_id', $sessionId)
             ->whereDate('date', Carbon::today())
+            ->when(config('tenant.school_id'), fn($q) => $q->where('school_id', config('tenant.school_id')))
             ->first();
 
         return [
@@ -237,6 +245,7 @@ class AttendanceRepository implements AttendanceInterface
             ->where('class_id', $classId)
             ->whereYear('date', $year)
             ->whereMonth('date', $month)
+            ->when(config('tenant.school_id'), fn($q) => $q->where('school_id', config('tenant.school_id')))
             ->groupByRaw('DAY(date)')
             ->get()
             ->keyBy('day');
@@ -271,6 +280,11 @@ class AttendanceRepository implements AttendanceInterface
             )
             ->where('attendances.session_id', $sessionId)
             ->whereDate('attendances.date', $date)
+            ->when(config('tenant.school_id'), function ($q) {
+                $schoolId = config('tenant.school_id');
+                return $q->where('attendances.school_id', $schoolId)
+                         ->where('school_classes.school_id', $schoolId);
+            })
             ->groupBy('attendances.class_id', 'school_classes.class_name')
             ->orderBy('school_classes.class_name')
             ->get()

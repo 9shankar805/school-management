@@ -11,12 +11,14 @@ use Illuminate\Notifications\Notification;
  * General-purpose notification that supports:
  *  - Database channel (in-app notification center)
  *  - Mail channel (email)
+ *  - SMS channel (via SmsService — triggered by NotificationController/bulk)
+ *  - Push channel (via PushNotificationService — triggered by NotificationController/bulk)
  *
  * Usage:
  *   $user->notify(new GeneralNotification(
- *       title:    'Assignment Due',
- *       message:  'Your assignment is due tomorrow.',
- *       type:     'assignment',
+ *       title:     'Assignment Due',
+ *       message:   'Your assignment is due tomorrow.',
+ *       type:      'assignment',
  *       actionUrl: '/assignments/5',
  *   ));
  */
@@ -27,10 +29,11 @@ class GeneralNotification extends Notification implements ShouldQueue
     public function __construct(
         public readonly string  $title,
         public readonly string  $message,
-        public readonly string  $type = 'general',   // general|assignment|fee|attendance|exam|alert
-        public readonly ?string $actionUrl = null,
+        public readonly string  $type       = 'general',   // general|assignment|fee|attendance|exam|alert|announcement
+        public readonly ?string $actionUrl  = null,
         public readonly ?string $actionText = null,
-        public readonly bool    $sendEmail = false,
+        public readonly ?string $link       = null,        // alias for actionUrl
+        public readonly bool    $sendEmail  = false,
     ) {}
 
     /**
@@ -56,7 +59,7 @@ class GeneralNotification extends Notification implements ShouldQueue
             'title'       => $this->title,
             'message'     => $this->message,
             'type'        => $this->type,
-            'action_url'  => $this->actionUrl,
+            'action_url'  => $this->actionUrl ?? $this->link,
             'action_text' => $this->actionText,
         ];
     }
@@ -71,8 +74,11 @@ class GeneralNotification extends Notification implements ShouldQueue
             ->greeting('Hello ' . ($notifiable->first_name ?? 'there') . ',')
             ->line($this->message);
 
-        if ($this->actionUrl && $this->actionText) {
-            $mail->action($this->actionText, url($this->actionUrl));
+        $url  = $this->actionUrl ?? $this->link;
+        $text = $this->actionText;
+
+        if ($url && $text) {
+            $mail->action($text, url($url));
         }
 
         return $mail->line('Thank you for using ' . config('app.name') . '.');

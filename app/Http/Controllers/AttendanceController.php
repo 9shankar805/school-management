@@ -53,19 +53,32 @@ class AttendanceController extends Controller
 
     public function index()
     {
+        if (auth()->check() && auth()->user()->hasRole('student')) {
+            return redirect()->route('student.attendance.show', auth()->id());
+        }
         return back();
     }
 
     public function create(Request $request)
     {
-        if ($request->query('class_id') === null) {
-            return abort(404);
-        }
-
         try {
             $academic_setting          = $this->academicSettingRepository->getAcademicSetting();
             $current_school_session_id = $this->getSchoolCurrentSession();
             $class_id                  = $request->query('class_id');
+            $school_classes            = $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id);
+
+            if ($class_id === null) {
+                return view('attendances.take', [
+                    'current_school_session_id' => $current_school_session_id,
+                    'academic_setting'          => $academic_setting,
+                    'school_classes'            => $school_classes,
+                    'student_list'              => null,
+                    'school_class'              => null,
+                    'school_section'            => null,
+                    'attendance_count'          => 0,
+                ]);
+            }
+
             $section_id                = $request->query('section_id', 0);
             $course_id                 = $request->query('course_id');
 
@@ -84,6 +97,7 @@ class AttendanceController extends Controller
             return view('attendances.take', [
                 'current_school_session_id' => $current_school_session_id,
                 'academic_setting'          => $academic_setting,
+                'school_classes'            => $school_classes,
                 'student_list'              => $student_list,
                 'school_class'              => $school_class,
                 'school_section'            => $school_section,
@@ -112,15 +126,24 @@ class AttendanceController extends Controller
 
     public function show(Request $request)
     {
-        if ($request->query('class_id') === null) {
-            return abort(404);
+        if (auth()->check() && auth()->user()->hasRole('student')) {
+            return redirect()->route('student.attendance.show', auth()->id());
         }
-
         $current_school_session_id = $this->getSchoolCurrentSession();
         $class_id                  = $request->query('class_id');
-        $section_id                = $request->query('section_id');
-        $course_id                 = $request->query('course_id');
-        $repo                      = new AttendanceRepository();
+        $school_classes            = $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id);
+
+        if ($class_id === null) {
+            return view('attendances.view', [
+                'attendances'               => null,
+                'school_classes'            => $school_classes,
+                'current_school_session_id' => $current_school_session_id,
+            ]);
+        }
+
+        $section_id = $request->query('section_id');
+        $course_id  = $request->query('course_id');
+        $repo       = new AttendanceRepository();
 
         try {
             $academic_setting = $this->academicSettingRepository->getAcademicSetting();
@@ -131,13 +154,17 @@ class AttendanceController extends Controller
                 $attendances = $repo->getCourseAttendance($class_id, $course_id, $current_school_session_id);
             }
 
-            return view('attendances.view', ['attendances' => $attendances]);
+            return view('attendances.view', [
+                'attendances'               => $attendances,
+                'school_classes'            => $school_classes,
+                'current_school_session_id' => $current_school_session_id,
+            ]);
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());
         }
     }
 
-    public function showStudentAttendance(int $id)
+    public function showStudentAttendance(Request $request, int $id)
     {
         if (auth()->user()->hasRole('student') && auth()->id() !== $id) {
             abort(403);
@@ -148,7 +175,23 @@ class AttendanceController extends Controller
         $attendances               = $repo->getStudentAttendance($current_school_session_id, $id);
         $student                   = $this->userRepository->findStudent($id);
 
-        return view('attendances.attendance', compact('attendances', 'student'));
+        $month = (int) $request->query('month', now()->month);
+        $year  = (int) $request->query('year', now()->year);
+
+        $totalAttendance = $attendances->count();
+        $presentCount    = $attendances->filter(fn($a) => in_array(strtolower((string)$a->status), ['present', 'on', '1']))->count();
+        $absentCount     = $attendances->filter(fn($a) => in_array(strtolower((string)$a->status), ['absent', 'off', '0']))->count();
+        $attendancePct   = $totalAttendance > 0 ? round(($presentCount / $totalAttendance) * 100) : 0;
+        $shortageDeficit = max(0, (int) ceil(($totalAttendance * 0.75) - $presentCount));
+
+        $promotionRepo = new \App\Repositories\PromotionRepository();
+        $classInfo     = $promotionRepo->getStudentCurrentClass($id, $current_school_session_id);
+
+        return view('attendances.attendance', compact(
+            'attendances', 'student', 'totalAttendance', 'presentCount',
+            'absentCount', 'attendancePct', 'shortageDeficit', 'classInfo',
+            'month', 'year', 'current_school_session_id'
+        ));
     }
 
     // ──────────────────────────────────────────────────────────────────────────

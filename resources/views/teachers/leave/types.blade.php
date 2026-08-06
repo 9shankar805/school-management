@@ -1,7 +1,5 @@
 @extends('layouts.app')
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">@include('layouts.left-menu')</div>
     <div class="flex-1 p-6 lg:p-8 overflow-auto max-w-4xl">
         <nav class="text-xs text-slate-400 mb-5"><a href="{{ route('leave.index') }}" class="hover:text-indigo-600">Leave</a><span class="mx-1">/</span>Types</nav>
         <h1 class="text-2xl font-bold text-slate-800 mb-7 tracking-tight">Leave Types</h1>

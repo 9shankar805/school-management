@@ -1,11 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
     <!-- Sidebar / Left Menu (Using existing include but wrapping it) -->
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">
-        @include('layouts.left-menu')
-    </div>
 
     <!-- Main Content Area -->
     <div class="flex-1 p-6 lg:p-10 overflow-hidden">

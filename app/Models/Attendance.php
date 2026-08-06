@@ -1,16 +1,19 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class Attendance extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'student_id',
         'class_id',
         'section_id',

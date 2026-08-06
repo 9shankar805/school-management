@@ -14,6 +14,8 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\CheckAttendanceShortage::class,
+        \App\Console\Commands\SendFeeReminders::class,
+        \App\Console\Commands\GenerateMonthlyInvoices::class,
     ];
 
     /**
@@ -31,6 +33,53 @@ class Kernel extends ConsoleKernel
                  ->withoutOverlapping()
                  ->runInBackground()
                  ->appendOutputTo(storage_path('logs/attendance-shortage.log'));
+
+        // Send fee due-date reminders 3 days before (and overdue alerts) daily at 8am
+        $schedule->command('fees:reminders --days=3 --overdue')
+                 ->dailyAt('08:00')
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/fee-reminders.log'));
+
+        // Auto-generate monthly invoices on the 1st of every month at 06:00
+        $schedule->command('fees:generate-monthly')
+                 ->monthlyOn(1, '06:00')
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/monthly-invoices.log'));
+
+        // ── Module 23: Backup ─────────────────────────────────────────────
+        // Full backup every day at 02:00 (off-peak)
+        $schedule->command('backup:run --only-db')
+                 ->dailyAt('02:00')
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->onFailure(function () {
+                     \Illuminate\Support\Facades\Log::error('Daily DB backup failed.');
+                 })
+                 ->appendOutputTo(storage_path('logs/backup.log'));
+
+        // Full backup including files every Sunday at 03:00
+        $schedule->command('backup:run')
+                 ->weeklyOn(0, '03:00')
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->onFailure(function () {
+                     \Illuminate\Support\Facades\Log::error('Weekly full backup failed.');
+                 })
+                 ->appendOutputTo(storage_path('logs/backup.log'));
+
+        // Clean up old backups daily at 04:00
+        $schedule->command('backup:clean')
+                 ->dailyAt('04:00')
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/backup.log'));
+
+        // Monitor backup health daily at 09:00
+        $schedule->command('backup:monitor')
+                 ->dailyAt('09:00')
+                 ->appendOutputTo(storage_path('logs/backup.log'));
     }
 
     /**

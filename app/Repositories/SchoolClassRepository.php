@@ -26,7 +26,9 @@ class SchoolClassRepository implements SchoolClassInterface {
     }
 
     public function getAllWithCoursesBySession($session_id) {
-        return SchoolClass::with(['courses','syllabi'])->where('session_id', $session_id)->get();
+        return SchoolClass::with(['courses', 'syllabi', 'sections.promotions', 'promotions'])
+                ->where('session_id', $session_id)
+                ->get();
     }
 
     public function getClassesAndSections($session_id) {
@@ -45,7 +47,7 @@ class SchoolClassRepository implements SchoolClassInterface {
     }
 
     public function findById($class_id) {
-        return SchoolClass::find($class_id);
+        return SchoolClass::with(['sections.promotions', 'courses', 'syllabi'])->find($class_id);
     }
 
     public function update($request) {

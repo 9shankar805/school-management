@@ -22,6 +22,11 @@ use App\Traits\SchoolSession;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use App\Models\MedicalRecord;
+use App\Models\DisciplinaryRecord;
+use App\Models\StudentDocument;
+use App\Models\Event;
 
 class ParentPortalController extends Controller
 {
@@ -150,8 +155,8 @@ class ParentPortalController extends Controller
             ->pluck('course_id');
 
         // Performance trend: avg marks per exam ordered by start_date
-        $trend = Mark::where('student_id', $studentId)
-            ->where('session_id', $sessionId)
+        $trend = Mark::where('marks.student_id', $studentId)
+            ->where('marks.session_id', $sessionId)
             ->join('exams', 'marks.exam_id', '=', 'exams.id')
             ->select('exams.exam_name as exam_name', DB::raw('ROUND(AVG(marks.marks), 1) as avg'))
             ->groupBy('marks.exam_id', 'exams.exam_name', 'exams.start_date')
@@ -159,11 +164,11 @@ class ParentPortalController extends Controller
             ->get();
 
         // Course bar chart
-        $courseTrend = Mark::where('student_id', $studentId)
-            ->where('session_id', $sessionId)
+        $courseTrend = Mark::where('marks.student_id', $studentId)
+            ->where('marks.session_id', $sessionId)
             ->join('courses', 'marks.course_id', '=', 'courses.id')
-            ->select('courses.name as course_name', DB::raw('ROUND(AVG(marks.marks), 1) as avg'))
-            ->groupBy('marks.course_id', 'courses.name')
+            ->select('courses.course_name as course_name', DB::raw('ROUND(AVG(marks.marks), 1) as avg'))
+            ->groupBy('marks.course_id', 'courses.course_name')
             ->get();
 
         return view('parent.results', compact(
@@ -346,6 +351,86 @@ class ParentPortalController extends Controller
     }
 
     // -------------------------------------------------------------------------
+    // Homework tracking (parent view)
+    // -------------------------------------------------------------------------
+    public function homework(int $studentId)
+    {
+        $child     = $this->resolveChild($studentId);
+        $sessionId = $this->getSchoolCurrentSession();
+
+        $promotion = Promotion::where('student_id', $studentId)
+            ->where('session_id', $sessionId)
+            ->latest()->first();
+
+        $homeworks = collect();
+        if ($promotion) {
+            $homeworks = \App\Models\Homework::where('class_id', $promotion->class_id)
+                ->where('section_id', $promotion->section_id)
+                ->where('session_id', $sessionId)
+                ->with(['course', 'teacher'])
+                ->withCount('submissions')
+                ->latest()
+                ->get()
+                ->map(function ($hw) use ($studentId) {
+                    // Attach this child's submission if any
+                    $hw->mySubmission = $hw->submissions()
+                        ->where('student_id', $studentId)
+                        ->first();
+                    return $hw;
+                });
+        }
+
+        return view('parent.homework', compact('child', 'homeworks', 'promotion'));
+    }
+
+    // -------------------------------------------------------------------------
+    // Timetable (parent view — child's class schedule)
+    // -------------------------------------------------------------------------
+    public function timetable(int $studentId)
+    {
+        $child     = $this->resolveChild($studentId);
+        $sessionId = $this->getSchoolCurrentSession();
+
+        $promotion = Promotion::where('student_id', $studentId)
+            ->where('session_id', $sessionId)
+            ->latest()->first();
+
+        $slots = collect();
+        if ($promotion) {
+            $slots = \App\Models\Routine::where('session_id', $sessionId)
+                ->where('class_id', $promotion->class_id)
+                ->where('section_id', $promotion->section_id)
+                ->with(['course', 'teacher'])
+                ->orderBy('weekday')
+                ->orderBy('start')
+                ->get()
+                ->groupBy('weekday');
+        }
+
+        $days = [1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday',
+                 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday', 7 => 'Sunday'];
+
+        $todayWeekday = now()->isoWeekday();
+
+        return view('parent.timetable', compact('child', 'slots', 'days', 'todayWeekday', 'promotion'));
+    }
+
+    // -------------------------------------------------------------------------
+    // Transport info (parent view)
+    // -------------------------------------------------------------------------
+    public function transport(int $studentId)
+    {
+        $child = $this->resolveChild($studentId);
+
+        $transport = \App\Models\StudentTransport::where('student_id', $studentId)
+            ->with(['route.stops', 'route.vehicle', 'route.driver', 'stop'])
+            ->latest()
+            ->first();
+
+        return view('parent.transport', compact('child', 'transport'));
+    }
+
+    // -------------------------------------------------------------------------
     // Messaging
     // -------------------------------------------------------------------------
     public function conversations()
@@ -480,8 +565,8 @@ class ParentPortalController extends Controller
         $markCount = Mark::where('student_id', $studentId)->where('session_id', $sessionId)->count();
 
         // Exam trend (line chart)
-        $examTrend = Mark::where('student_id', $studentId)
-            ->where('session_id', $sessionId)
+        $examTrend = Mark::where('marks.student_id', $studentId)
+            ->where('marks.session_id', $sessionId)
             ->join('exams', 'marks.exam_id', '=', 'exams.id')
             ->select('exams.exam_name as exam_name', DB::raw('ROUND(AVG(marks.marks), 1) as avg'))
             ->groupBy('marks.exam_id', 'exams.exam_name', 'exams.start_date')
@@ -489,11 +574,11 @@ class ParentPortalController extends Controller
             ->get();
 
         // Course bar chart
-        $courseTrend = Mark::where('student_id', $studentId)
-            ->where('session_id', $sessionId)
+        $courseTrend = Mark::where('marks.student_id', $studentId)
+            ->where('marks.session_id', $sessionId)
             ->join('courses', 'marks.course_id', '=', 'courses.id')
-            ->select('courses.name as course_name', DB::raw('ROUND(AVG(marks.marks), 1) as avg'))
-            ->groupBy('marks.course_id', 'courses.name')
+            ->select('courses.course_name as course_name', DB::raw('ROUND(AVG(marks.marks), 1) as avg'))
+            ->groupBy('marks.course_id', 'courses.course_name')
             ->get();
 
         // Multi-session comparison
@@ -504,8 +589,8 @@ class ParentPortalController extends Controller
         $multiSession = [];
         if ($sessions->count() > 1) {
             foreach ($sessions as $sid) {
-                $multiSession[$sid] = Mark::where('student_id', $studentId)
-                    ->where('session_id', $sid)
+                $multiSession[$sid] = Mark::where('marks.student_id', $studentId)
+                    ->where('marks.session_id', $sid)
                     ->join('exams', 'marks.exam_id', '=', 'exams.id')
                     ->select('exams.exam_name as exam_name', DB::raw('ROUND(AVG(marks.marks), 1) as avg'))
                     ->groupBy('marks.exam_id', 'exams.exam_name', 'exams.start_date')
@@ -637,5 +722,166 @@ class ParentPortalController extends Controller
         }
 
         return back()->with('status', 'Reply sent.');
+    }
+    // -------------------------------------------------------------------------
+    // Teachers Directory (from Phase 5)
+    // -------------------------------------------------------------------------
+    public function teachers(int $studentId)
+    {
+        $child     = $this->resolveChild($studentId);
+        $sessionId = $this->getSchoolCurrentSession();
+        $promotion = Promotion::where('student_id', $studentId)
+            ->where('session_id', $sessionId)
+            ->latest()->first();
+
+        $teachers = collect();
+        if ($promotion) {
+            $assigned = AssignedTeacher::with(['teacher', 'course', 'schoolClass', 'section'])
+                ->where('class_id', $promotion->class_id)
+                ->where('section_id', $promotion->section_id)
+                ->where('session_id', $sessionId)
+                ->get();
+
+            $teachers = $assigned->groupBy('teacher_id')->map(function ($items) {
+                $teacher = $items->first()->teacher;
+                $subjects = $items->map(fn($i) => $i->course->name ?? '')->filter()->unique()->values();
+                $teacher->subjects_taught = $subjects;
+                return $teacher;
+            })->values();
+        }
+
+        return view('parent.teachers', compact('child', 'teachers'));
+    }
+
+    // -------------------------------------------------------------------------
+    // Meetings (Mocked) (from Phase 5)
+    // -------------------------------------------------------------------------
+    public function meetings(int $studentId)
+    {
+        $child = $this->resolveChild($studentId);
+        
+        // Mock data
+        $upcoming = [
+            ['id' => 1, 'teacher' => 'Mr. Smith', 'subject' => 'Math Performance', 'date' => now()->addDays(2)->format('Y-m-d H:i'), 'status' => 'confirmed']
+        ];
+        $past = [
+            ['id' => 2, 'teacher' => 'Mrs. Doe', 'subject' => 'General checkin', 'date' => now()->subDays(10)->format('Y-m-d H:i'), 'status' => 'completed']
+        ];
+
+        return view('parent.meetings', compact('child', 'upcoming', 'past'));
+    }
+
+    public function storeMeeting(Request $request, int $studentId)
+    {
+        $child = $this->resolveChild($studentId);
+        $request->validate(['teacher_id' => 'required', 'subject' => 'required', 'date' => 'required']);
+        return back()->with('status', 'Meeting request submitted successfully (mock).');
+    }
+
+    // -------------------------------------------------------------------------
+    // Events (from Phase 5)
+    // -------------------------------------------------------------------------
+    public function events(int $studentId)
+    {
+        $child = $this->resolveChild($studentId);
+        $schoolId = auth()->user()->school_id ?? 1;
+        $events = Event::where('school_id', $schoolId)->where('start', '>=', now())->orderBy('start')->get();
+        
+        return view('parent.events', compact('child', 'events'));
+    }
+
+    // -------------------------------------------------------------------------
+    // Health (Medical Records) (from Phase 6)
+    // -------------------------------------------------------------------------
+    public function health(int $studentId)
+    {
+        $child  = $this->resolveChild($studentId);
+        $record = MedicalRecord::where('student_id', $studentId)->first();
+        
+        return view('parent.health', compact('child', 'record'));
+    }
+
+    public function updateHealth(Request $request, int $studentId)
+    {
+        $child = $this->resolveChild($studentId);
+        $validated = $request->validate([
+            'emergency_medical_notes' => 'nullable|string',
+            'doctor_name'             => 'nullable|string|max:255',
+            'doctor_phone'            => 'nullable|string|max:50',
+        ]);
+
+        $record = MedicalRecord::firstOrCreate(
+            ['student_id' => $child->id],
+            ['school_id' => auth()->user()->school_id ?? 1]
+        );
+        $record->update($validated);
+
+        return back()->with('status', 'Health record updated securely.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Behavior (Disciplinary Records) (from Phase 6)
+    // -------------------------------------------------------------------------
+    public function behavior(int $studentId)
+    {
+        $child = $this->resolveChild($studentId);
+        $records = DisciplinaryRecord::with('reporter')
+            ->where('student_id', $child->id)
+            ->orderBy('incident_date', 'desc')
+            ->get();
+
+        $active = $records->where('resolved', false)->values();
+        $history = $records->where('resolved', true)->values();
+
+        return view('parent.behavior', compact('child', 'active', 'history'));
+    }
+
+    // -------------------------------------------------------------------------
+    // Documents (from Phase 6)
+    // -------------------------------------------------------------------------
+    public function documents(int $studentId)
+    {
+        $child = $this->resolveChild($studentId);
+        $documents = StudentDocument::where('student_id', $child->id)->orderBy('created_at', 'desc')->get();
+        return view('parent.documents', compact('child', 'documents'));
+    }
+
+    public function uploadDocument(Request $request, int $studentId)
+    {
+        $child = $this->resolveChild($studentId);
+        $request->validate([
+            'document_type' => 'required|string',
+            'title'         => 'required|string|max:255',
+            'file'          => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        ]);
+
+        $file = $request->file('file');
+        $path = $file->store('student_documents/' . $child->id, 'public');
+
+        StudentDocument::create([
+            'school_id'     => auth()->user()->school_id ?? 1,
+            'student_id'    => $child->id,
+            'document_type' => $request->document_type,
+            'title'         => $request->title,
+            'file_path'     => $path,
+            'file_name'     => $file->getClientOriginalName(),
+            'mime_type'     => $file->getMimeType(),
+            'file_size'     => $file->getSize(),
+            'uploaded_by'   => auth()->id(),
+            'is_verified'   => false,
+        ]);
+
+        return back()->with('status', 'Document uploaded successfully.');
+    }
+
+    public function downloadDocument(int $studentId, int $id)
+    {
+        $child = $this->resolveChild($studentId);
+        $document = StudentDocument::where('student_id', $child->id)->findOrFail($id);
+
+        if (!Storage::disk('public')->exists($document->file_path)) {
+            abort(404, 'File not found on server.');
+        }
+        return Storage::disk('public')->download($document->file_path, $document->file_name);
     }
 }

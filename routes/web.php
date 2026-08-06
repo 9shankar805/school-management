@@ -37,7 +37,18 @@ use App\Http\Controllers\TransportRouteController;
 use App\Http\Controllers\StudentTransportController;
 use App\Http\Controllers\TransportAttendanceController;
 use App\Http\Controllers\TransportController;
+// Module 10 — Finance
+use App\Http\Controllers\FeeController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\IncomeController;
+use App\Http\Controllers\FinanceReportController;
+// Module 11 — HR
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\StaffContractController;
+use App\Http\Controllers\StaffDocumentController;
+use App\Http\Controllers\StaffTrainingController;
+use App\Http\Controllers\StaffExitController;
+use App\Http\Controllers\RecruitmentController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\AdmissionController;
@@ -47,6 +58,9 @@ use App\Http\Controllers\EmergencyContactController;
 use App\Http\Controllers\DisciplinaryRecordController;
 use App\Http\Controllers\HouseAssignmentController;
 use App\Http\Controllers\ScholarshipController;
+use App\Http\Controllers\SchoolProfileController;
+use App\Http\Controllers\SchoolLandingController;
+use App\Http\Controllers\Api\V1\SettingController;
 use App\Http\Controllers\StudentTransferController;
 use App\Http\Controllers\StudentIdCardController;
 use App\Http\Controllers\GraduationController;
@@ -71,6 +85,11 @@ use App\Http\Controllers\QuestionPaperController;
 use App\Http\Controllers\QuestionBankController;
 use App\Http\Controllers\QuestionPaperTemplateController;
 use App\Http\Controllers\QuestionApprovalController;
+use App\Http\Controllers\AiFeatureWebController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\ReportCenterController;
+use App\Http\Controllers\CommunicationController;
+use App\Http\Controllers\HrController;
 
 /*
 |--------------------------------------------------------------------------
@@ -82,6 +101,8 @@ use App\Http\Controllers\QuestionApprovalController;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -106,10 +127,12 @@ Route::middleware(['auth'])->group(function () {
         // Class
         Route::post('class/create', [SchoolClassController::class, 'store'])->name('class.create');
         Route::post('class/update', [SchoolClassController::class, 'update'])->name('class.update');
+        Route::post('class/delete/{id}', [SchoolClassController::class, 'destroy'])->name('class.delete');
 
         // Sections
         Route::post('section/create', [SectionController::class, 'store'])->name('section.create');
         Route::post('section/update', [SectionController::class, 'update'])->name('section.update');
+        Route::post('section/delete/{id}', [SectionController::class, 'destroy'])->name('section.delete');
 
         // Courses
         Route::post('course/create', [CourseController::class, 'store'])->name('course.create');
@@ -180,6 +203,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/teachers/edit/{id}', [UserController::class, 'editTeacher'])->name('teacher.edit.show');
     Route::get('/teachers/view/list', [UserController::class, 'getTeacherList'])->name('teacher.list.show');
     Route::get('/teachers/view/profile/{id}', [UserController::class, 'showTeacherProfile'])->name('teacher.profile.show');
+    // Teacher timetable slot management (admin)
+    Route::post('/teachers/{id}/timetable',          [\App\Http\Controllers\RoutineController::class, 'storeForTeacher'])->name('teacher.timetable.store');
+    Route::delete('/teachers/timetable/{routineId}', [\App\Http\Controllers\RoutineController::class, 'destroySlot'])->name('teacher.timetable.destroy');
+    // AJAX: get courses by class
+    Route::get('/ajax/courses-by-class', [\App\Http\Controllers\RoutineController::class, 'coursesByClass'])->name('ajax.courses.by.class');
+    // Class detail view
+    Route::get('/classes/{id}/show', [\App\Http\Controllers\SchoolClassController::class, 'detail'])->name('class.detail.show');
 
     //Students
     Route::get('/students/add', [UserController::class, 'createStudent'])->name('student.create.show');
@@ -255,10 +285,31 @@ Route::middleware(['auth'])->group(function () {
     Route::get('courses/assignments/index', [AssignmentController::class, 'getCourseAssignments'])->name('assignment.list.show');
     Route::get('courses/assignments/create', [AssignmentController::class, 'create'])->name('assignment.create');
     Route::post('courses/assignments/create', [AssignmentController::class, 'store'])->name('assignment.store');
+    Route::get('assignments', [AssignmentController::class, 'teacherIndex'])->name('assignment.teacher.index');
+    Route::delete('assignments/{assignment}', [AssignmentController::class, 'destroy'])->name('assignment.destroy');
+
+    // Gradebook + Student Progress
+    Route::get('gradebook',                         [\App\Http\Controllers\GradebookController::class, 'index'])->name('gradebook.index');
+    Route::get('student-progress/{studentId}',      [\App\Http\Controllers\GradebookController::class, 'studentProgress'])->name('student.progress');
+
+    // Discipline log (teacher view)
+    Route::get('discipline',                        [\App\Http\Controllers\DisciplinaryRecordController::class, 'index'])->name('student.discipline.index');
 
     // Update password
     Route::get('password/edit', [UpdatePasswordController::class, 'edit'])->name('password.change');
     Route::post('password/edit', [UpdatePasswordController::class, 'update'])->name('password.change.update');
+
+    // ── PAYMENTS & INVOICES (Module 10) ────────────────────────────────────────
+    Route::prefix('payments')->name('payments.')->group(function () {
+        Route::get('/',                          [PaymentController::class, 'index'])->name('index');
+        Route::get('/create',                    [PaymentController::class, 'create'])->name('create');
+        Route::post('/',                         [PaymentController::class, 'store'])->name('store');
+        Route::post('/bulk-generate',            [PaymentController::class, 'bulkGenerate'])->name('bulk-generate');
+        Route::get('/student/{studentId}/ledger',[PaymentController::class, 'studentLedger'])->name('student-ledger');
+        Route::get('/{id}',                      [PaymentController::class, 'show'])->name('show');
+        Route::get('/{id}/pay',                  [PaymentController::class, 'pay'])->name('pay');
+        Route::post('/{id}/pay',                 [PaymentController::class, 'processPayment'])->name('process');
+    });
 
     // ── LIBRARY (Module 12) ────────────────────────────────────────────────────
 
@@ -267,10 +318,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/',                [LibraryController::class, 'index'])->name('index');
         Route::get('/create',          [LibraryController::class, 'create'])->name('create');
         Route::post('/',               [LibraryController::class, 'store'])->name('store');
-        Route::get('/{id}',            [LibraryController::class, 'show'])->name('show');
-        Route::get('/{id}/edit',       [LibraryController::class, 'edit'])->name('edit');
-        Route::put('/{id}',            [LibraryController::class, 'update'])->name('update');
-        Route::delete('/{id}',         [LibraryController::class, 'destroy'])->name('destroy');
         Route::get('/analytics',       [LibraryController::class, 'analytics'])->name('analytics');
         Route::get('/reports',         [LibraryController::class, 'reportForm'])->name('reports.form');
         Route::get('/reports/export',  [LibraryController::class, 'reportExport'])->name('reports.export');
@@ -279,8 +326,8 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('categories')->name('categories.')->group(function () {
             Route::get('/',         [BookCategoryController::class, 'index'])->name('index');
             Route::post('/',        [BookCategoryController::class, 'store'])->name('store');
-            Route::put('/{id}',     [BookCategoryController::class, 'update'])->name('update');
-            Route::delete('/{id}',  [BookCategoryController::class, 'destroy'])->name('destroy');
+            Route::put('/{id}',     [BookCategoryController::class, 'update'])->name('update')->where('id', '[0-9]+');
+            Route::delete('/{id}',  [BookCategoryController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
         });
 
         // Book issue / return
@@ -289,8 +336,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/create',                  [BookIssueController::class, 'create'])->name('create');
             Route::post('/',                       [BookIssueController::class, 'store'])->name('store');
             Route::get('/return',                  [BookIssueController::class, 'returnForm'])->name('return');
-            Route::post('/{id}/return',            [BookIssueController::class, 'processReturn'])->name('return.process');
-            Route::post('/{id}/lost',              [BookIssueController::class, 'markLost'])->name('lost');
+            Route::post('/{id}/return',            [BookIssueController::class, 'processReturn'])->name('return.process')->where('id', '[0-9]+');
+            Route::post('/{id}/lost',              [BookIssueController::class, 'markLost'])->name('lost')->where('id', '[0-9]+');
             Route::get('/scan',                    [BookIssueController::class, 'scanLookup'])->name('scan');
         });
 
@@ -299,11 +346,11 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/',                        [LibraryMemberController::class, 'index'])->name('index');
             Route::get('/create',                  [LibraryMemberController::class, 'create'])->name('create');
             Route::post('/',                       [LibraryMemberController::class, 'store'])->name('store');
-            Route::get('/{id}',                    [LibraryMemberController::class, 'show'])->name('show');
-            Route::get('/{id}/edit',               [LibraryMemberController::class, 'edit'])->name('edit');
-            Route::put('/{id}',                    [LibraryMemberController::class, 'update'])->name('update');
-            Route::delete('/{id}',                 [LibraryMemberController::class, 'destroy'])->name('destroy');
-            Route::post('/{id}/fine/settle',       [LibraryMemberController::class, 'settleFine'])->name('fine.settle');
+            Route::get('/{id}',                    [LibraryMemberController::class, 'show'])->name('show')->where('id', '[0-9]+');
+            Route::get('/{id}/edit',               [LibraryMemberController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
+            Route::put('/{id}',                    [LibraryMemberController::class, 'update'])->name('update')->where('id', '[0-9]+');
+            Route::delete('/{id}',                 [LibraryMemberController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
+            Route::post('/{id}/fine/settle',       [LibraryMemberController::class, 'settleFine'])->name('fine.settle')->where('id', '[0-9]+');
         });
 
         // E-books / digital library
@@ -311,13 +358,19 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/',                        [EbookController::class, 'index'])->name('index');
             Route::get('/create',                  [EbookController::class, 'create'])->name('create');
             Route::post('/',                       [EbookController::class, 'store'])->name('store');
-            Route::get('/{id}',                    [EbookController::class, 'show'])->name('show');
-            Route::get('/{id}/edit',               [EbookController::class, 'edit'])->name('edit');
-            Route::put('/{id}',                    [EbookController::class, 'update'])->name('update');
-            Route::delete('/{id}',                 [EbookController::class, 'destroy'])->name('destroy');
-            Route::get('/{id}/download',           [EbookController::class, 'download'])->name('download');
-            Route::post('/{id}/toggle',            [EbookController::class, 'toggleActive'])->name('toggle');
+            Route::get('/{id}',                    [EbookController::class, 'show'])->name('show')->where('id', '[0-9]+');
+            Route::get('/{id}/edit',               [EbookController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
+            Route::put('/{id}',                    [EbookController::class, 'update'])->name('update')->where('id', '[0-9]+');
+            Route::delete('/{id}',                 [EbookController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
+            Route::get('/{id}/download',           [EbookController::class, 'download'])->name('download')->where('id', '[0-9]+');
+            Route::post('/{id}/toggle',            [EbookController::class, 'toggleActive'])->name('toggle')->where('id', '[0-9]+');
         });
+
+        // Wildcard book routes — MUST come after all named sub-routes
+        Route::get('/{id}',            [LibraryController::class, 'show'])->name('show')->where('id', '[0-9]+');
+        Route::get('/{id}/edit',       [LibraryController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
+        Route::put('/{id}',            [LibraryController::class, 'update'])->name('update')->where('id', '[0-9]+');
+        Route::delete('/{id}',         [LibraryController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
     });
 
     // ── TRANSPORT (Module 13) ─────────────────────────────────────────────────
@@ -395,7 +448,56 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
-    // Staff
+    // ── FINANCE (Module 10) ───────────────────────────────────────────────────
+
+    Route::prefix('finance')->name('finance.')->group(function () {
+        Route::get('/',                         [FeeController::class, 'overview'])->name('overview');
+
+        // Fee categories
+        Route::prefix('categories')->name('categories.')->group(function () {
+            Route::get('/',         [FeeController::class, 'categories'])->name('index');
+            Route::post('/',        [FeeController::class, 'storeCategory'])->name('store');
+            Route::put('/{id}',     [FeeController::class, 'updateCategory'])->name('update');
+            Route::delete('/{id}',  [FeeController::class, 'destroyCategory'])->name('destroy');
+        });
+
+        // Fee structures
+        Route::get('/structures',        [FeeController::class, 'structures'])->name('structures');
+        Route::post('/structures',       [FeeController::class, 'storeStructure'])->name('structures.store');
+        Route::put('/structures/{id}',   [FeeController::class, 'updateStructure'])->name('structures.update');
+        Route::delete('/structures/{id}',[FeeController::class, 'destroyStructure'])->name('structures.destroy');
+
+        // Discounts
+        Route::get('/discounts',            [FeeController::class, 'discounts'])->name('discounts');
+        Route::post('/discounts',           [FeeController::class, 'storeDiscount'])->name('discounts.store');
+        Route::put('/discounts/{id}',       [FeeController::class, 'updateDiscount'])->name('discounts.update');
+        Route::delete('/discounts/{id}',    [FeeController::class, 'destroyDiscount'])->name('discounts.destroy');
+        Route::post('/discounts/assign',    [FeeController::class, 'assignDiscount'])->name('discounts.assign');
+        Route::delete('/discounts/revoke/{id}', [FeeController::class, 'revokeDiscount'])->name('discounts.revoke');
+
+        // Expenses
+        Route::get('/expenses',           [ExpenseController::class, 'index'])->name('expenses');
+        Route::post('/expenses',          [ExpenseController::class, 'store'])->name('expenses.store');
+        Route::put('/expenses/{id}',      [ExpenseController::class, 'update'])->name('expenses.update');
+        Route::delete('/expenses/{id}',   [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+
+        // Other income
+        Route::get('/income',             [IncomeController::class, 'index'])->name('income');
+        Route::post('/income',            [IncomeController::class, 'store'])->name('income.store');
+        Route::put('/income/{id}',        [IncomeController::class, 'update'])->name('income.update');
+        Route::delete('/income/{id}',     [IncomeController::class, 'destroy'])->name('income.destroy');
+
+        // Reports + PDF receipt
+        Route::get('/reports',            [FinanceReportController::class, 'form'])->name('reports');        // left-menu uses finance.reports
+        Route::get('/reports/export',     [FinanceReportController::class, 'export'])->name('reports.export');
+        Route::get('/receipt/{id}',       [FinanceReportController::class, 'receipt'])->name('receipt');
+    });
+
+    // Legacy payment routes handled by the payments prefix group above
+
+    // ── HR & STAFF (Module 11) ────────────────────────────────────────────────
+
+    // Staff CRUD (existing — keep names)
     Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
     Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
     Route::post('/staff/store', [StaffController::class, 'store'])->name('staff.store');
@@ -403,12 +505,48 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/staff/update/{id}', [StaffController::class, 'update'])->name('staff.update');
     Route::post('/staff/delete/{id}', [StaffController::class, 'destroy'])->name('staff.destroy');
 
-    // Payment
-    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
-    Route::get('/payments/create', [PaymentController::class, 'create'])->name('payments.create');
-    Route::post('/payments/store', [PaymentController::class, 'store'])->name('payments.store');
-    Route::get('/payments/pay/{id}', [PaymentController::class, 'pay'])->name('payments.pay');
-    Route::post('/payments/process/{id}', [PaymentController::class, 'processPayment'])->name('payments.process');
+    // Contracts
+    Route::prefix('staff/contracts')->name('staff.contracts.')->group(function () {
+        Route::get('/',          [StaffContractController::class, 'index'])->name('index');
+        Route::post('/',         [StaffContractController::class, 'store'])->name('store');
+        Route::put('/{id}',      [StaffContractController::class, 'update'])->name('update');
+        Route::delete('/{id}',   [StaffContractController::class, 'destroy'])->name('destroy');
+    });
+
+    // Documents
+    Route::prefix('staff/documents')->name('staff.documents.')->group(function () {
+        Route::get('/',                 [StaffDocumentController::class, 'index'])->name('index');
+        Route::post('/',                [StaffDocumentController::class, 'store'])->name('store');
+        Route::post('/{id}/verify',     [StaffDocumentController::class, 'verify'])->name('verify');
+        Route::delete('/{id}',          [StaffDocumentController::class, 'destroy'])->name('destroy');
+    });
+
+    // Training
+    Route::prefix('staff/training')->name('staff.training.')->group(function () {
+        Route::get('/',         [StaffTrainingController::class, 'index'])->name('index');
+        Route::post('/',        [StaffTrainingController::class, 'store'])->name('store');
+        Route::put('/{id}',     [StaffTrainingController::class, 'update'])->name('update');
+        Route::delete('/{id}',  [StaffTrainingController::class, 'destroy'])->name('destroy');
+    });
+
+    // Exit records
+    Route::prefix('staff/exit')->name('staff.exit.')->group(function () {
+        Route::get('/',         [StaffExitController::class, 'index'])->name('index');
+        Route::post('/',        [StaffExitController::class, 'store'])->name('store');
+        Route::put('/{id}',     [StaffExitController::class, 'update'])->name('update');
+        Route::delete('/{id}',  [StaffExitController::class, 'destroy'])->name('destroy');
+    });
+
+    // Recruitment
+    Route::prefix('staff/recruitment')->name('staff.recruitment.')->group(function () {
+        Route::get('/postings',                    [RecruitmentController::class, 'postings'])->name('postings');
+        Route::post('/postings',                   [RecruitmentController::class, 'storePosting'])->name('postings.store');
+        Route::put('/postings/{id}',               [RecruitmentController::class, 'updatePosting'])->name('postings.update');
+        Route::delete('/postings/{id}',            [RecruitmentController::class, 'destroyPosting'])->name('postings.destroy');
+        Route::get('/postings/{id}/applications',  [RecruitmentController::class, 'applications'])->name('applications');
+        Route::put('/applications/{id}',           [RecruitmentController::class, 'updateApplication'])->name('applications.update');
+        Route::delete('/applications/{id}',        [RecruitmentController::class, 'destroyApplication'])->name('applications.destroy');
+    });
 
     // Notifications
     Route::prefix('notifications')->name('notifications.')->group(function () {
@@ -428,10 +566,12 @@ Route::middleware(['auth'])->group(function () {
 
     // Two-Factor Authentication
     Route::prefix('two-factor')->name('two-factor.')->group(function () {
-        Route::get('challenge',    [\App\Http\Controllers\TwoFactorController::class, 'showChallenge'])->name('challenge');
-        Route::post('challenge',   [\App\Http\Controllers\TwoFactorController::class, 'verifyChallenge'])->name('challenge.verify');
-        Route::get('setup',        [\App\Http\Controllers\TwoFactorController::class, 'showSetup'])->name('setup');
-        Route::post('disable',     [\App\Http\Controllers\TwoFactorController::class, 'disable'])->name('disable');
+        Route::get('challenge',         [\App\Http\Controllers\TwoFactorController::class, 'showChallenge'])->name('challenge');
+        Route::post('challenge',        [\App\Http\Controllers\TwoFactorController::class, 'verifyChallenge'])->name('challenge.verify');
+        Route::get('setup',             [\App\Http\Controllers\TwoFactorController::class, 'showSetup'])->name('setup');
+        Route::post('confirm',          [\App\Http\Controllers\TwoFactorController::class, 'confirmSetup'])->name('confirm');
+        Route::get('recovery-codes',    [\App\Http\Controllers\TwoFactorController::class, 'recoveryCodes'])->name('recovery-codes');
+        Route::post('disable',          [\App\Http\Controllers\TwoFactorController::class, 'disable'])->name('disable');
     });
 
     // ── TEACHER MANAGEMENT (Module 5) ────────────────────────────────────────
@@ -550,20 +690,6 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('achievements/{id}',                [AchievementController::class, 'destroy'])->name('student.achievements.destroy');
     Route::get('achievements/leaderboard',            [AchievementController::class, 'leaderboard'])->name('achievements.leaderboard');
 
-    // ── CERTIFICATE TEMPLATES ─────────────────────────────────────────────────
-    Route::prefix('certificates')->name('certificates.')->group(function () {
-        Route::get('/',         [CertificateController::class, 'index'])->name('index');
-        Route::get('/create',   [CertificateController::class, 'create'])->name('create');
-        Route::post('/',        [CertificateController::class, 'store'])->name('store');
-        Route::get('/{id}/edit',[CertificateController::class, 'edit'])->name('edit');
-        Route::put('/{id}',     [CertificateController::class, 'update'])->name('update');
-        Route::delete('/{id}',  [CertificateController::class, 'destroy'])->name('destroy');
-    });
-
-    // ── CERTIFICATE GENERATION ────────────────────────────────────────────────
-    Route::get('students/{studentId}/certificate',   [CertificateController::class, 'generate'])->name('student.certificate.generate');
-    Route::post('certificates/bulk-generate',        [CertificateController::class, 'bulkGenerate'])->name('certificates.bulk-generate');
-
     // ── MODULE 7: ACADEMIC — PROGRAMS ────────────────────────────────────────
     Route::prefix('programs')->name('programs.')->group(function () {
         Route::get('/',            [\App\Http\Controllers\ProgramController::class, 'index'])->name('index');
@@ -667,6 +793,23 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{studentId}/leave',       [\App\Http\Controllers\ParentPortalController::class, 'leave'])->name('leave');
         Route::post('/{studentId}/leave',      [\App\Http\Controllers\ParentPortalController::class, 'submitLeave'])->name('leave.submit');
         Route::post('/{studentId}/leave/{applicationId}/cancel', [\App\Http\Controllers\ParentPortalController::class, 'cancelLeave'])->name('leave.cancel');
+        // New routes
+        Route::get('/{studentId}/homework',    [\App\Http\Controllers\ParentPortalController::class, 'homework'])->name('homework');
+        Route::get('/{studentId}/timetable',   [\App\Http\Controllers\ParentPortalController::class, 'timetable'])->name('timetable');
+        Route::get('/{studentId}/transport',   [\App\Http\Controllers\ParentPortalController::class, 'transport'])->name('transport');
+        
+        // Modules from API translation
+        Route::get('/{studentId}/teachers',    [\App\Http\Controllers\ParentPortalController::class, 'teachers'])->name('teachers');
+        Route::get('/{studentId}/meetings',    [\App\Http\Controllers\ParentPortalController::class, 'meetings'])->name('meetings');
+        Route::post('/{studentId}/meetings',   [\App\Http\Controllers\ParentPortalController::class, 'storeMeeting'])->name('meetings.store');
+        Route::get('/{studentId}/events',      [\App\Http\Controllers\ParentPortalController::class, 'events'])->name('events');
+        Route::get('/{studentId}/health',      [\App\Http\Controllers\ParentPortalController::class, 'health'])->name('health');
+        Route::post('/{studentId}/health',     [\App\Http\Controllers\ParentPortalController::class, 'updateHealth'])->name('health.update');
+        Route::get('/{studentId}/behavior',    [\App\Http\Controllers\ParentPortalController::class, 'behavior'])->name('behavior');
+        Route::get('/{studentId}/documents',   [\App\Http\Controllers\ParentPortalController::class, 'documents'])->name('documents');
+        Route::post('/{studentId}/documents',  [\App\Http\Controllers\ParentPortalController::class, 'uploadDocument'])->name('documents.upload');
+        Route::get('/{studentId}/documents/{id}/download', [\App\Http\Controllers\ParentPortalController::class, 'downloadDocument'])->name('documents.download');
+
         // Messaging
         Route::get('/conversations',           [\App\Http\Controllers\ParentPortalController::class, 'conversations'])->name('conversations');
         Route::get('/conversations/new',       [\App\Http\Controllers\ParentPortalController::class, 'newConversation'])->name('conversation.new');
@@ -685,6 +828,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/parents/search',                          [\App\Http\Controllers\ParentPortalController::class, 'searchStudentsForLink'])->name('admin.parents.search');
     Route::post('/admin/parents/{parentId}/link',                [\App\Http\Controllers\ParentPortalController::class, 'linkStudent'])->name('admin.parents.link.store');
     Route::delete('/admin/parents/{parentId}/unlink/{studentId}',[\App\Http\Controllers\ParentPortalController::class, 'unlinkStudent'])->name('admin.parents.unlink');
+    
+    // Admin: Manage Parent Accounts
+    Route::resource('parents', \App\Http\Controllers\AdminParentController::class)->except(['show']);
+    Route::put('parents/{parent}/password', [\App\Http\Controllers\AdminParentController::class, 'updatePassword'])->name('parents.password.update');
 
     // ── MODULE 9: EXAM HALLS ──────────────────────────────────────────────────
     Route::get('/exam/halls',                   [ExamHallController::class, 'index'])->name('exam.hall.index');
@@ -692,6 +839,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/exam/halls/{id}',              [ExamHallController::class, 'update'])->name('exam.hall.update');
     Route::delete('/exam/halls/{id}',           [ExamHallController::class, 'destroy'])->name('exam.hall.destroy');
     Route::get('/exam/halls/{scheduleId}/seats',      [ExamHallController::class, 'seats'])->name('exam.hall.seats');
+    Route::get('/exam/halls/{scheduleId}/seats/print',[ExamHallController::class, 'printSeats'])->name('exam.hall.seats.print');
     Route::post('/exam/halls/{scheduleId}/seats/auto',[ExamHallController::class, 'autoAllocate'])->name('exam.hall.seats.auto');
     Route::post('/exam/halls/{scheduleId}/seats',     [ExamHallController::class, 'saveSeats'])->name('exam.hall.seats.save');
     Route::delete('/exam/halls/{scheduleId}/seats',   [ExamHallController::class, 'clearSeats'])->name('exam.hall.seats.clear');
@@ -713,6 +861,48 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/review',   [ReExamController::class, 'review'])->name('review');
         Route::post('/{id}/result',   [ReExamController::class, 'enterResult'])->name('result');
         Route::post('/{id}/complete', [ReExamController::class, 'complete'])->name('complete');
+    });
+
+    // ── MODULE 9: ONLINE EXAMS ────────────────────────────────────────────────
+    Route::prefix('online-exams')->name('online-exams.')->group(function () {
+        // Student-facing exam experience
+        Route::get('/my-exams',                       [\App\Http\Controllers\OnlineExamController::class, 'studentIndex'])->name('student.index');
+        Route::get('/take/{id}',                      [\App\Http\Controllers\OnlineExamController::class, 'startAttempt'])->name('student.start');
+        Route::post('/attempt/{attemptId}/save',      [\App\Http\Controllers\OnlineExamController::class, 'saveAnswer'])->name('student.save-answer');
+        Route::post('/attempt/{attemptId}/submit',    [\App\Http\Controllers\OnlineExamController::class, 'submitAttempt'])->name('student.submit');
+        Route::get('/attempt/{attemptId}/result',     [\App\Http\Controllers\OnlineExamController::class, 'result'])->name('student.result');
+
+        // Admin / Teacher management
+        Route::get('/',                               [\App\Http\Controllers\OnlineExamController::class, 'index'])->name('index');
+        Route::get('/create',                         [\App\Http\Controllers\OnlineExamController::class, 'create'])->name('create');
+        Route::post('/',                              [\App\Http\Controllers\OnlineExamController::class, 'store'])->name('store');
+        Route::get('/{id}',                           [\App\Http\Controllers\OnlineExamController::class, 'show'])->name('show');
+        Route::get('/{id}/edit',                      [\App\Http\Controllers\OnlineExamController::class, 'edit'])->name('edit');
+        Route::put('/{id}',                           [\App\Http\Controllers\OnlineExamController::class, 'update'])->name('update');
+        Route::delete('/{id}',                        [\App\Http\Controllers\OnlineExamController::class, 'destroy'])->name('destroy');
+        Route::patch('/{id}/toggle-publish',          [\App\Http\Controllers\OnlineExamController::class, 'togglePublish'])->name('toggle-publish');
+        Route::patch('/{id}/close',                   [\App\Http\Controllers\OnlineExamController::class, 'close'])->name('close');
+
+        // Question management
+        Route::get('/{id}/questions',                 [\App\Http\Controllers\OnlineExamController::class, 'questions'])->name('questions');
+        Route::post('/{id}/questions',                [\App\Http\Controllers\OnlineExamController::class, 'storeQuestion'])->name('questions.store');
+        Route::put('/questions/{questionId}',         [\App\Http\Controllers\OnlineExamController::class, 'updateQuestion'])->name('questions.update');
+        Route::delete('/questions/{questionId}',      [\App\Http\Controllers\OnlineExamController::class, 'destroyQuestion'])->name('questions.destroy');
+
+        // Attempts (grading view)
+        Route::get('/{id}/attempts',                  [\App\Http\Controllers\OnlineExamController::class, 'attempts'])->name('attempts');
+        Route::post('/attempt/{attemptId}/grade',     [\App\Http\Controllers\OnlineExamController::class, 'grade'])->name('grade');
+    });
+
+    // ── MODULE 9: PRACTICAL EXAMS ─────────────────────────────────────────────
+    Route::prefix('practical-exams')->name('practical-exams.')->group(function () {
+        Route::get('/',           [\App\Http\Controllers\PracticalExamController::class, 'index'])->name('index');
+        Route::post('/',          [\App\Http\Controllers\PracticalExamController::class, 'store'])->name('store');
+        Route::get('/{id}',       [\App\Http\Controllers\PracticalExamController::class, 'show'])->name('show');
+        Route::put('/{id}',       [\App\Http\Controllers\PracticalExamController::class, 'update'])->name('update');
+        Route::delete('/{id}',    [\App\Http\Controllers\PracticalExamController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/marks',[\App\Http\Controllers\PracticalExamController::class, 'saveMarks'])->name('marks.save');
+        Route::get('/{id}/pdf',   [\App\Http\Controllers\PracticalExamController::class, 'pdf'])->name('pdf');
     });
 
     // ── MODULE 9: RESULTS & TRANSCRIPTS ──────────────────────────────────────
@@ -792,6 +982,7 @@ Route::middleware(['auth'])->group(function () {
     // ── ROLE & PERMISSION MANAGEMENT ────────────────────────────────────────
     Route::middleware('permission:manage roles')->prefix('roles')->name('roles.')->group(function () {
         Route::get('/',                         [RoleController::class, 'index'])->name('index');
+        Route::get('/users',                    [RoleController::class, 'assignableUsers'])->name('assignable-users');
         Route::get('/create',                   [RoleController::class, 'create'])->name('create');
         Route::post('/',                        [RoleController::class, 'store'])->name('store');
         Route::get('/{role}/edit',              [RoleController::class, 'edit'])->name('edit');
@@ -820,4 +1011,350 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('maintenance',\App\Http\Controllers\HostelMaintenanceRequestController::class)
              ->only(['index','store','update','destroy']);
     });
+
+    // ── AI FEATURES (Module 19) ──────────────────────────────────────────────
+    Route::prefix('ai-features')->name('ai_features.web.')->group(function () {
+        Route::get('/',                 [AiFeatureWebController::class, 'index'])->name('index');
+        Route::get('/homework',         [AiFeatureWebController::class, 'homework'])->name('homework');
+        Route::get('/notice',           [AiFeatureWebController::class, 'notice'])->name('notice');
+        Route::get('/attendance',       [AiFeatureWebController::class, 'attendance'])->name('attendance');
+        Route::get('/fee-prediction',   [AiFeatureWebController::class, 'feePrediction'])->name('fee');
+        Route::get('/performance',      [AiFeatureWebController::class, 'performance'])->name('performance');
+        Route::get('/chatbot',          [AiFeatureWebController::class, 'chatbot'])->name('chatbot');
+        Route::get('/timetable',        [AiFeatureWebController::class, 'timetable'])->name('timetable');
+        Route::get('/report',           [AiFeatureWebController::class, 'reportSummariser'])->name('report');
+        Route::get('/remedial',         [AiFeatureWebController::class, 'remedial'])->name('remedial');
+    });
+
+    // ── CENTRAL ANALYTICS (Module 18) ─────────────────────────────────────────
+    Route::get('/analytics/dashboard', [AnalyticsController::class, 'index'])
+         ->name('central_analytics.index')
+         ->middleware('role:admin|principal');
+
+    // ── REPORT CENTER (Module 17) ─────────────────────────────────────────────
+    Route::prefix('reports')->name('reports.')->middleware('role:admin|principal')->group(function () {
+        Route::get('/',                [ReportCenterController::class, 'index'])->name('index');
+        Route::get('/builder',         [ReportCenterController::class, 'builder'])->name('builder');
+        Route::get('/builder/preview', [ReportCenterController::class, 'builderPreview'])->name('builder.preview');
+        Route::get('/builder/export',  [ReportCenterController::class, 'builderExport'])->name('builder.export');
+        Route::get('/schedule',        [ReportCenterController::class, 'schedule'])->name('schedule');
+    });
+
+    // ── RFID / BIOMETRIC (Module 8) ───────────────────────────────────────────
+    Route::prefix('rfid')->name('rfid.')->middleware('role:admin|principal|attendance-officer')->group(function () {
+        // Devices
+        Route::get('/devices',             [\App\Http\Controllers\RfidController::class, 'devices'])->name('devices');
+        Route::post('/devices',            [\App\Http\Controllers\RfidController::class, 'storeDevice'])->name('devices.store');
+        Route::patch('/devices/{id}/toggle',[\App\Http\Controllers\RfidController::class, 'toggleDevice'])->name('devices.toggle');
+        Route::delete('/devices/{id}',     [\App\Http\Controllers\RfidController::class, 'destroyDevice'])->name('devices.destroy');
+        // Cards
+        Route::get('/cards',               [\App\Http\Controllers\RfidController::class, 'cards'])->name('cards');
+        Route::post('/cards',              [\App\Http\Controllers\RfidController::class, 'storeCard'])->name('cards.store');
+        Route::patch('/cards/{id}/revoke', [\App\Http\Controllers\RfidController::class, 'revokeCard'])->name('cards.revoke');
+        Route::delete('/cards/{id}',       [\App\Http\Controllers\RfidController::class, 'destroyCard'])->name('cards.destroy');
+        // Scan log
+        Route::get('/scans',               [\App\Http\Controllers\RfidController::class, 'scans'])->name('scans');
+    });
+    Route::prefix('communication')->name('communication.')->group(function () {
+        Route::get('/',          [CommunicationController::class, 'index'])->name('index');
+        Route::get('/bulk',      [CommunicationController::class, 'bulk'])->name('bulk');
+        Route::post('/bulk/send',[CommunicationController::class, 'sendBulk'])->name('bulk.send');
+        Route::get('/chat',      [CommunicationController::class, 'chat'])->name('chat');
+        Route::get('/settings',  [CommunicationController::class, 'settings'])->name('settings');
+    });
+    // WhatsApp webhook (no CSRF — Meta posts here)
+    Route::get('/webhooks/whatsapp',  [CommunicationController::class, 'whatsappWebhookVerify'])->name('webhooks.whatsapp.verify');
+    Route::post('/webhooks/whatsapp', [CommunicationController::class, 'whatsappWebhookReceive'])->name('webhooks.whatsapp.receive');
+
+    // ── INVENTORY (Module 15) ─────────────────────────────────────────────────
+    Route::prefix('inventory')->name('inventory.')->middleware('role:admin|principal')->group(function () {
+        Route::get('/',                [App\Http\Controllers\InventoryController::class, 'index'])->name('dashboard');
+        
+        // Consumables (Items)
+        Route::get('/items',           [App\Http\Controllers\InventoryController::class, 'items'])->name('items');
+        Route::get('/items/create',    [App\Http\Controllers\InventoryController::class, 'createItem'])->name('items.create');
+        Route::post('/items',          [App\Http\Controllers\InventoryController::class, 'storeItem'])->name('items.store');
+        
+        // Fixed Assets
+        Route::get('/assets',          [App\Http\Controllers\InventoryController::class, 'assets'])->name('assets');
+        Route::get('/assets/create',   [App\Http\Controllers\InventoryController::class, 'createAsset'])->name('assets.create');
+        Route::post('/assets',         [App\Http\Controllers\InventoryController::class, 'storeAsset'])->name('assets.store');
+        
+        // Suppliers
+        Route::get('/suppliers',       [App\Http\Controllers\InventoryController::class, 'suppliers'])->name('suppliers');
+        Route::get('/suppliers/create',[App\Http\Controllers\InventoryController::class, 'createSupplier'])->name('suppliers.create');
+        Route::post('/suppliers',      [App\Http\Controllers\InventoryController::class, 'storeSupplier'])->name('suppliers.store');
+        
+        // Purchase Orders
+        Route::get('/purchase-orders', [App\Http\Controllers\InventoryController::class, 'purchaseOrders'])->name('purchase-orders');
+        Route::get('/purchase-orders/create', [App\Http\Controllers\InventoryController::class, 'createPurchaseOrder'])->name('purchase-orders.create');
+        Route::post('/purchase-orders',[App\Http\Controllers\InventoryController::class, 'storePurchaseOrder'])->name('purchase-orders.store');
+    });
+
+    // ── HR MANAGEMENT (Module 11) ─────────────────────────────────────────────
+    Route::prefix('hr')->name('hr.')->middleware('role:admin|principal')->group(function () {
+        Route::get('/',            [HrController::class, 'index'])->name('dashboard');
+        Route::get('/leaves',      [HrController::class, 'leaves'])->name('leaves');
+        Route::post('/leaves/{id}/status', [HrController::class, 'updateLeaveStatus'])->name('leaves.status');
+        Route::get('/payroll',     [HrController::class, 'payroll'])->name('payroll');
+        Route::get('/recruitment', [HrController::class, 'recruitment'])->name('recruitment');
+        Route::get('/employees',   [HrController::class, 'employees'])->name('employees');
+    });
+
+    // ── FINANCE EXTRAS (Module 10) — Salary Slips, Tax Rates, Ledger, P&L ────
+    Route::prefix('finance')->name('finance.')->group(function () {
+        // Salary Slips (staff payroll)
+        Route::prefix('salary')->name('salary.')->group(function () {
+            Route::get('/',               [\App\Http\Controllers\SalarySlipController::class, 'index'])->name('index');
+            Route::post('/',              [\App\Http\Controllers\SalarySlipController::class, 'store'])->name('store');
+            Route::post('/bulk-generate', [\App\Http\Controllers\SalarySlipController::class, 'bulkGenerate'])->name('bulk-generate');
+            Route::patch('/{id}/approve', [\App\Http\Controllers\SalarySlipController::class, 'approve'])->name('approve');
+            Route::patch('/{id}/paid',    [\App\Http\Controllers\SalarySlipController::class, 'markPaid'])->name('paid');
+            Route::delete('/{id}',        [\App\Http\Controllers\SalarySlipController::class, 'destroy'])->name('destroy');
+            Route::get('/{id}/pdf',       [\App\Http\Controllers\SalarySlipController::class, 'pdf'])->name('pdf');
+
+            // Salary components (master definitions)
+            Route::get('/components',         [\App\Http\Controllers\SalarySlipController::class, 'components'])->name('components');
+            Route::post('/components',        [\App\Http\Controllers\SalarySlipController::class, 'storeComponent'])->name('components.store');
+            Route::put('/components/{id}',    [\App\Http\Controllers\SalarySlipController::class, 'updateComponent'])->name('components.update');
+            Route::delete('/components/{id}', [\App\Http\Controllers\SalarySlipController::class, 'destroyComponent'])->name('components.destroy');
+
+            // Per-staff salary structure
+            Route::get('/structure/{staffId}',  [\App\Http\Controllers\SalarySlipController::class, 'staffStructure'])->name('structure');
+            Route::post('/structure/{staffId}', [\App\Http\Controllers\SalarySlipController::class, 'saveStaffStructure'])->name('structure.save');
+        });
+
+        // Tax rates
+        Route::prefix('tax')->name('tax.')->group(function () {
+            Route::get('/',        [\App\Http\Controllers\SalarySlipController::class, 'taxRates'])->name('index');
+            Route::post('/',       [\App\Http\Controllers\SalarySlipController::class, 'storeTaxRate'])->name('store');
+            Route::put('/{id}',    [\App\Http\Controllers\SalarySlipController::class, 'updateTaxRate'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\SalarySlipController::class, 'destroyTaxRate'])->name('destroy');
+        });
+
+        // Accounting ledger
+        Route::get('/ledger',      [\App\Http\Controllers\LedgerController::class, 'index'])->name('ledger');
+        Route::post('/ledger/sync',[\App\Http\Controllers\LedgerController::class, 'sync'])->name('ledger.sync');
+
+        // Profit & Loss
+        Route::get('/profit-loss',     [\App\Http\Controllers\LedgerController::class, 'profitLoss'])->name('profit-loss');
+        Route::get('/profit-loss/pdf', [\App\Http\Controllers\LedgerController::class, 'profitLossPdf'])->name('profit-loss.pdf');
+
+        // Fee types master list
+        Route::prefix('fee-types')->name('fee-types.')->group(function () {
+            Route::get('/',        [\App\Http\Controllers\FeeController::class, 'feeTypes'])->name('index');
+            Route::post('/',       [\App\Http\Controllers\FeeController::class, 'storeFeeType'])->name('store');
+            Route::put('/{id}',    [\App\Http\Controllers\FeeController::class, 'updateFeeType'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\FeeController::class, 'destroyFeeType'])->name('destroy');
+        });
+    });
+
+    // ── FEE INSTALLMENT PLANS ─────────────────────────────────────────────────
+    Route::prefix('finance/invoices/{invoiceId}/installments')->name('finance.installments.')->group(function () {
+        Route::get('/',                [\App\Http\Controllers\FeeInstallmentController::class, 'index'])->name('index');
+        Route::post('/',               [\App\Http\Controllers\FeeInstallmentController::class, 'store'])->name('store');
+        Route::delete('/',             [\App\Http\Controllers\FeeInstallmentController::class, 'destroy'])->name('destroy');
+        Route::get('/auto-split',      [\App\Http\Controllers\FeeInstallmentController::class, 'autoSplit'])->name('auto-split');
+    });
+    Route::post('finance/installments/{id}/pay', [\App\Http\Controllers\FeeInstallmentController::class, 'markPaid'])->name('finance.installments.pay');
+
+    // ── TDS REMITTANCE TRACKER ────────────────────────────────────────────────
+    Route::prefix('finance/tds')->name('finance.tds.')->group(function () {
+        Route::get('/',        [\App\Http\Controllers\TdsRemittanceController::class, 'index'])->name('index');
+        Route::post('/deposit',[\App\Http\Controllers\TdsRemittanceController::class, 'deposit'])->name('deposit');
+    });
+
+    // Payment gateway callbacks (outside auth middleware — gateways hit these)
+    Route::get('/finance/paypal/return',          fn() => redirect()->route('finance.overview')->with('status', 'PayPal payment captured.'))->name('finance.paypal.return');
+    Route::get('/finance/paypal/cancel',          fn() => redirect()->route('finance.overview')->with('error', 'PayPal payment cancelled.'))->name('finance.paypal.cancel');
+    Route::get('/finance/flutterwave/callback',   fn() => redirect()->route('finance.overview')->with('status', 'Flutterwave payment received.'))->name('finance.flutterwave.callback');
+
+    // ── ESEWA / KHALTI GATEWAY CALLBACKS (authenticated — redirect after login) ─
+    Route::get('/finance/esewa/success',  [\App\Http\Controllers\OnlinePaymentController::class, 'esewaSuccess'])->name('finance.esewa.success');
+    Route::get('/finance/esewa/failure',  [\App\Http\Controllers\OnlinePaymentController::class, 'esewaFailure'])->name('finance.esewa.failure');
+    Route::get('/finance/khalti/callback',[\App\Http\Controllers\OnlinePaymentController::class, 'khaltiCallback'])->name('finance.khalti.callback');
+    Route::post('/finance/initiate',      [\App\Http\Controllers\OnlinePaymentController::class, 'initiate'])->name('finance.payment.initiate');
+
+    // ── CERTIFICATE MANAGEMENT ────────────────────────────────────────────
+    // Template CRUD
+    Route::prefix('certificates')->name('certificates.')->group(function () {
+        Route::get('/',                           [CertificateController::class, 'index'])->name('index');
+        Route::get('/create',                     [CertificateController::class, 'create'])->name('create');
+        Route::post('/',                          [CertificateController::class, 'store'])->name('store');
+        Route::get('/{id}/edit',                  [CertificateController::class, 'edit'])->name('edit');
+        Route::put('/{id}',                       [CertificateController::class, 'update'])->name('update');
+        Route::delete('/{id}',                    [CertificateController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}/preview',               [CertificateController::class, 'preview'])->name('preview');
+
+        // ── Visual Drag & Drop Builder ────────────────────────────────
+        Route::get('/{id}/builder',               [CertificateController::class, 'builder'])->name('builder');
+        Route::post('/{id}/builder',              [CertificateController::class, 'builderSave'])->name('builder.save');
+        Route::post('/{id}/builder/background',   [CertificateController::class, 'builderUploadBackground'])->name('builder.background');
+
+        // Issued certificates ledger
+        Route::get('/issued',                     [CertificateController::class, 'issued'])->name('issued');
+        Route::get('/issued/{id}/download',       [CertificateController::class, 'download'])->name('download');
+        Route::post('/issued/{id}/revoke',        [CertificateController::class, 'revoke'])->name('revoke');
+
+        // Bulk issue (select class)
+        Route::get('/bulk',                       [CertificateController::class, 'bulkForm'])->name('bulk');
+        Route::post('/bulk',                      [CertificateController::class, 'bulkIssue'])->name('bulk.issue');
+    });
+
+    // Issue certificate to a specific student
+    Route::get('/students/{studentId}/certificates',        [CertificateController::class, 'issueForm'])->name('certificates.issue.form');
+    Route::post('/students/{studentId}/certificates',       [CertificateController::class, 'issue'])->name('certificates.issue');
+
 });
+
+// ── Certificate public verification (no auth required — accessed via QR) ──
+Route::get('/certificates/verify/{token}', [CertificateController::class, 'verify'])->name('certificates.verify');
+
+// ── Global search for command palette (authenticated) ──
+Route::middleware(['auth'])->get('/search', [SettingController::class, 'globalSearch'])->name('global.search');
+
+// ── School Profile Management (authenticated) ──
+Route::middleware(['auth'])->prefix('school/profile')->name('school.profile.')->group(function () {
+    Route::get('/', [SchoolProfileController::class, 'edit'])->name('edit');
+    Route::post('/', [SchoolProfileController::class, 'update'])->name('update');
+    Route::get('/preview', [SchoolLandingController::class, 'preview'])->name('preview');
+});
+
+// ── Public School Landing Pages (no auth required) ──
+Route::get('/school/{slug}', [SchoolLandingController::class, 'show'])->name('school.landing');
+
+// Payment gateway webhooks — no CSRF (raw POST from gateways)
+Route::post('/webhooks/stripe',      [\App\Http\Controllers\WebhookController::class, 'stripe'])->name('webhooks.stripe');
+Route::post('/webhooks/paypal',      [\App\Http\Controllers\WebhookController::class, 'paypal'])->name('webhooks.paypal');
+Route::post('/webhooks/razorpay',    [\App\Http\Controllers\WebhookController::class, 'razorpay'])->name('webhooks.razorpay');
+Route::post('/webhooks/flutterwave', [\App\Http\Controllers\WebhookController::class, 'flutterwave'])->name('webhooks.flutterwave');
+Route::post('/webhooks/esewa',       [\App\Http\Controllers\WebhookController::class, 'esewa'])->name('webhooks.esewa');
+Route::post('/webhooks/khalti',      [\App\Http\Controllers\WebhookController::class, 'khalti'])->name('webhooks.khalti');
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NEPALSCHOOLHUB SAAS ROUTES
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Dynamic Sitemap
+Route::get('/sitemap.xml', function () {
+    $lastmod = now()->toAtomString();
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+    <url>
+        <loc>'.url('/').'</loc>
+        <lastmod>'.$lastmod.'</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+    </url>
+    <url>
+        <loc>'.route('saas.register').'</loc>
+        <lastmod>'.$lastmod.'</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>'.url('/#features').'</loc>
+        <lastmod>'.$lastmod.'</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>'.url('/#pricing').'</loc>
+        <lastmod>'.$lastmod.'</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>'.url('/#faq').'</loc>
+        <lastmod>'.$lastmod.'</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>'.url('/#contact').'</loc>
+        <lastmod>'.$lastmod.'</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+    <url>
+        <loc>'.route('login').'</loc>
+        <lastmod>'.$lastmod.'</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
+</urlset>';
+    return response($xml, 200)->header('Content-Type', 'application/xml');
+});
+
+Route::get('/robots.txt', function () {
+    $content = "User-agent: *\n";
+    $content .= "Allow: /\n";
+    $content .= "Disallow: /home\n";
+    $content .= "Disallow: /admin\n";
+    $content .= "Disallow: /super\n";
+    $content .= "Disallow: /api/\n";
+    $content .= "Disallow: /storage/\n";
+    $content .= "\n";
+    $content .= "Sitemap: ".url('/sitemap.xml')."\n";
+    return response($content, 200)->header('Content-Type', 'text/plain');
+});
+
+// Public landing page
+Route::get('/', [\App\Http\Controllers\SaasLandingController::class, 'index'])->name('saas.landing');
+Route::post('/contact', [\App\Http\Controllers\SaasLandingController::class, 'contact'])->name('saas.contact');
+
+// School registration (public)
+Route::get('/register/school',         [\App\Http\Controllers\SchoolRegistrationController::class, 'create'])->name('saas.register');
+Route::post('/register/school',        [\App\Http\Controllers\SchoolRegistrationController::class, 'store'])->name('saas.register.store');
+Route::get('/register/school/success', [\App\Http\Controllers\SchoolRegistrationController::class, 'registered'])->name('saas.registered');
+
+// Super-admin school management panel
+Route::middleware(['auth', 'role:super-admin'])
+     ->prefix('super')
+     ->name('super.')
+     ->group(function () {
+         Route::get('/',                           [\App\Http\Controllers\HomeController::class, 'index']);
+         Route::get('/dashboard',                 [\App\Http\Controllers\HomeController::class, 'index'])->name('dashboard');
+         Route::get('/schools',                    [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'index'])->name('schools.index');
+         Route::get('/schools/{school}',           [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'show'])->name('schools.show');
+         Route::post('/schools/{school}/approve',  [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'approve'])->name('schools.approve');
+         Route::post('/schools/{school}/suspend',  [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'suspend'])->name('schools.suspend');
+         Route::post('/schools/{school}/reactivate',[\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'reactivate'])->name('schools.reactivate');
+         Route::patch('/schools/{school}/plan',    [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'changePlan'])->name('schools.plan');
+         Route::delete('/schools/{school}',        [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'destroy'])->name('schools.destroy');
+         Route::post('/schools/{school}/impersonate', [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'impersonate'])->name('schools.impersonate');
+         Route::get('/impersonate/stop',           [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'stopImpersonate'])->name('impersonate.stop');
+
+         // ── Contact Messages Inbox ────────────────────────────────────────
+         Route::get('/contact-messages',                                    [\App\Http\Controllers\ContactMessagesController::class, 'index'])->name('contact-messages.index');
+         Route::get('/contact-messages/{contactMessage}',                   [\App\Http\Controllers\ContactMessagesController::class, 'show'])->name('contact-messages.show');
+         Route::patch('/contact-messages/{contactMessage}/status',          [\App\Http\Controllers\ContactMessagesController::class, 'updateStatus'])->name('contact-messages.status');
+         Route::patch('/contact-messages/{contactMessage}/notes',           [\App\Http\Controllers\ContactMessagesController::class, 'saveNotes'])->name('contact-messages.notes');
+         Route::delete('/contact-messages/{contactMessage}',                [\App\Http\Controllers\ContactMessagesController::class, 'destroy'])->name('contact-messages.destroy');
+     });
+
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MODULE 23 — INFRASTRUCTURE ROUTES
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── PWA offline fallback page (cached by service worker) ──────────────────
+Route::get('/offline', function () {
+    return view('offline');
+})->name('pwa.offline');
+
+// ── Laravel Horizon dashboard ──────────────────────────────────────────────
+// Access is gated inside HorizonServiceProvider::gate() to super-admin / Admin roles.
+// The Horizon package self-registers its routes via HorizonServiceProvider, so
+// no manual route registration is required. The block below keeps a named alias
+// for redirect-back links used in left-menu and admin tools.
+if (class_exists(\Laravel\Horizon\Horizon::class)) {
+    // Horizon routes are auto-registered by the package; this is a named alias
+    // so we can link to the dashboard without hard-coding the path.
+    Route::get(config('horizon.path', 'horizon'), function () {
+        return redirect(config('horizon.path', 'horizon'));
+    })->middleware(['auth'])->name('horizon.index');
+}

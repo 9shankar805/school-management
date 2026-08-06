@@ -14,7 +14,11 @@ trait SchoolSession {
         if (session()->has('browse_session_id')){
             $current_school_session_id = session('browse_session_id');
         } else {
-            $latest_school_session = $this->schoolSessionRepository->getLatestSession();
+            $repo = (property_exists($this, 'schoolSessionRepository') && $this->schoolSessionRepository)
+                ? $this->schoolSessionRepository
+                : app(\App\Interfaces\SchoolSessionInterface::class);
+
+            $latest_school_session = $repo->getLatestSession();
 
             if($latest_school_session){
                 $current_school_session_id = $latest_school_session->id;

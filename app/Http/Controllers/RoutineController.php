@@ -204,6 +204,93 @@ class RoutineController extends Controller
             ->orderBy('start')
             ->get();
 
-        return response()->json($slots);
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json($slots);
+        }
+
+        $teacher = \App\Models\User::find($teacher_id) ?? auth()->user();
+        return view('routines.teacher-timetable', compact('slots', 'teacher', 'session_id'));
+    }
+
+    /**
+     * Store a timetable slot from the teacher profile page.
+     * Includes the same conflict detection as store().
+     */
+    public function storeForTeacher(Request $request, int $teacherId)
+    {
+        $request->validate([
+            'class_id'   => 'required|integer',
+            'section_id' => 'required|integer',
+            'course_id'  => 'required|integer',
+            'weekday'    => 'required|integer|min:0|max:6',
+            'start'      => 'required|string',
+            'end'        => 'required|string',
+            'room'       => 'nullable|string|max:50',
+        ]);
+
+        $session_id = $this->getSchoolCurrentSession();
+        $weekday    = $request->weekday;
+        $start      = $request->start;
+        $end        = $request->end;
+        $section_id = $request->section_id;
+
+        // Section conflict
+        $sectionConflict = Routine::where('session_id', $session_id)
+            ->where('section_id', $section_id)
+            ->where('weekday', $weekday)
+            ->where(fn($q) => $q->where('start', '<', $end)->where('end', '>', $start))
+            ->first();
+
+        if ($sectionConflict) {
+            return back()->withErrors(['conflict' => "This section already has a class from {$sectionConflict->start} to {$sectionConflict->end} on that day."])->withInput();
+        }
+
+        // Teacher conflict
+        $teacherConflict = Routine::where('session_id', $session_id)
+            ->where('teacher_id', $teacherId)
+            ->where('weekday', $weekday)
+            ->where(fn($q) => $q->where('start', '<', $end)->where('end', '>', $start))
+            ->first();
+
+        if ($teacherConflict) {
+            return back()->withErrors(['conflict' => "Teacher is already scheduled from {$teacherConflict->start} to {$teacherConflict->end} on that day."])->withInput();
+        }
+
+        Routine::create([
+            'session_id' => $session_id,
+            'teacher_id' => $teacherId,
+            'class_id'   => $request->class_id,
+            'section_id' => $request->section_id,
+            'course_id'  => $request->course_id,
+            'weekday'    => $weekday,
+            'start'      => $start,
+            'end'        => $end,
+            'room'       => $request->room,
+        ]);
+
+        return back()->with('status', 'Timetable slot added successfully.');
+    }
+
+    /**
+     * Delete a single timetable slot (from teacher profile page).
+     */
+    public function destroySlot(int $routineId)
+    {
+        $routine = Routine::findOrFail($routineId);
+        $routine->delete();
+        return back()->with('status', 'Timetable slot removed.');
+    }
+
+    /**
+     * AJAX: return courses for a given class_id (for the timetable form dropdown).
+     */
+    public function coursesByClass(Request $request)
+    {
+        $classId    = $request->query('class_id');
+        $sessionId  = $this->getSchoolCurrentSession();
+        $courses    = \App\Models\Course::where('class_id', $classId)
+            ->where('session_id', $sessionId)
+            ->get(['id', 'course_name']);
+        return response()->json($courses);
     }
 }

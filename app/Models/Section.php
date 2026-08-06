@@ -1,16 +1,19 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\SchoolClass;
+use App\Models\Promotion;
 
 class Section extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
-    protected $fillable = ['section_name', 'room_no', 'class_id', 'session_id'];
+    protected $fillable = ['school_id', 'section_name', 'room_no', 'class_id', 'session_id'];
 
     /**
      * Convenience accessor so ->name works alongside ->section_name
@@ -22,5 +25,9 @@ class Section extends Model
 
     public function schoolClass() {
         return $this->belongsTo(SchoolClass::class, 'class_id');
+    }
+
+    public function promotions() {
+        return $this->hasMany(Promotion::class, 'section_id', 'id');
     }
 }

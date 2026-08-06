@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Repositories\PromotionRepository;
 use App\Repositories\StudentParentInfoRepository;
 use App\Repositories\StudentAcademicInfoRepository;
+use App\Services\BillingService;
 use App\Traits\SchoolSession as SchoolSessionTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -157,18 +158,24 @@ class AdmissionController extends Controller
         DB::transaction(function () use ($application, $request) {
             // 1. Create user account
             $student = User::create([
-                'first_name'  => $application->first_name,
-                'last_name'   => $application->last_name,
-                'email'       => $request->email,
-                'password'    => Hash::make($request->password),
-                'gender'      => $application->gender,
-                'birthday'    => $application->birthday,
-                'nationality' => $application->nationality,
-                'religion'    => $application->religion,
-                'blood_type'  => $application->blood_type,
-                'address'     => $application->address,
-                'phone'       => $application->phone,
-                'role'        => 'student',
+                'first_name'     => $application->first_name,
+                'last_name'      => $application->last_name,
+                'email'          => $request->email,
+                'password'       => Hash::make($request->password),
+                'gender'         => $application->gender,
+                'birthday'       => $application->birthday,
+                'nationality'    => $application->nationality,
+                'religion'       => $application->religion,
+                'blood_type'     => $application->blood_type,
+                'address'        => $application->address,
+                'phone'          => $application->phone,
+                'role'           => 'student',
+                'admission_date' => today()->toDateString(),
+                'student_status' => 'active',
+                // Auto-generate admission number: ADM-YYYY-XXXXXX
+                'admission_no'   => 'ADM-' . now()->year . '-' . str_pad(
+                    User::whereYear('created_at', now()->year)->count() + 1, 5, '0', STR_PAD_LEFT
+                ),
             ]);
 
             $student->assignRole('student');
@@ -194,13 +201,24 @@ class AdmissionController extends Controller
             // 4. Assign class/section
             $promoRepo = new PromotionRepository();
             $promoRepo->assignClassSection([
-                'session_id' => $request->session_id,
-                'class_id'   => $request->class_id,
-                'section_id' => $request->section_id,
+                'session_id'     => $request->session_id,
+                'class_id'       => $request->class_id,
+                'section_id'     => $request->section_id,
                 'id_card_number' => null,
             ], $student->id);
 
-            // 5. Mark application as enrolled
+            // 5. Auto-generate admission fee invoices from fee structures
+            try {
+                $billing = app(BillingService::class);
+                $billing->generateOnAdmission($student, $request->class_id, $request->session_id);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning(
+                    "AdmissionController: billing failed for student #{$student->id}: " . $e->getMessage()
+                );
+                // Don't abort enrollment if billing fails — admin can generate manually
+            }
+
+            // 6. Mark application as enrolled
             $application->update([
                 'status'     => 'enrolled',
                 'student_id' => $student->id,
@@ -208,7 +226,7 @@ class AdmissionController extends Controller
         });
 
         return redirect()->route('admissions.index')
-            ->with('status', 'Student enrolled successfully.');
+            ->with('status', 'Student enrolled successfully. Admission fee invoice generated.');
     }
 
     // ── Destroy (soft-delete) ─────────────────────────────────────────────

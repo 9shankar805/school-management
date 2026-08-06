@@ -7,7 +7,10 @@ use App\Interfaces\AcademicSettingInterface;
 
 class AcademicSettingRepository implements AcademicSettingInterface {
     public function getAcademicSetting(){
-        return AcademicSetting::find(1);
+        return AcademicSetting::withoutGlobalScopes()->find(1) ?? AcademicSetting::withoutGlobalScopes()->create([
+            'attendance_type' => 'section',
+            'marks_submission_status' => 'off'
+        ]);
     }
 
     public function updateAttendanceType($request) {

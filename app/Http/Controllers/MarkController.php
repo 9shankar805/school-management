@@ -50,6 +50,7 @@ class MarkController extends Controller
         $this->courseRepository = $courseRepository;
         $this->semesterRepository = $semesterRepository;
     }
+
     /**
      * Display a listing of the resource.
      *
@@ -58,56 +59,61 @@ class MarkController extends Controller
      */
     public function index(Request $request)
     {
-        $class_id = $request->query('class_id', 0);
-        $section_id = $request->query('section_id', 0);
-        $course_id = $request->query('course_id', 0);
-        $semester_id = $request->query('semester_id', 0);
+        try {
+            $class_id = $request->query('class_id', 0);
+            $section_id = $request->query('section_id', 0);
+            $course_id = $request->query('course_id', 0);
+            $semester_id = $request->query('semester_id', 0);
 
-        $current_school_session_id = $this->getSchoolCurrentSession();
+            $current_school_session_id = $this->getSchoolCurrentSession();
 
-        $semesters = $this->semesterRepository->getAll($current_school_session_id);
+            $semesters = $this->semesterRepository->getAll($current_school_session_id);
+            $school_classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
 
-        $school_classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
+            $markRepository = new MarkRepository();
+            $marks = $markRepository->getAllFinalMarks($current_school_session_id, $semester_id, $class_id, $section_id, $course_id);
 
-        $markRepository = new MarkRepository();
-        $marks = $markRepository->getAllFinalMarks($current_school_session_id, $semester_id, $class_id, $section_id, $course_id);
+            if(!$marks) {
+                $marks = collect();
+            }
 
-        if(!$marks) {
-            return abort(404);
-        }
+            $gradingSystemRepository = new GradingSystemRepository();
+            $gradingSystem = $gradingSystemRepository->getGradingSystem($current_school_session_id, $semester_id, $class_id);
 
-        $gradingSystemRepository = new GradingSystemRepository();
-        $gradingSystem = $gradingSystemRepository->getGradingSystem($current_school_session_id, $semester_id, $class_id);
+            $gradingSystemRules = collect();
+            if($gradingSystem) {
+                $gradeRulesRepository = new GradeRuleRepository();
+                $gradingSystemRules = $gradeRulesRepository->getAll($current_school_session_id, $gradingSystem->id) ?? collect();
+            }
 
-        if(!$gradingSystem) {
-            return abort(404);
-        }
-
-        $gradeRulesRepository = new GradeRuleRepository();
-        $gradingSystemRules = $gradeRulesRepository->getAll($current_school_session_id, $gradingSystem->id);
-
-        if(!$gradingSystemRules) {
-            return abort(404);
-        }
-
-        foreach($marks as $mark_key => $mark) {
-            foreach ($gradingSystemRules as $key => $gradingSystemRule) {
-                if($mark->final_marks >= $gradingSystemRule->start_at && $mark->final_marks <= $gradingSystemRule->end_at) {
-                    $marks[$mark_key]['point'] = $gradingSystemRule->point;
-                    $marks[$mark_key]['grade'] = $gradingSystemRule->grade;
+            foreach($marks as $mark_key => $mark) {
+                foreach ($gradingSystemRules as $key => $gradingSystemRule) {
+                    if($mark->final_marks >= $gradingSystemRule->start_at && $mark->final_marks <= $gradingSystemRule->end_at) {
+                        $marks[$mark_key]['point'] = $gradingSystemRule->point;
+                        $marks[$mark_key]['grade'] = $gradingSystemRule->grade;
+                    }
                 }
             }
+
+            $data = [
+                'current_school_session_id' => $current_school_session_id,
+                'semesters'                 => $semesters,
+                'classes'                   => $school_classes,
+                'marks'                     => $marks,
+                'grading_system_rules'      => $gradingSystemRules,
+            ];
+
+            return view('marks.results', $data);
+        } catch (\Exception $e) {
+            return view('marks.results', [
+                'current_school_session_id' => 0,
+                'semesters' => collect(),
+                'classes' => collect(),
+                'marks' => collect(),
+                'grading_system_rules' => collect(),
+                'error' => 'Unable to load marks: ' . $e->getMessage()
+            ]);
         }
-
-        $data = [
-            'current_school_session_id' => $current_school_session_id,
-            'semesters'                 => $semesters,
-            'classes'                   => $school_classes,
-            'marks'                     => $marks,
-            'grading_system_rules'      => $gradingSystemRules,
-        ];
-
-        return view('marks.results', $data);
     }
 
     /**
@@ -118,20 +124,58 @@ class MarkController extends Controller
      */
     public function create(Request $request)
     {
-        $class_id = $request->query('class_id');
-        $section_id = $request->query('section_id');
-        $course_id = $request->query('course_id');
-        $semester_id = $request->query('semester_id', 0);
-        
-        try{
+        try {
+            $class_id = $request->query('class_id');
+            $section_id = $request->query('section_id', 0);
+            $course_id = $request->query('course_id', 0);
+            $semester_id = $request->query('semester_id', 0);
 
             $current_school_session_id = $this->getSchoolCurrentSession();
-            $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
+            
+            if (!$current_school_session_id) {
+                return view('marks.create', [
+                    'academic_setting' => null,
+                    'semesters' => collect(),
+                    'school_classes' => collect(),
+                    'exams' => collect(),
+                    'students_with_marks' => collect(),
+                    'class_id' => null,
+                    'section_id' => 0,
+                    'course_id' => 0,
+                    'semester_id' => 0,
+                    'final_marks_submitted' => false,
+                    'sectionStudents' => collect(),
+                    'exam_rules_by_exam_id' => collect(),
+                    'current_school_session_id' => 0,
+                    'error' => 'Unable to determine current school session. Please configure a session first.'
+                ]);
+            }
 
-            $academic_setting = $this->academicSettingRepository->getAcademicSetting();
+            $academic_setting = $this->academicSettingRepository ? $this->academicSettingRepository->getAcademicSetting() : null;
+            $semesters = $this->semesterRepository ? $this->semesterRepository->getAll($current_school_session_id) : collect();
+            $school_classes = $this->schoolClassRepository ? $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id) : collect();
+
+            if ($class_id && $course_id) {
+                $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
+            } else {
+                return view('marks.create', [
+                    'academic_setting'          => $academic_setting,
+                    'semesters'                 => $semesters,
+                    'school_classes'            => $school_classes,
+                    'exams'                     => collect(),
+                    'students_with_marks'       => collect(),
+                    'class_id'                  => null,
+                    'section_id'                => 0,
+                    'course_id'                 => 0,
+                    'semester_id'               => 0,
+                    'final_marks_submitted'     => false,
+                    'sectionStudents'           => collect(),
+                    'exam_rules_by_exam_id'     => collect(),
+                    'current_school_session_id' => $current_school_session_id,
+                ]);
+            }
 
             $examRepository = new ExamRepository();
-
             $exams = $examRepository->getAll($current_school_session_id, $semester_id, $class_id);
             $examRulesByExamId = ExamRule::where('session_id', $current_school_session_id)
                                             ->whereIn('exam_id', $exams->pluck('id')->toArray())
@@ -139,12 +183,11 @@ class MarkController extends Controller
 
             $markRepository = new MarkRepository();
             $studentsWithMarks = $markRepository->getAll($current_school_session_id, $semester_id, $class_id, $section_id, $course_id);
-            $studentsWithMarks = $studentsWithMarks->groupBy('student_id');
+            $studentsWithMarks = $studentsWithMarks ? $studentsWithMarks->groupBy('student_id') : collect();
 
-            $sectionStudents = $this->userRepository->getAllStudents($current_school_session_id, $class_id, $section_id);
+            $sectionStudents = $this->userRepository ? $this->userRepository->getAllStudents($current_school_session_id, $class_id, $section_id) : collect();
 
             $final_marks_submitted = false;
-            
             $final_marks_submit_count = $markRepository->getFinalMarksCount($current_school_session_id, $semester_id, $class_id, $section_id, $course_id);
 
             if($final_marks_submit_count > 0) {
@@ -153,6 +196,8 @@ class MarkController extends Controller
 
             $data = [
                 'academic_setting'          => $academic_setting,
+                'semesters'                 => $semesters,
+                'school_classes'            => $school_classes,
                 'exams'                     => $exams,
                 'students_with_marks'       => $studentsWithMarks,
                 'class_id'                  => $class_id,
@@ -167,7 +212,22 @@ class MarkController extends Controller
 
             return view('marks.create', $data);
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return view('marks.create', [
+                'academic_setting'          => null,
+                'semesters'                 => collect(),
+                'school_classes'            => collect(),
+                'exams'                     => collect(),
+                'students_with_marks'       => collect(),
+                'class_id'                  => null,
+                'section_id'                => 0,
+                'course_id'                 => 0,
+                'semester_id'               => 0,
+                'final_marks_submitted'     => false,
+                'sectionStudents'           => collect(),
+                'exam_rules_by_exam_id'     => collect(),
+                'current_school_session_id' => 0,
+                'error' => 'Unable to load marks entry form: ' . $e->getMessage()
+            ]);
         }
     }
 
@@ -179,30 +239,45 @@ class MarkController extends Controller
      */
     public function showFinalMark(Request $request)
     {
-        $class_id = $request->query('class_id');
-        $section_id = $request->query('section_id');
-        $course_id = $request->query('course_id');
-        $semester_id = $request->query('semester_id', 0);
+        try {
+            $class_id = $request->query('class_id');
+            $section_id = $request->query('section_id');
+            $course_id = $request->query('course_id');
+            $semester_id = $request->query('semester_id', 0);
 
-        $current_school_session_id = $this->getSchoolCurrentSession();
+            $current_school_session_id = $this->getSchoolCurrentSession();
 
-        $markRepository = new MarkRepository();
-        $studentsWithMarks = $markRepository->getAll($current_school_session_id, $semester_id, $class_id, $section_id, $course_id);
-        $studentsWithMarks = $studentsWithMarks->groupBy('student_id');
+            $markRepository = new MarkRepository();
+            $studentsWithMarks = $markRepository->getAll($current_school_session_id, $semester_id, $class_id, $section_id, $course_id);
+            $studentsWithMarks = $studentsWithMarks ? $studentsWithMarks->groupBy('student_id') : collect();
 
-        $data = [
-            'students_with_marks'       => $studentsWithMarks,
-            'class_id'                  => $class_id,
-            'class_name'                => $request->query('class_name'),
-            'section_id'                => $section_id,
-            'section_name'              => $request->query('section_name'),
-            'course_id'                 => $course_id,
-            'course_name'               => $request->query('course_name'),
-            'semester_id'               => $semester_id,
-            'current_school_session_id' => $current_school_session_id,
-        ];
+            $data = [
+                'students_with_marks'       => $studentsWithMarks,
+                'class_id'                  => $class_id,
+                'class_name'                => $request->query('class_name'),
+                'section_id'                => $section_id,
+                'section_name'              => $request->query('section_name'),
+                'course_id'                 => $course_id,
+                'course_name'               => $request->query('course_name'),
+                'semester_id'               => $semester_id,
+                'current_school_session_id' => $current_school_session_id,
+            ];
 
-        return view('marks.submit-final-marks', $data);
+            return view('marks.submit-final-marks', $data);
+        } catch (\Exception $e) {
+            return view('marks.submit-final-marks', [
+                'students_with_marks'       => collect(),
+                'class_id'                  => null,
+                'class_name'                => null,
+                'section_id'                => null,
+                'section_name'              => null,
+                'course_id'                 => null,
+                'course_name'               => null,
+                'semester_id'               => 0,
+                'current_school_session_id' => 0,
+                'error' => 'Unable to load final marks form: ' . $e->getMessage()
+            ]);
+        }
     }
 
     /**
@@ -317,51 +392,55 @@ class MarkController extends Controller
      */
     public function showCourseMark(Request $request)
     {
-        $session_id = $request->query('session_id');
-        $semester_id = $request->query('semester_id');
-        $class_id = $request->query('class_id');
-        $section_id = $request->query('section_id');
-        $course_id = $request->query('course_id');
-        $course_name = $request->query('course_name');
-        $student_id = $request->query('student_id');
-        $markRepository = new MarkRepository();
-        $marks = $markRepository->getAllByStudentId($session_id, $semester_id, $class_id, $section_id, $course_id, $student_id);
-        $finalMarks = $markRepository->getAllFinalMarksByStudentId($session_id, $student_id, $semester_id, $class_id, $section_id, $course_id);
+        try {
+            $session_id = $request->query('session_id');
+            $semester_id = $request->query('semester_id');
+            $class_id = $request->query('class_id');
+            $section_id = $request->query('section_id');
+            $course_id = $request->query('course_id');
+            $course_name = $request->query('course_name');
+            $student_id = $request->query('student_id');
+            $markRepository = new MarkRepository();
+            $marks = $markRepository->getAllByStudentId($session_id, $semester_id, $class_id, $section_id, $course_id, $student_id);
+            $finalMarks = $markRepository->getAllFinalMarksByStudentId($session_id, $student_id, $semester_id, $class_id, $section_id, $course_id);
 
-        if(!$finalMarks) {
-            return abort(404);
-        }
+            if(!$finalMarks) {
+                $finalMarks = collect();
+            }
 
-        $gradingSystemRepository = new GradingSystemRepository();
-        $gradingSystem = $gradingSystemRepository->getGradingSystem($session_id, $semester_id, $class_id);
+            $gradingSystemRepository = new GradingSystemRepository();
+            $gradingSystem = $gradingSystemRepository->getGradingSystem($session_id, $semester_id, $class_id);
 
-        if(!$gradingSystem) {
-            return abort(404);
-        }
+            $gradingSystemRules = collect();
+            if($gradingSystem) {
+                $gradeRulesRepository = new GradeRuleRepository();
+                $gradingSystemRules = $gradeRulesRepository->getAll($session_id, $gradingSystem->id) ?? collect();
+            }
 
-        $gradeRulesRepository = new GradeRuleRepository();
-        $gradingSystemRules = $gradeRulesRepository->getAll($session_id, $gradingSystem->id);
-
-        if(!$gradingSystemRules) {
-            return abort(404);
-        }
-
-        foreach($finalMarks as $mark_key => $mark) {
-            foreach ($gradingSystemRules as $key => $gradingSystemRule) {
-                if($mark->final_marks >= $gradingSystemRule->start_at && $mark->final_marks <= $gradingSystemRule->end_at) {
-                    $finalMarks[$mark_key]['point'] = $gradingSystemRule->point;
-                    $finalMarks[$mark_key]['grade'] = $gradingSystemRule->grade;
+            foreach($finalMarks as $mark_key => $mark) {
+                foreach ($gradingSystemRules as $key => $gradingSystemRule) {
+                    if($mark->final_marks >= $gradingSystemRule->start_at && $mark->final_marks <= $gradingSystemRule->end_at) {
+                        $finalMarks[$mark_key]['point'] = $gradingSystemRule->point;
+                        $finalMarks[$mark_key]['grade'] = $gradingSystemRule->grade;
+                    }
                 }
             }
+
+            $data = [
+                'marks' => $marks,
+                'final_marks'   => $finalMarks,
+                'course_name' => $course_name,
+            ];
+
+            return view('marks.student', $data);
+        } catch (\Exception $e) {
+            return view('marks.student', [
+                'marks' => collect(),
+                'final_marks' => collect(),
+                'course_name' => null,
+                'error' => 'Unable to load course marks: ' . $e->getMessage()
+            ]);
         }
-
-        $data = [
-            'marks' => $marks,
-            'final_marks'   => $finalMarks,
-            'course_name' => $course_name,
-        ];
-
-        return view('marks.student', $data);
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -8,9 +9,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TransportRoute extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'name', 'code', 'description', 'vehicle_id', 'driver_id', 'conductor_id',
         'morning_departure', 'morning_arrival', 'afternoon_departure', 'afternoon_arrival',
         'distance_km', 'monthly_fee', 'status',

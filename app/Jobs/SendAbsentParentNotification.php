@@ -6,6 +6,9 @@ use App\Models\Attendance;
 use App\Models\StudentParentInfo;
 use App\Models\User;
 use App\Notifications\AttendanceAlertNotification;
+use App\Services\SmsService;
+use App\Services\WhatsAppService;
+use App\Services\PushNotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -45,7 +48,7 @@ class SendAbsentParentNotification implements ShouldQueue
     // Handle
     // ──────────────────────────────────────────────────────────────────────────
 
-    public function handle(): void
+    public function handle(SmsService $sms, PushNotificationService $push, WhatsAppService $whatsapp): void
     {
         // Resolve the parent record
         $parentInfo = StudentParentInfo::where('student_id', $this->studentId)->first();
@@ -55,20 +58,63 @@ class SendAbsentParentNotification implements ShouldQueue
             return;
         }
 
-        // Find the parent User account (if they have one)
-        $parent = User::where('email', $parentInfo->father_email)
-            ->orWhere('email', $parentInfo->mother_email)
-            ->first();
+        $message = "Your child {$this->studentName} was marked absent on {$this->date} ({$this->courseName}).";
 
-        if ($parent) {
+        // Find parent User accounts (via Spatie role relationship pivot)
+        $student = User::find($this->studentId);
+        $parents = $student?->parents ?? collect();
+
+        foreach ($parents as $parent) {
+            // 1. In-app + email notification
             $parent->notify(new AttendanceAlertNotification(
                 studentName: $this->studentName,
                 date:        $this->date,
                 courseName:  $this->courseName,
             ));
-        } else {
-            // No User account — just log for now; SMS gateway can hook in here
-            Log::info("SendAbsentParentNotification: parent has no user account for student {$this->studentId}. Email(s): {$parentInfo->father_email} / {$parentInfo->mother_email}");
+
+            // 2. SMS alert
+            if ($parent->phone) {
+                $sms->send($parent->phone, $message);
+                if ($student->school) {
+                    $whatsapp->setSchool($student->school)->setModule('attendance')->sendText($parent->phone, $message);
+                }
+            }
+
+            // 3. Push notification
+            $push->broadcast('parent', 'Attendance Alert', $message, [
+                'student_id' => $this->studentId,
+                'date'       => $this->date,
+                'type'       => 'attendance_absent',
+            ]);
+        }
+
+        // Fallback: parent has no User account — try legacy StudentParentInfo phones
+        if ($parents->isEmpty()) {
+            $phones = array_filter([
+                $parentInfo->father_phone ?? null,
+                $parentInfo->mother_phone ?? null,
+            ]);
+            foreach ($phones as $phone) {
+                $sms->send($phone, $message);
+                if ($student?->school) {
+                    $whatsapp->setSchool($student->school)->setModule('attendance')->sendText($phone, $message);
+                }
+            }
+
+            // Also try legacy email-based User lookup
+            $legacyParent = User::where('email', $parentInfo->father_email)
+                ->orWhere('email', $parentInfo->mother_email)
+                ->first();
+
+            if ($legacyParent) {
+                $legacyParent->notify(new AttendanceAlertNotification(
+                    studentName: $this->studentName,
+                    date:        $this->date,
+                    courseName:  $this->courseName,
+                ));
+            } else {
+                Log::info("SendAbsentParentNotification: no User account for student {$this->studentId}. SMS attempted to: " . implode(', ', $phones));
+            }
         }
     }
 

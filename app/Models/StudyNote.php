@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -8,9 +9,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class StudyNote extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'title', 'description', 'file_path', 'type', 'external_url',
         'uploaded_by', 'course_id', 'class_id', 'session_id',
         'term_id', 'is_published',

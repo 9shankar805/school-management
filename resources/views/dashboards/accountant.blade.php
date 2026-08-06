@@ -1,10 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">
-        @include('layouts.left-menu')
-    </div>
 
     <div class="flex-1 p-6 lg:p-8 overflow-auto">
 
@@ -48,7 +44,7 @@
                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">This Month</p>
                     <span class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 text-sm"><i class="bi bi-calendar-month"></i></span>
                 </div>
-                <p class="text-3xl font-bold text-emerald-600">${{ number_format($monthRevenue) }}</p>
+                <p class="text-3xl font-bold text-emerald-600">Rs. {{ number_format($monthRevenue) }}</p>
                 <p class="mt-1 text-xs text-emerald-500">{{ now()->format('F Y') }}</p>
             </div>
             <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
@@ -56,7 +52,7 @@
                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">This Year</p>
                     <span class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 text-sm"><i class="bi bi-graph-up-arrow"></i></span>
                 </div>
-                <p class="text-3xl font-bold text-slate-800">${{ number_format($yearRevenue) }}</p>
+                <p class="text-3xl font-bold text-slate-800">Rs. {{ number_format($yearRevenue) }}</p>
                 <p class="mt-1 text-xs text-slate-400">{{ now()->year }}</p>
             </div>
         </div>
@@ -83,7 +79,7 @@
                             <p class="text-sm font-medium text-slate-700">{{ $inv->student?->full_name ?? '—' }}</p>
                             <p class="text-xs text-slate-400">{{ $inv->title }} · Due {{ \Carbon\Carbon::parse($inv->due_date)->format('M d, Y') }}</p>
                         </div>
-                        <span class="text-sm font-semibold text-rose-600">${{ number_format($inv->amount) }}</span>
+                        <span class="text-sm font-semibold text-rose-600">Rs. {{ number_format($inv->amount) }}</span>
                     </div>
                     @endforeach
                 </div>
@@ -108,7 +104,7 @@
                             <p class="text-sm text-slate-700 truncate">{{ $student?->full_name ?? '—' }}</p>
                         </div>
                         <div class="flex-shrink-0 text-right">
-                            <p class="text-sm font-semibold text-emerald-600">${{ number_format($p->amount_paid) }}</p>
+                            <p class="text-sm font-semibold text-emerald-600">Rs. {{ number_format($p->amount_paid) }}</p>
                             <p class="text-xs text-slate-400">{{ $p->created_at->format('M d') }}</p>
                         </div>
                     </div>

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -8,9 +9,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class OnlineClass extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'title', 'description', 'platform', 'meeting_url',
         'meeting_id', 'meeting_password', 'scheduled_at',
         'duration_minutes', 'status', 'teacher_id', 'course_id',

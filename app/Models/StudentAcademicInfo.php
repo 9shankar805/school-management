@@ -1,14 +1,16 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class StudentAcademicInfo extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -16,6 +18,7 @@ class StudentAcademicInfo extends Model
      * @var array
      */
     protected $fillable = [
+        'school_id',
         'student_id',
         'board_reg_no',
     ];

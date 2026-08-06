@@ -10,12 +10,14 @@
         "fruitcake/laravel-cors": "^2.0",
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel/framework": "^8.54",
+        "laravel/horizon": "^5.21",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
         "maatwebsite/excel": "^3.1",
         "phpoffice/phpword": "^0.18",
         "predis/predis": "^2.0",
         "spatie/laravel-activitylog": "^4.7",
+        "spatie/laravel-backup": "^8.6",
         "spatie/laravel-permission": "^4.2",
         "stevebauman/purify": "^4.0"
     },
@@ -34,7 +36,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Helpers/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

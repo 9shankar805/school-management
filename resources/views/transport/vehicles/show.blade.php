@@ -3,7 +3,6 @@
 @section('content')
 <div class="container">
     <div class="row justify-content-start">
-        @include('layouts.left-menu')
         <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
             <div class="row pt-2">
                 <div class="col ps-4">
@@ -74,11 +73,11 @@
                                 <div class="card-body">
                                     <div class="d-flex gap-2">
                                         <span class="small text-muted">Total Fuel Cost:</span>
-                                        <span class="fw-semibold">${{ number_format($totalFuelCost, 2) }}</span>
+                                        <span class="fw-semibold">Rs. {{ number_format($totalFuelCost, 2) }}</span>
                                     </div>
                                     <div class="d-flex gap-2">
                                         <span class="small text-muted">Total Maint. Cost:</span>
-                                        <span class="fw-semibold">${{ number_format($totalMaintCost, 2) }}</span>
+                                        <span class="fw-semibold">Rs. {{ number_format($totalMaintCost, 2) }}</span>
                                     </div>
                                 </div>
                                 <div class="card-footer d-flex gap-2">
@@ -126,8 +125,8 @@
                                             <tr>
                                                 <td>{{ $fl->date->format('d M Y') }}</td>
                                                 <td>{{ $fl->litres }}</td>
-                                                <td>${{ $fl->cost_per_litre }}</td>
-                                                <td class="fw-semibold">${{ number_format($fl->total_cost, 2) }}</td>
+                                                <td>Rs. {{ $fl->cost_per_litre }}</td>
+                                                <td class="fw-semibold">Rs. {{ number_format($fl->total_cost, 2) }}</td>
                                                 <td>{{ $fl->odometer_reading ?? '—' }}</td>
                                                 <td class="small text-muted">{{ $fl->fuel_station ?? '—' }}</td>
                                                 <td>
@@ -192,7 +191,7 @@
                                                 <td>{{ $ml->service_date->format('d M Y') }}</td>
                                                 <td class="small">{{ $ml->type_label }}</td>
                                                 <td class="small">{{ $ml->title }}</td>
-                                                <td>${{ number_format($ml->cost, 2) }}</td>
+                                                <td>Rs. {{ number_format($ml->cost, 2) }}</td>
                                                 <td class="small text-muted">{{ $ml->service_provider ?? '—' }}</td>
                                                 <td>{!! $ml->status_badge !!}</td>
                                             </tr>

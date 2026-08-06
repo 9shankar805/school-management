@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Traits\HasTenant;
 use App\Models\MedicalRecord;
 use App\Models\EmergencyContact;
 use App\Models\StudentDocument;
@@ -31,25 +34,56 @@ use App\Models\TeacherTraining;
 use App\Models\TeacherPayroll;
 use App\Models\Department;
 use App\Models\Conversation;
+use App\Models\Invoice;
+use App\Models\StudentLedger;
+use App\Models\StaffSalaryStructure;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasRoles, HasFactory, Notifiable;
+    use HasApiTokens, HasRoles, HasFactory, Notifiable, SoftDeletes, HasTenant;
 
     protected $fillable = [
+        'school_id',
         'first_name', 'last_name', 'email', 'password',
         'gender', 'nationality', 'phone',
         'address', 'address2', 'city', 'zip',
         'photo', 'birthday', 'religion', 'blood_type',
         'role',                     // legacy column kept for compatibility
+        'national_id',              // stored encrypted (see $casts)
+        'must_change_password',     // force password change on next login
+        'email_verified_at',
+        // Student fields
+        'admission_no',
+        'roll_no',
+        'admission_date',
+        'guardian_id',
+        'student_status',
+        // Staff payroll fields
+        'pan_no',
+        'bank_name',
+        'bank_account_no',
+        'basic_salary',
     ];
 
     protected $hidden = ['password', 'remember_token'];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'birthday'          => 'date',
+        'email_verified_at'    => 'datetime',
+        'birthday'             => 'date',
+        'admission_date'       => 'date',
+        'national_id'          => 'encrypted',   // AES-256 via Laravel's Crypt
+        'must_change_password' => 'boolean',
+        'basic_salary'         => 'decimal:2',
     ];
+
+    // -----------------------------------------------------------------------
+    // Tenant relationship
+    // -----------------------------------------------------------------------
+
+    public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\School::class);
+    }
 
     // -----------------------------------------------------------------------
     // Relationships
@@ -149,6 +183,31 @@ class User extends Authenticatable
     }
 
     // ── Student extended relationships ────────────────────────────────────
+
+    public function guardian()
+    {
+        return $this->belongsTo(User::class, 'guardian_id');
+    }
+
+    public function wards()
+    {
+        return $this->hasMany(User::class, 'guardian_id');
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class, 'student_id')->latest();
+    }
+
+    public function studentLedger(): HasMany
+    {
+        return $this->hasMany(StudentLedger::class, 'student_id')->orderBy('id');
+    }
+
+    public function salaryStructure(): HasMany
+    {
+        return $this->hasMany(StaffSalaryStructure::class, 'user_id');
+    }
 
     public function medicalRecord(): HasOne
     {

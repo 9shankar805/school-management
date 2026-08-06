@@ -9,7 +9,7 @@ class StudentAcademicInfoRepository {
         try {
             StudentAcademicInfo::create([
                 'student_id'        => $student_id,
-                'board_reg_no'      => $request['board_reg_no'],
+                'board_reg_no'      => $request['board_reg_no'] ?? null,
             ]);
         } catch (\Exception $e) {
             throw new \Exception('Failed to create Student academic information. '.$e->getMessage());

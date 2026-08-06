@@ -1,15 +1,18 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class StockTransaction extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'inventory_item_id', 'purchase_order_id', 'processed_by',
         'type', 'quantity', 'quantity_before', 'quantity_after',
         'unit_price', 'reference', 'notes', 'transacted_at',

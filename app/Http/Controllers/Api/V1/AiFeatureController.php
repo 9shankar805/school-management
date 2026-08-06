@@ -81,8 +81,9 @@ class AiFeatureController extends Controller
     private function respond(string $response)
     {
         return response()->json([
-            'success' => true,
+            'success'  => true,
             'response' => $response,
+            'data'     => $response,
         ]);
     }
 }

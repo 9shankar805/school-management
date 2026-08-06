@@ -31,13 +31,19 @@ class UserRepository implements UserInterface {
                     'nationality'   => $request['nationality'],
                     'phone'         => $request['phone'],
                     'address'       => $request['address'],
-                    'address2'      => $request['address2'],
+                    'address2'      => $request['address2'] ?? null,
                     'city'          => $request['city'],
                     'zip'           => $request['zip'],
                     'photo'         => (!empty($request['photo']))?$this->convert($request['photo']):null,
                     'role'          => 'teacher',
                     'password'      => Hash::make($request['password']),
                 ]);
+
+                // Assign the Spatie "teacher" role so hasRole('teacher'), role('teacher')
+                // queries, role-based middleware, and the admin-facing role assignment
+                // dropdown all recognize this user as a teacher.
+                $user->assignRole('teacher');
+
                 $user->givePermissionTo(
                     'create exams',
                     'view exams',
@@ -77,7 +83,7 @@ class UserRepository implements UserInterface {
                     'nationality'   => $request['nationality'],
                     'phone'         => $request['phone'],
                     'address'       => $request['address'],
-                    'address2'      => $request['address2'],
+                    'address2'      => $request['address2'] ?? null,
                     'city'          => $request['city'],
                     'zip'           => $request['zip'],
                     'photo'         => (!empty($request['photo']))?$this->convert($request['photo']):null,
@@ -99,6 +105,41 @@ class UserRepository implements UserInterface {
                 // Assign student to a Class and a Section
                 $promotionRepository = new PromotionRepository();
                 $promotionRepository->assignClassSection($request, $student->id);
+
+                $student->assignRole('student');
+
+                // If direct parent link credentials are provided, handle parent user creation & linking
+                if (!empty($request['parent_email']) && !empty($request['parent_password'])) {
+                    $parent = User::firstOrCreate(
+                        ['email' => $request['parent_email']],
+                        [
+                            'first_name'  => (!empty($request['parent_relationship']) && $request['parent_relationship'] == 'mother') ? $request['mother_name'] : $request['father_name'],
+                            'last_name'   => $request['last_name'],
+                            'password'    => Hash::make($request['parent_password']),
+                            'phone'       => (!empty($request['parent_relationship']) && $request['parent_relationship'] == 'mother') ? $request['mother_phone'] : $request['father_phone'],
+                            'gender'      => 'Other',
+                            'nationality' => $request['nationality'] ?? 'N/A',
+                            'address'     => $request['parent_address'] ?? 'N/A',
+                            'city'        => $request['city'] ?? 'N/A',
+                            'zip'         => $request['zip'] ?? 'N/A',
+                            'role'        => 'parent',
+                            'school_id'   => auth()->user()->school_id ?? 1,
+                        ]
+                    );
+
+                    if (!$parent->hasRole('parent')) {
+                        $parent->assignRole('parent');
+                    }
+
+                    $rel = !empty($request['parent_relationship']) ? $request['parent_relationship'] : 'guardian';
+                    
+                    $parent->children()->syncWithoutDetaching([
+                        $student->id => [
+                            'relationship' => $rel,
+                            'is_primary'   => true,
+                        ],
+                    ]);
+                }
 
                 $student->givePermissionTo(
                     'view attendances',
@@ -129,7 +170,7 @@ class UserRepository implements UserInterface {
                     'nationality'   => $request['nationality'],
                     'phone'         => $request['phone'],
                     'address'       => $request['address'],
-                    'address2'      => $request['address2'],
+                    'address2'      => $request['address2'] ?? null,
                     'city'          => $request['city'],
                     'zip'           => $request['zip'],
                     'birthday'      => $request['birthday'],
@@ -161,7 +202,7 @@ class UserRepository implements UserInterface {
                     'nationality'   => $request['nationality'],
                     'phone'         => $request['phone'],
                     'address'       => $request['address'],
-                    'address2'      => $request['address2'],
+                    'address2'      => $request['address2'] ?? null,
                     'city'          => $request['city'],
                     'zip'           => $request['zip'],
                 ]);
@@ -213,7 +254,9 @@ class UserRepository implements UserInterface {
 
     public function findTeacher($id) {
         try {
-            return User::where('id', $id)->where('role', 'teacher')->first();
+            return User::where('id', $id)
+                ->whereNotIn('role', ['student', 'parent'])
+                ->first();
         } catch (\Exception $e) {
             throw new \Exception('Failed to get Teacher. '.$e->getMessage());
         }
@@ -221,7 +264,8 @@ class UserRepository implements UserInterface {
 
     public function getAllTeachers() {
         try {
-            return User::where('role', 'teacher')->get();
+            return User::whereNotIn('role', ['student', 'parent', 'super-admin'])
+                ->get();
         } catch (\Exception $e) {
             throw new \Exception('Failed to get all Teachers. '.$e->getMessage());
         }

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,9 +10,11 @@ use Illuminate\Support\Facades\Storage;
 
 class StudentDocument extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'student_id', 'document_type', 'title',
         'file_path', 'file_name', 'mime_type', 'file_size',
         'notes', 'uploaded_by', 'is_verified',

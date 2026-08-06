@@ -37,7 +37,20 @@ class AiFeatureService
 
     public function generateHomework(string $topic, string $gradeLevel): string
     {
-        $prompt = "Act as a teacher. Generate a 5-question homework assignment or question paper about '{$topic}' suitable for {$gradeLevel} level students. Include a mix of multiple choice and short answer questions, followed by the answer key.";
+        $prompt = "You are an expert school educator. Create a 5-question homework assignment specifically for students in {$gradeLevel}.\n\n"
+            . "Topic: \"{$topic}\"\n"
+            . "Grade Level: {$gradeLevel}\n\n"
+            . "CRITICAL INSTRUCTIONS FOR GRADE COMPLEXITY:\n"
+            . "- You MUST strictly calibrate the vocabulary, mathematical rigor, and conceptual depth to {$gradeLevel}.\n"
+            . "- For Primary (Grade 1-5): Use simple wording, basic counting, or simple visual/arithmetic concepts suitable for 6-10 year olds.\n"
+            . "- For Lower Secondary (Grade 6-8): Focus on core formulas, 2-step word problems, and middle school concepts.\n"
+            . "- For High School (Grade 9-12 / High School): Use advanced formulas, calculus/pre-calculus/quadratic concepts, formal proof reasoning, and rigorous analytical questions.\n\n"
+            . "Structure:\n"
+            . "1. Title: Homework Worksheet - {$topic} ({$gradeLevel})\n"
+            . "2. 3 Multiple Choice Questions (A, B, C, D)\n"
+            . "3. 2 Short Answer / Numerical Problem Questions\n"
+            . "4. Complete Answer Key with brief explanations\n";
+
         return $this->freeAiService->generate($prompt);
     }
 

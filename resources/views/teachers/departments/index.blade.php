@@ -1,7 +1,5 @@
 @extends('layouts.app')
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">@include('layouts.left-menu')</div>
     <div class="flex-1 p-6 lg:p-8 overflow-auto">
         <div class="flex flex-wrap justify-between items-start mb-7 gap-4">
             <div><h1 class="text-2xl font-bold text-slate-800 tracking-tight">Departments</h1></div>

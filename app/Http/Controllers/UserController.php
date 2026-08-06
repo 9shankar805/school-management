@@ -126,8 +126,12 @@ class UserController extends Controller
     public function showTeacherProfile($id) {
         $teacher = $this->userRepository->findTeacher($id);
 
+        if (!$teacher) {
+            abort(404, 'Teacher not found.');
+        }
+
         $teacher->load([
-            'assignedCourses.course','assignedCourses.section',
+            'assignedCourses.course','assignedCourses.section','assignedCourses.schoolClass',
             'qualifications',
             'contracts',
             'activeContract',
@@ -153,7 +157,26 @@ class UserController extends Controller
             'pct'     => $total > 0 ? round($presentCount / $total * 100) : 0,
         ];
 
-        return view('teachers.profile', compact('teacher','activeContract','attendanceStats'));
+        // ── Timetable (this session) ──────────────────────────────────────────
+        $sessionId = $this->getSchoolCurrentSession();
+        $timetableSlots = \App\Models\Routine::with(['course','schoolClass','section'])
+            ->where('teacher_id', $id)
+            ->where('session_id', $sessionId)
+            ->orderBy('weekday')
+            ->orderBy('start')
+            ->get()
+            ->groupBy('weekday');
+
+        // Classes available for the timetable assignment form
+        $allClasses = $this->schoolClassRepository->getAllBySession($sessionId);
+
+        // Courses for dropdown (filtered by class via AJAX in view)
+        $allCourses = \App\Models\Course::where('session_id', $sessionId)->get();
+
+        return view('teachers.profile', compact(
+            'teacher','activeContract','attendanceStats',
+            'timetableSlots','allClasses','allCourses','sessionId'
+        ));
     }
 
 

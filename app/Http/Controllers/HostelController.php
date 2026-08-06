@@ -9,7 +9,7 @@ class HostelController extends Controller
     public function __construct() { $this->middleware(['auth', 'can:view hostel']); }
     public function index() { 
         $hostels = Hostel::with('warden')->get();
-        $wardens = User::role('Hostel Warden')->get();
+        $wardens = User::role('hostel-manager')->get();
         return view('hostels.hostels.index', compact('hostels', 'wardens'));
     }
     public function store(Request $request) {

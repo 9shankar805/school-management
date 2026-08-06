@@ -1,17 +1,20 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class QuestionBank extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     protected $table = 'question_bank';
 
     protected $fillable = [
+        'school_id',
         'question_type', 'question_text', 'answer_text',
         'options', 'correct_answer', 'allocated_marks',
         'difficulty', 'subject', 'chapter',

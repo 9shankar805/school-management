@@ -1,10 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">
-        @include('layouts.left-menu')
-    </div>
     <div class="flex-1 p-6 lg:p-8 overflow-auto max-w-4xl">
 
         <nav class="text-xs text-slate-400 mb-5">
@@ -14,7 +10,7 @@
 
         <h1 class="text-2xl font-bold text-slate-800 mb-7 tracking-tight">New Admission Application</h1>
 
-        @if($errors->any())
+        @if(isset($errors) && $errors->any())
         <div class="mb-5 p-4 bg-rose-50 border border-rose-200 rounded-xl text-sm text-rose-700">
             @foreach($errors->all() as $e)<p>{{ $e }}</p>@endforeach
         </div>
@@ -27,8 +23,7 @@
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
                 <h2 class="text-sm font-semibold text-slate-700 mb-4"><span class="inline-flex w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] items-center justify-center mr-2">1</span>Applicant Information</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    @foreach([['first_name','First Name',true],['last_name','Last Name',true],['email','Email Address',false],['phone','Phone',false],['birthday','Date of Birth',false,'date'],['nationality','Nationality',false],['religion','Religion',false],['blood_type','Blood Type',false],] as [$f,$l,$req,$type])
-                    @php $type ??= 'text'; @endphp
+                    @foreach([['first_name','First Name',true,'text'],['last_name','Last Name',true,'text'],['email','Email Address',false,'email'],['phone','Phone',false,'text'],['birthday','Date of Birth',false,'date'],['nationality','Nationality',false,'text'],['religion','Religion',false,'text'],['blood_type','Blood Type',false,'text']] as [$f,$l,$req,$type])
                     <div>
                         <label class="block text-xs font-medium text-slate-500 mb-1">{{ $l }}@if($req) <span class="text-rose-400">*</span>@endif</label>
                         <input type="{{ $type }}" name="{{ $f }}" value="{{ old($f) }}" {{ $req ? 'required' : '' }}

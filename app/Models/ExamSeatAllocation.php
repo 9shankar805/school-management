@@ -1,16 +1,21 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class ExamSeatAllocation extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     protected $fillable = [
-        'schedule_id', 'student_id', 'seat_number', 'notes',
+        'school_id',
+        'schedule_id', 'student_id', 'seat_number',
+        'column_no', 'bench_no', 'bench_position',
+        'notes',
     ];
 
     // ── Relationships ─────────────────────────────────────────────────────────

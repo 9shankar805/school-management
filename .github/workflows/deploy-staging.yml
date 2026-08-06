@@ -1,0 +1,76 @@
+name: Deploy — Staging
+
+# ──────────────────────────────────────────────────────────────
+# Deploys to staging automatically when CI passes on `develop`.
+#
+# Required GitHub Secrets:
+#   STAGING_HOST        — SSH host or IP
+#   STAGING_USER        — SSH user (e.g. deploy)
+#   STAGING_SSH_KEY     — Private key (RSA/ED25519)
+#   STAGING_DEPLOY_PATH — Absolute path on server (/var/www/staging)
+#   STAGING_APP_URL     — https://staging.school.example.com
+# ──────────────────────────────────────────────────────────────
+
+on:
+  workflow_run:
+    workflows: ["CI — Test & Lint"]
+    branches: [develop]
+    types: [completed]
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    timeout-minutes: 20
+    environment:
+      name: staging
+      url: ${{ secrets.STAGING_APP_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up PHP ${{ env.PHP_VERSION || '8.3' }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+          tools: composer:v2
+
+      - name: Install Composer dependencies (prod)
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-progress
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install npm dependencies & build assets
+        run: |
+          npm ci --prefer-offline
+          npm run production
+
+      - name: Deploy via SSH (rsync + artisan down/up)
+        uses: easingthemes/ssh-deploy@v5
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.STAGING_HOST }}
+          REMOTE_USER: ${{ secrets.STAGING_USER }}
+          TARGET: ${{ secrets.STAGING_DEPLOY_PATH }}
+          EXCLUDE: ".git/, node_modules/, .env, storage/logs/, tests/"
+          SCRIPT_BEFORE: |
+            php ${{ secrets.STAGING_DEPLOY_PATH }}/artisan down --render="errors::503" --secret="deploy-secret" || true
+          SCRIPT_AFTER: |
+            cd ${{ secrets.STAGING_DEPLOY_PATH }}
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan queue:restart
+            php artisan up
+
+      - name: Notify deployment success
+        if: success()
+        run: echo "Staging deployment complete — ${{ secrets.STAGING_APP_URL }}"

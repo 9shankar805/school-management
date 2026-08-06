@@ -83,7 +83,7 @@
                 <td>{{ $issue->due_date->format('d M Y') }}</td>
                 <td>{{ $issue->return_date?->format('d M Y') ?? '—' }}</td>
                 <td>{{ $issue->overdue_days }}</td>
-                <td class="badge-danger">${{ number_format($issue->fine_amount, 2) }}</td>
+                <td class="badge-danger">Rs. {{ number_format($issue->fine_amount, 2) }}</td>
             </tr>
             @endforeach
         </tbody>

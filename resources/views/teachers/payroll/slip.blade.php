@@ -59,26 +59,26 @@ body { font-family: DejaVu Sans, sans-serif; font-size: 10pt; color: #1f2937; }
     <table class="earnings-table">
         <tr><th colspan="2">Earnings</th><th colspan="2">Deductions</th></tr>
         <tr>
-            <td>Basic Salary</td><td>${{ number_format($payroll->basic_salary,2) }}</td>
-            <td>Income Tax</td><td>${{ number_format($payroll->tax_deduction,2) }}</td>
+            <td>Basic Salary</td><td>Rs. {{ number_format($payroll->basic_salary,2) }}</td>
+            <td>Income Tax</td><td>Rs. {{ number_format($payroll->tax_deduction,2) }}</td>
         </tr>
         <tr>
-            <td>Allowances</td><td>${{ number_format($payroll->allowances,2) }}</td>
-            <td>Other Deductions</td><td>${{ number_format($payroll->other_deductions,2) }}</td>
+            <td>Allowances</td><td>Rs. {{ number_format($payroll->allowances,2) }}</td>
+            <td>Other Deductions</td><td>Rs. {{ number_format($payroll->other_deductions,2) }}</td>
         </tr>
         <tr>
-            <td>Overtime</td><td>${{ number_format($payroll->overtime,2) }}</td>
-            <td>Total Deductions</td><td>${{ number_format($payroll->tax_deduction+$payroll->other_deductions,2) }}</td>
+            <td>Overtime</td><td>Rs. {{ number_format($payroll->overtime,2) }}</td>
+            <td>Total Deductions</td><td>Rs. {{ number_format($payroll->tax_deduction+$payroll->other_deductions,2) }}</td>
         </tr>
         <tr class="total-row">
-            <td>Gross Salary</td><td>${{ number_format($payroll->gross_salary,2) }}</td>
+            <td>Gross Salary</td><td>Rs. {{ number_format($payroll->gross_salary,2) }}</td>
             <td colspan="2"></td>
         </tr>
     </table>
 
     <div class="net-box">
         <div class="net-label">NET SALARY</div>
-        <div class="net-amount">${{ number_format($payroll->net_salary,2) }}</div>
+        <div class="net-amount">Rs. {{ number_format($payroll->net_salary,2) }}</div>
     </div>
 
     @if($payroll->notes)

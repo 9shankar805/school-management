@@ -59,7 +59,7 @@ class QrAttendanceController extends Controller
             ->orderBy('class_name')
             ->get();
 
-        $courses = \App\Models\Course::where('session_id', $sessionId)->orderBy('name')->get();
+        $courses = \App\Models\Course::where('session_id', $sessionId)->orderBy('course_name')->get();
 
         return view('attendances.qr.create', compact('classesAndSections', 'courses', 'sessionId'));
     }

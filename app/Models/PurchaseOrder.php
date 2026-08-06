@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,9 +10,11 @@ use Illuminate\Support\Str;
 
 class PurchaseOrder extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'po_number','supplier_id','raised_by','approved_by',
         'order_date','expected_date','received_date',
         'total_amount','status','notes',

@@ -1,10 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">
-        @include('layouts.left-menu')
-    </div>
 
     <div class="flex-1 p-6 lg:p-8 overflow-auto">
 
@@ -76,6 +72,9 @@
                 </a>
                 <a href="{{ route('student.id-card', $student->id) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition">
                     <i class="bi bi-credit-card-2-front"></i> ID Card PDF
+                </a>
+                <a href="{{ route('certificates.issue.form', $student->id) }}" class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition">
+                    <i class="bi bi-award-fill"></i> Certificate
                 </a>
                 @endcan
             </div>
@@ -153,25 +152,59 @@
                             </tbody>
                         </table>
                     </div>
-                    @if($student->parent_info)
                     <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                        <div class="px-5 py-3 border-b border-slate-100 font-semibold text-sm text-slate-700">
-                            <i class="bi bi-people me-1 text-violet-500"></i> Parents
+                        <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+                            <span class="font-semibold text-sm text-slate-700"><i class="bi bi-people me-1 text-violet-500"></i> Parent Accounts</span>
+                            @can('create students')
+                            <a href="{{ route('admin.parents.link') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Manage Links</a>
+                            @endcan
                         </div>
-                        <table class="w-full text-sm">
-                            <tbody class="divide-y divide-slate-50">
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-5 py-2.5 text-slate-400 font-medium w-1/3">Father</td>
-                                    <td class="px-5 py-2.5 text-slate-700">{{ $student->parent_info->father_name ?? '—' }} · {{ $student->parent_info->father_phone ?? '' }}</td>
-                                </tr>
-                                <tr class="hover:bg-slate-50">
-                                    <td class="px-5 py-2.5 text-slate-400 font-medium">Mother</td>
-                                    <td class="px-5 py-2.5 text-slate-700">{{ $student->parent_info->mother_name ?? '—' }} · {{ $student->parent_info->mother_phone ?? '' }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        
+                        @php
+                            $parents = $student->parents;
+                        @endphp
+
+                        @if($parents->isNotEmpty())
+                        <div class="divide-y divide-slate-50">
+                            @foreach($parents as $parent)
+                            <div class="px-5 py-3 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center font-bold text-xs">
+                                        {{ substr($parent->first_name, 0, 1) }}{{ substr($parent->last_name, 0, 1) }}
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-800">
+                                            {{ $parent->full_name }}
+                                            @if($parent->pivot->is_primary)
+                                            <span class="ml-1 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">Primary</span>
+                                            @endif
+                                        </p>
+                                        <p class="text-xs text-slate-400 capitalize">
+                                            {{ $parent->pivot->relationship }} 
+                                            @if($parent->phone || $parent->email)
+                                            · {{ $parent->phone ?? $parent->email }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
+                                @can('create students')
+                                <form method="POST" action="{{ route('admin.parents.unlink', [$parent->id, $student->id]) }}">
+                                    @csrf @method('DELETE')
+                                    <button class="text-xs px-2 py-1 bg-rose-50 text-rose-600 rounded hover:bg-rose-100" onclick="return confirm('Unlink this parent?')">Unlink</button>
+                                </form>
+                                @endcan
+                            </div>
+                            @endforeach
+                        </div>
+                        @else
+                        <div class="p-5 text-center">
+                            <p class="text-sm text-slate-400 mb-2">No parent accounts linked.</p>
+                            @can('create students')
+                            <a href="{{ route('admin.parents.link') }}" class="text-xs bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-100 font-medium">Link a Parent</a>
+                            @endcan
+                        </div>
+                        @endif
                     </div>
-                    @endif
                 </div>
             </div>
         </div>
@@ -468,7 +501,7 @@
                                 <p class="text-sm font-medium text-slate-700">{{ $sc->name }}</p>
                                 <p class="text-xs text-slate-400">
                                     {{ \App\Models\Scholarship::TYPES[$sc->type] ?? $sc->type }}
-                                    @if($sc->amount) · ${{ number_format($sc->amount) }}@endif
+                                    @if($sc->amount) · Rs. {{ number_format($sc->amount) }}@endif
                                     @if($sc->percentage) · {{ $sc->percentage }}%@endif
                                     · Awarded {{ $sc->awarded_date->format('d M Y') }}
                                 </p>
@@ -489,7 +522,7 @@
                                 @foreach(\App\Models\Scholarship::TYPES as $v => $l)<option value="{{ $v }}">{{ $l }}</option>@endforeach
                             </select>
                             <input type="date" name="awarded_date" value="{{ now()->toDateString() }}" required class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                            <input type="number" name="amount" placeholder="Amount ($)" step="0.01" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            <input type="number" name="amount" placeholder="Amount (NPR)" step="0.01" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
                             <input type="text" name="percentage" placeholder="Discount %" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
                             <div class="col-span-2">
                                 <button type="submit" class="px-3 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-sm font-medium transition">Add Scholarship</button>
@@ -797,40 +830,77 @@
         {{-- ═══════════════ TAB: CERTIFICATES ═══════════════ --}}
         <div id="tab-certificates" class="tab-panel hidden">
             @can('create students')
-            @php $certTemplates = \App\Models\CertificateTemplate::where('is_active', true)->get(); @endphp
-            @if($certTemplates->count())
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-5">
-                <p class="text-sm font-semibold text-slate-700 mb-4"><i class="bi bi-file-earmark-pdf me-1 text-rose-500"></i>Generate Certificate PDF</p>
-                <form method="GET" action="{{ route('student.certificate.generate', $student->id) }}" target="_blank" class="flex flex-wrap gap-3 items-end">
-                    <div class="flex-1 min-w-0">
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Template</label>
-                        <select name="template_id" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                            @foreach($certTemplates as $t)<option value="{{ $t->id }}">{{ $t->name }}</option>@endforeach
-                        </select>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Extra Notes</label>
-                        <input type="text" name="extra_notes" placeholder="e.g. with distinction" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                    </div>
-                    <button type="submit" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-medium transition flex-shrink-0">
-                        <i class="bi bi-download me-1"></i>Generate PDF
-                    </button>
-                </form>
-            </div>
-            @else
-            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-5 flex gap-3 items-start">
-                <i class="bi bi-exclamation-triangle text-amber-500 mt-0.5"></i>
-                <div>
-                    <p class="text-sm font-medium text-amber-800">No active certificate templates.</p>
-                    <a href="{{ route('certificates.create') }}" class="text-xs text-amber-700 hover:underline">Create one →</a>
+                <div class="flex items-center justify-between mb-4">
+                    <p class="text-sm font-semibold text-slate-700"><i class="bi bi-award me-1 text-indigo-500"></i>Issue Certificate</p>
+                    <a href="{{ route('certificates.issue.form', $student->id) }}"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition">
+                        <i class="bi bi-plus-lg"></i> Issue New Certificate
+                    </a>
                 </div>
+
+                {{-- Previously issued for this student --}}
+                @php
+                    $studentCerts = \App\Models\IssuedCertificate::with('template')
+                        ->where('student_id', $student->id)
+                        ->latest()->get();
+                @endphp
+
+                @if($studentCerts->count())
+                <div class="divide-y divide-slate-50 -mx-5 mt-4 border-t border-slate-50">
+                    @foreach($studentCerts as $cert)
+                    <div class="px-5 py-3 flex items-center gap-3">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-slate-700 truncate">{{ $cert->template->name ?? $cert->typeLabel() }}</p>
+                            <div class="flex flex-wrap items-center gap-2 mt-0.5">
+                                <span class="font-mono text-xs text-slate-400">{{ $cert->certificate_number }}</span>
+                                <span class="text-xs text-slate-400">·</span>
+                                <span class="text-xs text-slate-400">{{ $cert->issued_date->format('d M Y') }}</span>
+                                @if($cert->purpose)
+                                <span class="text-xs text-slate-400">· {{ $cert->purpose }}</span>
+                                @endif
+                            </div>
+                        </div>
+                        <span class="text-xs {{ $cert->statusBadgeClass() }} px-2 py-0.5 rounded-full flex-shrink-0">
+                            {{ ucfirst($cert->status) }}
+                        </span>
+                        @if($cert->status === 'issued')
+                        <a href="{{ route('certificates.download', $cert->id) }}" target="_blank"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-medium transition flex-shrink-0"
+                           title="View & Print PDF">
+                            <i class="bi bi-printer-fill"></i> View & Print
+                        </a>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+                @else
+                <div class="text-center py-8 text-slate-400">
+                    <i class="bi bi-award text-3xl block mb-2 text-slate-200"></i>
+                    <p class="text-sm">No certificates issued yet.</p>
+                    <a href="{{ route('certificates.issue.form', $student->id) }}"
+                       class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition">
+                        <i class="bi bi-plus-lg"></i> Issue First Certificate
+                    </a>
+                </div>
+                @endif
             </div>
-            @endif
             @endcan
+
             <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-                <p class="text-sm font-semibold text-slate-700 mb-2">About Certificates</p>
-                <p class="text-sm text-slate-500 mb-3">Generated on-demand as PDF. Tokens like <code class="bg-slate-100 px-1 rounded text-xs">{{student_name}}</code>, <code class="bg-slate-100 px-1 rounded text-xs">{{class}}</code>, <code class="bg-slate-100 px-1 rounded text-xs">{{date}}</code> are filled automatically.</p>
-                <a href="{{ route('certificates.index') }}" class="inline-flex items-center gap-1 text-xs text-indigo-600 hover:underline"><i class="bi bi-arrow-right"></i> Manage templates</a>
+                <p class="text-sm font-semibold text-slate-700 mb-2">Available Tokens</p>
+                <p class="text-sm text-slate-500 mb-3">Use these in your certificate templates — they are filled automatically from this student's data.</p>
+                @php
+                $profileTokens = ['{{student_name}}','{{class}}','{{section}}','{{roll_no}}','{{admission_no}}','{{birthday}}','{{father_name}}','{{school_name}}','{{date}}','{{academic_year}}'];
+                @endphp
+                <div class="flex flex-wrap gap-1.5">
+                    @foreach($profileTokens as $tok)
+                    <code class="text-xs bg-slate-100 px-1.5 py-0.5 rounded font-mono text-slate-600">{{ $tok }}</code>
+                    @endforeach
+                </div>
+                <a href="{{ route('certificates.index') }}" class="inline-flex items-center gap-1 text-xs text-indigo-600 hover:underline mt-3">
+                    <i class="bi bi-arrow-right"></i> Manage certificate templates
+                </a>
             </div>
         </div>
 

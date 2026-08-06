@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -8,9 +9,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Driver extends Model
 {
+    use HasTenant;
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'school_id',
         'name', 'employee_id', 'phone', 'email', 'address', 'date_of_birth',
         'joining_date', 'license_number', 'license_type', 'license_expiry',
         'national_id', 'photo', 'current_vehicle_id', 'status', 'salary', 'notes',

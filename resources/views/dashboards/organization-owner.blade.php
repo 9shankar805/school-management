@@ -1,10 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">
-        @include('layouts.left-menu')
-    </div>
 
     <div class="flex-1 p-6 lg:p-8 overflow-auto">
 
@@ -34,9 +30,9 @@
             <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
                     <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Revenue / Month</p>
-                    <span class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 text-sm"><i class="bi bi-currency-dollar"></i></span>
+                    <span class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 text-sm"><i class="bi bi-currency-rupee"></i></span>
                 </div>
-                <p class="text-3xl font-bold text-emerald-600">${{ number_format($monthRevenue) }}</p>
+                <p class="text-3xl font-bold text-emerald-600">Rs. {{ number_format($monthRevenue) }}</p>
             </div>
             <div class="bg-white rounded-2xl p-5 border border-rose-50 shadow-sm">
                 <div class="flex items-center justify-between mb-3">

@@ -1,13 +1,15 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class Assignment extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -15,6 +17,7 @@ class Assignment extends Model
      * @var array
      */
     protected $fillable = [
+        'school_id',
         'teacher_id',
         'semester_id',
         'class_id',

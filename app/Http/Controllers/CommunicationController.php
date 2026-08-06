@@ -1,0 +1,178 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Services\SmsService;
+use App\Services\WhatsAppService;
+use App\Services\PushNotificationService;
+use App\Notifications\GeneralNotification;
+use Illuminate\Http\Request;
+
+class CommunicationController extends Controller
+{
+    public function __construct(
+        private SmsService              $sms,
+        private WhatsAppService         $whatsapp,
+        private PushNotificationService $push,
+    ) {
+        $this->middleware('auth');
+    }
+
+    /**
+     * The main communication hub dashboard
+     */
+    public function index()
+    {
+        $this->authorize('view notices');
+        return view('communication.index');
+    }
+
+    /**
+     * UI for Bulk Announcement System
+     */
+    public function bulk()
+    {
+        $this->authorize('create notices');
+        return view('communication.bulk');
+    }
+
+    /**
+     * Process and send a bulk announcement via selected channels.
+     *
+     * POST /communication/bulk/send
+     */
+    public function sendBulk(Request $request)
+    {
+        $this->authorize('create notices');
+
+        $data = $request->validate([
+            'subject'     => 'required|string|max:200',
+            'message'     => 'required|string|max:1000',
+            'audience'    => 'required|array|min:1',
+            'audience.*'  => 'in:students,parents,teachers,staff,all',
+            'channels'    => 'required|array|min:1',
+            'channels.*'  => 'in:in_app,email,sms,whatsapp,push',
+        ]);
+
+        // Resolve target users
+        $roles = collect($data['audience'])->flatMap(fn($a) => match ($a) {
+            'students' => ['student'],
+            'parents'  => ['parent'],
+            'teachers' => ['teacher', 'class-teacher'],
+            'staff'    => ['admin', 'accountant', 'librarian', 'hr-manager', 'receptionist',
+                           'transport-manager', 'hostel-manager', 'attendance-officer', 'admission-officer'],
+            'all'      => ['student', 'parent', 'teacher', 'class-teacher', 'admin'],
+            default    => [],
+        })->unique()->values()->all();
+
+        $users = User::role($roles)->get();
+
+        $results = [
+            'in_app'    => 0,
+            'email'     => 0,
+            'sms'       => 0,
+            'whatsapp'  => 0,
+            'push'      => 0,
+        ];
+
+        $channels = $data['channels'];
+
+        foreach ($users as $user) {
+            // In-app notification
+            if (in_array('in_app', $channels, true)) {
+                $user->notify(new GeneralNotification(
+                    title:   $data['subject'],
+                    message: $data['message'],
+                    type:    'announcement',
+                    link:    null,
+                ));
+                $results['in_app']++;
+            }
+
+            // Email (uses queue)
+            if (in_array('email', $channels, true) && $user->email) {
+                // GeneralNotification supports mail channel
+                $results['email']++;
+            }
+
+            // SMS
+            if (in_array('sms', $channels, true) && $user->phone) {
+                $body = "{$data['subject']}: {$data['message']}";
+                if ($this->sms->send($user->phone, $body)) {
+                    $results['sms']++;
+                }
+            }
+
+            // WhatsApp
+            if (in_array('whatsapp', $channels, true) && $user->phone) {
+                $body = "*{$data['subject']}*\n{$data['message']}";
+                $this->whatsapp->setSchool(auth()->user()->school)->setModule('announcement');
+                if ($this->whatsapp->sendText($user->phone, $body)) {
+                    $results['whatsapp']++;
+                }
+            }
+        }
+
+        // Push broadcast (by role segments)
+        if (in_array('push', $channels, true)) {
+            foreach ($data['audience'] as $segment) {
+                $this->push->broadcast($segment, $data['subject'], $data['message']);
+            }
+            $results['push'] = $users->count();
+        }
+
+        return back()->with('status',
+            "Announcement sent — In-app: {$results['in_app']}, SMS: {$results['sms']}, WhatsApp: {$results['whatsapp']}, Push: {$results['push']}."
+        );
+    }
+
+    /**
+     * UI for live Chat / Discussion Forums
+     */
+    public function chat()
+    {
+        return view('communication.chat');
+    }
+
+    /**
+     * UI for configuring Gateway API keys (Twilio, WhatsApp, Mail, Push)
+     */
+    public function settings()
+    {
+        $this->authorize('view settings');
+        return view('communication.settings');
+    }
+
+    /**
+     * WhatsApp webhook verification (GET from Meta)
+     */
+    public function whatsappWebhookVerify(Request $request)
+    {
+        $mode      = $request->query('hub_mode');
+        $token     = $request->query('hub_verify_token');
+        $challenge = $request->query('hub_challenge');
+
+        $result = $this->whatsapp->verifyWebhook($mode, $token, $challenge);
+        if ($result !== false) {
+            return response($result, 200);
+        }
+        return response('Forbidden', 403);
+    }
+
+    /**
+     * WhatsApp incoming message webhook (POST from Meta)
+     */
+    public function whatsappWebhookReceive(Request $request)
+    {
+        $payload = $request->all();
+        $parsed  = $this->whatsapp->parseWebhook($payload);
+
+        if ($parsed) {
+            // TODO: store message, auto-reply, or notify staff
+            \Illuminate\Support\Facades\Log::info('WhatsApp incoming message', $parsed);
+        }
+
+        return response('OK', 200);
+    }
+}

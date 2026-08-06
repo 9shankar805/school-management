@@ -1,15 +1,17 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use App\Models\Section;
 use App\Models\SchoolClass;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Promotion extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -17,6 +19,7 @@ class Promotion extends Model
      * @var array
      */
     protected $fillable = [
+        'school_id',
         'student_id',
         'class_id',
         'section_id',

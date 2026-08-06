@@ -3,7 +3,6 @@
 @section('content')
 <div class="container">
     <div class="row justify-content-start">
-        @include('layouts.left-menu')
         <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
             <div class="row pt-2">
                 <div class="col ps-4">
@@ -12,8 +11,8 @@
                         <div class="card-body">
                             <p><strong>Invoice Title:</strong> {{ $invoice->title }}</p>
                             <p><strong>Student:</strong> {{ optional($invoice->student)->first_name }} {{ optional($invoice->student)->last_name }}</p>
-                            <p><strong>Total Amount:</strong> ${{ number_format($invoice->amount, 2) }}</p>
-                            <p><strong>Amount Due:</strong> ${{ number_format($invoice->amount - $invoice->payments->sum('amount_paid'), 2) }}</p>
+                            <p><strong>Total Amount:</strong> Rs. {{ number_format($invoice->amount, 2) }}</p>
+                            <p><strong>Amount Due:</strong> Rs. {{ number_format($invoice->amount - $invoice->payments->sum('amount_paid'), 2) }}</p>
 
                             <form action="{{ route('payments.process', $invoice->id) }}" method="POST">
                                 @csrf

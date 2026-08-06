@@ -11,7 +11,7 @@ class AchievementController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'can:view students']);
+        $this->middleware('auth');
     }
 
     // ── Store a new achievement for a student ─────────────────────────────

@@ -12,6 +12,6 @@ class VerifyCsrfToken extends Middleware
      * @var array
      */
     protected $except = [
-        //
+        'webhooks/*',       // payment gateway webhooks and WhatsApp webhook post raw data without CSRF tokens
     ];
 }

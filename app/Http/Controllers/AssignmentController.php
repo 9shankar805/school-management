@@ -26,6 +26,7 @@ class AssignmentController extends Controller
     }
     /**
      * Display a listing of the resource.
+     * Used by the course-detail page (filter by course_id).
      *
      * @return \Illuminate\Http\Response
      */
@@ -36,9 +37,29 @@ class AssignmentController extends Controller
         $assignmentRepository = new AssignmentRepository();
         $assignments = $assignmentRepository->getAssignments($current_school_session_id, $course_id);
         $data = [
-            'assignments'   => $assignments,
+            'assignments' => $assignments,
+            'isMine'      => false,
         ];
         return view('assignments.index', $data);
+    }
+
+    /**
+     * My Assignments — all assignments posted by the authenticated teacher.
+     * Linked from the teacher sidebar → Assignments.
+     */
+    public function teacherIndex()
+    {
+        $sessionId   = $this->getSchoolCurrentSession();
+        $assignments = Assignment::with(['course', 'schoolClass', 'section'])
+            ->where('teacher_id', auth()->id())
+            ->where('session_id', $sessionId)
+            ->latest()
+            ->get();
+
+        return view('assignments.index', [
+            'assignments' => $assignments,
+            'isMine'      => true,
+        ]);
     }
     
     /**
@@ -126,6 +147,15 @@ class AssignmentController extends Controller
      */
     public function destroy(Assignment $assignment)
     {
-        //
+        abort_if($assignment->teacher_id !== auth()->id(), 403, 'You can only delete your own assignments.');
+
+        // Remove the stored file
+        if ($assignment->assignment_file_path) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($assignment->assignment_file_path);
+        }
+
+        $assignment->delete();
+
+        return back()->with('status', 'Assignment deleted.');
     }
 }

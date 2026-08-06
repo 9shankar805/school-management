@@ -3,7 +3,6 @@
 @section('content')
 <div class="container">
     <div class="row justify-content-start">
-        @include('layouts.left-menu')
         <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
             <div class="row pt-2">
                 <div class="col ps-4">
@@ -73,13 +72,13 @@
                                         <dt class="col-sm-5">Return Date</dt>
                                         <dd class="col-sm-7">{{ now()->format('d M Y') }} (today)</dd>
                                         <dt class="col-sm-5">Fine Per Day</dt>
-                                        <dd class="col-sm-7">${{ number_format($issue->fine_per_day, 2) }}</dd>
+                                        <dd class="col-sm-7">Rs. {{ number_format($issue->fine_per_day, 2) }}</dd>
                                         <dt class="col-sm-5">Estimated Fine</dt>
                                         <dd class="col-sm-7">
                                             @if($issue->calculated_fine > 0)
-                                                <span class="text-danger fw-bold">${{ number_format($issue->calculated_fine, 2) }}</span>
+                                                <span class="text-danger fw-bold">Rs. {{ number_format($issue->calculated_fine, 2) }}</span>
                                             @else
-                                                <span class="text-success">$0.00 — no fine</span>
+                                                <span class="text-success">Rs. 0.00 — no fine</span>
                                             @endif
                                         </dd>
                                     </dl>

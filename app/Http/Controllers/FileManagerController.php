@@ -16,6 +16,8 @@ class FileManagerController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
+        // Enforce MIME/extension allowlist + AV scan on every upload request
+        $this->middleware('validate.upload')->only('upload');
     }
 
     /**
@@ -37,24 +39,26 @@ class FileManagerController extends Controller
     /**
      * POST /files/upload
      * Accepts one or more file uploads with optional model binding.
+     * MIME/extension/AV validation handled by ValidateFileUpload middleware.
      */
     public function upload(Request $request): JsonResponse
     {
         $request->validate([
             'files'        => ['required', 'array', 'max:10'],
-            'files.*'      => ['required', 'file', 'max:20480'], // 20 MB max per file
-            'collection'   => ['sometimes', 'string', 'max:60'],
-            'model_type'   => ['sometimes', 'string'],
-            'model_id'     => ['sometimes', 'integer'],
+            'files.*'      => ['required', 'file', 'max:20480'],   // 20 MB per file (belt-and-suspenders)
+            'collection'   => ['sometimes', 'string', 'max:60', 'regex:/^[a-z0-9_-]+$/i'],
+            'model_type'   => ['sometimes', 'string', 'max:100'],
+            'model_id'     => ['sometimes', 'integer', 'min:1'],
         ]);
 
         $collection = $request->input('collection', 'default');
         $uploaded   = [];
 
         foreach ($request->file('files') as $file) {
-            $extension  = $file->getClientOriginalExtension();
-            $fileName   = Str::uuid() . '.' . $extension;
-            $directory  = 'uploads/' . $collection . '/' . now()->format('Y/m');
+            // Use UUID filename — never trust original filename for storage path
+            $extension = strtolower($file->getClientOriginalExtension());
+            $fileName  = Str::uuid() . '.' . $extension;
+            $directory = 'uploads/' . $collection . '/' . now()->format('Y/m');
 
             $path = $file->storeAs($directory, $fileName, 'local');
 
@@ -64,7 +68,8 @@ class FileManagerController extends Controller
                 'model_type'     => $request->model_type,
                 'model_id'       => $request->model_id,
                 'file_name'      => $fileName,
-                'original_name'  => $file->getClientOriginalName(),
+                // Store sanitised version of original name (strip path traversal chars)
+                'original_name'  => basename(str_replace(['..', '/', '\\'], '', $file->getClientOriginalName())),
                 'mime_type'      => $file->getMimeType(),
                 'disk'           => 'local',
                 'path'           => $path,

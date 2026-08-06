@@ -6,15 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\TwoFactorAuth;
 use App\Models\User;
+use App\Services\TotpService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    public function __construct(private TotpService $totp) {}
     /**
      * POST /api/v1/auth/login
      * Returns Sanctum token on success.
@@ -125,7 +129,11 @@ class AuthController extends Controller
         $request->validate([
             'token'                 => ['required'],
             'email'                 => ['required', 'email'],
-            'password'              => ['required', 'min:8', 'confirmed'],
+            'password'              => [
+                'required',
+                'confirmed',
+                PasswordRule::min(8)->mixedCase()->numbers()->symbols(),
+            ],
             'password_confirmation' => ['required'],
         ]);
 
@@ -143,46 +151,68 @@ class AuthController extends Controller
     }
 
     /**
-     * POST /api/v1/auth/2fa/enable — generate TOTP secret for user
+     * POST /api/v1/auth/2fa/enable — generate TOTP secret + QR code URL for the user
      */
     public function enableTwoFactor(Request $request): JsonResponse
     {
         $user = $request->user();
 
-        $tfa = TwoFactorAuth::firstOrCreate(
-            ['user_id' => $user->id],
-            ['method' => 'totp', 'enabled' => false]
-        );
+        $tfa = TwoFactorAuth::firstOrNew(['user_id' => $user->id]);
 
-        // In production: use pragmarx/google2fa to generate real secrets
-        $secret = base64_encode(random_bytes(20));
-        $tfa->update(['secret' => encrypt($secret)]);
+        // Only regenerate if not already confirmed (don't invalidate an active 2FA setup)
+        if (! $tfa->exists || ! $tfa->isConfirmed()) {
+            $plainSecret = $this->totp->generateSecret();
+            $tfa->fill([
+                'method'  => 'totp',
+                'secret'  => Crypt::encryptString($plainSecret),
+                'enabled' => false,
+            ])->save();
+        } else {
+            $plainSecret = Crypt::decryptString($tfa->secret);
+        }
 
         return response()->json([
-            'status' => 'success',
-            'secret' => $secret,
-            'message' => 'Scan the QR code with your authenticator app, then call /2fa/verify to confirm.',
+            'status'   => 'success',
+            'secret'   => $plainSecret,
+            'qr_url'   => $this->totp->getQrCodeUrl($user->email, $plainSecret),
+            'otpauth'  => $this->totp->getOtpauthUrl($user->email, $plainSecret),
+            'message'  => 'Scan the QR code with your authenticator app, then call /2fa/verify to confirm.',
         ]);
     }
 
     /**
-     * POST /api/v1/auth/2fa/verify — confirm 2FA setup
+     * POST /api/v1/auth/2fa/verify — confirm TOTP setup with first valid code
      */
     public function verifyTwoFactor(Request $request): JsonResponse
     {
-        $request->validate(['code' => ['required', 'string']]);
+        $request->validate(['code' => ['required', 'string', 'size:6', 'regex:/^\d{6}$/']]);
 
         $tfa = TwoFactorAuth::where('user_id', $request->user()->id)->firstOrFail();
 
-        // TODO: validate TOTP code against $tfa->secret (pragmarx/google2fa)
-        // Stub: accept any 6-digit code for now
-        if (! preg_match('/^\d{6}$/', $request->code)) {
-            return response()->json(['status' => 'error', 'message' => 'Invalid code.'], 422);
+        $secret = Crypt::decryptString($tfa->secret);
+
+        if (! $this->totp->verify($secret, $request->code)) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Invalid verification code. Ensure your device clock is synced.',
+            ], 422);
         }
 
-        $tfa->update(['enabled' => true, 'confirmed_at' => now()]);
+        // Generate hashed recovery codes
+        $plainCodes  = $this->totp->generateRecoveryCodes();
+        $hashedCodes = array_map(fn($c) => password_hash($c, PASSWORD_BCRYPT), $plainCodes);
 
-        return response()->json(['status' => 'success', 'message' => '2FA enabled.']);
+        $tfa->update([
+            'enabled'        => true,
+            'confirmed_at'   => now(),
+            'recovery_codes' => Crypt::encryptString(json_encode($hashedCodes)),
+        ]);
+
+        return response()->json([
+            'status'         => 'success',
+            'message'        => 'Two-factor authentication enabled successfully.',
+            'recovery_codes' => $plainCodes,  // shown once — user must store these
+        ]);
     }
 
     /**

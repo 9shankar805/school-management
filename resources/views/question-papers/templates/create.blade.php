@@ -1,7 +1,5 @@
 @extends('layouts.app')
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">@include('layouts.left-menu')</div>
     <div class="flex-1 p-6 lg:p-8 overflow-auto">
 
         <nav class="text-xs text-slate-400 mb-4">
@@ -37,18 +35,41 @@
                 <hr class="border-slate-100">
                 <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">School Info</h3>
 
+                {{-- School profile preview --}}
+                @if($school)
+                <div class="flex items-center gap-3 p-3 bg-indigo-50 border border-indigo-100 rounded-xl">
+                    <img src="{{ $school->logo_url }}" alt="{{ $school->name }}"
+                         class="w-10 h-10 rounded-lg object-cover border border-indigo-200 flex-shrink-0">
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold text-indigo-800 truncate">{{ $school->name }}</p>
+                        @if($school->address || $school->city)
+                        <p class="text-[11px] text-indigo-500 truncate">{{ implode(', ', array_filter([$school->address, $school->city])) }}</p>
+                        @endif
+                    </div>
+                    <span class="ml-auto text-[10px] text-indigo-400 flex-shrink-0">from school profile</span>
+                </div>
+                <p class="text-[11px] text-slate-400 -mt-1">
+                    Leave the fields below blank to use the school profile values automatically.
+                    Fill them in only if you want to override for this template.
+                </p>
+                @endif
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">School Name</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">School Name
+                            <span class="text-xs font-normal text-slate-400 ml-1">(leave blank to use profile)</span>
+                        </label>
                         <input type="text" name="school_name" value="{{ old('school_name') }}"
                                class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                               placeholder="ABC Secondary School">
+                               placeholder="{{ $school?->name ?? 'ABC Secondary School' }}">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">School Address</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">School Address
+                            <span class="text-xs font-normal text-slate-400 ml-1">(leave blank to use profile)</span>
+                        </label>
                         <input type="text" name="school_address" value="{{ old('school_address') }}"
                                class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                               placeholder="City, Country">
+                               placeholder="{{ implode(', ', array_filter([$school?->address, $school?->city])) ?: 'City, Country' }}">
                     </div>
                 </div>
 

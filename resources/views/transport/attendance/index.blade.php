@@ -1,134 +1,200 @@
 @extends('layouts.app')
+@section('title', 'Bus Attendance Register')
 
 @section('content')
-<div class="container">
-    <div class="row justify-content-start">
-        @include('layouts.left-menu')
-        <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
-            <div class="row pt-2">
-                <div class="col ps-4">
-                    <h1 class="display-6 mb-1"><i class="bi bi-check2-square"></i> Transport Attendance</h1>
-                    <nav aria-label="breadcrumb" class="mb-3">
-                        <ol class="breadcrumb">
-                            <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('transport.index') }}">Transport</a></li>
-                            <li class="breadcrumb-item active">Attendance</li>
-                        </ol>
-                    </nav>
+<style>
+  .header-icon-box-transport {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%) !important;
+    color: #ffffff !important;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  }
+  .header-icon-box-transport i {
+    color: #ffffff !important;
+    font-size: 22px !important;
+    line-height: 1 !important;
+    display: inline-block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+</style>
 
-                    @if(session('status'))
-                        <div class="alert alert-success alert-dismissible fade show">{{ session('status') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-                    @endif
-
-                    {{-- Selector form --}}
-                    <form method="GET" action="{{ route('transport.attendance.index') }}" class="card shadow-sm mb-4">
-                        <div class="card-body">
-                            <div class="row g-3 align-items-end">
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Route <span class="text-danger">*</span></label>
-                                    <select name="route_id" class="form-select" required onchange="this.form.submit()">
-                                        <option value="">— Select Route —</option>
-                                        @foreach($routes as $r)
-                                            <option value="{{ $r->id }}" @selected($routeId == $r->id)>{{ $r->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Date</label>
-                                    <input type="date" name="date" class="form-control" value="{{ $date }}" onchange="this.form.submit()">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label fw-semibold">Trip</label>
-                                    <select name="trip" class="form-select" onchange="this.form.submit()">
-                                        <option value="morning"   @selected($trip==='morning')>Morning (Pickup)</option>
-                                        <option value="afternoon" @selected($trip==='afternoon')>Afternoon (Dropoff)</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <button class="btn btn-secondary w-100" type="submit"><i class="bi bi-search"></i> Load</button>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
-
-                    @if($route)
-                    <form action="{{ route('transport.attendance.store') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="route_id" value="{{ $routeId }}">
-                        <input type="hidden" name="date" value="{{ $date }}">
-                        <input type="hidden" name="trip" value="{{ $trip }}">
-
-                        <div class="card shadow-sm">
-                            <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
-                                <span>
-                                    {{ $route->name }} — {{ ucfirst($trip) }} — {{ \Carbon\Carbon::parse($date)->format('d M Y') }}
-                                </span>
-                                <div class="d-flex gap-2">
-                                    <button type="button" class="btn btn-outline-success btn-sm" onclick="markAll('present')">All Present</button>
-                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="markAll('absent')">All Absent</button>
-                                </div>
-                            </div>
-                            <div class="card-body p-0">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr><th>#</th><th>Student</th><th>Stop</th><th>Status</th><th>Remarks</th></tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($route->activeStudents as $i => $alloc)
-                                        @php
-                                            $existing = $records->get($alloc->student_id);
-                                            $status = $existing?->status ?? 'present';
-                                        @endphp
-                                        <tr>
-                                            <td class="text-muted">{{ $i + 1 }}</td>
-                                            <td class="fw-semibold small">
-                                                {{ $alloc->student->first_name }} {{ $alloc->student->last_name }}
-                                            </td>
-                                            <td class="small text-muted">{{ $alloc->stop?->name ?? '—' }}</td>
-                                            <td>
-                                                <input type="hidden" name="attendance[{{ $i }}][student_id]" value="{{ $alloc->student_id }}">
-                                                <div class="d-flex gap-2">
-                                                    @foreach(['present'=>['success','check-circle'],'absent'=>['danger','x-circle'],'late'=>['warning','clock']] as $val=>[$color,$icon])
-                                                    <div class="form-check form-check-inline">
-                                                        <input class="form-check-input att-radio" type="radio"
-                                                               name="attendance[{{ $i }}][status]"
-                                                               id="att_{{ $i }}_{{ $val }}"
-                                                               value="{{ $val }}"
-                                                               @checked($status === $val)>
-                                                        <label class="form-check-label text-{{ $color }}" for="att_{{ $i }}_{{ $val }}">
-                                                            <i class="bi bi-{{ $icon }}"></i> {{ ucfirst($val) }}
-                                                        </label>
-                                                    </div>
-                                                    @endforeach
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <input type="text" name="attendance[{{ $i }}][remarks]" class="form-control form-control-sm"
-                                                       value="{{ $existing?->remarks }}" placeholder="Optional remark">
-                                            </td>
-                                        </tr>
-                                        @empty
-                                        <tr><td colspan="5" class="text-center text-muted py-4">No students on this route.</td></tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                            @if($route->activeStudents->isNotEmpty())
-                            <div class="card-footer">
-                                <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Save Attendance</button>
-                            </div>
-                            @endif
-                        </div>
-                    </form>
-                    @endif
-
+<div class="container-fluid px-4 py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-3 mb-1">
+                <div class="header-icon-box-transport">
+                    <i class="bi bi-clipboard-check-fill"></i>
+                </div>
+                <div>
+                    <h2 class="h3 font-extrabold text-slate-800 mb-0">Bus Attendance Register</h2>
+                    <p class="text-slate-500 text-sm mb-0">Record morning pickup and afternoon drop-off bus attendance for subscribed students</p>
                 </div>
             </div>
-            @include('layouts.footer')
+        </div>
+
+        <!-- Navigation Bar -->
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <a href="{{ route('transport.index') }}" class="btn btn-light border border-slate-200 text-slate-700 font-semibold px-3.5 py-2 rounded-xl text-xs hover:bg-slate-100 transition">
+                <i class="bi bi-speedometer2 me-1"></i> Overview
+            </a>
+            <a href="{{ route('transport.routes.index') }}" class="btn btn-light border border-slate-200 text-slate-700 font-semibold px-3.5 py-2 rounded-xl text-xs hover:bg-slate-100 transition">
+                <i class="bi bi-map me-1"></i> Routes
+            </a>
+            <a href="{{ route('transport.attendance.index') }}" class="btn btn-amber bg-amber-600 text-white font-bold px-3.5 py-2 rounded-xl text-xs shadow-sm">
+                <i class="bi bi-clipboard-check me-1"></i> Attendance
+            </a>
         </div>
     </div>
+
+    @include('session-messages')
+
+    <!-- Filter Control Card -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-4">
+        <form method="GET" action="{{ route('transport.attendance.index') }}" class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label font-semibold text-slate-700 text-xs uppercase tracking-wider">Select Transport Route <span class="text-rose-500">*</span></label>
+                <select name="route_id" class="form-select rounded-xl border-slate-200 py-2 text-sm font-medium text-slate-800" required onchange="this.form.submit()">
+                    <option value="">-- Choose Route --</option>
+                    @foreach($routes as $r)
+                        <option value="{{ $r->id }}" @selected($routeId == $r->id)>{{ $r->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="col-12 col-md-3">
+                <label class="form-label font-semibold text-slate-700 text-xs uppercase tracking-wider">Attendance Date <span class="text-rose-500">*</span></label>
+                <input type="date" name="date" class="form-control rounded-xl border-slate-200 py-2 text-sm font-medium text-slate-800" value="{{ $date }}" onchange="this.form.submit()">
+            </div>
+
+            <div class="col-12 col-md-3">
+                <label class="form-label font-semibold text-slate-700 text-xs uppercase tracking-wider">Trip Type <span class="text-rose-500">*</span></label>
+                <select name="trip" class="form-select rounded-xl border-slate-200 py-2 text-sm font-medium text-slate-800" onchange="this.form.submit()">
+                    <option value="morning" @selected($trip==='morning')>Morning (Pickup Roster)</option>
+                    <option value="afternoon" @selected($trip==='afternoon')>Afternoon (Drop-off Roster)</option>
+                </select>
+            </div>
+
+            <div class="col-12 col-md-2">
+                <button type="submit" class="btn btn-amber bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-xl text-sm w-100 shadow-sm transition">
+                    <i class="bi bi-funnel me-1"></i> Load Roster
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bus Attendance Form Roster -->
+    @if($route)
+    <form action="{{ route('transport.attendance.store') }}" method="POST">
+        @csrf
+        <input type="hidden" name="route_id" value="{{ $routeId }}">
+        <input type="hidden" name="date" value="{{ $date }}">
+        <input type="hidden" name="trip" value="{{ $trip }}">
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 p-md-5">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4 pb-3 border-b border-slate-100">
+                <div>
+                    <h5 class="font-bold text-slate-800 mb-0">
+                        {{ $route->name }} ({{ ucfirst($trip) }})
+                    </h5>
+                    <p class="text-xs text-slate-400 mb-0">Date: {{ \Carbon\Carbon::parse($date)->format('d M Y') }} | Passengers: {{ $route->activeStudents->count() }}</p>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-emerald bg-emerald-600 text-white font-semibold text-xs py-1.5 px-3 rounded-xl shadow-sm" onclick="markAll('present')">
+                        <i class="bi bi-check-all me-1"></i> All Present
+                    </button>
+                    <button type="button" class="btn btn-sm btn-rose bg-rose-600 text-white font-semibold text-xs py-1.5 px-3 rounded-xl shadow-sm" onclick="markAll('absent')">
+                        <i class="bi bi-x-circle me-1"></i> All Absent
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table align-middle text-sm mb-0">
+                    <thead>
+                        <tr class="text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-50">
+                            <th class="py-3 px-4 rounded-s-xl" style="width: 50px;">#</th>
+                            <th class="py-3 px-4">Student Passenger</th>
+                            <th class="py-3 px-4">Designated Bus Stop</th>
+                            <th class="py-3 px-4 text-center">Status</th>
+                            <th class="py-3 px-4 rounded-e-xl">Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @forelse($route->activeStudents as $i => $alloc)
+                        @php
+                            $existing = $records->get($alloc->student_id);
+                            $status = $existing?->status ?? 'present';
+                        @endphp
+                        <tr>
+                            <td class="py-3 px-4 text-xs font-semibold text-slate-400">{{ $i + 1 }}</td>
+                            <td class="py-3 px-4">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 font-bold d-flex align-items-center justify-content-center text-xs flex-shrink-0">
+                                        {{ strtoupper(substr($alloc->student->first_name ?? 'S', 0, 1)) }}
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-slate-800">{{ $alloc->student->first_name ?? '' }} {{ $alloc->student->last_name ?? '' }}</div>
+                                        <div class="text-xs text-slate-400">ID: #{{ $alloc->student_id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4 text-xs font-semibold text-slate-700">
+                                <i class="bi bi-geo-alt text-amber-600 me-1"></i> {{ $alloc->stop?->name ?? 'Default Stop' }}
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                <input type="hidden" name="attendance[{{ $i }}][student_id]" value="{{ $alloc->student_id }}">
+                                <div class="d-inline-flex align-items-center gap-3 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                                    @foreach(['present'=>['text-emerald-700','Present'],'absent'=>['text-rose-700','Absent'],'late'=>['text-amber-700','Late']] as $val=>[$color,$label])
+                                    <label class="d-inline-flex align-items-center gap-1.5 text-xs font-bold cursor-pointer {{ $color }} mb-0">
+                                        <input class="form-check-input att-radio" type="radio"
+                                               name="attendance[{{ $i }}][status]"
+                                               id="att_{{ $i }}_{{ $val }}"
+                                               value="{{ $val }}"
+                                               @checked($status === $val)>
+                                        <span>{{ $label }}</span>
+                                    </label>
+                                    @endforeach
+                                </div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <input type="text" name="attendance[{{ $i }}][remarks]" class="form-control rounded-xl border-slate-200 py-1 px-2.5 text-xs text-slate-800" value="{{ $existing?->remarks }}" placeholder="Optional notes...">
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="5" class="text-center text-slate-400 py-5">No active student passengers assigned to this route.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            @if($route->activeStudents->isNotEmpty())
+            <hr class="my-4 border-slate-100">
+
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-amber bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-md shadow-amber-500/20 transition">
+                    <i class="bi bi-check2-circle me-1.5"></i> Save Bus Attendance
+                </button>
+            </div>
+            @endif
+        </div>
+    </form>
+    @else
+    <div class="bg-white rounded-2xl border border-slate-200 p-5 text-center text-slate-400">
+        <i class="bi bi-bus-front display-4 text-slate-300 mb-2 block"></i>
+        <h6 class="font-bold text-slate-600 mb-1">Select Transport Route Above</h6>
+        <p class="mb-0 text-xs">Choose a route from the dropdown menu above to load the student passenger roster.</p>
+    </div>
+    @endif
 </div>
-@endsection
 
 @push('scripts')
 <script>
@@ -137,3 +203,4 @@ function markAll(status) {
 }
 </script>
 @endpush
+@endsection

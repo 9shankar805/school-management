@@ -1,15 +1,17 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class ParentTeacherMessage extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
-    protected $fillable = ['conversation_id', 'sender_id', 'body', 'read_at'];
+    protected $fillable = ['school_id', 'conversation_id', 'sender_id', 'body', 'read_at'];
 
     protected $casts = [
         'read_at' => 'datetime',

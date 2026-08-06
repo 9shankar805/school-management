@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Interfaces\StaffInterface;
+use Spatie\Permission\Models\Role;
 
 class StaffController extends Controller
 {
@@ -25,9 +26,10 @@ class StaffController extends Controller
     public function store(Request $request) {
         $request->validate([
             'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'role' => 'required|string',
+            'last_name'  => 'required|string|max:255',
+            'email'      => 'required|email|unique:users',
+            'role'       => 'required|string|not_in:super-admin|exists:roles,name',
+            'password'   => 'required|min:8|confirmed',
         ]);
 
         $this->staffRepository->create($request);
@@ -42,8 +44,9 @@ class StaffController extends Controller
     public function update(Request $request, $id) {
         $request->validate([
             'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,'.$id,
+            'last_name'  => 'required|string|max:255',
+            'email'      => 'required|email|unique:users,email,'.$id,
+            'role'       => 'nullable|string|not_in:super-admin|exists:roles,name',
         ]);
 
         $this->staffRepository->update($request, $id);

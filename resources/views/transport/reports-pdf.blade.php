@@ -64,7 +64,7 @@
                 <td>{{ $i+1 }}</td><td>{{ $r->name }}</td><td>{{ $r->code ?? '—' }}</td>
                 <td>{{ $r->vehicle?->name ?? '—' }}</td><td>{{ $r->driver?->name ?? '—' }}</td>
                 <td>{{ $r->morning_departure ?? '—' }}</td>
-                <td>${{ number_format($r->monthly_fee,2) }}</td>
+                <td>Rs. {{ number_format($r->monthly_fee,2) }}</td>
                 <td>{{ $r->active_students_count }}</td>
                 <td>{{ ucfirst($r->status) }}</td>
             </tr>
@@ -82,7 +82,7 @@
                 <td>{{ $s->student->first_name }} {{ $s->student->last_name }}</td>
                 <td>{{ $s->route->name }}</td><td>{{ $s->stop?->name ?? '—' }}</td>
                 <td>{{ ucfirst(str_replace('_',' ',$s->direction)) }}</td>
-                <td>${{ number_format($s->monthly_fee,2) }}</td>
+                <td>Rs. {{ number_format($s->monthly_fee,2) }}</td>
                 <td>{{ ucfirst($s->status) }}</td>
                 <td>{{ $s->start_date->format('d M Y') }}</td>
             </tr>
@@ -98,8 +98,8 @@
             <tr>
                 <td>{{ $i+1 }}</td><td>{{ $f->vehicle->name }}</td>
                 <td>{{ $f->date->format('d M Y') }}</td>
-                <td>{{ $f->litres }}</td><td>${{ $f->cost_per_litre }}</td>
-                <td>${{ number_format($f->total_cost,2) }}</td>
+                <td>{{ $f->litres }}</td><td>Rs. {{ $f->cost_per_litre }}</td>
+                <td>Rs. {{ number_format($f->total_cost,2) }}</td>
                 <td>{{ $f->odometer_reading ?? '—' }}</td>
                 <td>{{ $f->fuel_station ?? '—' }}</td>
             </tr>
@@ -116,7 +116,7 @@
                 <td>{{ $i+1 }}</td><td>{{ $m->vehicle->name }}</td>
                 <td>{{ $m->type_label }}</td><td>{{ $m->title }}</td>
                 <td>{{ $m->service_date->format('d M Y') }}</td>
-                <td>${{ number_format($m->cost,2) }}</td>
+                <td>Rs. {{ number_format($m->cost,2) }}</td>
                 <td>{{ $m->service_provider ?? '—' }}</td>
                 <td>{{ ucfirst($m->status) }}</td>
             </tr>

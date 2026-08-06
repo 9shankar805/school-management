@@ -22,9 +22,12 @@ class RoleController extends Controller
     // -----------------------------------------------------------------------
     public function index(): View
     {
-        $roles = Role::withCount('permissions', 'users')->orderBy('name')->get();
-
-        return view('roles.index', compact('roles'));
+        try {
+            $roles = Role::withCount('permissions', 'users')->orderBy('name')->get();
+            return view('roles.index', compact('roles'));
+        } catch (\Exception $e) {
+            return view('roles.index', ['roles' => collect(), 'error' => 'Unable to load roles: ' . $e->getMessage()]);
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -32,12 +35,16 @@ class RoleController extends Controller
     // -----------------------------------------------------------------------
     public function create(): View
     {
-        $permissions = Permission::orderBy('name')->get()->groupBy(function ($p) {
-            // Group by first word of permission name for display
-            return ucwords(explode(' ', $p->name, 2)[1] ?? 'general');
-        });
+        try {
+            $permissions = Permission::orderBy('name')->get()->groupBy(function ($p) {
+                // Group by first word of permission name for display
+                return ucwords(explode(' ', $p->name, 2)[1] ?? 'general');
+            });
 
-        return view('roles.create', compact('permissions'));
+            return view('roles.create', compact('permissions'));
+        } catch (\Exception $e) {
+            return view('roles.create', ['permissions' => collect(), 'error' => 'Unable to load permissions: ' . $e->getMessage()]);
+        }
     }
 
     public function store(Request $request): RedirectResponse
@@ -60,12 +67,21 @@ class RoleController extends Controller
     // -----------------------------------------------------------------------
     public function edit(Role $role): View
     {
-        $permissions = Permission::orderBy('name')->get()->groupBy(function ($p) {
-            return ucwords(explode(' ', $p->name, 2)[1] ?? 'general');
-        });
-        $rolePermissions = $role->permissions->pluck('id')->toArray();
+        try {
+            $permissions = Permission::orderBy('name')->get()->groupBy(function ($p) {
+                return ucwords(explode(' ', $p->name, 2)[1] ?? 'general');
+            });
+            $rolePermissions = $role->permissions->pluck('id')->toArray();
 
-        return view('roles.edit', compact('role', 'permissions', 'rolePermissions'));
+            return view('roles.edit', compact('role', 'permissions', 'rolePermissions'));
+        } catch (\Exception $e) {
+            return view('roles.edit', [
+                'role' => $role,
+                'permissions' => collect(),
+                'rolePermissions' => [],
+                'error' => 'Unable to load role permissions: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function update(Request $request, Role $role): RedirectResponse
@@ -105,19 +121,28 @@ class RoleController extends Controller
     // -----------------------------------------------------------------------
     public function matrix(): View
     {
-        $this->authorize('manage permissions');
+        try {
+            $this->authorize('manage permissions');
 
-        $roles       = Role::orderBy('name')->get();
-        $permissions = Permission::orderBy('name')->get()->groupBy(function ($p) {
-            return ucwords(explode(' ', $p->name, 2)[1] ?? 'general');
-        });
-        $matrix      = [];
+            $roles       = Role::orderBy('name')->get();
+            $permissions = Permission::orderBy('name')->get()->groupBy(function ($p) {
+                return ucwords(explode(' ', $p->name, 2)[1] ?? 'general');
+            });
+            $matrix      = [];
 
-        foreach ($roles as $role) {
-            $matrix[$role->name] = $role->permissions->pluck('name')->toArray();
+            foreach ($roles as $role) {
+                $matrix[$role->name] = $role->permissions->pluck('name')->toArray();
+            }
+
+            return view('roles.matrix', compact('roles', 'permissions', 'matrix'));
+        } catch (\Exception $e) {
+            return view('roles.matrix', [
+                'roles' => collect(),
+                'permissions' => collect(),
+                'matrix' => [],
+                'error' => 'Unable to load permission matrix: ' . $e->getMessage()
+            ]);
         }
-
-        return view('roles.matrix', compact('roles', 'permissions', 'matrix'));
     }
 
     public function matrixUpdate(Request $request): RedirectResponse
@@ -145,31 +170,96 @@ class RoleController extends Controller
     }
 
     // -----------------------------------------------------------------------
+    // List of assignable users (with filters) — school-scoped
+    // -----------------------------------------------------------------------
+    public function assignableUsers(): View
+    {
+        try {
+            $query = User::with('roles');
+
+            if (!auth()->user()->isSuperAdmin()) {
+                $query->whereDoesntHave('roles', fn ($q) => $q->where('name', 'super-admin'));
+            }
+
+            if ($search = request('search')) {
+                $like = '%' . $search . '%';
+                $query->where(function ($q) use ($like) {
+                    $q->where('first_name', 'like', $like)
+                      ->orWhere('last_name', 'like', $like)
+                      ->orWhere('email', 'like', $like)
+                      ->orWhere('phone', 'like', $like)
+                      ->orWhereRaw("CONCAT(first_name, ' ', last_name) like ?", [$like]);
+                });
+            }
+
+            if ($roleFilter = request('role')) {
+                $query->role($roleFilter);
+            }
+
+            $users = $query->orderByDesc('id')->paginate(25)->withQueryString();
+
+            return view('roles.assignable-users', compact('users'));
+        } catch (\Exception $e) {
+            return view('roles.assignable-users', ['users' => null, 'error' => 'Unable to load users: ' . $e->getMessage()]);
+        }
+    }
+
+    // -----------------------------------------------------------------------
     // Assign / remove roles from a specific user
     // -----------------------------------------------------------------------
     public function userRoles(User $user): View
     {
-        $roles     = Role::orderBy('name')->get();
-        $userRoles = $user->getRoleNames()->toArray();
+        try {
+            if (!auth()->user()->isSuperAdmin() && $user->hasRole('super-admin')) {
+                abort(403, 'You cannot modify super-admin users.');
+            }
 
-        return view('roles.user-roles', compact('user', 'roles', 'userRoles'));
+            $roles = Role::when(!auth()->user()->isSuperAdmin(), fn ($q) => $q->where('name', '!=', 'super-admin'))
+                         ->orderBy('name')
+                         ->get();
+            $userRoles = $user->getRoleNames()->toArray();
+
+            return view('roles.user-roles', compact('user', 'roles', 'userRoles'));
+        } catch (\Exception $e) {
+            return view('roles.user-roles', [
+                'user' => $user,
+                'roles' => collect(),
+                'userRoles' => [],
+                'error' => 'Unable to load user roles: ' . $e->getMessage()
+            ]);
+        }
     }
 
     public function updateUserRoles(Request $request, User $user): RedirectResponse
     {
-        $request->validate([
-            'roles'   => ['nullable', 'array'],
-            'roles.*' => ['string', 'exists:roles,name'],
-        ]);
+        try {
+            if (!auth()->user()->isSuperAdmin() && $user->hasRole('super-admin')) {
+                abort(403, 'You cannot modify super-admin users.');
+            }
 
-        $user->syncRoles($request->roles ?? []);
-        // Keep legacy role column in sync with primary Spatie role
-        $primary = $user->getRoleNames()->first();
-        if ($primary) {
-            $user->update(['role' => $primary]);
+            $request->validate([
+                'roles'   => ['nullable', 'array'],
+                'roles.*' => ['string', 'exists:roles,name'],
+            ]);
+
+            $roles = $request->roles ?? [];
+            if (!auth()->user()->isSuperAdmin()) {
+                $roles = array_values(array_filter($roles, fn ($r) => $r !== 'super-admin'));
+            }
+
+            $user->syncRoles($roles);
+            $primary = $user->getRoleNames()->first();
+            if ($primary) {
+                $user->update(['role' => $primary]);
+            } elseif ($user->role !== null) {
+                $user->update(['role' => null]);
+            }
+
+            return redirect()->back()
+                ->with('success', "Roles updated for {$user->full_name}.");
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Unable to update user roles: ' . $e->getMessage());
         }
-
-        return redirect()->back()
-            ->with('success', "Roles updated for {$user->full_name}.");
     }
 }

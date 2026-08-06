@@ -1,12 +1,16 @@
 <?php
 namespace App\Models;
+use App\Traits\HasTenant;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class TeacherAttendance extends Model
 {
-    use HasFactory;
-    protected $fillable = ['teacher_id','date','status','check_in','check_out','notes','marked_by'];
+    use HasFactory, HasTenant, SoftDeletes;
+
+    protected $table = 'teacher_attendance';
+    protected $fillable = ['school_id', 'teacher_id','date','status','check_in','check_out','notes','marked_by'];
     protected $casts = ['date'=>'date'];
 
     const STATUSES = ['present'=>'Present','absent'=>'Absent','late'=>'Late','half_day'=>'Half Day','on_leave'=>'On Leave'];

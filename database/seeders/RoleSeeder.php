@@ -198,6 +198,14 @@ class RoleSeeder extends Seeder
             'view books',
             'view chat', 'send chat messages',
             'view own profile',
+            // Teaching tools
+            'create study notes', 'view study notes',
+            'manage projects', 'view projects',
+            'view practical exams',
+            // Leave
+            'apply leave', 'view own leave',
+            // Messaging
+            'message parents',
         ],
 
         // ----------------------------------------------------------------
@@ -219,6 +227,14 @@ class RoleSeeder extends Seeder
             'view events', 'create events',
             'view notifications', 'send notifications',
             'message teachers',
+            // Teaching tools
+            'create study notes', 'view study notes',
+            'manage projects', 'view projects',
+            'view practical exams',
+            // Leave
+            'apply leave', 'view own leave',
+            // Messaging
+            'message parents',
             'upload files', 'view files',
             'view books',
             'view chat', 'send chat messages',

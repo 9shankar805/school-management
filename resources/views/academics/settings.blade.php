@@ -4,7 +4,6 @@
 <script src="{{ asset('js/masonry.pkgd.min.js') }}"></script>
 <div class="container">
     <div class="row justify-content-start">
-        @include('layouts.left-menu')
         <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
             <div class="row pt-2">
                 <div class="col ps-4">
@@ -78,6 +77,8 @@
                                 </form>
                                 </div>
                             </div>
+                            @endif
+                            @if ($latest_school_session_id == $current_school_session_id)
                             <div class="col-md-4 mb-4">
                                 <div class="p-3 border bg-light shadow-sm">
                                     <h6>Attendance Type</h6>
@@ -87,13 +88,13 @@
                                     <form action="{{route('school.attendance.type.update')}}" method="POST">
                                         @csrf
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="attendance_type" id="attendance_type_section" {{($academic_setting->attendance_type == 'section')?'checked="checked"':null}} value="section">
+                                            <input class="form-check-input" type="radio" name="attendance_type" id="attendance_type_section" {{($academic_setting->attendance_type ?? 'section') == 'section' ? 'checked="checked"' : null}} value="section">
                                             <label class="form-check-label" for="attendance_type_section">
                                                 Attendance by Section
                                             </label>
                                         </div>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="radio" name="attendance_type" id="attendance_type_course" {{($academic_setting->attendance_type == 'course')?'checked="checked"':null}} value="course">
+                                            <input class="form-check-input" type="radio" name="attendance_type" id="attendance_type_course" {{($academic_setting->attendance_type ?? 'section') == 'course' ? 'checked="checked"' : null}} value="course">
                                             <label class="form-check-label" for="attendance_type_course">
                                                 Attendance by Course
                                             </label>
@@ -103,6 +104,7 @@
                                     </form>
                                 </div>
                             </div>
+                            @endif
                             <div class="col-md-4 mb-4">
                                 <div class="p-3 border bg-light shadow-sm">
                                     <h6>Create Class</h6>
@@ -235,6 +237,7 @@
                                     </form>
                                 </div>
                             </div>
+                            @if ($latest_school_session_id == $current_school_session_id)
                             <div class="col-md-4 mb-4">
                                 <div class="p-3 border bg-light shadow-sm">
                                     <h6>Allow Final Marks Submission</h6>
@@ -247,8 +250,8 @@
                                             <small><i class="bi bi-exclamation-diamond-fill me-2"></i> Disallow at the start of a "Semester".</small>
                                         </p>
                                         <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" name="marks_submission_status" id="marks_submission_status_check" {{($academic_setting->marks_submission_status == 'on')?'checked="checked"':null}}>
-                                            <label class="form-check-label" for="marks_submission_status_check">{{($academic_setting->marks_submission_status == 'on')?'Allowed':'Disallowed'}}</label>
+                                            <input class="form-check-input" type="checkbox" name="marks_submission_status" id="marks_submission_status_check" {{($academic_setting->marks_submission_status ?? 'off') == 'on' ? 'checked="checked"' : null}}>
+                                            <label class="form-check-label" for="marks_submission_status_check">{{($academic_setting->marks_submission_status ?? 'off') == 'on' ? 'Allowed' : 'Disallowed'}}</label>
                                         </div>
                                         <button type="submit" class="mt-3 btn btn-sm btn-outline-primary"><i class="bi bi-check2"></i> Save</button>
                                     </form>

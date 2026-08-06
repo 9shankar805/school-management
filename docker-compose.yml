@@ -1,13 +1,20 @@
-version: '3'
+version: '3.8'
+
+# ══════════════════════════════════════════════════════════════
+#  School Management ERP — Docker Compose
+#  Services: app (php-fpm), webserver (nginx), db (mysql),
+#            redis, queue-worker (supervisor), mailhog
+# ══════════════════════════════════════════════════════════════
+
 services:
 
-  #PHP Service
+  # ── PHP-FPM application ──────────────────────────────────────
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    image: digitalocean.com/php
-    container_name: app
+    image: school-erp/app:latest
+    container_name: school-app
     restart: unless-stopped
     tty: true
     environment:
@@ -19,46 +26,118 @@ services:
       - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
     networks:
       - app-network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
-  #Nginx Service
+  # ── Nginx webserver ──────────────────────────────────────────
   webserver:
     image: nginx:alpine
-    container_name: webserver
+    container_name: school-webserver
     restart: unless-stopped
     tty: true
     ports:
-      - "8080:80"
+      - "${APP_PORT:-8080}:80"
       - "443:443"
     volumes:
       - ./:/var/www
       - ./nginx/conf.d/:/etc/nginx/conf.d/
     networks:
       - app-network
+    depends_on:
+      - app
 
-  #MySQL Service
+  # ── MySQL database ───────────────────────────────────────────
   db:
-    image: mysql:5.7.22
-    container_name: db
+    image: mysql:8.0
+    container_name: school-db
     restart: unless-stopped
     tty: true
     ports:
-      - "3307:3306"
+      - "${DB_PORT:-3307}:3306"
     environment:
-      MYSQL_DATABASE: unifiedtransform
-      MYSQL_ROOT_PASSWORD: your_mysql_root_password
+      MYSQL_DATABASE: ${DB_DATABASE:-school_db}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secret}
+      MYSQL_USER: ${DB_USERNAME:-school_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-School@123}
       SERVICE_TAGS: dev
       SERVICE_NAME: mysql
     volumes:
-      - dbdata:/var/lib/mysql/
+      - dbdata:/var/lib/mysql
       - ./mysql/my.cnf:/etc/mysql/my.cnf
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-root_secret}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-#Docker Networks
+  # ── Redis ─────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: school-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass "${REDIS_PASSWORD:-}"
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Queue worker + scheduler (Supervisor) ────────────────────
+  queue-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    image: school-erp/worker:latest
+    container_name: school-queue-worker
+    restart: unless-stopped
+    working_dir: /var/www
+    environment:
+      SERVICE_NAME: queue-worker
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
+    volumes:
+      - ./:/var/www
+      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+      - worker-logs:/var/log/supervisor
+    networks:
+      - app-network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ── MailHog (local email testing) ────────────────────────────
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: school-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    networks:
+      - app-network
+
+# ── Networks ──────────────────────────────────────────────────
 networks:
   app-network:
     driver: bridge
-#Volumes
+
+# ── Volumes ───────────────────────────────────────────────────
 volumes:
   dbdata:
+    driver: local
+  redisdata:
+    driver: local
+  worker-logs:
     driver: local

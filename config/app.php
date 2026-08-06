@@ -183,6 +183,11 @@ return [
         App\Providers\CourseServiceProvider::class,
         App\Providers\UserServiceProvider::class,
         App\Providers\PurifySetupProvider::class,
+
+        // Module 23 — Laravel Horizon (queue monitoring dashboard)
+        // Disabled: laravel/horizon package not installed in this environment.
+        // Re-enable after: php composer.phar require laravel/horizon
+        // App\Providers\HorizonServiceProvider::class,
     ],
 
     /*

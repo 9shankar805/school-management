@@ -1,7 +1,5 @@
 @extends('layouts.app')
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">@include('layouts.left-menu')</div>
     <div class="flex-1 p-6 lg:p-8 overflow-auto">
 
         <div class="flex flex-wrap justify-between items-start mb-7 gap-4">
@@ -62,6 +60,11 @@
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('teacher.profile.show', $t->id) }}" class="flex-1 text-center py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-medium transition">Profile</a>
+                    @can('manage roles')
+                    <a href="{{ route('roles.user-roles', $t->id) }}" class="flex-1 text-center py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium transition" title="Assign roles">
+                        <i class="bi bi-person-check"></i> Roles
+                    </a>
+                    @endcan
                     @can('create teachers')
                     <a href="{{ route('teacher.edit.show', $t->id) }}" class="flex-1 text-center py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-medium transition">Edit</a>
                     @endcan

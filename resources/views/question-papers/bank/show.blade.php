@@ -1,7 +1,5 @@
 @extends('layouts.app')
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">@include('layouts.left-menu')</div>
     <div class="flex-1 p-6 lg:p-8 overflow-auto">
 
         <nav class="text-xs text-slate-400 mb-4">
@@ -66,12 +64,12 @@
                 <div class="mt-3 space-y-1.5">
                     @foreach($question->options as $i => $opt)
                     <div class="flex items-center gap-2 text-sm
-                        {{ $question->correct_answer && strtoupper($question->correct_answer) === chr(65+$i) ? 'text-emerald-700 font-semibold' : 'text-slate-600' }}">
-                        <span class="w-6 h-6 rounded-full border {{ $question->correct_answer && strtoupper($question->correct_answer) === chr(65+$i) ? 'bg-emerald-100 border-emerald-300' : 'bg-slate-100 border-slate-200' }} flex items-center justify-center text-xs font-bold flex-shrink-0">
-                            {{ chr(65+$i) }}
+                        {{ $question->correct_answer && strtoupper($question->correct_answer) === chr(65+$loop->index) ? 'text-emerald-700 font-semibold' : 'text-slate-600' }}">
+                        <span class="w-6 h-6 rounded-full border {{ $question->correct_answer && strtoupper($question->correct_answer) === chr(65+$loop->index) ? 'bg-emerald-100 border-emerald-300' : 'bg-slate-100 border-slate-200' }} flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            {{ chr(65+$loop->index) }}
                         </span>
                         {{ $opt }}
-                        @if($question->correct_answer && strtoupper($question->correct_answer) === chr(65+$i))
+                        @if($question->correct_answer && strtoupper($question->correct_answer) === chr(65+$loop->index))
                         <i class="bi bi-check-circle-fill text-emerald-500 text-xs ml-1"></i>
                         @endif
                     </div>

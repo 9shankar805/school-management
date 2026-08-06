@@ -1,12 +1,15 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Cache;
 
 class Setting extends Model
 {
+    use SoftDeletes, HasTenant;
     protected $fillable = [
         'school_id', 'group', 'key', 'value', 'type', 'label', 'is_public', 'is_encrypted',
     ];

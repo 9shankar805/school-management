@@ -1,0 +1,88 @@
+name: Deploy — Production
+
+# ──────────────────────────────────────────────────────────────
+# Deploys to production on a manual workflow_dispatch trigger
+# OR automatically when a semver tag (v*.*.*) is pushed.
+#
+# Required GitHub Secrets:
+#   PROD_HOST           — SSH host or IP
+#   PROD_USER           — SSH user (e.g. deploy)
+#   PROD_SSH_KEY        — Private key (RSA/ED25519)
+#   PROD_DEPLOY_PATH    — Absolute path on server (/var/www/production)
+#   PROD_APP_URL        — https://school.example.com
+# ──────────────────────────────────────────────────────────────
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Reason for manual deployment"
+        required: true
+        type: string
+
+jobs:
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: production
+      url: ${{ secrets.PROD_APP_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+          tools: composer:v2
+
+      - name: Install Composer dependencies (prod, no-dev)
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-progress
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install npm dependencies & build production assets
+        run: |
+          npm ci --prefer-offline
+          npm run production
+
+      - name: Deploy via SSH
+        uses: easingthemes/ssh-deploy@v5
+        with:
+          SSH_PRIVATE_KEY: ${{ secrets.PROD_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.PROD_HOST }}
+          REMOTE_USER: ${{ secrets.PROD_USER }}
+          TARGET: ${{ secrets.PROD_DEPLOY_PATH }}
+          EXCLUDE: ".git/, node_modules/, .env, storage/logs/, tests/"
+          SCRIPT_BEFORE: |
+            php ${{ secrets.PROD_DEPLOY_PATH }}/artisan down --render="errors::503" --secret="deploy-secret" || true
+          SCRIPT_AFTER: |
+            cd ${{ secrets.PROD_DEPLOY_PATH }}
+            php artisan migrate --force
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan event:cache
+            php artisan queue:restart
+            php artisan horizon:terminate || true
+            php artisan up
+
+      - name: Tag deployment
+        if: success()
+        run: |
+          echo "Production deployment complete"
+          echo "Tag: ${{ github.ref_name }}"
+          echo "URL: ${{ secrets.PROD_APP_URL }}"
+          echo "Triggered by: ${{ github.actor }}"
+          echo "Reason: ${{ github.event.inputs.reason || 'tag push' }}"

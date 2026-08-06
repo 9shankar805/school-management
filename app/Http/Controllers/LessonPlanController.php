@@ -33,9 +33,17 @@ class LessonPlanController extends Controller
         $this->sectionRepository       = $sectionRepository;
     }
 
+    private function authorizeAccess()
+    {
+        $user = auth()->user();
+        if (!$user || !$user->hasRole(['teacher', 'class-teacher', 'admin', 'principal'])) {
+            abort(403, 'Unauthorized access to lesson plans.');
+        }
+    }
+
     public function index(Request $request)
     {
-        $this->authorize('view lesson plans');
+        $this->authorizeAccess();
 
         $session_id = $this->getSchoolCurrentSession();
         $teacher_id = auth()->user()->hasRole(['teacher','class-teacher'])
@@ -60,7 +68,7 @@ class LessonPlanController extends Controller
 
     public function create()
     {
-        $this->authorize('create lesson plans');
+        $this->authorizeAccess();
 
         $session_id = $this->getSchoolCurrentSession();
         $classes    = $this->schoolClassRepository->getAllBySession($session_id);
@@ -71,7 +79,7 @@ class LessonPlanController extends Controller
 
     public function store(Request $request)
     {
-        $this->authorize('create lesson plans');
+        $this->authorizeAccess();
 
         $session_id = $this->getSchoolCurrentSession();
 
@@ -104,7 +112,7 @@ class LessonPlanController extends Controller
 
     public function show(int $id)
     {
-        $this->authorize('view lesson plans');
+        $this->authorizeAccess();
 
         $lessonPlan = LessonPlan::with([
             'teacher', 'course', 'schoolClass', 'section', 'term', 'curriculumTopic'
@@ -115,13 +123,12 @@ class LessonPlanController extends Controller
 
     public function edit(int $id)
     {
-        $this->authorize('create lesson plans');
+        $this->authorizeAccess();
 
         $lessonPlan = LessonPlan::findOrFail($id);
 
-        // Only the owner or admin may edit
-        if (auth()->id() !== $lessonPlan->teacher_id) {
-            $this->authorize('view academic settings');
+        if (auth()->id() !== $lessonPlan->teacher_id && !auth()->user()->hasRole(['admin', 'principal'])) {
+            abort(403);
         }
 
         $session_id = $this->getSchoolCurrentSession();
@@ -136,12 +143,12 @@ class LessonPlanController extends Controller
 
     public function update(Request $request, int $id)
     {
-        $this->authorize('create lesson plans');
+        $this->authorizeAccess();
 
         $lessonPlan = LessonPlan::findOrFail($id);
 
-        if (auth()->id() !== $lessonPlan->teacher_id) {
-            $this->authorize('view academic settings');
+        if (auth()->id() !== $lessonPlan->teacher_id && !auth()->user()->hasRole(['admin', 'principal'])) {
+            abort(403);
         }
 
         $data = $request->validate([
@@ -166,12 +173,12 @@ class LessonPlanController extends Controller
 
     public function destroy(int $id)
     {
-        $this->authorize('create lesson plans');
+        $this->authorizeAccess();
 
         $lessonPlan = LessonPlan::findOrFail($id);
 
-        if (auth()->id() !== $lessonPlan->teacher_id) {
-            $this->authorize('view academic settings');
+        if (auth()->id() !== $lessonPlan->teacher_id && !auth()->user()->hasRole(['admin', 'principal'])) {
+            abort(403);
         }
 
         $lessonPlan->delete();

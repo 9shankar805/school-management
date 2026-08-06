@@ -39,6 +39,7 @@ class SchoolClassController extends Controller
         $current_school_session_id = $this->getSchoolCurrentSession();
 
         $data = $this->schoolClassRepository->getClassesAndSections($current_school_session_id);
+        $data['current_school_session_id'] = $current_school_session_id;
 
         return view('classes.index', $data);
     }
@@ -50,7 +51,8 @@ class SchoolClassController extends Controller
      */
     public function create()
     {
-        //
+        $current_school_session_id = $this->getSchoolCurrentSession();
+        return view('classes.create', compact('current_school_session_id'));
     }
 
     /**
@@ -62,11 +64,30 @@ class SchoolClassController extends Controller
     public function store(SchoolClassStoreRequest $request)
     {
         try {
-            $this->schoolClassRepository->create($request->validated());
+            $class = SchoolClass::create([
+                'class_name' => $request->class_name,
+                'session_id' => $request->session_id,
+            ]);
 
-            return back()->with('status', 'Class creation was successful!');
+            // Auto-create initial sections if provided
+            if ($request->has('initial_sections_str') && !empty($request->initial_sections_str)) {
+                $sections = explode(',', $request->initial_sections_str);
+                foreach ($sections as $secName) {
+                    $secName = trim($secName);
+                    if (!empty($secName)) {
+                        \App\Models\Section::create([
+                            'section_name' => $secName,
+                            'room_no'      => $request->input('default_room_no', '101'),
+                            'class_id'     => $class->id,
+                            'session_id'   => $request->session_id,
+                        ]);
+                    }
+                }
+            }
+
+            return back()->with('status', 'Class "' . $class->class_name . '" created successfully!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->withError('Failed to create class. ' . $e->getMessage());
         }
     }
 
@@ -82,6 +103,50 @@ class SchoolClassController extends Controller
     }
 
     /**
+     * Full class detail page — students, subject teachers, timetable.
+     */
+    public function detail(int $id)
+    {
+        $sessionId   = $this->getSchoolCurrentSession();
+        $schoolClass = SchoolClass::with(['sections', 'courses'])->findOrFail($id);
+
+        // All sections for this class
+        $sections = $schoolClass->sections;
+
+        // Students enrolled via promotions (current session)
+        $promotions = \App\Models\Promotion::with(['student.academic_info', 'student.parent_info', 'section'])
+            ->where('class_id', $id)
+            ->where('session_id', $sessionId)
+            ->orderBy('section_id')
+            ->get();
+
+        // Assigned teachers (subject → teacher mapping)
+        $assignedTeachers = \App\Models\AssignedTeacher::with(['teacher', 'course', 'section'])
+            ->where('class_id', $id)
+            ->where('session_id', $sessionId)
+            ->get();
+
+        // Class teacher — teacher who teaches the most subjects in this class,
+        // or the one explicitly marked (first assigned, as a convention)
+        $classTeacher = $assignedTeachers->first()?->teacher;
+
+        // Timetable for this class — all sections, grouped by section → weekday
+        $timetableSlots = \App\Models\Routine::with(['course', 'section', 'teacher'])
+            ->where('class_id', $id)
+            ->where('session_id', $sessionId)
+            ->orderBy('section_id')
+            ->orderBy('weekday')
+            ->orderBy('start')
+            ->get()
+            ->groupBy('section_id');
+
+        return view('classes.show', compact(
+            'schoolClass', 'sections', 'promotions',
+            'assignedTeachers', 'classTeacher', 'timetableSlots', 'sessionId'
+        ));
+    }
+
+    /**
      * Show the form for editing the specified resource.
      *
      * @param  $class_id
@@ -92,11 +157,13 @@ class SchoolClassController extends Controller
         $current_school_session_id = $this->getSchoolCurrentSession();
 
         $schoolClass = $this->schoolClassRepository->findById($class_id);
+        $sections = \App\Models\Section::where('class_id', $class_id)->get();
 
         $data = [
             'current_school_session_id' => $current_school_session_id,
             'class_id'                  => $class_id,
             'schoolClass'               => $schoolClass,
+            'sections'                  => $sections,
         ];
         return view('classes.edit', $data);
     }
@@ -112,7 +179,7 @@ class SchoolClassController extends Controller
         try {
             $this->schoolClassRepository->update($request);
 
-            return back()->with('status', 'Class edit was successful!');
+            return back()->with('status', 'Class updated successfully!');
         } catch (\Exception $e) {
             return back()->withError($e->getMessage());
         }
@@ -121,11 +188,20 @@ class SchoolClassController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\SchoolClass  $schoolClass
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(SchoolClass $schoolClass)
+    public function destroy($id)
     {
-        //
+        try {
+            $class = SchoolClass::findOrFail($id);
+            $className = $class->class_name;
+            \App\Models\Section::where('class_id', $id)->delete();
+            $class->delete();
+
+            return back()->with('status', 'Class "' . $className . '" deleted successfully!');
+        } catch (\Exception $e) {
+            return back()->withError('Failed to delete class. ' . $e->getMessage());
+        }
     }
 }

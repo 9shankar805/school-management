@@ -25,25 +25,219 @@
             body {
                 font-family: 'Nunito', sans-serif;
             }
+
+            /* Contact Section Styles */
+            .contact-wrapper {
+                display: flex;
+                flex-direction: column;
+                background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 100%);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border-radius: 24px;
+                border: 1px solid rgba(255,255,255,0.5);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+                overflow: hidden;
+                margin-top: 3rem;
+                margin-bottom: 3rem;
+            }
+
+            @media (min-width: 768px) {
+                .contact-wrapper {
+                    flex-direction: row;
+                }
+            }
+
+            .contact-info {
+                flex: 1;
+                padding: 3rem;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+            }
+
+            .contact-title {
+                font-size: 2.5rem;
+                font-weight: 800;
+                margin-bottom: 1rem;
+                line-height: 1.2;
+                margin-top: 0;
+            }
+
+            .contact-subtitle {
+                font-size: 1.1rem;
+                opacity: 0.9;
+                margin-bottom: 3rem;
+                line-height: 1.6;
+            }
+
+            .contact-details {
+                display: flex;
+                flex-direction: column;
+                gap: 2rem;
+            }
+
+            .contact-item {
+                display: flex;
+                align-items: center;
+                gap: 1.5rem;
+            }
+
+            .contact-icon-wrapper {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 50px;
+                height: 50px;
+                background: rgba(255,255,255,0.2);
+                border-radius: 50%;
+                backdrop-filter: blur(10px);
+                transition: transform 0.3s ease, background 0.3s ease;
+                flex-shrink: 0;
+            }
+
+            .contact-item:hover .contact-icon-wrapper {
+                transform: scale(1.1);
+                background: rgba(255,255,255,0.3);
+            }
+
+            .contact-item-title {
+                font-size: 1.2rem;
+                font-weight: 600;
+                margin: 0 0 0.25rem 0;
+            }
+
+            .contact-item-text {
+                margin: 0;
+                opacity: 0.8;
+                font-size: 1rem;
+            }
+
+            .contact-form-container {
+                flex: 1.2;
+                padding: 3rem;
+                background: white;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+
+            .form-title {
+                font-size: 2rem;
+                font-weight: 700;
+                color: #2d3748;
+                margin-bottom: 2rem;
+                margin-top: 0;
+            }
+
+            .form-group {
+                margin-bottom: 1.5rem;
+                text-align: left;
+            }
+
+            .form-label {
+                display: block;
+                font-size: 0.95rem;
+                font-weight: 600;
+                color: #4a5568;
+                margin-bottom: 0.5rem;
+            }
+
+            .form-input {
+                width: 100%;
+                padding: 0.8rem 1.2rem;
+                font-size: 1rem;
+                font-family: inherit;
+                border: 2px solid #e2e8f0;
+                border-radius: 12px;
+                background: #f7fafc;
+                transition: all 0.3s ease;
+                outline: none;
+                box-sizing: border-box;
+                color: #2d3748;
+            }
+
+            .form-input:focus {
+                border-color: #667eea;
+                background: white;
+                box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            }
+
+            .submit-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.75rem;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                font-size: 1.1rem;
+                font-weight: 600;
+                padding: 1rem 2rem;
+                border: none;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                width: 100%;
+                margin-top: 1rem;
+                box-shadow: 0 10px 20px rgba(118, 75, 162, 0.2);
+            }
+
+            .submit-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 15px 25px rgba(118, 75, 162, 0.3);
+            }
+
+            .submit-btn:active {
+                transform: translateY(0);
+            }
+
+            @media (prefers-color-scheme: dark) {
+                .contact-form-container {
+                    background: #1a202c;
+                }
+                .contact-wrapper {
+                    background: rgba(30, 41, 59, 0.7);
+                    border-color: rgba(255,255,255,0.1);
+                }
+                .form-title {
+                    color: #f7fafc;
+                }
+                .form-label {
+                    color: #a0aec0;
+                }
+                .form-input {
+                    background: #2d3748;
+                    border-color: #4a5568;
+                    color: #e2e8f0;
+                }
+                .form-input:focus {
+                    background: #1a202c;
+                    border-color: #667eea;
+                }
+            }
         </style>
     </head>
     <body class="antialiased">
-        <div class="relative flex items-top justify-center min-h-screen sm:items-center py-4 sm:pt-0">
             @if (Route::has('login'))
-                <div class="hidden fixed top-0 right-0 px-6 py-4 sm:block">
-                    @auth
-                        <a href="{{ url('/home') }}" class="text-sm text-gray-700 underline">Home</a>
-                    @else
-                        <a href="{{ route('login') }}" class="text-gray-900 dark:text-white" style="border: 1px solid #1a202c;padding: 5px;border-radius: 5px;">Login</a>
-
-                        {{-- @if (Route::has('register'))
-                            <a href="{{ route('register') }}" class="ml-4 text-sm text-gray-700 underline">Register</a>
-                        @endif --}}
-                    @endauth
-                </div>
+                <header class="fixed top-0 left-0 right-0 px-6 py-4 flex justify-between items-center bg-white shadow-sm" style="z-index: 50; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #edf2f7; width: 100%;">
+                    <div class="flex items-center" style="display: flex; align-items: center;">
+                        <img src="{{asset('favicon_io/android-chrome-192x192.png')}}" height="32px" width="32px" class="mr-2" style="margin-right: 10px;">
+                        <span style="font-weight: 800; font-size: 1.25rem; color: #8a6dd9;">Unifiedtransform</span>
+                    </div>
+                    <nav class="flex items-center flex-wrap" style="display: flex; align-items: center; gap: 20px;">
+                        <a href="#features" class="text-gray-700 font-semibold" style="text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#667eea'" onmouseout="this.style.color='#4a5568'">Features</a>
+                        <a href="#how-it-works" class="text-gray-700 font-semibold" style="text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#667eea'" onmouseout="this.style.color='#4a5568'">How it works</a>
+                        <a href="#modules" class="text-gray-700 font-semibold" style="text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#667eea'" onmouseout="this.style.color='#4a5568'">Modules</a>
+                        <a href="#pricing" class="text-gray-700 font-semibold" style="text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#667eea'" onmouseout="this.style.color='#4a5568'">Pricing</a>
+                        <a href="#contact" class="text-gray-700 font-semibold" style="text-decoration: none; transition: color 0.3s;" onmouseover="this.style.color='#667eea'" onmouseout="this.style.color='#4a5568'">Contact Us</a>
+                        @auth
+                            <a href="{{ url('/home') }}" class="text-gray-700 font-semibold" style="text-decoration: none;">Home</a>
+                        @else
+                            <a href="{{ route('login') }}" class="text-white font-semibold" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 8px 20px; border-radius: 8px; text-decoration: none; box-shadow: 0 4px 6px rgba(102, 126, 234, 0.25); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">Login</a>
+                        @endauth
+                    </nav>
+                </header>
             @endif
 
-            <div class="max-w-6xl mx-auto sm:px-6 lg:px-8">
+            <div class="max-w-6xl mx-auto sm:px-6 lg:px-8" style="padding-top: 100px;">
                 <div class="flex justify-center pt-8 sm:justify-start sm:pt-0" style="align-items: center;">
                     <h1 class="text-gray-900 dark:text-white"><img src="{{asset('favicon_io/android-chrome-512x512.png')}}" class="mr-2" height="50px" width="50px"><span style="font-size: 45px; color: #8a6dd9;">nifiedtransform</span> - <small>Powered by &nbsp;</small></h1>
                     <svg viewBox="0 0 651 192" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-16 w-auto text-gray-700 sm:h-20">
@@ -55,61 +249,542 @@
                     <img class="ml-4" src="{{asset('bootstrap-5-1.svg')}}" height="70" alt="Bootstrap 5">
                 </div>
 
-                {{-- <div class="mt-8 bg-white dark:bg-gray-800 overflow-hidden shadow sm:rounded-lg">
-                    <div class="grid grid-cols-1 md:grid-cols-2">
-                        <div class="p-6">
-                            <div class="flex items-center">
-                                <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" class="w-8 h-8 text-gray-500"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                                <div class="ml-4 text-lg leading-7 font-semibold"><a href="https://laravel.com/docs" class="underline text-gray-900 dark:text-white">Documentation</a></div>
-                            </div>
+                <!-- Apps Showcase Section -->
+                <div class="mt-16 bg-white dark:bg-gray-900 overflow-hidden sm:rounded-2xl shadow-xl">
+                    <div class="p-8 border-b border-gray-200 dark:border-gray-800 text-center">
+                        <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Our Unified Ecosystem</h2>
+                        <p class="text-gray-600 dark:text-gray-400">Experience seamless school management across all your devices.</p>
+                    </div>
 
-                            <div class="ml-12">
-                                <div class="mt-2 text-gray-600 dark:text-gray-400 text-sm">
-                                    Laravel has wonderful, thorough documentation covering every aspect of the framework. Whether you are new to the framework or have previous experience with Laravel, we recommend reading all of the documentation from beginning to end.
-                                </div>
+                    <!-- 1. Teacher App (Left Features, Right Image) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-10 lg:p-16 border-b border-gray-200 dark:border-gray-800 items-center">
+                        <div class="order-2 md:order-1">
+                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Teacher App</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-6">Empower your educators with tools designed to streamline daily tasks, so they can focus on what matters most—teaching.</p>
+                            
+                            <ul class="space-y-4">
+                                <li class="flex items-start">
+                                    <svg class="h-6 w-6 text-indigo-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-200">Real-Time Gradebook</h4>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Input and sync student scores instantly from the classroom.</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="h-6 w-6 text-indigo-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-200">Smart Attendance</h4>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Mark attendance with one tap, saving valuable instruction time.</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="h-6 w-6 text-indigo-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-200">Lesson Planner</h4>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Build and manage your daily curriculum seamlessly.</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="order-1 md:order-2 flex justify-center">
+                            <img src="/imgs/screenshots/teacher_app.webp" alt="Teacher App Screenshot" class="rounded-2xl shadow-2xl hover:shadow-indigo-500/20 transition-shadow duration-300 transform hover:-translate-y-2" style="max-height: 400px; width: auto; object-fit: contain;">
+                        </div>
+                    </div>
+
+                    <!-- 2. Parent App (Left Image, Right Features) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-10 lg:p-16 border-b border-gray-200 dark:border-gray-800 items-center bg-gray-50 dark:bg-gray-800">
+                        <div class="order-1 flex justify-center">
+                            <img src="/imgs/screenshots/parent_app.webp" alt="Parent App Screenshot" class="rounded-2xl shadow-2xl hover:shadow-green-500/20 transition-shadow duration-300 transform hover:-translate-y-2" style="max-height: 400px; width: auto; object-fit: contain;">
+                        </div>
+                        <div class="order-2">
+                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Parent App</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-6">Bridge the gap between home and school. Stay intimately involved in your child's academic journey with real-time updates.</p>
+                            
+                            <ul class="space-y-4">
+                                <li class="flex items-start">
+                                    <svg class="h-6 w-6 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-200">Live Bus Tracking</h4>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Never miss the bus with real-time GPS location updates.</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="h-6 w-6 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-200">Academic Progress</h4>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Track grades, assignments, and exam results on the go.</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="h-6 w-6 text-green-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-200">Instant Notifications</h4>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Receive immediate alerts for school announcements and attendance.</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- 3. Student App (Left Features, Right Image) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-10 lg:p-16 border-b border-gray-200 dark:border-gray-800 items-center">
+                        <div class="order-2 md:order-1">
+                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Student App</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-6">A digital companion for every student. Stay organized, submit homework, and access study materials instantly.</p>
+                            
+                            <ul class="space-y-4">
+                                <li class="flex items-start">
+                                    <svg class="h-6 w-6 text-blue-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-200">Homework & Assignments</h4>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">View daily tasks and upload submissions right from your phone.</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="h-6 w-6 text-blue-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-200">E-Library Access</h4>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Read study notes, presentations, and borrow books digitally.</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="h-6 w-6 text-blue-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-200">Interactive Timetable</h4>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Keep track of upcoming classes and schedule changes.</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="order-1 md:order-2 flex justify-center">
+                            <img src="/imgs/screenshots/student_app.webp" alt="Student App Screenshot" class="rounded-2xl shadow-2xl hover:shadow-blue-500/20 transition-shadow duration-300 transform hover:-translate-y-2" style="max-height: 400px; width: auto; object-fit: contain;">
+                        </div>
+                    </div>
+
+                    <!-- 4. Driver App (Left Image, Right Features) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-10 lg:p-16 border-b border-gray-200 dark:border-gray-800 items-center bg-gray-50 dark:bg-gray-800">
+                        <div class="order-1 flex justify-center">
+                            <img src="/imgs/screenshots/driver_app.webp" alt="Driver App Screenshot" class="rounded-2xl shadow-2xl hover:shadow-orange-500/20 transition-shadow duration-300 transform hover:-translate-y-2" style="max-height: 400px; width: auto; object-fit: contain;">
+                        </div>
+                        <div class="order-2">
+                            <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Driver App</h3>
+                            <p class="text-gray-600 dark:text-gray-400 mb-6">Ensure student safety and fleet efficiency. Equip your drivers with precise routing and passenger tracking.</p>
+                            
+                            <ul class="space-y-4">
+                                <li class="flex items-start">
+                                    <svg class="h-6 w-6 text-orange-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-200">Optimized Routing</h4>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Get turn-by-turn navigation for the most efficient daily routes.</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="h-6 w-6 text-orange-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-200">Roster Management</h4>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">Access real-time passenger lists for each specific trip.</p>
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <svg class="h-6 w-6 text-orange-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    <div>
+                                        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-200">Emergency Alerts</h4>
+                                        <p class="text-sm text-gray-500 dark:text-gray-400">One-tap panic buttons for instant school notification.</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CSS FOR NEW SECTIONS -->
+                <style>
+                /* New Sections CSS */
+                .section-container {
+                    padding: 5rem 0;
+                    border-bottom: 1px solid rgba(0,0,0,0.05);
+                }
+                .section-title {
+                    font-size: 2.5rem;
+                    font-weight: 800;
+                    text-align: center;
+                    color: #1a202c;
+                    margin-bottom: 1rem;
+                }
+                .section-subtitle {
+                    font-size: 1.1rem;
+                    text-align: center;
+                    color: #718096;
+                    margin-bottom: 4rem;
+                    max-width: 600px;
+                    margin-left: auto;
+                    margin-right: auto;
+                }
+                
+                /* Features Grid */
+                .features-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 2rem;
+                }
+                .feature-card {
+                    background: white;
+                    padding: 2.5rem;
+                    border-radius: 16px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+                    transition: transform 0.3s ease, box-shadow 0.3s ease;
+                    text-align: center;
+                }
+                .feature-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+                }
+                .feature-icon {
+                    width: 64px;
+                    height: 64px;
+                    background: rgba(102, 126, 234, 0.1);
+                    color: #667eea;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto 1.5rem auto;
+                }
+                .feature-title {
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    margin-bottom: 1rem;
+                    color: #2d3748;
+                }
+                .feature-desc {
+                    color: #718096;
+                    line-height: 1.6;
+                }
+                
+                /* How it Works */
+                .steps-container {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 3rem;
+                    position: relative;
+                }
+                .step-card {
+                    text-align: center;
+                    position: relative;
+                }
+                .step-number {
+                    width: 50px;
+                    height: 50px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    font-size: 1.5rem;
+                    font-weight: bold;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto 1.5rem auto;
+                    box-shadow: 0 10px 20px rgba(118, 75, 162, 0.3);
+                }
+                
+                /* Modules */
+                .modules-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    gap: 1.5rem;
+                }
+                .module-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 1.5rem;
+                    background: white;
+                    padding: 1.5rem;
+                    border-radius: 12px;
+                    border: 1px solid #edf2f7;
+                    transition: all 0.3s;
+                }
+                .module-item:hover {
+                    border-color: #667eea;
+                    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.1);
+                }
+                
+                /* Pricing */
+                .pricing-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    gap: 2rem;
+                }
+                .pricing-card {
+                    background: white;
+                    border-radius: 20px;
+                    padding: 3rem 2rem;
+                    text-align: center;
+                    border: 1px solid #edf2f7;
+                    transition: transform 0.3s;
+                    position: relative;
+                    overflow: hidden;
+                }
+                .pricing-card:hover {
+                    transform: translateY(-10px);
+                    box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+                }
+                .pricing-card.popular {
+                    border-color: #667eea;
+                    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
+                }
+                .popular-badge {
+                    position: absolute;
+                    top: 20px;
+                    right: -30px;
+                    background: #667eea;
+                    color: white;
+                    padding: 5px 40px;
+                    transform: rotate(45deg);
+                    font-size: 0.8rem;
+                    font-weight: bold;
+                }
+                .price {
+                    font-size: 3rem;
+                    font-weight: 800;
+                    color: #1a202c;
+                    margin: 1.5rem 0;
+                }
+                .price span {
+                    font-size: 1.2rem;
+                    color: #a0aec0;
+                }
+                .pricing-features {
+                    list-style: none;
+                    padding: 0;
+                    margin: 2rem 0;
+                    text-align: left;
+                }
+                .pricing-features li {
+                    padding: 0.5rem 0;
+                    color: #4a5568;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .pricing-btn {
+                    display: block;
+                    width: 100%;
+                    padding: 1rem;
+                    border-radius: 10px;
+                    background: #edf2f7;
+                    color: #4a5568;
+                    font-weight: bold;
+                    text-decoration: none;
+                    transition: all 0.3s;
+                }
+                .pricing-card.popular .pricing-btn {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                }
+                .pricing-btn:hover {
+                    opacity: 0.9;
+                }
+                </style>
+                
+                <!-- FEATURES SECTION -->
+                <div id="features" class="section-container">
+                    <h2 class="section-title">Powerful Features</h2>
+                    <p class="section-subtitle">Everything you need to manage your institution effectively and efficiently in one place.</p>
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                            </div>
+                            <h3 class="feature-title">Top-tier Security</h3>
+                            <p class="feature-desc">Your school's data is protected with enterprise-grade encryption and automated backups.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            </div>
+                            <h3 class="feature-title">Lightning Fast</h3>
+                            <p class="feature-desc">Optimized performance ensuring quick load times for attendance, grades, and reports.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+                            </div>
+                            <h3 class="feature-title">Cloud Native</h3>
+                            <p class="feature-desc">Access your dashboard from anywhere, anytime, on any device with our cloud infrastructure.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HOW IT WORKS SECTION -->
+                <div id="how-it-works" class="section-container">
+                    <h2 class="section-title">How It Works</h2>
+                    <p class="section-subtitle">Get your school up and running on our platform in three simple steps.</p>
+                    <div class="steps-container">
+                        <div class="step-card">
+                            <div class="step-number">1</div>
+                            <h3 class="feature-title">Onboarding</h3>
+                            <p class="feature-desc">We import your existing student and staff data seamlessly into the new system.</p>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-number">2</div>
+                            <h3 class="feature-title">Configuration</h3>
+                            <p class="feature-desc">Customize grading systems, attendance rules, and communication templates.</p>
+                        </div>
+                        <div class="step-card">
+                            <div class="step-number">3</div>
+                            <h3 class="feature-title">Go Live</h3>
+                            <p class="feature-desc">Train your staff and launch the portal for parents, students, and teachers.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULES SECTION -->
+                <div id="modules" class="section-container">
+                    <h2 class="section-title">Comprehensive Modules</h2>
+                    <p class="section-subtitle">A modular design means you only use what you need, but have access to everything.</p>
+                    <div class="modules-grid">
+                        <div class="module-item">
+                            <div class="feature-icon" style="margin:0; width:48px; height:48px;">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                            </div>
+                            <div>
+                                <h4 style="margin:0; font-weight:700; color:#2d3748;">Student Management</h4>
+                                <p style="margin:5px 0 0 0; font-size:0.9rem; color:#718096;">Enrollments, profiles, and history.</p>
                             </div>
                         </div>
-
-                        <div class="p-6 border-t border-gray-200 dark:border-gray-700 md:border-t-0 md:border-l">
-                            <div class="flex items-center">
-                                <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" class="w-8 h-8 text-gray-500"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                <div class="ml-4 text-lg leading-7 font-semibold"><a href="https://laracasts.com" class="underline text-gray-900 dark:text-white">Laracasts</a></div>
+                        <div class="module-item">
+                            <div class="feature-icon" style="margin:0; width:48px; height:48px;">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                             </div>
-
-                            <div class="ml-12">
-                                <div class="mt-2 text-gray-600 dark:text-gray-400 text-sm">
-                                    Laracasts offers thousands of video tutorials on Laravel, PHP, and JavaScript development. Check them out, see for yourself, and massively level up your development skills in the process.
-                                </div>
+                            <div>
+                                <h4 style="margin:0; font-weight:700; color:#2d3748;">Finance & Fees</h4>
+                                <p style="margin:5px 0 0 0; font-size:0.9rem; color:#718096;">Invoicing, online payments, and payroll.</p>
                             </div>
                         </div>
-
-                        <div class="p-6 border-t border-gray-200 dark:border-gray-700">
-                            <div class="flex items-center">
-                                <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" class="w-8 h-8 text-gray-500"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path></svg>
-                                <div class="ml-4 text-lg leading-7 font-semibold"><a href="https://laravel-news.com/" class="underline text-gray-900 dark:text-white">Laravel News</a></div>
+                        <div class="module-item">
+                            <div class="feature-icon" style="margin:0; width:48px; height:48px;">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             </div>
-
-                            <div class="ml-12">
-                                <div class="mt-2 text-gray-600 dark:text-gray-400 text-sm">
-                                    Laravel News is a community driven portal and newsletter aggregating all of the latest and most important news in the Laravel ecosystem, including new package releases and tutorials.
-                                </div>
+                            <div>
+                                <h4 style="margin:0; font-weight:700; color:#2d3748;">Academics & Exams</h4>
+                                <p style="margin:5px 0 0 0; font-size:0.9rem; color:#718096;">Timetables, gradebooks, and report cards.</p>
                             </div>
                         </div>
-
-                        <div class="p-6 border-t border-gray-200 dark:border-gray-700 md:border-l">
-                            <div class="flex items-center">
-                                <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" class="w-8 h-8 text-gray-500"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                <div class="ml-4 text-lg leading-7 font-semibold text-gray-900 dark:text-white">Vibrant Ecosystem</div>
+                        <div class="module-item">
+                            <div class="feature-icon" style="margin:0; width:48px; height:48px;">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path></svg>
                             </div>
+                            <div>
+                                <h4 style="margin:0; font-weight:700; color:#2d3748;">Communication</h4>
+                                <p style="margin:5px 0 0 0; font-size:0.9rem; color:#718096;">SMS, Email, and Push Notifications.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                            <div class="ml-12">
-                                <div class="mt-2 text-gray-600 dark:text-gray-400 text-sm">
-                                    Laravel's robust library of first-party tools and libraries, such as <a href="https://forge.laravel.com" class="underline">Forge</a>, <a href="https://vapor.laravel.com" class="underline">Vapor</a>, <a href="https://nova.laravel.com" class="underline">Nova</a>, and <a href="https://envoyer.io" class="underline">Envoyer</a> help you take your projects to the next level. Pair them with powerful open source libraries like <a href="https://laravel.com/docs/billing" class="underline">Cashier</a>, <a href="https://laravel.com/docs/dusk" class="underline">Dusk</a>, <a href="https://laravel.com/docs/broadcasting" class="underline">Echo</a>, <a href="https://laravel.com/docs/horizon" class="underline">Horizon</a>, <a href="https://laravel.com/docs/sanctum" class="underline">Sanctum</a>, <a href="https://laravel.com/docs/telescope" class="underline">Telescope</a>, and more.
+                <!-- PRICING SECTION -->
+                <div id="pricing" class="section-container">
+                    <h2 class="section-title">Simple, Transparent Pricing</h2>
+                    <p class="section-subtitle">No hidden fees. Choose the plan that fits your institution's size and needs.</p>
+                    <div class="pricing-grid">
+                        <div class="pricing-card">
+                            <h3 style="color:#2d3748; margin-top:0;">Starter</h3>
+                            <div class="price">$49<span>/mo</span></div>
+                            <p style="color:#718096;">Perfect for small schools and kindergartens.</p>
+                            <ul class="pricing-features">
+                                <li><svg class="w-5 h-5" style="color:#48bb78" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Up to 500 Students</li>
+                                <li><svg class="w-5 h-5" style="color:#48bb78" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Basic Modules</li>
+                                <li><svg class="w-5 h-5" style="color:#48bb78" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Email Support</li>
+                            </ul>
+                            <a href="#contact" class="pricing-btn">Get Started</a>
+                        </div>
+                        <div class="pricing-card popular">
+                            <div class="popular-badge">POPULAR</div>
+                            <h3 style="color:#2d3748; margin-top:0;">Professional</h3>
+                            <div class="price">$99<span>/mo</span></div>
+                            <p style="color:#718096;">Ideal for growing schools requiring more power.</p>
+                            <ul class="pricing-features">
+                                <li><svg class="w-5 h-5" style="color:#48bb78" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Up to 2,000 Students</li>
+                                <li><svg class="w-5 h-5" style="color:#48bb78" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> All Modules Included</li>
+                                <li><svg class="w-5 h-5" style="color:#48bb78" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Priority Support</li>
+                                <li><svg class="w-5 h-5" style="color:#48bb78" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Custom Domain</li>
+                            </ul>
+                            <a href="#contact" class="pricing-btn">Get Started</a>
+                        </div>
+                        <div class="pricing-card">
+                            <h3 style="color:#2d3748; margin-top:0;">Enterprise</h3>
+                            <div class="price">Custom</div>
+                            <p style="color:#718096;">For large institutions and university campuses.</p>
+                            <ul class="pricing-features">
+                                <li><svg class="w-5 h-5" style="color:#48bb78" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Unlimited Students</li>
+                                <li><svg class="w-5 h-5" style="color:#48bb78" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Dedicated Server</li>
+                                <li><svg class="w-5 h-5" style="color:#48bb78" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> 24/7 Phone Support</li>
+                                <li><svg class="w-5 h-5" style="color:#48bb78" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> API Access</li>
+                            </ul>
+                            <a href="#contact" class="pricing-btn">Contact Sales</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Us Section -->
+                <div id="contact" class="contact-wrapper">
+                    <div class="contact-info sm:text-left">
+                        <h2 class="contact-title">Get in Touch</h2>
+                        <p class="contact-subtitle">Have questions or need assistance? We're here to help. Reach out to our dedicated support team today!</p>
+                        
+                        <div class="contact-details">
+                            <div class="contact-item">
+                                <div class="contact-icon-wrapper">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="contact-item-title">Our Office</h4>
+                                    <p class="contact-item-text">123 Education Lane, Learning City, 45678</p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <div class="contact-icon-wrapper">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="contact-item-title">Email Us</h4>
+                                    <p class="contact-item-text">support@unifiedtransform.com</p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <div class="contact-icon-wrapper">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                                </div>
+                                <div>
+                                    <h4 class="contact-item-title">Call Us</h4>
+                                    <p class="contact-item-text">+1 (555) 123-4567</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div> --}}
+                    
+                    <div class="contact-form-container">
+                        <form class="contact-form" action="#" method="POST">
+                            <h3 class="form-title">Send us a Message</h3>
+                            <div class="form-group">
+                                <label for="name" class="form-label">Full Name</label>
+                                <input type="text" id="name" name="name" class="form-input" placeholder="John Doe" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" id="email" name="email" class="form-input" placeholder="john@example.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="message" class="form-label">Message</label>
+                                <textarea id="message" name="message" rows="4" class="form-input" placeholder="How can we help you?" required></textarea>
+                            </div>
+                            <button type="submit" class="submit-btn">
+                                <span>Send Message</span>
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 1.25rem; height: 1.25rem;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
 
                 <div class="flex justify-center mt-4 sm:items-center sm:justify-between">
                     {{-- <div class="text-center text-sm text-gray-500 sm:text-left">

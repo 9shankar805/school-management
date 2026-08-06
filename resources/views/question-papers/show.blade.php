@@ -1,7 +1,5 @@
 @extends('layouts.app')
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">@include('layouts.left-menu')</div>
     <div class="flex-1 p-6 lg:p-8 overflow-auto">
 
         <nav class="text-xs text-slate-400 mb-4">
@@ -16,6 +14,11 @@
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 mb-6">
             <div class="flex flex-wrap justify-between items-start gap-4">
                 <div>
+                    @if($paper->school)
+                    <div class="text-xs font-semibold text-indigo-600 mb-1 flex items-center gap-1">
+                        <i class="bi bi-building"></i> {{ $paper->school->name }}
+                    </div>
+                    @endif
                     <div class="flex flex-wrap items-center gap-2 mb-1">
                         <h1 class="text-xl font-bold text-slate-800">{{ $paper->title }}</h1>
                         <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $paper->status_badge }}">
@@ -136,7 +139,7 @@
                                 <div class="mt-2 space-y-1">
                                     @foreach($q->options as $i => $opt)
                                     <p class="text-xs text-slate-600 flex items-center gap-2">
-                                        <span class="w-5 h-5 rounded-full border border-slate-200 flex items-center justify-center text-[10px] font-bold">{{ chr(65+$i) }}</span>
+                                        <span class="w-5 h-5 rounded-full border border-slate-200 flex items-center justify-center text-[10px] font-bold">{{ chr(65 + $loop->index) }}</span>
                                         {{ $opt }}
                                     </p>
                                     @endforeach

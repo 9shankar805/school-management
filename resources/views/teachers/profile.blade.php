@@ -1,7 +1,5 @@
 @extends('layouts.app')
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">@include('layouts.left-menu')</div>
     <div class="flex-1 p-6 lg:p-8 overflow-auto">
 
         <nav class="text-xs text-slate-400 mb-4">
@@ -33,7 +31,7 @@
                 <div class="flex flex-wrap gap-4 text-xs text-slate-500 mt-1">
                     <span><i class="bi bi-envelope me-1"></i>{{ $teacher->email }}</span>
                     @if($teacher->phone)<span><i class="bi bi-telephone me-1"></i>{{ $teacher->phone }}</span>@endif
-                    @if($activeContract)<span><i class="bi bi-briefcase me-1"></i>{{ ucfirst($activeContract->position ?? $activeContract->contract_type) }} · ${{ number_format($activeContract->basic_salary) }}/mo</span>@endif
+                    @if($activeContract)<span><i class="bi bi-briefcase me-1"></i>{{ ucfirst($activeContract->position ?? $activeContract->contract_type) }} · Rs. {{ number_format($activeContract->basic_salary) }}/mo</span>@endif
                 </div>
                 <div class="flex flex-wrap gap-4 mt-3">
                     <div class="text-center"><p class="text-lg font-bold text-slate-800">{{ $teacher->qualifications->count() }}</p><p class="text-[10px] text-slate-400">Qualifications</p></div>
@@ -53,6 +51,7 @@
         <div class="flex gap-1 overflow-x-auto mb-6 bg-white rounded-xl border border-slate-100 shadow-sm p-1">
             @foreach([
                 ['overview','bi-person-lines-fill','Overview'],
+                ['timetable','bi-calendar3-week','Timetable'],
                 ['qualifications','bi-award','Qualifications'],
                 ['contracts','bi-file-earmark-text','Contracts'],
                 ['documents','bi-folder2-open','Documents'],
@@ -91,7 +90,7 @@
                             <tbody class="divide-y divide-slate-50">
                                 <tr class="hover:bg-slate-50"><td class="px-5 py-2.5 text-slate-400 font-medium w-36">Type</td><td class="px-5 py-2.5 text-slate-700">{{ ucfirst($activeContract->contract_type) }}</td></tr>
                                 <tr class="hover:bg-slate-50"><td class="px-5 py-2.5 text-slate-400 font-medium">Position</td><td class="px-5 py-2.5 text-slate-700">{{ $activeContract->position ?? '—' }}</td></tr>
-                                <tr class="hover:bg-slate-50"><td class="px-5 py-2.5 text-slate-400 font-medium">Salary</td><td class="px-5 py-2.5 text-slate-700">${{ number_format($activeContract->basic_salary) }}/month</td></tr>
+                                <tr class="hover:bg-slate-50"><td class="px-5 py-2.5 text-slate-400 font-medium">Salary</td><td class="px-5 py-2.5 text-slate-700">Rs. {{ number_format($activeContract->basic_salary) }}/month</td></tr>
                                 <tr class="hover:bg-slate-50"><td class="px-5 py-2.5 text-slate-400 font-medium">Start</td><td class="px-5 py-2.5 text-slate-700">{{ $activeContract->start_date->format('d M Y') }}</td></tr>
                                 <tr class="hover:bg-slate-50"><td class="px-5 py-2.5 text-slate-400 font-medium">End</td>
                                     <td class="px-5 py-2.5">
@@ -109,21 +108,266 @@
                     @endif
                     {{-- Assigned courses --}}
                     <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                        <div class="px-5 py-3 border-b border-slate-100 text-sm font-semibold text-slate-700"><i class="bi bi-journal-medical me-1 text-blue-500"></i>Assigned Courses</div>
+                        <div class="px-5 py-3 border-b border-slate-100 text-sm font-semibold text-slate-700"><i class="bi bi-journal-medical me-1 text-blue-500"></i>Assigned Subjects</div>
                         @if($teacher->assignedCourses->count())
                         <div class="divide-y divide-slate-50">
-                            @foreach($teacher->assignedCourses->take(5) as $ac)
-                            <div class="px-5 py-2.5 flex justify-between text-sm">
-                                <span class="text-slate-700">{{ $ac->course?->name ?? '—' }}</span>
-                                <span class="text-slate-400">{{ $ac->section?->section_name ?? '—' }}</span>
+                            @foreach($teacher->assignedCourses->take(8) as $ac)
+                            <div class="px-5 py-2.5 flex items-center justify-between text-sm gap-2">
+                                <span class="text-slate-700 font-medium">{{ $ac->course?->course_name ?? '—' }}</span>
+                                <div class="flex items-center gap-1.5 flex-shrink-0">
+                                    @if($ac->schoolClass)
+                                    <span class="text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-full">{{ $ac->schoolClass->class_name }}</span>
+                                    @endif
+                                    @if($ac->section)
+                                    <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">{{ $ac->section->section_name }}</span>
+                                    @endif
+                                </div>
                             </div>
                             @endforeach
+                            @if($teacher->assignedCourses->count() > 8)
+                            <div class="px-5 py-2 text-xs text-slate-400">+{{ $teacher->assignedCourses->count() - 8 }} more</div>
+                            @endif
                         </div>
-                        @else<p class="text-sm text-slate-400 text-center py-6">No courses assigned.</p>@endif
+                        @else<p class="text-sm text-slate-400 text-center py-6">No subjects assigned.</p>@endif
                     </div>
                 </div>
             </div>
         </div>
+
+        {{-- TAB: TIMETABLE --}}
+        <div id="tab-timetable" class="tab-panel hidden">
+            @php
+                $days = [1=>'Monday',2=>'Tuesday',3=>'Wednesday',4=>'Thursday',5=>'Friday',6=>'Saturday',0=>'Sunday'];
+                $totalSlots = collect($timetableSlots)->flatten()->count();
+            @endphp
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+                {{-- ── Left: Weekly timetable grid ── --}}
+                <div class="xl:col-span-2 space-y-4">
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+                            <p class="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                                <i class="bi bi-calendar3-week text-indigo-500"></i>
+                                Weekly Schedule
+                            </p>
+                            <span class="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-medium">
+                                {{ $totalSlots }} period{{ $totalSlots !== 1 ? 's' : '' }} total
+                            </span>
+                        </div>
+
+                        @if($totalSlots > 0)
+                        <div class="divide-y divide-slate-50">
+                            @foreach($days as $dayNum => $dayName)
+                                @if(isset($timetableSlots[$dayNum]) && $timetableSlots[$dayNum]->count())
+                                <div class="px-5 py-3">
+                                    <div class="flex items-center gap-2 mb-2.5">
+                                        <span class="w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0"></span>
+                                        <p class="text-xs font-bold text-slate-600 uppercase tracking-wider">{{ $dayName }}</p>
+                                        <span class="text-[10px] text-slate-400">{{ $timetableSlots[$dayNum]->count() }} period{{ $timetableSlots[$dayNum]->count() > 1 ? 's' : '' }}</span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($timetableSlots[$dayNum]->sortBy('start') as $slot)
+                                        @php
+                                            $colors = ['bg-indigo-50 border-indigo-200 text-indigo-700','bg-emerald-50 border-emerald-200 text-emerald-700','bg-amber-50 border-amber-200 text-amber-700','bg-sky-50 border-sky-200 text-sky-700','bg-violet-50 border-violet-200 text-violet-700','bg-rose-50 border-rose-200 text-rose-700'];
+                                            $color = $colors[$slot->course_id % count($colors)];
+                                        @endphp
+                                        <div class="flex-1 min-w-[160px] max-w-[220px] border rounded-xl p-3 {{ $color }}">
+                                            <div class="flex items-start justify-between gap-2 mb-1">
+                                                <p class="text-xs font-bold leading-tight">{{ $slot->course?->course_name ?? 'Free' }}</p>
+                                                @can('create teachers')
+                                                <form method="POST" action="{{ route('teacher.timetable.destroy', $slot->id) }}" class="flex-shrink-0">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" onclick="return confirm('Remove this slot?')"
+                                                            class="text-[10px] opacity-50 hover:opacity-100 transition"
+                                                            title="Remove slot">
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                </form>
+                                                @endcan
+                                            </div>
+                                            <p class="text-[10px] font-mono font-semibold opacity-80">{{ $slot->start }} – {{ $slot->end }}</p>
+                                            <div class="flex items-center gap-1 mt-1 flex-wrap">
+                                                <span class="text-[9px] font-semibold opacity-70">{{ $slot->schoolClass?->class_name ?? '' }}</span>
+                                                @if($slot->section)<span class="text-[9px] opacity-50">· {{ $slot->section->section_name }}</span>@endif
+                                                @if($slot->room)<span class="text-[9px] opacity-60 ml-auto"><i class="bi bi-door-open"></i> {{ $slot->room }}</span>@endif
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                @endif
+                            @endforeach
+                        </div>
+                        @else
+                        <div class="py-14 text-center text-slate-400">
+                            <i class="bi bi-calendar3-week text-4xl block mb-2 opacity-30"></i>
+                            <p class="text-sm font-medium">No timetable slots assigned yet.</p>
+                            <p class="text-xs mt-1 opacity-60">Use the form on the right to add periods.</p>
+                        </div>
+                        @endif
+                    </div>
+
+                    {{-- Summary table --}}
+                    @if($totalSlots > 0)
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="px-5 py-3 border-b border-slate-100 text-sm font-semibold text-slate-700">
+                            <i class="bi bi-table me-1 text-slate-400"></i> Period Summary
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="bg-slate-50 text-xs text-slate-400 uppercase tracking-wide">
+                                    <tr>
+                                        <th class="px-4 py-2.5 text-left font-medium">Day</th>
+                                        <th class="px-4 py-2.5 text-left font-medium">Subject</th>
+                                        <th class="px-4 py-2.5 text-left font-medium">Class</th>
+                                        <th class="px-4 py-2.5 text-left font-medium">Section</th>
+                                        <th class="px-4 py-2.5 text-left font-medium">Time</th>
+                                        <th class="px-4 py-2.5 text-left font-medium">Room</th>
+                                        @can('create teachers')<th class="px-4 py-2.5"></th>@endcan
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50">
+                                    @foreach($days as $dayNum => $dayName)
+                                        @if(isset($timetableSlots[$dayNum]))
+                                        @foreach($timetableSlots[$dayNum]->sortBy('start') as $slot)
+                                        <tr class="hover:bg-slate-50">
+                                            <td class="px-4 py-2.5 font-medium text-slate-600">{{ $dayName }}</td>
+                                            <td class="px-4 py-2.5 text-slate-700">{{ $slot->course?->course_name ?? '—' }}</td>
+                                            <td class="px-4 py-2.5 text-slate-500">{{ $slot->schoolClass?->class_name ?? '—' }}</td>
+                                            <td class="px-4 py-2.5 text-slate-500">{{ $slot->section?->section_name ?? '—' }}</td>
+                                            <td class="px-4 py-2.5 font-mono text-xs text-slate-600">{{ $slot->start }} – {{ $slot->end }}</td>
+                                            <td class="px-4 py-2.5 text-slate-400 text-xs">{{ $slot->room ?? '—' }}</td>
+                                            @can('create teachers')
+                                            <td class="px-4 py-2.5">
+                                                <form method="POST" action="{{ route('teacher.timetable.destroy', $slot->id) }}">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" onclick="return confirm('Remove?')"
+                                                            class="text-xs text-rose-400 hover:text-rose-600 transition">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                            @endcan
+                                        </tr>
+                                        @endforeach
+                                        @endif
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+
+                {{-- ── Right: Add slot form (admin only) ── --}}
+                @can('create teachers')
+                <div class="xl:col-span-1">
+                    <div class="sticky top-24 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="px-5 py-3.5 border-b border-slate-100 bg-indigo-50">
+                            <p class="text-sm font-semibold text-indigo-700 flex items-center gap-2">
+                                <i class="bi bi-plus-circle-fill"></i> Add Timetable Slot
+                            </p>
+                            <p class="text-xs text-indigo-500 mt-0.5">Assign a period to this teacher's weekly schedule</p>
+                        </div>
+                        <form method="POST" action="{{ route('teacher.timetable.store', $teacher->id) }}" class="p-5 space-y-3">
+                            @csrf
+
+                            @if($errors->has('conflict'))
+                            <div class="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs flex items-start gap-2">
+                                <i class="bi bi-exclamation-circle-fill flex-shrink-0 mt-0.5"></i>
+                                {{ $errors->first('conflict') }}
+                            </div>
+                            @endif
+
+                            {{-- Day --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Day of Week *</label>
+                                <select name="weekday" required
+                                        class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    @foreach($days as $num => $name)
+                                    <option value="{{ $num }}" {{ old('weekday') == $num ? 'selected' : '' }}>{{ $name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Time --}}
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 mb-1">Start Time *</label>
+                                    <input type="time" name="start" value="{{ old('start', '08:00') }}" required
+                                           class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 mb-1">End Time *</label>
+                                    <input type="time" name="end" value="{{ old('end', '09:00') }}" required
+                                           class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                </div>
+                            </div>
+
+                            {{-- Class --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Class *</label>
+                                <select name="class_id" id="tt_class_id" required
+                                        class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                                        onchange="loadCoursesForClass(this.value)">
+                                    <option value="">— Select class —</option>
+                                    @foreach($allClasses as $cls)
+                                    <option value="{{ $cls->id }}" {{ old('class_id') == $cls->id ? 'selected' : '' }}>{{ $cls->class_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Section --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Section *</label>
+                                <select name="section_id" id="tt_section_id" required
+                                        class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    <option value="">— Select class first —</option>
+                                    @foreach($allClasses as $cls)
+                                        @foreach($cls->sections as $sec)
+                                        <option value="{{ $sec->id }}" data-class="{{ $cls->id }}"
+                                            {{ old('section_id') == $sec->id ? 'selected' : '' }}>
+                                            {{ $cls->class_name }} · {{ $sec->section_name }}
+                                        </option>
+                                        @endforeach
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Subject / Course --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Subject *</label>
+                                <select name="course_id" id="tt_course_id" required
+                                        class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    <option value="">— Select class first —</option>
+                                    @foreach($allCourses as $c)
+                                    <option value="{{ $c->id }}" data-class="{{ $c->class_id }}"
+                                            {{ old('course_id') == $c->id ? 'selected' : '' }}>
+                                        {{ $c->course_name }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Room (optional) --}}
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">Room <span class="font-normal opacity-60">(optional)</span></label>
+                                <input type="text" name="room" value="{{ old('room') }}" placeholder="e.g. Room 101"
+                                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            </div>
+
+                            <button type="submit"
+                                    class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2">
+                                <i class="bi bi-plus-lg"></i> Add Slot
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                @endcan
+
+            </div>{{-- /grid --}}
+        </div>{{-- /tab-timetable --}}
 
         {{-- TAB: QUALIFICATIONS --}}
         <div id="tab-qualifications" class="tab-panel hidden">
@@ -157,7 +401,7 @@
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-semibold text-slate-700">{{ $q->title }}</p>
                             <p class="text-xs text-slate-500">{{ $q->institution }}@if($q->field_of_study) · {{ $q->field_of_study }}@endif</p>
-                            <p class="text-xs text-slate-400 mt-0.5">{{ $q->start_year ?? '' }}@if($q->end_year) – {{ $q->end_year }}@endif@if($q->grade) · {{ $q->grade }}@endif</p>
+                            <p class="text-xs text-slate-400 mt-0.5">{{ $q->start_year ?? '' }} @if($q->end_year) – {{ $q->end_year }} @endif @if($q->grade) · {{ $q->grade }} @endif</p>
                             @if($q->attachment_path)<a href="{{ $q->attachment_url }}" target="_blank" class="text-xs text-indigo-600 hover:underline mt-0.5 inline-block"><i class="bi bi-paperclip me-1"></i>Certificate</a>@endif
                         </div>
                         <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full flex-shrink-0">{{ \App\Models\TeacherQualification::TYPES[$q->type] ?? $q->type }}</span>
@@ -208,7 +452,7 @@
                                     @if($c->is_expiring)<span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full"><i class="bi bi-exclamation-triangle me-1"></i>Expiring soon</span>@endif
                                     @if($c->is_expired)<span class="text-xs bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full"><i class="bi bi-x-circle me-1"></i>Expired</span>@endif
                                 </div>
-                                <p class="text-xs text-slate-500">{{ $c->start_date->format('d M Y') }} – {{ $c->end_date?->format('d M Y') ?? 'Ongoing' }} · ${{ number_format($c->basic_salary) }}/month</p>
+                                <p class="text-xs text-slate-500">{{ $c->start_date->format('d M Y') }} – {{ $c->end_date?->format('d M Y') ?? 'Ongoing' }} · Rs. {{ number_format($c->basic_salary) }}/month</p>
                             </div>
                             @if($c->attachment_path)<a href="{{ \Illuminate\Support\Facades\Storage::url($c->attachment_path) }}" target="_blank" class="text-xs text-indigo-600 hover:underline flex-shrink-0">View</a>@endif
                         </div>
@@ -405,9 +649,9 @@
                         @foreach($payrolls as $p)
                         <tr class="hover:bg-slate-50">
                             <td class="px-5 py-3 font-medium text-slate-700">{{ $p->month_name }} {{ $p->year }}</td>
-                            <td class="px-5 py-3 text-slate-600">${{ number_format($p->gross_salary) }}</td>
-                            <td class="px-5 py-3 text-rose-500">-${{ number_format($p->tax_deduction + $p->other_deductions) }}</td>
-                            <td class="px-5 py-3 font-bold text-emerald-600">${{ number_format($p->net_salary) }}</td>
+                            <td class="px-5 py-3 text-slate-600">Rs. {{ number_format($p->gross_salary) }}</td>
+                            <td class="px-5 py-3 text-rose-500">-Rs. {{ number_format($p->tax_deduction + $p->other_deductions) }}</td>
+                            <td class="px-5 py-3 font-bold text-emerald-600">Rs. {{ number_format($p->net_salary) }}</td>
                             <td class="px-5 py-3"><span class="text-xs px-2 py-0.5 rounded-full font-medium {{ $p->status_badge }}">{{ ucfirst($p->status) }}</span></td>
                             <td class="px-5 py-3"><a href="{{ route('teacher.payroll.slip', $p->id) }}" target="_blank" class="text-xs text-indigo-600 hover:underline">Slip</a></td>
                         </tr>
@@ -510,7 +754,7 @@
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-medium text-slate-700">{{ $tr->title }}</p>
                             <p class="text-xs text-slate-400">{{ \App\Models\TeacherTraining::TYPES[$tr->type] ?? $tr->type }}@if($tr->organizer) · {{ $tr->organizer }}@endif</p>
-                            <p class="text-xs text-slate-400 mt-0.5">{{ $tr->from_date->format('d M Y') }}@if($tr->to_date) – {{ $tr->to_date->format('d M Y') }}@endif@if($tr->hours) · {{ $tr->hours }}h@endif</p>
+                            <p class="text-xs text-slate-400 mt-0.5">{{ $tr->from_date->format('d M Y') }} @if($tr->to_date) – {{ $tr->to_date->format('d M Y') }} @endif @if($tr->hours) · {{ $tr->hours }}h @endif</p>
                         </div>
                         @can('create teachers')
                         <form method="POST" action="{{ route('teacher.training.destroy', $tr->id) }}">@csrf @method('DELETE')
@@ -540,5 +784,32 @@ function showTab(id) {
     history.replaceState(null,'','#' + id);
 }
 (function(){ showTab(location.hash.replace('#','') || 'overview'); })();
+
+// ── Timetable form: cascade class → sections & courses ───────────────
+function loadCoursesForClass(classId) {
+    const sectionSel = document.getElementById('tt_section_id');
+    const courseSel  = document.getElementById('tt_course_id');
+    if (!sectionSel || !courseSel) return;
+
+    // Filter sections
+    Array.from(sectionSel.options).forEach(opt => {
+        if (!opt.value) return; // keep placeholder
+        opt.hidden = opt.dataset.class != classId;
+    });
+    sectionSel.value = '';
+
+    // Filter courses
+    Array.from(courseSel.options).forEach(opt => {
+        if (!opt.value) return;
+        opt.hidden = opt.dataset.class != classId;
+    });
+    courseSel.value = '';
+}
+
+// Run on page load to filter to any previously-selected class (e.g. after validation error)
+(function() {
+    const classEl = document.getElementById('tt_class_id');
+    if (classEl && classEl.value) loadCoursesForClass(classEl.value);
+})();
 </script>
 @endpush

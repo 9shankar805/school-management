@@ -47,10 +47,15 @@ class StudentStoreRequest extends FormRequest
             'mother_phone'      => 'required|string',
             'parent_address'    => 'required|string',
 
+            // Direct Parent Link Account Information
+            'parent_email'      => 'nullable|string|email|max:255',
+            'parent_password'   => 'nullable|string|min:6',
+            'parent_relationship'=> 'nullable|string|in:father,mother,guardian',
+
             // Academic information
             'class_id'          => 'required',
             'section_id'        => 'required',
-            'board_reg_no'      => 'string',
+            'board_reg_no'      => 'nullable|string',
             'session_id'        => 'required',
             'id_card_number'    => 'required',
         ];

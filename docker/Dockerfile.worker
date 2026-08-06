@@ -1,0 +1,59 @@
+# ──────────────────────────────────────────────────────────────
+#  Worker image — PHP-FPM + Supervisor
+#  Handles Laravel queues, scheduler, and (optionally) Horizon
+# ──────────────────────────────────────────────────────────────
+FROM php:8.3-fpm
+
+# System deps
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libzip-dev \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libxml2-dev \
+    libonig-dev \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    zip \
+    unzip \
+    git \
+    curl \
+    supervisor \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# PHP extensions
+RUN docker-php-ext-install \
+    pdo_mysql \
+    zip \
+    exif \
+    pcntl \
+    bcmath \
+    opcache \
+    mbstring
+
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install gd
+
+# Redis PHP extension
+RUN pecl install redis && docker-php-ext-enable redis
+
+# Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# App user
+RUN groupadd -g 1000 www && useradd -u 1000 -ms /bin/bash -g www www
+
+WORKDIR /var/www
+
+# Copy supervisor config
+COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Copy application (permissions set separately via volume in docker-compose)
+COPY --chown=www:www . /var/www
+
+RUN mkdir -p /var/log/supervisor && chown www:www /var/log/supervisor
+
+USER www
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

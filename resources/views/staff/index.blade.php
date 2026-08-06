@@ -3,7 +3,6 @@
 @section('content')
 <div class="container">
     <div class="row justify-content-start">
-        @include('layouts.left-menu')
         <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
             <div class="row pt-2">
                 <div class="col ps-4">
@@ -34,8 +33,24 @@
                                         <td>{{ $staff->first_name }} {{ $staff->last_name }}</td>
                                         <td>{{ $staff->email }}</td>
                                         <td>{{ $staff->role }}</td>
-                                        <td>
-                                            <!-- placeholder for edit/delete -->
+                                        <td class="text-nowrap">
+                                            @can('manage roles')
+                                            <a href="{{ route('roles.user-roles', $staff->id) }}"
+                                               class="btn btn-sm btn-outline-success me-1">
+                                                <i class="bi bi-person-check"></i> Assign Roles
+                                            </a>
+                                            @endcan
+                                            <a href="{{ route('staff.edit', $staff->id) }}"
+                                               class="btn btn-sm btn-outline-primary me-1">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </a>
+                                            <form method="POST" action="{{ route('staff.destroy', $staff->id) }}"
+                                                  class="d-inline" onsubmit="return confirm('Delete this staff?')">
+                                                @csrf @method('DELETE')
+                                                <button class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                     @endforeach

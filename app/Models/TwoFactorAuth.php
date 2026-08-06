@@ -1,12 +1,15 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TwoFactorAuth extends Model
 {
+    use SoftDeletes, HasTenant;
     protected $table = 'two_factor_auth';
 
     protected $fillable = [

@@ -3,7 +3,6 @@
 @section('content')
 <div class="container">
     <div class="row justify-content-start">
-        @include('layouts.left-menu')
         <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
             <div class="row pt-2">
                 <div class="col ps-4">
@@ -43,7 +42,7 @@
 
                                     @if($member->outstanding_fine > 0)
                                     <div class="alert alert-danger mt-3 py-2 small">
-                                        Outstanding Fine: <strong>${{ number_format($member->outstanding_fine, 2) }}</strong>
+                                        Outstanding Fine: <strong>Rs. {{ number_format($member->outstanding_fine, 2) }}</strong>
                                     </div>
                                     @endif
                                 </div>
@@ -170,7 +169,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Outstanding: <strong class="text-danger">${{ number_format($member->outstanding_fine, 2) }}</strong></p>
+                    <p>Outstanding: <strong class="text-danger">Rs. {{ number_format($member->outstanding_fine, 2) }}</strong></p>
                     <div class="mb-3">
                         <label class="form-label">Action</label>
                         <select name="action" class="form-select">

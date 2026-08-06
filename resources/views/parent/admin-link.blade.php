@@ -1,10 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="flex min-h-screen bg-slate-50">
-    <div class="hidden lg:block w-64 flex-shrink-0 bg-white border-r border-slate-200">
-        @include('layouts.left-menu')
-    </div>
 
     <div class="flex-1 p-6 lg:p-8 overflow-auto">
         <nav class="text-xs text-slate-400 mb-4">
@@ -35,15 +31,17 @@
         <div id="linkFormContainer" class="hidden">
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-5 mb-6">
                 <p class="text-sm font-semibold text-slate-700 mb-4">Link Student to Parent: <span id="selectedParentName" class="text-indigo-600"></span></p>
-                <form id="linkForm" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <form id="linkForm" method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4" onsubmit="return validateLinkForm()">
                     @csrf
                     <input type="hidden" name="parent_id_hidden" id="selectedParentId">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-500 mb-1">Student Name / Email</label>
-                        <input type="text" id="studentSearch" placeholder="Start typing student name…"
-                               class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300">
-                        <input type="hidden" name="student_id" id="selectedStudentId">
-                        <div id="studentResults" class="mt-1 space-y-1 hidden"></div>
+                        <label class="block text-xs font-semibold text-slate-500 mb-1">Select Student</label>
+                        <select name="student_id" id="selectedStudentId" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300" required>
+                            <option value="">— Choose a student —</option>
+                            @foreach(\App\Models\User::role('student')->orderBy('first_name')->get() as $student)
+                                <option value="{{ $student->id }}">{{ $student->full_name }} — {{ $student->email }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-500 mb-1">Relationship</label>
@@ -129,41 +127,21 @@ function selectParent(id, name) {
     document.getElementById('linkFormContainer').scrollIntoView({ behavior: 'smooth' });
 }
 
+function validateLinkForm() {
+    const studentId = document.getElementById('selectedStudentId').value;
+    if (!studentId) {
+        alert('Please select a student from the dropdown list before submitting.');
+        return false;
+    }
+    return true;
+}
+
 async function searchParents() {
     const q = document.getElementById('parentSearch').value;
     if (!q) return;
-    const res = await fetch('/admin/parents/students/search?q=' + encodeURIComponent(q) + '&role=parent');
+    const res = await fetch('/admin/parents/search?q=' + encodeURIComponent(q) + '&role=parent');
     // reuse same endpoint but filter by parent role — for now just list all parents via PHP above
 }
 
-let studentSearchTimer;
-document.addEventListener('DOMContentLoaded', function () {
-    const input = document.getElementById('studentSearch');
-    if (!input) return;
-    input.addEventListener('input', function () {
-        clearTimeout(studentSearchTimer);
-        const q = this.value;
-        if (q.length < 2) { document.getElementById('studentResults').classList.add('hidden'); return; }
-        studentSearchTimer = setTimeout(async () => {
-            const res = await fetch('/admin/parents/students/search?q=' + encodeURIComponent(q));
-            const data = await res.json();
-            const container = document.getElementById('studentResults');
-            container.innerHTML = '';
-            data.forEach(s => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'w-full text-left text-xs px-3 py-2 bg-slate-50 hover:bg-indigo-50 rounded-lg border border-slate-200';
-                btn.textContent = s.text;
-                btn.onclick = () => {
-                    document.getElementById('selectedStudentId').value = s.id;
-                    document.getElementById('studentSearch').value = s.text;
-                    container.classList.add('hidden');
-                };
-                container.appendChild(btn);
-            });
-            container.classList.toggle('hidden', data.length === 0);
-        }, 300);
-    });
-});
 </script>
 @endpush

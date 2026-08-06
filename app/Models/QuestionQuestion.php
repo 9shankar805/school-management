@@ -1,17 +1,20 @@
 <?php
 
 namespace App\Models;
+use App\Traits\HasTenant;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 
 class QuestionQuestion extends Model
 {
-    use HasFactory;
+    use HasFactory, HasTenant, SoftDeletes;
 
     protected $table = 'question_questions';
 
     protected $fillable = [
+        'school_id',
         'section_id', 'bank_id', 'question_type', 'question_text',
         'answer_text', 'options', 'correct_answer', 'allocated_marks',
         'difficulty', 'chapter', 'bloom_taxonomy', 'numbering', 'sort_order',

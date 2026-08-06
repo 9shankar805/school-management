@@ -25,7 +25,8 @@ class QuestionPaperTemplateController extends Controller
 
     public function create()
     {
-        return view('question-papers.templates.create');
+        $school = config('tenant.school');
+        return view('question-papers.templates.create', compact('school'));
     }
 
     public function store(Request $request)
@@ -46,6 +47,11 @@ class QuestionPaperTemplateController extends Controller
             'watermark_text'     => 'nullable|string|max:100',
         ]);
 
+        // If school_name is left blank, fall back to the school profile name
+        if (empty($data['school_name'])) {
+            $data['school_name'] = config('tenant.school')?->name;
+        }
+
         QuestionPaperTemplate::create(array_merge($data, [
             'created_by'     => auth()->id(),
             'is_active'      => true,
@@ -65,7 +71,8 @@ class QuestionPaperTemplateController extends Controller
     public function edit(int $id)
     {
         $template = QuestionPaperTemplate::findOrFail($id);
-        return view('question-papers.templates.edit', compact('template'));
+        $school   = config('tenant.school');
+        return view('question-papers.templates.edit', compact('template', 'school'));
     }
 
     public function update(Request $request, int $id)
@@ -92,6 +99,8 @@ class QuestionPaperTemplateController extends Controller
         $template->update(array_merge($data, [
             'show_watermark' => $request->boolean('show_watermark'),
             'is_active'      => $request->boolean('is_active', true),
+            // If school_name was cleared, fall back to the school profile name
+            'school_name'    => $data['school_name'] ?: (config('tenant.school')?->name ?? $template->school_name),
         ]));
 
         return redirect()->route('question-paper-templates.index')

@@ -126,11 +126,19 @@ class SectionController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Section  $section
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Section $section)
+    public function destroy($id)
     {
-        //
+        try {
+            $section = Section::findOrFail($id);
+            $secName = $section->section_name;
+            $section->delete();
+
+            return back()->with('status', 'Section "' . $secName . '" deleted successfully!');
+        } catch (\Exception $e) {
+            return back()->withError('Failed to delete section. ' . $e->getMessage());
+        }
     }
 }

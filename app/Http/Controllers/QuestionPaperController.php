@@ -304,10 +304,11 @@ class QuestionPaperController extends Controller
         }
 
         $template    = $paper->template;
+        $school      = config('tenant.school');
         $orientation = $paper->orientation ?? 'portrait';
         $paperSize   = $paper->paper_size  ?? 'A4';
 
-        $pdf = Pdf::loadView('question-papers.pdf.paper', compact('paper', 'template'))
+        $pdf = Pdf::loadView('question-papers.pdf.paper', compact('paper', 'template', 'school'))
             ->setPaper(strtolower($paperSize), $orientation)
             ->setOptions([
                 'defaultFont'     => 'sans-serif',
@@ -354,8 +355,9 @@ class QuestionPaperController extends Controller
         $boldUnderline = ['name' => 'Arial', 'size' => 10, 'bold' => true, 'underline' => 'single'];
 
         // ── Header block ─────────────────────────────────────────────────────
-        $template = $paper->template;
-        $schoolName = $template?->school_name ?? config('app.name');
+        $template   = $paper->template;
+        $school     = config('tenant.school');
+        $schoolName = $template?->school_name ?: ($school?->name ?? config('app.name'));
 
         $section->addText($schoolName, $titleStyle, $centerPara);
         $section->addText($paper->exam_name ?? 'Examination', $headingStyle, $centerPara);
