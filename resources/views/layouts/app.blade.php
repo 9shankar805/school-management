@@ -845,5 +845,8 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 @endif
+
+{{-- ── Professional Loading Indicator (top bar + overlay + button spinners) ── --}}
+<script src="{{ asset('js/loader.js') }}?v={{ filemtime(public_path('js/loader.js')) }}"></script>
 </body>
 </html>

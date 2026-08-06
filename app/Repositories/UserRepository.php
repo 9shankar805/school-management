@@ -162,7 +162,7 @@ class UserRepository implements UserInterface {
     public function updateStudent($request) {
         try {
             DB::transaction(function () use ($request) {
-                User::where('id', $request['student_id'])->update([
+                $fields = [
                     'first_name'    => $request['first_name'],
                     'last_name'     => $request['last_name'],
                     'email'         => $request['email'],
@@ -176,7 +176,14 @@ class UserRepository implements UserInterface {
                     'birthday'      => $request['birthday'],
                     'religion'      => $request['religion'],
                     'blood_type'    => $request['blood_type'],
-                ]);
+                ];
+
+                // Only update photo if a new base64 image was submitted
+                if (!empty($request['photo'])) {
+                    $fields['photo'] = $this->convert($request['photo']);
+                }
+
+                User::where('id', $request['student_id'])->update($fields);
 
                 // Update Parents' information
                 $studentParentInfoRepository = new StudentParentInfoRepository();
@@ -194,7 +201,7 @@ class UserRepository implements UserInterface {
     public function updateTeacher($request) {
         try {
             DB::transaction(function () use ($request) {
-                User::where('id', $request['teacher_id'])->update([
+                $fields = [
                     'first_name'    => $request['first_name'],
                     'last_name'     => $request['last_name'],
                     'email'         => $request['email'],
@@ -205,7 +212,14 @@ class UserRepository implements UserInterface {
                     'address2'      => $request['address2'] ?? null,
                     'city'          => $request['city'],
                     'zip'           => $request['zip'],
-                ]);
+                ];
+
+                // Only update photo if a new base64 image was submitted
+                if (!empty($request['photo'])) {
+                    $fields['photo'] = $this->convert($request['photo']);
+                }
+
+                User::where('id', $request['teacher_id'])->update($fields);
             });
         } catch (\Exception $e) {
             throw new \Exception('Failed to update Teacher. '.$e->getMessage());
