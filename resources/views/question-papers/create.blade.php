@@ -19,101 +19,42 @@
 
                 {{-- Template picker --}}
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Template</label>
-                    <select name="template_id" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                        <option value="">— No template (blank paper) —</option>
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Template <span class="text-rose-500">*</span></label>
+                    <select name="template_id" required class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
                         @foreach($templates as $tpl)
                         <option value="{{ $tpl->id }}" {{ old('template_id') == $tpl->id ? 'selected' : '' }}>
                             {{ $tpl->name }}
-                            ({{ strtoupper($tpl->paper_size) }} · {{ ucfirst($tpl->orientation) }})
                         </option>
                         @endforeach
                     </select>
                     <p class="text-xs text-slate-400 mt-1">
-                        Templates pre-fill header, footer, and school details.
-                        <a href="{{ route('question-paper-templates.create') }}" class="text-indigo-500 hover:underline">Create template</a>
+                        Selected template pre-fills header box, metadata grid, and paper formatting.
                     </p>
                 </div>
 
                 <hr class="border-slate-100">
 
-                {{-- Paper identity --}}
+                {{-- Paper Title --}}
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1.5">Paper Title <span class="text-rose-500">*</span></label>
                     <input type="text" name="title" value="{{ old('title') }}" required
                            class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                           placeholder="e.g. First Terminal Examination — Mathematics Class 10">
+                           placeholder="e.g. 3rd Terminal Examination — C. Math Class 8">
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Exam</label>
-                        <select name="exam_id" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                            <option value="">— Link to exam (optional) —</option>
-                            @foreach($exams as $exam)
-                            <option value="{{ $exam->id }}" {{ old('exam_id') == $exam->id ? 'selected' : '' }}>
-                                {{ $exam->exam_name }}
-                                @if($exam->course) · {{ $exam->course->course_name }}@endif
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Subject / Course</label>
-                        <select name="course_id" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                            <option value="">— Select course —</option>
-                            @foreach($courses as $course)
-                            <option value="{{ $course->id }}" {{ old('course_id') == $course->id ? 'selected' : '' }}>
-                                {{ $course->course_name }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Class</label>
-                        <select name="class_id" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                            <option value="">— Select class —</option>
-                            @foreach($classes as $cls)
-                            <option value="{{ $cls->id }}" {{ old('class_id') == $cls->id ? 'selected' : '' }}>{{ $cls->class_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Semester</label>
-                        <select name="semester_id" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                            <option value="">— Select semester —</option>
-                            @foreach($semesters as $sem)
-                            <option value="{{ $sem->id }}" {{ old('semester_id') == $sem->id ? 'selected' : '' }}>{{ $sem->semester_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Exam Date</label>
-                        <input type="date" name="exam_date" value="{{ old('exam_date') }}"
-                               class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                    </div>
-                </div>
-
-                <hr class="border-slate-100">
-
-                {{-- Paper header fields (placeholders) --}}
-                <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Paper Header Info</h3>
-
+                {{-- Header Fields --}}
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1.5">Exam Name (on paper)</label>
                         <input type="text" name="exam_name" value="{{ old('exam_name') }}"
                                class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                               placeholder="First Terminal Examination">
+                               placeholder="e.g. 3rd TERMINAL EXAMINATION 2082">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1.5">Subject (on paper)</label>
                         <input type="text" name="subject" value="{{ old('subject') }}"
                                class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                               placeholder="Mathematics">
+                               placeholder="e.g. C. Math / गणित">
                     </div>
                 </div>
 
@@ -122,21 +63,21 @@
                         <label class="block text-sm font-medium text-slate-700 mb-1.5">Class Label</label>
                         <input type="text" name="class_label" value="{{ old('class_label') }}"
                                class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                               placeholder="Class 10">
+                               placeholder="e.g. 8 / Class 10">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Duration</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Duration / Time</label>
                         <input type="text" name="duration" value="{{ old('duration') }}"
                                class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                               placeholder="3 Hours">
+                               placeholder="e.g. 3 Hours / ३ घण्टा">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Full Marks</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Full Marks (F.M.)</label>
                         <input type="number" name="full_marks" value="{{ old('full_marks', 100) }}" min="0" step="0.5"
                                class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Pass Marks</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Pass Marks (P.M.)</label>
                         <input type="number" name="pass_marks" value="{{ old('pass_marks', 40) }}" min="0" step="0.5"
                                class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
                     </div>
@@ -155,8 +96,8 @@
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1.5">Orientation</label>
                         <select name="orientation" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                            <option value="portrait" {{ old('orientation', 'portrait') === 'portrait' ? 'selected' : '' }}>Portrait</option>
-                            <option value="landscape" {{ old('orientation') === 'landscape' ? 'selected' : '' }}>Landscape</option>
+                            <option value="portrait" {{ old('orientation', 'portrait') === 'portrait' ? 'selected' : '' }}>Portrait (Single Page)</option>
+                            <option value="landscape" {{ old('orientation') === 'landscape' ? 'selected' : '' }}>Landscape (2-Column Booklet)</option>
                         </select>
                     </div>
                 </div>

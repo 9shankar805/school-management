@@ -13,7 +13,7 @@ class School extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'name', 'slug', 'email', 'phone',
+        'name', 'slug', 'iemis_code', 'email', 'phone',
         'address', 'city', 'district', 'province', 'country',
         'logo', 'website', 'description',
         'about_us', 'mission', 'vision', 'history',

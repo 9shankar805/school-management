@@ -138,6 +138,10 @@
         <span class="sidebar-link-icon"><i class="bi bi-people-fill"></i></span>
         <span class="sidebar-link-text">All Students</span>
     </a>
+    <a href="{{ route('student.id-cards.bulk') }}" target="_blank" class="sidebar-link {{ request()->is('students/id-cards*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-vcard-fill text-indigo-400"></i></span>
+        <span class="sidebar-link-text">Student ID Cards</span>
+    </a>
     @can('create students')
     @unless(session()->has('browse_session_id'))
     <a href="{{ route('student.create.show') }}" class="sidebar-link {{ request()->is('students/add') ? 'active' : '' }}">
@@ -352,6 +356,10 @@
     <a href="{{ route('teacher.list.show') }}" class="sidebar-link {{ request()->is('teachers/view/list') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-person-badge-fill"></i></span>
         <span class="sidebar-link-text">All Teachers</span>
+    </a>
+    <a href="{{ route('teacher.id-cards.bulk') }}" target="_blank" class="sidebar-link {{ request()->is('teachers/id-cards*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-vcard text-blue-400"></i></span>
+        <span class="sidebar-link-text">Teacher ID Cards</span>
     </a>
     @can('create teachers')
     @unless(session()->has('browse_session_id'))
@@ -795,10 +803,10 @@
     {{-- Certificates --}}
     @unlessrole('student|parent')
     @canany(['view students','create students'])
-    <p class="sidebar-section-label">Certificates</p>
+    <p class="sidebar-section-label">Certificates &amp; ID Cards</p>
     <a href="{{ route('certificates.index') }}" class="sidebar-link {{ request()->is('certificates') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-award-fill"></i></span>
-        <span class="sidebar-link-text">Templates</span>
+        <span class="sidebar-link-text">Cert. Templates</span>
     </a>
     <a href="{{ route('certificates.issued') }}" class="sidebar-link {{ request()->is('certificates/issued*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-journal-text"></i></span>
@@ -808,6 +816,12 @@
         <span class="sidebar-link-icon"><i class="bi bi-people-fill"></i></span>
         <span class="sidebar-link-text">Bulk Issue</span>
     </a>
+    @role('admin|principal')
+    <a href="{{ route('id-card-templates.index') }}" class="sidebar-link {{ request()->is('id-card-templates*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-credit-card-2-front-fill"></i></span>
+        <span class="sidebar-link-text">ID Card Designer</span>
+    </a>
+    @endrole
     @endcanany
     @endunlessrole
 
@@ -873,6 +887,10 @@
     <a href="{{ route('communication.bulk') }}" class="sidebar-link {{ request()->is('communication/bulk*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-whatsapp"></i></span>
         <span class="sidebar-link-text">WhatsApp & Bulk Alerts</span>
+    </a>
+    <a href="{{ route('communication.individual') }}" class="sidebar-link {{ request()->is('communication/individual*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-lines-fill"></i></span>
+        <span class="sidebar-link-text">Direct WhatsApp</span>
     </a>
     <a href="{{ route('communication.index') }}" class="sidebar-link {{ request()->is('communication') && !request()->is('communication/*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-chat-left-text-fill"></i></span>

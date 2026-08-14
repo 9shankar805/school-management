@@ -94,7 +94,7 @@ class LibraryController extends Controller
         $data['available_qty'] = $data['available_qty'] ?? $data['qty'];
 
         if ($request->hasFile('cover')) {
-            $data['cover_image'] = $request->file('cover')->store('books/covers', 'public');
+            $data['cover_image'] = \App\Services\ImageWebpService::storeAsWebp($request->file('cover'), 'books/covers', 'public');
         }
         unset($data['cover']);
 
@@ -139,7 +139,7 @@ class LibraryController extends Controller
             if ($book->cover_image) {
                 Storage::disk('public')->delete($book->cover_image);
             }
-            $data['cover_image'] = $request->file('cover')->store('books/covers', 'public');
+            $data['cover_image'] = \App\Services\ImageWebpService::storeAsWebp($request->file('cover'), 'books/covers', 'public');
         }
         unset($data['cover']);
 

@@ -41,6 +41,9 @@
                 </div>
             </div>
             <div class="flex flex-wrap gap-2 flex-shrink-0">
+                <a href="{{ route('teacher.id-card', $teacher->id) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition shadow-sm">
+                    <i class="bi bi-person-badge"></i> ID Card
+                </a>
                 @can('create teachers')
                 <a href="{{ route('teacher.edit.show', $teacher->id) }}" class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition"><i class="bi bi-pencil"></i> Edit</a>
                 @endcan

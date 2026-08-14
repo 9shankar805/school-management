@@ -6,7 +6,7 @@
 
     {{-- ── Left panel — Kathmandu background ────────────────────────── --}}
     <div class="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between p-12 relative overflow-hidden"
-         style="background: url('{{ asset('imgs/kathmandu.png') }}') center center / cover no-repeat;">
+         style="background: url('{{ asset('imgs/kathmandu.webp') }}') center center / cover no-repeat;">
 
         {{-- Dark overlay for readability --}}
         <div class="absolute inset-0" style="background:linear-gradient(135deg,rgba(30,27,75,.75) 0%,rgba(79,70,229,.55) 60%,rgba(37,99,235,.45) 100%)"></div>
@@ -14,7 +14,7 @@
         {{-- Top brand mark --}}
         <div class="relative">
             <div class="flex items-center gap-3">
-                <img src="{{ asset('imgs/logo_icon.png') }}" alt="{{ config('app.name') }} logo"
+                <img src="{{ asset('imgs/logo_icon.webp') }}?v={{ time() }}" alt="{{ config('app.name') }} logo"
                      class="w-10 h-10 rounded-xl object-contain"
                      style="background:rgba(255,255,255,.2);backdrop-filter:blur(6px);padding:4px">
                 <span class="text-white font-bold text-lg">{{ config('app.name', 'School ERP') }}</span>
@@ -62,7 +62,7 @@
 
     {{-- ── Right panel — register form ──────────────────────────────── --}}
     <div class="flex-1 flex items-center justify-center p-6 sm:p-12 relative overflow-hidden"
-         style="background: url('{{ asset('imgs/loginbg.png') }}') center center / cover no-repeat;">
+         style="background: url('{{ asset('imgs/loginbg.webp') }}') center center / cover no-repeat;">
 
         {{-- Frosted glass card keeps the form readable --}}
         <div class="w-full max-w-md relative rounded-2xl p-8 sm:p-10"
@@ -70,7 +70,7 @@
 
             {{-- Mobile brand --}}
             <div class="flex items-center gap-2.5 mb-8 lg:hidden">
-                <img src="{{ asset('imgs/logo_icon.png') }}" alt="{{ config('app.name') }} logo"
+                <img src="{{ asset('imgs/logo_icon.webp') }}" alt="{{ config('app.name') }} logo"
                      class="w-9 h-9 rounded-lg object-contain bg-indigo-600"
                      style="padding:4px">
                 <span class="font-bold text-base" style="color:var(--text-heading)">

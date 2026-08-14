@@ -28,7 +28,7 @@
     <meta property="og:url" content="{{ url('/') }}">
     <meta property="og:title" content="NepalSchoolHub — #1 School Management Software in Nepal">
     <meta property="og:description" content="Nepal's most complete school management platform. Students, teachers, fees, exams, hostel & transport — all in one dashboard. Free plan available.">
-    <meta property="og:image" content="{{ asset('imgs/nepalwithourschool.png') }}">
+    <meta property="og:image" content="{{ asset('imgs/nepalwithourschool.webp') }}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="NepalSchoolHub school management dashboard screenshot">
@@ -41,7 +41,7 @@
     <meta name="twitter:url" content="{{ url('/') }}">
     <meta name="twitter:title" content="NepalSchoolHub — School Management Software Nepal">
     <meta name="twitter:description" content="Nepal's most complete school ERP. Students, fees, exams, attendance & more — free to start.">
-    <meta name="twitter:image" content="{{ asset('imgs/nepalwithourschool.png') }}">
+    <meta name="twitter:image" content="{{ asset('imgs/nepalwithourschool.webp') }}">
     <meta name="twitter:image:alt" content="NepalSchoolHub dashboard">
 
     {{-- ── PWA / Mobile ── --}}
@@ -52,11 +52,11 @@
     <meta name="apple-mobile-web-app-title" content="NepalSchoolHub">
 
     {{-- ── Favicons — NepalSchoolHub logo ── --}}
-    <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('imgs/logo_icon_512.png') }}">
-    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('imgs/logo_icon_192.png') }}">
-    <link rel="icon" type="image/png" sizes="64x64"   href="{{ asset('imgs/logo_icon_64.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32"   href="{{ asset('imgs/logo_icon_32.png') }}">
-    <link rel="apple-touch-icon" sizes="180x180"      href="{{ asset('imgs/logo_icon_192.png') }}">
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('imgs/logo_icon_512.webp') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('imgs/logo_icon_192.webp') }}">
+    <link rel="icon" type="image/png" sizes="64x64"   href="{{ asset('imgs/logo_icon_64.webp') }}">
+    <link rel="icon" type="image/png" sizes="32x32"   href="{{ asset('imgs/logo_icon_32.webp') }}">
+    <link rel="apple-touch-icon" sizes="180x180"      href="{{ asset('imgs/logo_icon_192.webp') }}">
 
     {{-- ── Sitemap reference ── --}}
     <link rel="sitemap" type="application/xml" title="Sitemap" href="{{ url('/sitemap.xml') }}">
@@ -68,7 +68,7 @@
       "@type": "SoftwareApplication",
       "name": "NepalSchoolHub",
       "url": "{{ url('/') }}",
-      "logo": "{{ asset('imgs/logo_icon.png') }}",
+      "logo": "{{ asset('imgs/logo_icon.webp') }}",
       "operatingSystem": "Web, Android, iOS",
       "applicationCategory": "EducationalApplication",
       "applicationSubCategory": "School Management Software",
@@ -96,7 +96,7 @@
         "worstRating": "1"
       },
       "description": "Nepal's #1 school management SaaS platform. Manage students, teachers, attendance, fees, exams, hostel, transport, library and HR from a single dashboard. Built for Nepali schools.",
-      "screenshot": "{{ asset('imgs/nepalwithourschool.png') }}",
+      "screenshot": "{{ asset('imgs/nepalwithourschool.webp') }}",
       "featureList": "Student Management, Teacher Management, Fee Collection, Attendance Tracking, Exam Management, Hostel Management, Transport Tracking, Library, AI Features, WhatsApp Alerts",
       "inLanguage": "en",
       "availableOnDevice": "Web Browser, Mobile",
@@ -112,7 +112,7 @@
       "@type": "Organization",
       "name": "NepalSchoolHub",
       "url": "{{ url('/') }}",
-      "logo": "{{ asset('imgs/logo_icon.png') }}",
+      "logo": "{{ asset('imgs/logo_icon.webp') }}",
       "contactPoint": {
         "@type": "ContactPoint",
         "telephone": "+977-9767585122",
@@ -413,7 +413,7 @@
 {{-- ══ TOP NAV ══════════════════════════════════════════════════════════ --}}
 <nav class="topnav" role="navigation" aria-label="Main navigation">
     <a href="{{ route('saas.landing') }}" class="nav-logo">
-        <img src="{{ asset('imgs/logo_icon.png') }}" alt="NepalSchoolHub Logo">
+        <img src="{{ asset('imgs/logo_icon.webp') }}" alt="NepalSchoolHub Logo">
         <span>NepalSchoolHub</span>
     </a>
     <div class="nav-links">
@@ -488,7 +488,7 @@
 
     {{-- Dashboard screenshot --}}
     <div class="hero-img-wrap">
-        <img src="{{ asset('imgs/nepalwithourschool.png') }}" alt="NepalSchoolHub school management software dashboard — Nepal's #1 school ERP"
+        <img src="{{ asset('imgs/nepalwithourschool.webp') }}" alt="NepalSchoolHub school management software dashboard — Nepal's #1 school ERP"
              fetchpriority="high" loading="eager" decoding="async"
              loading="eager" style="border-radius:1.25rem 1.25rem 0 0">
     </div>
@@ -695,7 +695,7 @@
             </ul>
         </div>
         <div class="showcase-img">
-            <img src="{{ asset('imgs/features_preview.png') }}" alt="NepalSchoolHub features" loading="lazy">
+            <img src="{{ asset('imgs/features_preview.webp') }}" alt="NepalSchoolHub features" loading="lazy">
         </div>
     </div>
 
@@ -715,7 +715,7 @@
             </ul>
         </div>
         <div class="showcase-img">
-            <img src="{{ asset('imgs/nepalmap.png') }}" alt="Schools across Nepal" loading="lazy">
+            <img src="{{ asset('imgs/nepalmap.webp') }}" alt="Schools across Nepal" loading="lazy">
         </div>
     </div>
 
@@ -740,7 +740,7 @@
             </a>
         </div>
         <div class="showcase-img">
-            <img src="{{ asset('imgs/nepalwithourschool.png') }}" alt="Nepal schools using NepalSchoolHub" loading="lazy">
+            <img src="{{ asset('imgs/nepalwithourschool.webp') }}" alt="Nepal schools using NepalSchoolHub" loading="lazy">
         </div>
     </div>
 
@@ -835,7 +835,7 @@
 <section class="section" style="background:#fff;padding-top:0;padding-bottom:0">
 <div class="section-inner" style="padding:3rem 0">
     <div class="city-banner">
-        <img src="{{ asset('imgs/kathmandu.png') }}" alt="Kathmandu schools" loading="lazy">
+        <img src="{{ asset('imgs/kathmandu.webp') }}" alt="Kathmandu schools" loading="lazy">
         <div class="city-overlay">
             <h2>Proudly made for Nepal 🇳🇵</h2>
             <p>From the hills of Solukhumbu to the streets of Kathmandu — NepalSchoolHub is built by Nepalis, for Nepali schools.</p>
@@ -1583,7 +1583,7 @@
         <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:2rem">
             <div>
                 <div class="footer-logo">
-                    <img src="{{ asset('imgs/logo_icon.png') }}" alt="Logo">
+                    <img src="{{ asset('imgs/logo_icon.webp') }}" alt="Logo">
                     <span>NepalSchoolHub</span>
                 </div>
                 <p style="font-size:.8rem;max-width:260px;line-height:1.6">

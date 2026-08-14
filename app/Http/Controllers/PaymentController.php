@@ -82,27 +82,76 @@ class PaymentController extends Controller
         $this->authorize('manage finance');
 
         $data = $request->validate([
-            'student_id'  => 'required|exists:users,id',
-            'title'       => 'required|string|max:255',
-            'amount'      => 'required|numeric|min:0.01',
-            'due_date'    => 'nullable|date',
-            'description' => 'nullable|string|max:1000',
-            'session_id'  => 'nullable|exists:school_sessions,id',
+            'student_id'     => 'required|exists:users,id',
+            'title'          => 'required|string|max:255',
+            'amount'         => 'required|numeric|min:0.01',
+            'due_date'       => 'nullable|date',
+            'description'    => 'nullable|string|max:1000',
+            'session_id'     => 'nullable|exists:school_sessions,id',
+            'payment_status' => 'nullable|string|in:unpaid,paid',
+            'payment_method' => 'nullable|string|in:cash,bank,cheque,stripe,razorpay,paypal,flutterwave,esewa,khalti,fonepay,connectips,online',
+            'notes'          => 'nullable|string|max:500',
+            'items'          => 'nullable|array',
+            'items.*.name'   => 'nullable|string|max:255',
+            'items.*.amount' => 'nullable|numeric|min:0',
         ]);
 
         $invoice = Invoice::create([
-            'student_id'  => $data['student_id'],
-            'session_id'  => $data['session_id'] ?? null,
-            'title'       => $data['title'],
-            'amount'      => $data['amount'],
-            'total_amount'=> $data['amount'],
-            'status'      => 'unpaid',
-            'due_date'    => $data['due_date'] ?? null,
-            'description' => $data['description'] ?? null,
+            'student_id'   => $data['student_id'],
+            'session_id'   => $data['session_id'] ?? null,
+            'title'        => $data['title'],
+            'amount'       => $data['amount'],
+            'total_amount' => $data['amount'],
+            'status'       => 'unpaid',
+            'due_date'     => $data['due_date'] ?? null,
+            'description'  => $data['description'] ?? null,
         ]);
 
-        // Dispatch fee reminder notification
-        SendFeeReminderNotification::dispatch($invoice->id);
+        // Save itemized fee breakdown
+        if (!empty($data['items'])) {
+            foreach ($data['items'] as $item) {
+                if (!empty($item['name']) && (float)($item['amount'] ?? 0) > 0) {
+                    $feeTypeObj = DB::table('fee_types')->where('name', 'like', '%' . explode(' ', $item['name'])[0] . '%')->first();
+                    DB::table('invoice_items')->insert([
+                        'invoice_id'  => $invoice->id,
+                        'fee_type_id' => $feeTypeObj ? $feeTypeObj->id : null,
+                        'name'        => $item['name'],
+                        'unit_price'  => (float)$item['amount'],
+                        'quantity'    => 1,
+                        'amount'      => (float)$item['amount'],
+                        'total'       => (float)$item['amount'],
+                        'created_at'  => now(),
+                        'updated_at'  => now(),
+                    ]);
+                }
+            }
+        }
+
+        $paymentRecorded = false;
+        $receiptNo = '';
+
+        if (($request->input('payment_status') === 'paid') || $request->filled('payment_method')) {
+            $method = $data['payment_method'] ?? 'cash';
+            $payment = Payment::create([
+                'invoice_id'     => $invoice->id,
+                'amount'         => $data['amount'],
+                'payment_date'   => now()->toDateString(),
+                'payment_method' => $method,
+                'gateway'        => $method,
+                'notes'          => $data['notes'] ?? 'Immediate payment recorded at POS creation desk',
+                'recorded_by'    => auth()->id(),
+            ]);
+            $paymentRecorded = true;
+            $receiptNo = $payment->receipt_number;
+        } else {
+            // Dispatch fee reminder notification for unpaid invoice
+            SendFeeReminderNotification::dispatch($invoice->id);
+        }
+
+        if ($paymentRecorded) {
+            return redirect()->route('payments.index')
+                ->with('status', 'Invoice #' . $invoice->invoice_number . ' created with itemized fee breakdown and Payment of Rs. ' . number_format($data['amount'], 2) . ' recorded cleanly! Receipt: ' . $receiptNo);
+        }
 
         return redirect()->route('payments.index')
             ->with('status', 'Invoice #' . $invoice->invoice_number . ' created successfully.');
@@ -156,10 +205,10 @@ class PaymentController extends Controller
         }
 
         $data = $request->validate([
-            'amount'         => 'required|numeric|min:0.01|max:' . ($invoice->amount_due + 0.01),
-            'payment_date'   => 'required|date',
-            'payment_method' => 'required|in:cash,bank,cheque,stripe,razorpay,paypal,flutterwave',
-            'notes'          => 'nullable|string|max:500',
+            'amount'                 => 'required|numeric|min:0.01|max:' . ($invoice->amount_due + 0.01),
+            'payment_date'           => 'required|date',
+            'payment_method'         => 'required|in:cash,bank,cheque,stripe,razorpay,paypal,flutterwave,esewa,khalti,fonepay,connectips,online',
+            'notes'                  => 'nullable|string|max:500',
             'gateway_transaction_id' => 'nullable|string|max:100',
         ]);
 
@@ -232,5 +281,48 @@ class PaymentController extends Controller
         $pdf = Pdf::loadView('finance.receipt-pdf', compact('payment'))
             ->setPaper('a5');
         return $pdf->stream('receipt-' . $payment->receipt_number . '.pdf');
+    }
+
+    public function studentFeesJson(int $studentId)
+    {
+        $student  = User::with('promotions.schoolClass')->findOrFail($studentId);
+        $invoices = Invoice::where('student_id', $studentId)
+            ->with(['items', 'payments'])
+            ->orderBy('id')
+            ->get()
+            ->map(function ($inv) {
+                $paid = $inv->payments->sum('amount_paid');
+                $due  = max(0, $inv->amount - $paid);
+                return [
+                    'id'             => $inv->id,
+                    'invoice_number' => $inv->invoice_number,
+                    'title'          => $inv->title,
+                    'amount'         => (float)$inv->amount,
+                    'paid'           => (float)$paid,
+                    'due'            => (float)$due,
+                    'status'         => $inv->status,
+                    'due_date'       => $inv->due_date ? \Carbon\Carbon::parse($inv->due_date)->format('M d, Y') : 'N/A',
+                    'items'          => $inv->items->map(fn($item) => [
+                        'name'   => $item->name,
+                        'amount' => (float)$item->amount,
+                    ]),
+                ];
+            });
+
+        $totalOutstanding = $invoices->where('status', '!=', 'paid')->sum('due');
+        $latestPromo = optional($student->promotions)->last();
+        $className = $latestPromo?->schoolClass?->class_name ?? 'N/A';
+
+        return response()->json([
+            'success'          => true,
+            'student'          => [
+                'id'            => $student->id,
+                'name'          => $student->full_name,
+                'email'         => $student->email,
+                'class'         => $className,
+            ],
+            'total_outstanding'=> (float)$totalOutstanding,
+            'invoices'         => $invoices,
+        ]);
     }
 }

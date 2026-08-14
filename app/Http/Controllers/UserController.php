@@ -120,6 +120,10 @@ class UserController extends Controller
             'currentHouse'      => $currentHouse,
         ];
 
+        // Always fetch parent_info bypassing tenant scope so null school_id rows are visible
+        $studentParentInfoRepository = new StudentParentInfoRepository();
+        $data['parent_info'] = $studentParentInfoRepository->getParentInfo($id);
+
         return view('students.profile', $data);
     }
 

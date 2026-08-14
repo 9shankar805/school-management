@@ -23,7 +23,7 @@
         <i class="bi bi-exclamation-circle-fill"></i> {{ session('error') }}
     </div>
     @endif
-    @if($errors->any())
+    @if(isset($errors) && $errors->any())
     <div class="mb-5 p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 rounded-xl text-sm text-rose-700 dark:text-rose-300">
         @foreach($errors->all() as $e)<p>• {{ $e }}</p>@endforeach
     </div>
@@ -138,6 +138,95 @@
                     class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-semibold transition shadow-sm flex items-center justify-center gap-2">
                     <i class="bi bi-file-earmark-pdf-fill text-base"></i>
                     Generate Bulk Certificate PDF
+                </button>
+            </form>
+        </div>
+
+        {{-- ── 2. INDIVIDUAL STUDENT ISSUE BOX ─────────────────────────── --}}
+        <div class="mt-8 bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-xs p-6 space-y-5">
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-slate-700">
+                <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                    <i class="bi bi-person-fill text-lg"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight">Individual Student Issue</h2>
+                    <p class="text-slate-400 text-xs">Select a specific student to generate & issue a single certificate</p>
+                </div>
+            </div>
+
+            <form method="POST" action="{{ route('certificates.issue.single') }}" class="space-y-4">
+                @csrf
+
+                {{-- Select Student --}}
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                        Select Student <span class="text-rose-400">*</span>
+                    </label>
+                    <select name="student_id" required id="singleStudentSelect"
+                        class="w-full border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        <option value="">— Choose a student —</option>
+                        @foreach($students as $st)
+                        @php $latestPromo = optional($st->promotions)->last(); @endphp
+                        <option value="{{ $st->id }}" {{ old('student_id') == $st->id ? 'selected' : '' }}>
+                            {{ $st->first_name }} {{ $st->last_name }}
+                            @if($latestPromo && $latestPromo->schoolClass)
+                                (Class {{ $latestPromo->schoolClass->class_name }} @if($latestPromo->section)- {{ $latestPromo->section->section_name }}@endif)
+                            @endif
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Template --}}
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
+                        Certificate Template <span class="text-rose-400">*</span>
+                    </label>
+                    <select name="template_id" required id="singleTemplateSelect"
+                        class="w-full border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        <option value="">— Select template —</option>
+                        @foreach($templates as $tpl)
+                        <option value="{{ $tpl->id }}" data-paper="{{ $tpl->paper_size }}" data-lang="{{ $tpl->language }}">
+                            {{ $tpl->name }} ({{ $tpl->typeLabel() }})
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Issue Date <span class="text-rose-400">*</span></label>
+                        <input type="date" name="issued_date" value="{{ old('issued_date', now()->toDateString()) }}" required
+                            class="w-full border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Language</label>
+                        <select name="language" id="singleLangSelect"
+                            class="w-full border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            <option value="en">English</option>
+                            <option value="ne">Nepali (नेपाली)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Paper Size</label>
+                        <select name="paper_size" id="singlePaperSelect"
+                            class="w-full border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            <option value="A4">A4</option>
+                            <option value="Letter">Letter</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Purpose / Remarks</label>
+                    <input type="text" name="purpose" placeholder="e.g. Higher Studies, Passport Application"
+                        class="w-full border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                </div>
+
+                <button type="submit" @if($templates->isEmpty() || $students->isEmpty()) disabled @endif
+                    class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-semibold transition shadow-sm flex items-center justify-center gap-2">
+                    <i class="bi bi-file-earmark-person-fill text-base"></i>
+                    Issue Individual Certificate & Download
                 </button>
             </form>
         </div>

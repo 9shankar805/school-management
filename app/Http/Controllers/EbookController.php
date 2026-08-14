@@ -74,7 +74,7 @@ class EbookController extends Controller
 
         $coverPath = null;
         if ($request->hasFile('cover')) {
-            $coverPath = $request->file('cover')->store('ebooks/covers', 'public');
+            $coverPath = \App\Services\ImageWebpService::storeAsWebp($request->file('cover'), 'ebooks/covers', 'public');
         }
 
         Ebook::create(array_merge($data, [
@@ -123,7 +123,7 @@ class EbookController extends Controller
             if ($ebook->cover_image) {
                 Storage::disk('public')->delete($ebook->cover_image);
             }
-            $data['cover_image'] = $request->file('cover')->store('ebooks/covers', 'public');
+            $data['cover_image'] = \App\Services\ImageWebpService::storeAsWebp($request->file('cover'), 'ebooks/covers', 'public');
         }
 
         $ebook->update($data);

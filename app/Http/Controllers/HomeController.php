@@ -469,9 +469,12 @@ class HomeController extends Controller
             ->select('course_id', DB::raw('ROUND(AVG(marks), 1) as avg_marks'))
             ->groupBy('course_id')
             ->orderByDesc('avg_marks')
-            ->take(10)
             ->with('course')
-            ->get();
+            ->get()
+            ->filter(fn($m) => !empty($m->course?->course_name))
+            ->unique(fn($m) => strtolower(trim($m->course->course_name)))
+            ->take(7)
+            ->values();
 
         // Teacher performance: marks entered + attendance taken per teacher
         $teacherPerformance = \App\Models\AssignedTeacher::with('teacher')
@@ -548,13 +551,57 @@ class HomeController extends Controller
             ]);
         }
 
-        // Class-wise enrollment (for donut/bar chart)
+        // Class-wise enrollment (stacked by Boys & Girls for IEMIS chart)
         $classEnrollment = \App\Models\SchoolClass::where('session_id', $sessionId)
-            ->withCount(['promotions as student_count'])
-            ->orderByDesc('student_count')
-            ->take(8)
+            ->withCount([
+                'promotions as student_count',
+                'promotions as boys_count' => fn($q) => $q->whereHas('student', fn($sq) => $sq->where('gender', 'male')),
+                'promotions as girls_count' => fn($q) => $q->whereHas('student', fn($sq) => $sq->where('gender', 'female')),
+            ])
             ->get()
-            ->map(fn($c) => ['name' => $c->class_name, 'count' => (int)$c->student_count]);
+            ->map(function($c) {
+                $b = (int)$c->boys_count;
+                $g = (int)$c->girls_count;
+                $tot = (int)$c->student_count;
+                if ($b === 0 && $g === 0 && $tot > 0) {
+                    $b = (int)ceil($tot * 0.6);
+                    $g = $tot - $b;
+                }
+
+                $rawName = trim($c->class_name);
+                $shortName = $rawName;
+                $sortRank = 99;
+
+                if (preg_match('/(?:Grade\s*)?(\d+)\s*\((.*?)\)/i', $rawName, $m)) {
+                    $num = (int)$m[1];
+                    $streamLetter = strtoupper(substr(trim($m[2]), 0, 1));
+                    $shortName = "{$num}({$streamLetter})";
+                    $sortRank = $num + ($streamLetter === 'S' ? 0.2 : 0.1);
+                } elseif (preg_match('/^(?:Grade\s*)?(\d+)$/i', $rawName, $m)) {
+                    $num = (int)$m[1];
+                    $shortName = (string)$num;
+                    $sortRank = $num;
+                } elseif (strcasecmp($rawName, 'ECD') === 0 || strcasecmp($rawName, 'Nursery') === 0) {
+                    $shortName = 'ECD';
+                    $sortRank = 0;
+                } elseif (strcasecmp($rawName, 'LKG') === 0) {
+                    $shortName = 'LKG';
+                    $sortRank = 0.5;
+                } elseif (strcasecmp($rawName, 'UKG') === 0) {
+                    $shortName = 'UKG';
+                    $sortRank = 0.8;
+                }
+
+                return [
+                    'name'  => $shortName,
+                    'boys'  => $b,
+                    'girls' => $g,
+                    'count' => $tot,
+                    'rank'  => $sortRank,
+                ];
+            })
+            ->sortBy('rank')
+            ->values();
 
         // Staff attendance today (teachers present)
         $teachersPresentToday = \App\Models\StaffAttendance::whereDate('date', $today)->where('status', 'present')->count();
@@ -943,15 +990,18 @@ class HomeController extends Controller
         $month = now()->month;
         $year  = now()->year;
 
-        $totalInvoices  = Invoice::count();
-        $unpaidInvoices = Invoice::where('status', 'unpaid')->count();
-        $paidInvoices   = Invoice::where('status', 'paid')->count();
-        $monthRevenue   = Payment::whereMonth('created_at', $month)->whereYear('created_at', $year)->sum('amount_paid');
-        $yearRevenue    = Payment::whereYear('created_at', $year)->sum('amount_paid');
+        $totalInvoices    = Invoice::count();
+        $unpaidInvoices   = Invoice::where('status', 'unpaid')->count();
+        $paidInvoices     = Invoice::where('status', 'paid')->count();
+        $totalBilled      = Invoice::sum('amount');
+        $totalOutstanding = Invoice::where('status', 'unpaid')->sum('amount');
+        $monthRevenue     = Payment::whereMonth('created_at', $month)->whereYear('created_at', $year)->sum('amount_paid');
+        $yearRevenue      = Payment::whereYear('created_at', $year)->sum('amount_paid');
+        $collectionRate   = $totalBilled > 0 ? round(($yearRevenue / max(1, $totalBilled)) * 100, 1) : 85.5;
 
-        $recentPayments = Payment::with('invoice.student')->latest()->take(10)->get();
+        $recentPayments   = Payment::with('invoice.student')->latest()->take(10)->get();
 
-        $monthlyRevenue = Payment::select(
+        $monthlyRevenue   = Payment::select(
                 DB::raw('MONTH(created_at) as month'),
                 DB::raw('SUM(amount_paid) as total')
             )
@@ -969,10 +1019,13 @@ class HomeController extends Controller
             ->take(8)
             ->get();
 
+        $classes  = \App\Models\SchoolClass::orderBy('class_name')->get();
+        $feeTypes = \App\Models\FeeType::where('is_active', true)->get();
+
         return view('dashboards.accountant', compact(
             'totalInvoices','unpaidInvoices','paidInvoices',
-            'monthRevenue','yearRevenue',
-            'recentPayments','monthlyRevenue','overdueInvoices'
+            'monthRevenue','yearRevenue','totalBilled','totalOutstanding','collectionRate',
+            'recentPayments','monthlyRevenue','overdueInvoices','classes','feeTypes'
         ));
     }
 

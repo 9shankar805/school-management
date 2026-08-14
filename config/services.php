@@ -35,4 +35,15 @@ return [
         'model' => env('GROQ_MODEL', 'llama-3.3-70b-versatile'),
     ],
 
+    // ── Zavu — unified messaging API (WhatsApp, SMS, Voice) ──────────────────
+    // Docs: https://crubingllc.mintlify.app
+    // All messages are sent via POST https://api.zavu.dev/v1/messages
+    'zavu' => [
+        'api_key'   => env('ZAVU_API_KEY', ''),
+        'base_url'  => env('ZAVU_BASE_URL', 'https://api.zavu.dev/v1'),
+        // Optional: pin a specific Sender ID configured in your Zavu dashboard.
+        // Leave blank to use your account default sender.
+        'sender_id' => env('ZAVU_SENDER_ID', ''),
+    ],
+
 ];

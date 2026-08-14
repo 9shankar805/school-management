@@ -8,13 +8,13 @@
     <title>@yield('title', config('app.name', 'School ERP'))</title>
 
     {{-- Favicons — NepalSchoolHub logo --}}
-    <link rel="shortcut icon" href="{{ asset('imgs/logo_icon_32.png') }}">
-    <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('imgs/logo_icon_512.png') }}">
-    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('imgs/logo_icon_192.png') }}">
-    <link rel="icon" type="image/png" sizes="64x64"   href="{{ asset('imgs/logo_icon_64.png') }}">
-    <link rel="icon" type="image/png" sizes="32x32"   href="{{ asset('imgs/logo_icon_32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16"   href="{{ asset('imgs/logo_icon_32.png') }}">
-    <link rel="apple-touch-icon" sizes="180x180"      href="{{ asset('imgs/logo_icon_192.png') }}">
+    <link rel="shortcut icon" href="{{ asset('imgs/logo_icon_32.webp') }}">
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ asset('imgs/logo_icon_512.webp') }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('imgs/logo_icon_192.webp') }}">
+    <link rel="icon" type="image/png" sizes="64x64"   href="{{ asset('imgs/logo_icon_64.webp') }}">
+    <link rel="icon" type="image/png" sizes="32x32"   href="{{ asset('imgs/logo_icon_32.webp') }}">
+    <link rel="icon" type="image/png" sizes="16x16"   href="{{ asset('imgs/logo_icon_32.webp') }}">
+    <link rel="apple-touch-icon" sizes="180x180"      href="{{ asset('imgs/logo_icon_192.webp') }}">
 
     {{-- Module 23: PWA --}}
     <link rel="manifest" href="{{ asset('manifest.json') }}">
@@ -43,6 +43,9 @@
 
     {{-- Compiled CSS (Tailwind + custom) --}}
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+
+    {{-- Loading indicator — must be first so ErpLoader is available to inline scripts --}}
+    <script src="{{ asset('js/loader.js') }}?v={{ filemtime(public_path('js/loader.js')) }}" defer></script>
 
     <style>
         /* ── Sidebar Navigation Custom Styles ─────────────────────────────── */
@@ -341,13 +344,13 @@
     <aside id="sidebar"
            class="fixed inset-y-0 left-0 z-40 flex flex-col w-60 transition-transform duration-300 ease-in-out
                   -translate-x-full lg:translate-x-0 lg:static lg:inset-auto lg:z-auto"
-           style="background:url('/imgs/sidebarbg.png') center center / cover no-repeat;border-right:1px solid rgba(255,255,255,.06)">
+           style="background:url('/imgs/sidebarbg.webp') center center / cover no-repeat;border-right:1px solid rgba(255,255,255,.06)">
 
         {{-- Logo / Brand --}}
         <div class="flex items-center justify-between h-16 px-5 flex-shrink-0" style="border-bottom:1px solid rgba(255,255,255,.07)">
             <a href="{{ url('/') }}" class="flex items-center gap-2.5 min-w-0 no-underline">
                 <span class="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 shadow-lg">
-                    <img src="{{ asset('imgs/logo_icon.png') }}" alt="Logo" class="w-full h-full object-cover">
+                    <img src="{{ asset('imgs/logo_icon.webp') }}" alt="Logo" class="w-full h-full object-cover">
                 </span>
                 <div class="min-w-0">
                     <span class="font-black text-sm truncate block leading-tight text-white" style="letter-spacing:-.01em">Nepal<span class="text-indigo-400">School</span>Hub</span>
@@ -753,14 +756,14 @@
 
     var themes = {
         'none':   '',
-        'theme1': '/imgs/theme1.png',
-        'theme2': '/imgs/theme2.png',
-        'theme3': '/imgs/theme3.png',
-        'theme4': '/imgs/theme4.png',
-        'theme5': '/imgs/theme5.png',
-        'theme6': '/imgs/theme6.png',
-        'theme7': '/imgs/theme7.png',
-        'theme8': '/imgs/theme8.png',
+        'theme1': '/imgs/theme1.webp',
+        'theme2': '/imgs/theme2.webp',
+        'theme3': '/imgs/theme3.webp',
+        'theme4': '/imgs/theme4.webp',
+        'theme5': '/imgs/theme5.webp',
+        'theme6': '/imgs/theme6.webp',
+        'theme7': '/imgs/theme7.webp',
+        'theme8': '/imgs/theme8.webp',
     };
 
     function applyBgTheme(key) {
@@ -846,7 +849,19 @@ if ('serviceWorker' in navigator) {
 </script>
 @endif
 
-{{-- ── Professional Loading Indicator (top bar + overlay + button spinners) ── --}}
-<script src="{{ asset('js/loader.js') }}?v={{ filemtime(public_path('js/loader.js')) }}"></script>
+<script>
+// Auto-scroll active sidebar link into view on page load so highlighted item is ALWAYS visible
+document.addEventListener("DOMContentLoaded", function() {
+    const sidebarScroll = document.querySelector(".sidebar-scroll");
+    if (!sidebarScroll) return;
+
+    const activeLink = sidebarScroll.querySelector(".sidebar-link.active, .active");
+    if (activeLink) {
+        setTimeout(function() {
+            activeLink.scrollIntoView({ block: "center", behavior: "instant" });
+        }, 50);
+    }
+});
+</script>
 </body>
 </html>

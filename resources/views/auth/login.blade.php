@@ -6,7 +6,7 @@
 
     {{-- ── Left panel — Kathmandu background ────────────────────────── --}}
     <div class="hidden lg:flex lg:w-1/2 xl:w-3/5 flex-col justify-between p-12 relative overflow-hidden"
-         style="background: url('{{ asset('imgs/kathmandu.png') }}') center center / cover no-repeat;">
+         style="background: url('{{ asset('imgs/kathmandu.webp') }}') center center / cover no-repeat;">
 
         {{-- Dark overlay for readability --}}
         <div class="absolute inset-0" style="background:linear-gradient(135deg,rgba(30,27,75,.75) 0%,rgba(79,70,229,.55) 60%,rgba(37,99,235,.45) 100%)"></div>
@@ -14,7 +14,7 @@
         {{-- Top brand mark --}}
         <div class="relative">
             <div class="flex items-center gap-3">
-                <img src="{{ asset('imgs/logo_icon.png') }}" alt="{{ config('app.name') }} logo"
+                <img src="{{ asset('imgs/logo_icon.webp') }}?v={{ time() }}" alt="{{ config('app.name') }} logo"
                      class="w-10 h-10 rounded-xl object-contain"
                      style="background:rgba(255,255,255,.2);backdrop-filter:blur(6px);padding:4px">
                 <span class="text-white font-bold text-lg">{{ config('app.name', 'School ERP') }}</span>
@@ -62,7 +62,7 @@
 
     {{-- ── Right panel — login form ──────────────────────────────────── --}}
     <div class="flex-1 flex items-center justify-center p-6 sm:p-12 relative overflow-hidden"
-         style="background: url('{{ asset('imgs/loginbg.png') }}') center center / cover no-repeat;">
+         style="background: url('{{ asset('imgs/loginbg.webp') }}') center center / cover no-repeat;">
 
         {{-- No overlay — background shows fully --}}
 
@@ -72,7 +72,7 @@
 
             {{-- Mobile brand (shown only on small screens) --}}
             <div class="flex items-center gap-2.5 mb-8 lg:hidden">
-                <img src="{{ asset('imgs/logo_icon.png') }}" alt="{{ config('app.name') }} logo"
+                <img src="{{ asset('imgs/logo_icon.webp') }}" alt="{{ config('app.name') }} logo"
                      class="w-9 h-9 rounded-lg object-contain bg-indigo-600"
                      style="padding:4px">
                 <span class="font-bold text-base" style="color:var(--text-heading)">
@@ -167,7 +167,108 @@
                     <i class="bi bi-box-arrow-in-right"></i>
                     Sign In
                 </button>
+
+                {{-- QR Code Scan Login --}}
+                <div class="relative flex items-center justify-center my-3">
+                    <div class="border-t border-slate-200 dark:border-slate-700 w-full"></div>
+                    <span class="bg-white dark:bg-slate-900 px-3 text-[10px] uppercase font-bold text-slate-400 absolute">OR</span>
+                </div>
+
+                <button type="button"
+                        onclick="openQrModal()"
+                        class="w-full border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50/50 dark:bg-indigo-950/30 hover:bg-indigo-100/60 text-indigo-700 dark:text-indigo-300 font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
+                    <i class="bi bi-qr-code-scan text-base text-indigo-600 dark:text-indigo-400"></i>
+                    Scan ID Card QR Code to Sign In
+                </button>
             </form>
+
+            {{-- QR Scanner Modal --}}
+            <div id="qrScanModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 max-w-md w-full shadow-2xl relative">
+                    <button type="button" onclick="closeQrModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 text-lg">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                    
+                    <div class="text-center mb-4">
+                        <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-2xl flex items-center justify-center mx-auto mb-2 text-xl font-bold">
+                            <i class="bi bi-qr-code-scan"></i>
+                        </div>
+                        <h3 class="font-bold text-base text-slate-800 dark:text-slate-100">Scan ID Card QR Code</h3>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Hold the backside of your Student ID Card up to your camera to sign in.</p>
+                    </div>
+
+                    {{-- Camera Container --}}
+                    <div id="qr-reader" class="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-black min-h-[220px]"></div>
+
+                    <div id="qrScanStatus" class="mt-3 text-center text-xs font-semibold text-slate-600 dark:text-slate-300 min-h-[20px]">
+                        Initializing camera...
+                    </div>
+                </div>
+            </div>
+
+            <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+            <script>
+                let html5QrScanner = null;
+
+                function openQrModal() {
+                    document.getElementById('qrScanModal').classList.remove('hidden');
+                    document.getElementById('qrScanStatus').innerHTML = '<span class="text-slate-500">Initializing camera...</span>';
+
+                    if (!html5QrScanner) {
+                        html5QrScanner = new Html5Qrcode("qr-reader");
+                    }
+
+                    html5QrScanner.start(
+                        { facingMode: "environment" },
+                        { fps: 10, qrbox: { width: 200, height: 200 } },
+                        onQrCodeSuccess,
+                        onQrCodeError
+                    ).catch(err => {
+                        document.getElementById('qrScanStatus').innerHTML = '<span class="text-red-500 font-bold">Camera permission denied or unavailable.</span>';
+                    });
+                }
+
+                function closeQrModal() {
+                    document.getElementById('qrScanModal').classList.add('hidden');
+                    if (html5QrScanner && html5QrScanner.isScanning) {
+                        html5QrScanner.stop().catch(() => {});
+                    }
+                }
+
+                function onQrCodeSuccess(decodedText, decodedResult) {
+                    if (html5QrScanner && html5QrScanner.isScanning) {
+                        html5QrScanner.stop().catch(() => {});
+                    }
+
+                    document.getElementById('qrScanStatus').innerHTML = '<span class="text-emerald-500 font-bold">✓ QR Scanned! Authenticating...</span>';
+
+                    fetch("{{ route('login.qr-scan') }}", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                        },
+                        body: JSON.stringify({ qr_code: decodedText })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('qrScanStatus').innerHTML = `<span class="text-emerald-500 font-bold">✓ Welcome ${data.student.name}! Redirecting...</span>`;
+                            window.location.href = data.redirect;
+                        } else {
+                            document.getElementById('qrScanStatus').innerHTML = `<span class="text-red-500 font-bold">${data.message || 'QR Authentication failed.'}</span>`;
+                            setTimeout(openQrModal, 2000);
+                        }
+                    })
+                    .catch(err => {
+                        document.getElementById('qrScanStatus').innerHTML = '<span class="text-red-500 font-bold">Server connection error.</span>';
+                    });
+                }
+
+                function onQrCodeError(errorMessage) {
+                    // Ignored continuous scanning errors
+                }
+            </script>
 
             {{-- Footer note --}}
             <p class="text-center text-xs mt-8" style="color:var(--text-muted)">

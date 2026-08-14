@@ -8,6 +8,7 @@
                 <p class="text-slate-400 text-sm mt-0.5">{{ $teachers->count() }} faculty members</p>
             </div>
             <div class="flex flex-wrap gap-2">
+                <a href="{{ route('teacher.id-cards.bulk') }}" target="_blank" class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 text-sm font-medium rounded-lg hover:bg-indigo-100 transition"><i class="bi bi-person-vcard"></i> Bulk ID Cards</a>
                 <a href="{{ route('departments.index') }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 transition text-slate-700"><i class="bi bi-diagram-3"></i> Departments</a>
                 <a href="{{ route('teacher.attendance.index') }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 transition text-slate-700"><i class="bi bi-calendar-check"></i> Attendance</a>
                 <a href="{{ route('teacher.payroll.index') }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 transition text-slate-700"><i class="bi bi-cash-stack"></i> Payroll</a>
@@ -60,13 +61,14 @@
                 </div>
                 <div class="flex gap-2">
                     <a href="{{ route('teacher.profile.show', $t->id) }}" class="flex-1 text-center py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-medium transition">Profile</a>
+                    <a href="{{ route('teacher.id-card', $t->id) }}" target="_blank" class="flex-1 text-center py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-medium transition" title="Print ID Card"><i class="bi bi-person-badge"></i> ID Card</a>
                     @can('manage roles')
-                    <a href="{{ route('roles.user-roles', $t->id) }}" class="flex-1 text-center py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium transition" title="Assign roles">
-                        <i class="bi bi-person-check"></i> Roles
+                    <a href="{{ route('roles.user-roles', $t->id) }}" class="px-2.5 text-center py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium transition" title="Assign roles">
+                        <i class="bi bi-person-check"></i>
                     </a>
                     @endcan
                     @can('create teachers')
-                    <a href="{{ route('teacher.edit.show', $t->id) }}" class="flex-1 text-center py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-medium transition">Edit</a>
+                    <a href="{{ route('teacher.edit.show', $t->id) }}" class="px-2.5 text-center py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-medium transition"><i class="bi bi-pencil"></i></a>
                     @endcan
                 </div>
             </div>

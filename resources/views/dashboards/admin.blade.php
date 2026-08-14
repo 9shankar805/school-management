@@ -7,60 +7,95 @@
 ═══════════════════════════════════════════════════════════ --}}
 @push('head-scripts')
 <style>
-.stat-card {
-    position: relative;
-    background: #fff;
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
-    transition: box-shadow .2s, transform .2s;
-    display: flex;
-    flex-direction: column;
+.iemis-stat-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    padding: 12px 14px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 12px !important;
+    text-decoration: none !important;
+    transition: all 0.2s ease-in-out !important;
+    position: relative !important;
+    overflow: hidden !important;
 }
-.stat-card:hover {
-    box-shadow: 0 4px 20px rgba(0,0,0,.1);
-    transform: translateY(-2px);
+.iemis-stat-card:hover {
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08) !important;
+    transform: translateY(-1px) !important;
+    border-color: #cbd5e1 !important;
 }
-.stat-card .card-accent {
-    height: 4px;
-    width: 100%;
-    flex-shrink: 0;
+.iemis-icon-wrapper {
+    width: auto !important;
+    height: auto !important;
+    border-radius: 0 !important;
+    background-color: transparent !important;
+    background: transparent !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 2.2rem !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
 }
-.stat-card .card-body {
-    padding: 14px 16px 0 16px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
+.iemis-card-details {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    flex: 1 !important;
 }
-.stat-card .card-icon {
-    width: 36px; height: 36px;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 15px;
-    color: #fff;
-    flex-shrink: 0;
+.iemis-title {
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    color: #475569 !important;
+    line-height: 1.1 !important;
+    margin-bottom: 2px !important;
 }
-.stat-card .card-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: .07em;
-    text-transform: uppercase;
-    color: #94a3b8 !important;
-    line-height: 1;
+.iemis-num-group {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 6px !important;
+}
+.iemis-value {
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    line-height: 1.1 !important;
+}
+.iemis-badge-green {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #10b981 !important;
+}
+.iemis-badge-amber {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #f59e0b !important;
+}
+.iemis-badge-teal {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #0d9488 !important;
+}
+.iemis-badge-rose {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    color: #ef4444 !important;
 }
 .stat-card .card-value {
-    font-size: 26px;
-    font-weight: 900;
+    font-size: 22px;
+    font-weight: 800;
     color: #0f172a !important;
     line-height: 1.1;
-    margin: 4px 0 2px;
+    margin: 3px 0 2px;
 }
 .stat-card .card-sub {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
-    line-height: 1;
-    margin-bottom: 6px;
+    line-height: 1.1;
 }
 .stat-card .card-sparkline {
     margin: 0 -1px -1px -1px;
@@ -68,10 +103,11 @@
     flex-shrink: 0;
 }
 .section-card {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+.section-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04) !important;
     overflow: hidden;
 }
 .section-card .sc-header {
@@ -82,17 +118,17 @@
     justify-content: space-between;
 }
 .section-card .sc-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: #1e293b !important;
+    font-size: 14px !important;
+    font-weight: 800 !important;
+    color: #1e3c72 !important;
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 8px;
 }
 .section-card .sc-link {
     font-size: 11px;
-    font-weight: 600;
-    color: #3b82f6 !important;
+    font-weight: 700;
+    color: #2563eb !important;
     text-decoration: none;
 }
 .section-card .sc-link:hover { text-decoration: underline; }
@@ -147,7 +183,7 @@
     </div>
 </div>
 
-{{-- ── 6 STAT CARDS ── --}}
+{{-- ── 6 STAT CARDS (CEHRD IEMIS CARD STYLE) ── --}}
 <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:14px;"
      class="sm:grid-cols-3 lg:grid-cols-6"
      id="stat-cards-grid">
@@ -157,347 +193,238 @@
 </style>
 
 {{-- Students --}}
-<a href="{{ route('student.list.show') }}" class="stat-card" style="text-decoration:none;">
-    <div class="card-accent" style="background:linear-gradient(90deg,#2563eb,#3b82f6);"></div>
-    <div class="card-body">
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;">
-            <div class="card-icon" style="background:linear-gradient(135deg,#2563eb,#3b82f6);">
-                <i class="bi bi-people-fill"></i>
-            </div>
-            <span class="card-label">Students</span>
+<a href="{{ route('student.list.show') }}" class="iemis-stat-card">
+    <div class="iemis-icon-wrapper">🎓</div>
+    <div class="iemis-card-details">
+        <span class="iemis-title">Students</span>
+        <div class="iemis-num-group">
+            <span class="iemis-value">{{ number_format($studentCount) }}</span>
+            <span class="iemis-badge-green">13.86 %</span>
         </div>
-        <div class="card-value">{{ number_format($studentCount) }}</div>
-        <div class="card-sub" style="color:#10b981 !important;">This session</div>
     </div>
-    <div class="card-sparkline" id="sparkline-students"></div>
 </a>
 
 {{-- Teachers --}}
-<a href="{{ route('teacher.list.show') }}" class="stat-card" style="text-decoration:none;">
-    <div class="card-accent" style="background:linear-gradient(90deg,#10b981,#34d399);"></div>
-    <div class="card-body">
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;">
-            <div class="card-icon" style="background:linear-gradient(135deg,#10b981,#34d399);">
-                <i class="bi bi-person-badge-fill"></i>
-            </div>
-            <span class="card-label">Teachers</span>
+<a href="{{ route('teacher.list.show') }}" class="iemis-stat-card">
+    <div class="iemis-icon-wrapper">🧑‍🏫</div>
+    <div class="iemis-card-details">
+        <span class="iemis-title">Teachers</span>
+        <div class="iemis-num-group">
+            <span class="iemis-value">{{ number_format($teacherCount) }}</span>
+            <span class="iemis-badge-green">Active</span>
         </div>
-        <div class="card-value">{{ number_format($teacherCount) }}</div>
-        <div class="card-sub" style="color:#10b981 !important;">Active faculty</div>
     </div>
-    <div class="card-sparkline" id="sparkline-teachers"></div>
 </a>
 
 {{-- Staff --}}
-<div class="stat-card">
-    <div class="card-accent" style="background:linear-gradient(90deg,#8b5cf6,#a78bfa);"></div>
-    <div class="card-body">
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;">
-            <div class="card-icon" style="background:linear-gradient(135deg,#8b5cf6,#a78bfa);">
-                <i class="bi bi-briefcase-fill"></i>
-            </div>
-            <span class="card-label">Staff</span>
-        </div>
-        <div class="card-value">{{ number_format($staffCount) }}</div>
-        <div class="card-sub" style="color:{{ $teachersPresentToday > 0 ? '#10b981' : '#94a3b8' }} !important;">
-            {{ $teachersPresentToday }} present today
+<div class="iemis-stat-card">
+    <div class="iemis-icon-wrapper">💼</div>
+    <div class="iemis-card-details">
+        <span class="iemis-title">Staff</span>
+        <div class="iemis-num-group">
+            <span class="iemis-value">{{ number_format($staffCount) }}</span>
+            <span class="iemis-badge-green">{{ $teachersPresentToday }} present</span>
         </div>
     </div>
-    <div style="height:44px;background:linear-gradient(to top,rgba(139,92,246,.06),transparent);"></div>
 </div>
 
 {{-- Classes --}}
-<a href="{{ url('classes') }}" class="stat-card" style="text-decoration:none;">
-    <div class="card-accent" style="background:linear-gradient(90deg,#7c3aed,#a855f7);"></div>
-    <div class="card-body">
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;">
-            <div class="card-icon" style="background:linear-gradient(135deg,#7c3aed,#a855f7);">
-                <i class="bi bi-mortarboard-fill"></i>
-            </div>
-            <span class="card-label">Classes</span>
+<a href="{{ url('classes') }}" class="iemis-stat-card">
+    <div class="iemis-icon-wrapper">🏫</div>
+    <div class="iemis-card-details">
+        <span class="iemis-title">Classes</span>
+        <div class="iemis-num-group">
+            <span class="iemis-value">{{ number_format($classCount) }}</span>
+            <span class="iemis-badge-amber">This session</span>
         </div>
-        <div class="card-value">{{ number_format($classCount) }}</div>
-        <div class="card-sub" style="color:#f59e0b !important;">This session</div>
     </div>
-    <div class="card-sparkline" id="sparkline-classes"></div>
 </a>
 
 {{-- Revenue --}}
-<a href="{{ route('finance.overview') }}" class="stat-card" style="text-decoration:none;">
-    <div class="card-accent" style="background:linear-gradient(90deg,#0d9488,#14b8a6);"></div>
-    <div class="card-body">
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;">
-            <div class="card-icon" style="background:linear-gradient(135deg,#0d9488,#14b8a6);">
-                <i class="bi bi-currency-rupee"></i>
-            </div>
-            <span class="card-label">Revenue</span>
+<a href="{{ route('finance.overview') }}" class="iemis-stat-card">
+    <div class="iemis-icon-wrapper">💰</div>
+    <div class="iemis-card-details">
+        <span class="iemis-title">Revenue</span>
+        <div class="iemis-num-group">
+            <span class="iemis-value">Rs.{{ number_format($monthRevenue) }}</span>
+            <span class="iemis-badge-teal">This month</span>
         </div>
-        <div class="card-value" style="font-size:20px !important;">Rs.{{ number_format($monthRevenue) }}</div>
-        <div class="card-sub" style="color:#0d9488 !important;">This month</div>
     </div>
-    <div class="card-sparkline" id="sparkline-revenue"></div>
 </a>
 
 {{-- Unpaid --}}
-<a href="{{ route('payments.index') }}" class="stat-card" style="text-decoration:none;{{ $pendingInvoices > 0 ? 'border-color:#fca5a5;' : '' }}">
-    <div class="card-accent" style="background:{{ $pendingInvoices > 0 ? 'linear-gradient(90deg,#ef4444,#f87171)' : 'linear-gradient(90deg,#10b981,#34d399)' }};"></div>
-    <div class="card-body">
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;">
-            <div class="card-icon" style="background:{{ $pendingInvoices > 0 ? 'linear-gradient(135deg,#ef4444,#f87171)' : 'linear-gradient(135deg,#10b981,#34d399)' }};">
-                <i class="bi bi-receipt"></i>
-            </div>
-            <span class="card-label">Unpaid</span>
-        </div>
-        <div class="card-value" style="color:{{ $pendingInvoices > 0 ? '#ef4444' : '#10b981' }} !important;">
-            {{ number_format($pendingInvoices) }}
-        </div>
-        <div class="card-sub" style="color:{{ $pendingInvoices > 0 ? '#ef4444' : '#10b981' }} !important;">
-            {{ $pendingInvoices > 0 ? 'Invoices pending' : 'All cleared' }}
+<a href="{{ route('payments.index') }}" class="iemis-stat-card" style="{{ $pendingInvoices > 0 ? 'border-color:#fca5a5 !important;' : '' }}">
+    <div class="iemis-icon-wrapper">🧾</div>
+    <div class="iemis-card-details">
+        <span class="iemis-title">Unpaid</span>
+        <div class="iemis-num-group">
+            <span class="iemis-value" style="{{ $pendingInvoices > 0 ? 'color:#ef4444 !important;' : '' }}">{{ number_format($pendingInvoices) }}</span>
+            <span class="{{ $pendingInvoices > 0 ? 'iemis-badge-rose' : 'iemis-badge-green' }}">
+                {{ $pendingInvoices > 0 ? 'Pending' : 'Cleared' }}
+            </span>
         </div>
     </div>
-    <div style="height:44px;background:{{ $pendingInvoices > 0 ? 'linear-gradient(to top,rgba(239,68,68,.06),transparent)' : 'linear-gradient(to top,rgba(16,185,129,.06),transparent)' }};"></div>
 </a>
 
 </div>
 
-{{-- ── ROW 1: Attendance Donut (2/5) + Fee Collection (3/5) ── --}}
+{{-- ── ROW 1: Today's Attendance (2/5) + Fee Collection (3/5) ── --}}
 <div style="display:grid; grid-template-columns:1fr; gap:18px;" id="row1-grid">
 <style>@media(min-width:1024px){#row1-grid{grid-template-columns:2fr 3fr!important;}}</style>
 
-    {{-- Attendance Donut --}}
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#2563eb,#3b82f6);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-calendar-check"></i>
-                </span>
-                Today's Attendance
-            </span>
-            <span style="font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;
+    {{-- 1. Today's Attendance --}}
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Today's Attendance</span>
+            <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;
                 {{ $attendancePct >= 75 ? 'background:#dcfce7;color:#15803d !important;' : 'background:#fee2e2;color:#dc2626 !important;' }}">
-                {{ $attendancePct }}%
+                {{ $attendancePct }}% Rate
             </span>
         </div>
-        <div style="padding:16px;flex:1;display:flex;flex-direction:column;">
-            {{-- Donut --}}
-            <div style="position:relative;display:flex;align-items:center;justify-content:center;">
-                <div id="chart-attendance-donut" style="width:100%;height:180px;"></div>
-                <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
-                    <span style="font-size:32px;font-weight:900;color:#0f172a !important;line-height:1;">{{ $attendancePct }}%</span>
-                    <span style="font-size:10px;color:#94a3b8 !important;font-weight:600;margin-top:2px;">Attendance Rate</span>
-                </div>
-            </div>
-            {{-- Present / Absent stats --}}
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid #f1f5f9;">
-                <div style="text-align:center;background:#eff6ff;border-radius:12px;padding:10px 8px;">
-                    <div style="font-size:22px;font-weight:900;color:#2563eb !important;">{{ number_format($todayPresent) }}</div>
-                    <div style="font-size:10px;color:#64748b !important;font-weight:600;margin-top:2px;">Present</div>
-                </div>
-                <div style="text-align:center;background:#fff1f2;border-radius:12px;padding:10px 8px;">
-                    <div style="font-size:22px;font-weight:900;color:#e11d48 !important;">{{ number_format($todayAbsent) }}</div>
-                    <div style="font-size:10px;color:#64748b !important;font-weight:600;margin-top:2px;">Absent</div>
-                </div>
-            </div>
-            {{-- Staff row --}}
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:8px 12px;background:#faf5ff;border-radius:10px;">
-                <span style="font-size:11px;color:#6b21a8 !important;font-weight:600;display:flex;align-items:center;gap:6px;">
-                    <i class="bi bi-briefcase-fill" style="color:#8b5cf6;"></i> Staff present
-                </span>
-                <span style="font-size:13px;font-weight:800;color:#7c3aed !important;">{{ $teachersPresentToday }}</span>
-            </div>
-            <a href="{{ route('attendance.list.show') }}" style="display:inline-flex;align-items:center;gap:5px;margin-top:12px;font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">
-                View Attendance Report <i class="bi bi-arrow-right"></i>
-            </a>
+        <div style="display:flex;align-items:center;justify-content:center;margin:4px 0;">
+            <div id="chart-attendance-donut" style="width:100%;min-height:185px;"></div>
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;padding-top:12px;border-top:1px solid #f1f5f9;">
+            <div style="text-align:center;background:#f0fdf4;border:1px solid #dcfce7;border-radius:10px;padding:8px;">
+                <div style="font-size:18px;font-weight:900;color:#166534 !important;">{{ number_format($todayPresent) }}</div>
+                <div style="font-size:10px;color:#15803d !important;font-weight:700;">Present</div>
+            </div>
+            <div style="text-align:center;background:#fff1f2;border:1px solid #ffe4e6;border-radius:10px;padding:8px;">
+                <div style="font-size:18px;font-weight:900;color:#9f1239 !important;">{{ number_format($todayAbsent) }}</div>
+                <div style="font-size:10px;color:#be123c !important;font-weight:700;">Absent</div>
+            </div>
+        </div>
+        <a href="{{ route('attendance.list.show') }}" style="display:inline-flex;align-items:center;gap:5px;margin-top:12px;font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">
+            View Attendance Report →
+        </a>
     </div>
 
-    {{-- Fee Collection --}}
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#0d9488,#14b8a6);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-cash-stack"></i>
-                </span>
-                Fee Collection vs Outstanding
-            </span>
+    {{-- 2. Fee Collection vs Outstanding --}}
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Fee Collection vs Outstanding</span>
+            <a href="{{ route('payments.index') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">View Payments →</a>
         </div>
-        <div style="padding:16px 18px;flex:1;display:flex;flex-direction:column;">
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
-                <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #bbf7d0;border-radius:12px;padding:12px;text-align:center;">
-                    <div style="font-size:10px;color:#15803d !important;font-weight:700;letter-spacing:.04em;text-transform:uppercase;">Collected</div>
-                    <div style="font-size:14px;font-weight:900;color:#166534 !important;margin-top:4px;">Rs.{{ number_format($totalFeeCollected) }}</div>
-                </div>
-                <div style="background:linear-gradient(135deg,#fff1f2,#ffe4e6);border:1px solid #fecdd3;border-radius:12px;padding:12px;text-align:center;">
-                    <div style="font-size:10px;color:#be123c !important;font-weight:700;letter-spacing:.04em;text-transform:uppercase;">Outstanding</div>
-                    <div style="font-size:14px;font-weight:900;color:#9f1239 !important;margin-top:4px;">Rs.{{ number_format($totalOutstandingFees) }}</div>
-                </div>
-                <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;border-radius:12px;padding:12px;text-align:center;">
-                    <div style="font-size:10px;color:#1d4ed8 !important;font-weight:700;letter-spacing:.04em;text-transform:uppercase;">Rate</div>
-                    <div style="font-size:14px;font-weight:900;color:#1e3a8a !important;margin-top:4px;">{{ $collectionRate }}%</div>
-                </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;">
+            <div style="background:#f0fdf4;border:1px solid #dcfce7;border-radius:10px;padding:8px;text-align:center;">
+                <div style="font-size:9px;color:#15803d !important;font-weight:800;text-transform:uppercase;">Collected</div>
+                <div style="font-size:13px;font-weight:900;color:#166534 !important;margin-top:2px;">Rs.{{ number_format($totalFeeCollected) }}</div>
             </div>
-            <div id="chart-fee-collection" style="flex:1;min-height:180px;"></div>
-            <a href="{{ route('payments.index') }}" style="display:inline-flex;align-items:center;gap:5px;margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9;font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">
-                View All Payments <i class="bi bi-arrow-right"></i>
-            </a>
+            <div style="background:#fff1f2;border:1px solid #ffe4e6;border-radius:10px;padding:8px;text-align:center;">
+                <div style="font-size:9px;color:#be123c !important;font-weight:800;text-transform:uppercase;">Outstanding</div>
+                <div style="font-size:13px;font-weight:900;color:#9f1239 !important;margin-top:2px;">Rs.{{ number_format($totalOutstandingFees) }}</div>
+            </div>
+            <div style="background:#eff6ff;border:1px solid #dbeafe;border-radius:10px;padding:8px;text-align:center;">
+                <div style="font-size:9px;color:#1d4ed8 !important;font-weight:800;text-transform:uppercase;">Rate</div>
+                <div style="font-size:13px;font-weight:900;color:#1e3a8a !important;margin-top:2px;">{{ $collectionRate }}%</div>
+            </div>
         </div>
+        <div id="chart-fee-collection" style="flex:1;min-height:180px;"></div>
     </div>
 
 </div>
 
-{{-- ── ROW 2: 7-Day Trend + Class Enrollment + Gender ── --}}
-<div style="display:grid;grid-template-columns:1fr;gap:18px;" id="row2-grid">
-<style>@media(min-width:1024px){#row2-grid{grid-template-columns:repeat(3,1fr)!important;}}</style>
+{{-- ── ROW 2: Class Enrollment (2/3 width) + Gender Distribution (1/3 width) ── --}}
+<div style="display:grid;grid-template-columns:1fr;gap:18px;margin-top:18px;" id="row2-grid">
+<style>@media(min-width:1024px){#row2-grid{grid-template-columns:2fr 1fr!important;}}</style>
 
-    {{-- 7-Day Trend --}}
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#10b981,#34d399);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-graph-up"></i>
-                </span>
-                7-Day Attendance Trend
-            </span>
-            <a href="{{ route('attendance.analytics') }}" class="sc-link">Analytics →</a>
+    {{-- 4. Class Enrollment (Wider 2-column span) --}}
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Class Enrollment (ECD–12)</span>
+            <a href="{{ url('classes') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">All Classes →</a>
         </div>
-        <div style="padding:12px 16px 16px;flex:1;">
-            <div id="chart-attendance-trend" style="min-height:200px;"></div>
-        </div>
-    </div>
-
-    {{-- Class Enrollment --}}
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#818cf8);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-bar-chart-steps"></i>
-                </span>
-                Class Enrollment
-            </span>
-            <a href="{{ url('classes') }}" class="sc-link">All Classes →</a>
-        </div>
-        <div style="padding:12px 16px 16px;flex:1;">
+        <div style="flex:1;">
             @if($classEnrollment->count())
-            <div id="chart-class-enrollment" style="min-height:200px;"></div>
+            <div id="chart-class-enrollment" style="min-height:240px;"></div>
             @else
             <div class="empty-state"><i class="bi bi-bar-chart"></i>No enrollment data yet.</div>
             @endif
         </div>
     </div>
 
-    {{-- Student Distribution --}}
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#a855f7,#c084fc);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-gender-ambiguous"></i>
-                </span>
-                Student Distribution
-            </span>
+    {{-- 5. Student Gender Distribution --}}
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Student Gender Distribution</span>
         </div>
-        <div style="padding:12px 16px 16px;flex:1;display:flex;flex-direction:column;">
-            <div style="position:relative;display:flex;align-items:center;justify-content:center;">
-                <div id="chart-gender" style="width:100%;height:160px;"></div>
-                <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
-                    <span style="font-size:24px;font-weight:900;color:#0f172a !important;line-height:1;">{{ number_format($studentCount) }}</span>
-                    <span style="font-size:9px;color:#94a3b8 !important;font-weight:600;">Total</span>
-                </div>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+            <div style="display:flex;align-items:center;justify-content:center;margin:4px 0;">
+                <div id="chart-gender" style="width:100%;min-height:185px;"></div>
             </div>
-            <div style="margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9;display:flex;flex-direction:column;gap:8px;">
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="width:10px;height:10px;border-radius:50%;background:#3b82f6;display:inline-block;"></span>
-                        <span style="font-size:12px;color:#64748b !important;font-weight:500;">Male</span>
-                    </div>
-                    <span style="font-size:12px;font-weight:700;color:#1e293b !important;">
-                        {{ number_format($maleStudents) }} <span style="color:#94a3b8 !important;font-weight:400;">({{ $malePct }}%)</span>
-                    </span>
-                </div>
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <span style="width:10px;height:10px;border-radius:50%;background:#ec4899;display:inline-block;"></span>
-                        <span style="font-size:12px;color:#64748b !important;font-weight:500;">Female</span>
-                    </div>
-                    <span style="font-size:12px;font-weight:700;color:#1e293b !important;">
-                        {{ number_format($female) }} <span style="color:#94a3b8 !important;font-weight:400;">({{ 100 - $malePct }}%)</span>
-                    </span>
-                </div>
+            <div style="padding:8px 12px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:700;">
+                <span style="color:#208cf0;"><span style="width:8px;height:8px;border-radius:50%;background:#208cf0;display:inline-block;margin-right:4px;"></span>Boys: {{ number_format($maleStudents) }} ({{ $malePct }}%)</span>
+                <span style="color:#e9488a;"><span style="width:8px;height:8px;border-radius:50%;background:#e9488a;display:inline-block;margin-right:4px;"></span>Girls: {{ number_format($female) }} ({{ 100 - $malePct }}%)</span>
             </div>
         </div>
     </div>
 
 </div>
 
-{{-- ── ROW 3: Avg Marks + Attendance Heatmap ── --}}
-<div style="display:grid;grid-template-columns:1fr;gap:18px;" id="row3-grid">
-<style>@media(min-width:1024px){#row3-grid{grid-template-columns:repeat(2,1fr)!important;}}</style>
+{{-- ── ROW 3: Attendance Trend + Avg Marks + Heatmap (3 columns) ── --}}
+<div style="display:grid;grid-template-columns:1fr;gap:18px;margin-top:18px;" id="row3-grid">
+<style>@media(min-width:1024px){#row3-grid{grid-template-columns:repeat(3,1fr)!important;}}</style>
 
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#7c3aed,#a78bfa);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-award"></i>
-                </span>
-                Avg Marks by Course
-            </span>
-            <a href="{{ route('results.index') }}" class="sc-link">View Results →</a>
+    {{-- 3. 7-Day Attendance Trend --}}
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">7-Day Attendance Trend</span>
+            <a href="{{ route('attendance.analytics') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">Analytics →</a>
         </div>
-        <div style="padding:12px 16px 16px;flex:1;">
+        <div id="chart-attendance-trend" style="flex:1;min-height:200px;"></div>
+    </div>
+
+    {{-- Average Marks by Course --}}
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Average Marks by Course</span>
+            <a href="{{ route('results.index') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">View Results →</a>
+        </div>
+        <div style="flex:1;">
             @if($coursePerformance->count())
-            <div id="chart-course-performance" style="min-height:220px;"></div>
+            <div id="chart-course-performance" style="min-height:210px;"></div>
             @else
             <div class="empty-state"><i class="bi bi-award"></i>No marks recorded this session.</div>
             @endif
         </div>
     </div>
 
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#2563eb,#60a5fa);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-calendar3"></i>
-                </span>
-                Attendance Heatmap
-                <span style="font-size:10px;color:#94a3b8 !important;font-weight:400;">(10 weeks)</span>
-            </span>
-            <a href="{{ route('attendance.analytics') }}" class="sc-link">Analytics →</a>
+    {{-- Attendance Heatmap --}}
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Attendance Heatmap <span style="font-size:10px;color:#94a3b8;font-weight:400;">(10 weeks)</span></span>
+            <a href="{{ route('attendance.analytics') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">Analytics →</a>
         </div>
-        <div style="padding:12px 16px 16px;flex:1;">
+        <div style="flex:1;">
             <div id="chart-heatmap" style="min-height:220px;"></div>
         </div>
     </div>
 
 </div>
-
 {{-- ── ROW 4: Upcoming Exams + Events + Quick Actions ── --}}
-<div style="display:grid;grid-template-columns:1fr;gap:18px;" id="row4-grid">
+<div style="display:grid;grid-template-columns:1fr;gap:18px;margin-top:18px;" id="row4-grid">
 <style>@media(min-width:1024px){#row4-grid{grid-template-columns:repeat(3,1fr)!important;}}</style>
 
     {{-- Upcoming Exams --}}
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#ef4444,#f87171);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-file-earmark-text"></i>
-                </span>
-                Upcoming Exams
-            </span>
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Upcoming Exams</span>
             @can('view exams')
-            <a href="{{ route('exam.list.show') }}" class="sc-link">View all →</a>
+            <a href="{{ route('exam.list.show') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">View all →</a>
             @endcan
         </div>
-        <div style="padding:8px 10px 14px;flex:1;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
             @if($upcomingExams->count())
-            @foreach($upcomingExams as $exam)
-            <div class="row-item">
-                <div style="width:32px;height:32px;border-radius:8px;background:#fff1f2;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            @foreach($upcomingExams->take(5) as $exam)
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;">
+                <div style="width:32px;height:32px;border-radius:8px;background:#fff1f2;border:1px solid #ffe4e6;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <i class="bi bi-file-earmark-text" style="color:#ef4444;font-size:13px;"></i>
                 </div>
                 <div style="flex:1;min-width:0;">
-                    <div style="font-size:12px;font-weight:600;color:#1e293b !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $exam->exam_name }}</div>
-                    <div style="font-size:10px;color:#94a3b8 !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $exam->course?->course_name ?? '—' }}</div>
+                    <div style="font-size:12px;font-weight:700;color:#0f172a !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $exam->exam_name }}</div>
+                    <div style="font-size:10px;color:#64748b !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $exam->course?->course_name ?? '—' }}</div>
                 </div>
-                <span style="font-size:10px;font-weight:700;background:#eef2ff;color:#4f46e5 !important;padding:3px 8px;border-radius:6px;flex-shrink:0;">
+                <span style="font-size:10px;font-weight:800;background:#eef2ff;color:#4f46e5 !important;border:1px solid #c7d2fe;padding:3px 8px;border-radius:6px;flex-shrink:0;">
                     {{ \Carbon\Carbon::parse($exam->start_date)->format('M d') }}
                 </span>
             </div>
@@ -509,27 +436,22 @@
     </div>
 
     {{-- Upcoming Events --}}
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#818cf8);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-calendar3"></i>
-                </span>
-                Upcoming Events
-            </span>
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Upcoming Events</span>
             @can('view events')
-            <a href="{{ route('events.show') }}" class="sc-link">Calendar →</a>
+            <a href="{{ route('events.show') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">Calendar →</a>
             @endcan
         </div>
-        <div style="padding:8px 10px 14px;flex:1;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
             @if($upcomingEvents->count())
-            @foreach($upcomingEvents as $evt)
-            <div class="row-item">
-                <div style="width:32px;height:32px;border-radius:8px;background:#eef2ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            @foreach($upcomingEvents->take(5) as $evt)
+            <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;">
+                <div style="width:32px;height:32px;border-radius:8px;background:#eef2ff;border:1px solid #c7d2fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <i class="bi bi-calendar-event" style="color:#6366f1;font-size:13px;"></i>
                 </div>
-                <div style="flex:1;min-width:0;font-size:12px;font-weight:600;color:#1e293b !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $evt->title }}</div>
-                <span style="font-size:10px;font-weight:700;background:#fefce8;color:#b45309 !important;padding:3px 8px;border-radius:6px;flex-shrink:0;">
+                <div style="flex:1;min-width:0;font-size:12px;font-weight:700;color:#0f172a !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $evt->title }}</div>
+                <span style="font-size:10px;font-weight:800;background:#fefce8;color:#b45309 !important;border:1px solid #fef08a;padding:3px 8px;border-radius:6px;flex-shrink:0;">
                     {{ \Carbon\Carbon::parse($evt->start)->format('M d') }}
                 </span>
             </div>
@@ -541,54 +463,43 @@
     </div>
 
     {{-- Quick Actions --}}
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#f59e0b,#fbbf24);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-lightning-fill"></i>
-                </span>
-                Quick Actions
-            </span>
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Quick Actions</span>
         </div>
-        <div style="padding:8px 10px 14px;flex:1;">
-            <a href="{{ route('school.profile.edit') }}" class="row-item" style="text-decoration:none;display:flex;">
-                <div style="width:32px;height:32px;border-radius:8px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-building" style="color:#2563eb;font-size:14px;"></i></div>
-                <span style="font-size:12px;font-weight:600;color:#334155 !important;flex:1;">School Profile</span>
-                <i class="bi bi-chevron-right" style="color:#cbd5e1;font-size:11px;"></i>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;">
+            <a href="{{ route('school.profile.edit') }}" style="text-decoration:none;padding:10px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.background='#eff6ff';this.style.borderColor='#bfdbfe';" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9';">
+                <div style="width:28px;height:28px;border-radius:6px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-building" style="color:#2563eb;font-size:13px;"></i></div>
+                <span style="font-size:11px;font-weight:700;color:#0f172a !important;line-height:1.2;">School Profile</span>
             </a>
             @can('manage roles')
-            <a href="{{ route('roles.index') }}" class="row-item" style="text-decoration:none;display:flex;">
-                <div style="width:32px;height:32px;border-radius:8px;background:#eef2ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-shield-check" style="color:#6366f1;font-size:14px;"></i></div>
-                <span style="font-size:12px;font-weight:600;color:#334155 !important;flex:1;">Manage Roles</span>
-                <i class="bi bi-chevron-right" style="color:#cbd5e1;font-size:11px;"></i>
+            <a href="{{ route('roles.index') }}" style="text-decoration:none;padding:10px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.background='#eef2ff';this.style.borderColor='#c7d2fe';" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9';">
+                <div style="width:28px;height:28px;border-radius:6px;background:#eef2ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-shield-check" style="color:#6366f1;font-size:13px;"></i></div>
+                <span style="font-size:11px;font-weight:700;color:#0f172a !important;line-height:1.2;">Manage Roles</span>
             </a>
             @endcan
             @can('view academic settings')
-            <a href="{{ url('academics/settings') }}" class="row-item" style="text-decoration:none;display:flex;">
-                <div style="width:32px;height:32px;border-radius:8px;background:#fffbeb;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-tools" style="color:#f59e0b;font-size:14px;"></i></div>
-                <span style="font-size:12px;font-weight:600;color:#334155 !important;flex:1;">Academic Settings</span>
-                <i class="bi bi-chevron-right" style="color:#cbd5e1;font-size:11px;"></i>
+            <a href="{{ url('academics/settings') }}" style="text-decoration:none;padding:10px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.background='#fffbeb';this.style.borderColor='#fde68a';" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9';">
+                <div style="width:28px;height:28px;border-radius:6px;background:#fffbeb;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-sliders" style="color:#d97706;font-size:13px;"></i></div>
+                <span style="font-size:11px;font-weight:700;color:#0f172a !important;line-height:1.2;">Academic Settings</span>
             </a>
             @endcan
             @can('create teachers')
-            <a href="{{ route('teacher.create.show') }}" class="row-item" style="text-decoration:none;display:flex;">
-                <div style="width:32px;height:32px;border-radius:8px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-person-plus" style="color:#16a34a;font-size:14px;"></i></div>
-                <span style="font-size:12px;font-weight:600;color:#334155 !important;flex:1;">Add Teacher</span>
-                <i class="bi bi-chevron-right" style="color:#cbd5e1;font-size:11px;"></i>
+            <a href="{{ route('teacher.create.show') }}" style="text-decoration:none;padding:10px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.background='#f0fdf4';this.style.borderColor='#bbf7d0';" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9';">
+                <div style="width:28px;height:28px;border-radius:6px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-person-plus" style="color:#16a34a;font-size:13px;"></i></div>
+                <span style="font-size:11px;font-weight:700;color:#0f172a !important;line-height:1.2;">Add Teacher</span>
             </a>
             @endcan
             @can('create invoices')
-            <a href="{{ route('payments.create') }}" class="row-item" style="text-decoration:none;display:flex;">
-                <div style="width:32px;height:32px;border-radius:8px;background:#f0fdfa;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-receipt" style="color:#0d9488;font-size:14px;"></i></div>
-                <span style="font-size:12px;font-weight:600;color:#334155 !important;flex:1;">New Invoice</span>
-                <i class="bi bi-chevron-right" style="color:#cbd5e1;font-size:11px;"></i>
+            <a href="{{ route('payments.create') }}" style="text-decoration:none;padding:10px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.background='#f0fdfa';this.style.borderColor='#99f6e4';" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9';">
+                <div style="width:28px;height:28px;border-radius:6px;background:#f0fdfa;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-receipt" style="color:#0d9488;font-size:13px;"></i></div>
+                <span style="font-size:11px;font-weight:700;color:#0f172a !important;line-height:1.2;">New Invoice</span>
             </a>
             @endcan
             @can('promote students')
-            <a href="{{ url('promotions/index') }}" class="row-item" style="text-decoration:none;display:flex;">
-                <div style="width:32px;height:32px;border-radius:8px;background:#faf5ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-arrow-up-circle" style="color:#7c3aed;font-size:14px;"></i></div>
-                <span style="font-size:12px;font-weight:600;color:#334155 !important;flex:1;">Promotions</span>
-                <i class="bi bi-chevron-right" style="color:#cbd5e1;font-size:11px;"></i>
+            <a href="{{ url('promotions/index') }}" style="text-decoration:none;padding:10px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.background='#faf5ff';this.style.borderColor='#e9d5ff';" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9';">
+                <div style="width:28px;height:28px;border-radius:6px;background:#faf5ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-arrow-up-circle" style="color:#7c3aed;font-size:13px;"></i></div>
+                <span style="font-size:11px;font-weight:700;color:#0f172a !important;line-height:1.2;">Promotions</span>
             </a>
             @endcan
         </div>
@@ -597,34 +508,29 @@
 </div>
 
 {{-- ── ROW 5: Top Performers + Recent Admissions + Recent Payments ── --}}
-<div style="display:grid;grid-template-columns:1fr;gap:18px;" id="row5-grid">
+<div style="display:grid;grid-template-columns:1fr;gap:18px;margin-top:18px;" id="row5-grid">
 <style>@media(min-width:1024px){#row5-grid{grid-template-columns:repeat(3,1fr)!important;}}</style>
 
     {{-- Top Performers --}}
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#f59e0b,#fbbf24);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-trophy-fill"></i>
-                </span>
-                Top Performers
-            </span>
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Top Performers</span>
         </div>
-        <div style="padding:8px 10px 14px;flex:1;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
             @if($topPerformers->count())
             @foreach($topPerformers->take(6) as $i => $tp)
             @if($tp->student)
-            <div class="row-item">
-                <span style="width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;
-                    {{ $i===0?'background:#fef3c7;color:#92400e !important;':($i===1?'background:#f1f5f9;color:#475569 !important;':($i===2?'background:#fff7ed;color:#9a3412 !important;':'background:#f8fafc;color:#94a3b8 !important;')) }}">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;">
+                <span style="width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;
+                    {{ $i===0?'background:#fef3c7;color:#92400e !important;border:1px solid #fde68a;':($i===1?'background:#f1f5f9;color:#475569 !important;border:1px solid #e2e8f0;':($i===2?'background:#fff7ed;color:#9a3412 !important;border:1px solid #ffedd5;':'background:#ffffff;color:#94a3b8 !important;border:1px solid #f1f5f9;')) }}">
                     {{ $i+1 }}
                 </span>
                 <img src="{{ $tp->student->avatar }}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">
                 <div style="flex:1;min-width:0;">
-                    <div style="font-size:12px;font-weight:600;color:#1e293b !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $tp->student->full_name }}</div>
-                    <div style="font-size:10px;color:#94a3b8 !important;">{{ $tp->exams_count }} exams</div>
+                    <div style="font-size:12px;font-weight:700;color:#0f172a !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $tp->student->full_name }}</div>
+                    <div style="font-size:10px;color:#64748b !important;">{{ $tp->exams_count }} exams</div>
                 </div>
-                <span style="font-size:12px;font-weight:800;flex-shrink:0;color:{{ $tp->avg_marks>=80?'#16a34a':($tp->avg_marks>=60?'#d97706':'#dc2626') }} !important;">
+                <span style="font-size:12px;font-weight:900;flex-shrink:0;color:{{ $tp->avg_marks>=80?'#16a34a':($tp->avg_marks>=60?'#d97706':'#dc2626') }} !important;">
                     {{ $tp->avg_marks }}%
                 </span>
             </div>
@@ -637,29 +543,24 @@
     </div>
 
     {{-- Recent Admissions --}}
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#10b981,#34d399);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-person-check-fill"></i>
-                </span>
-                Recent Admissions
-            </span>
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Recent Admissions</span>
             @can('view students')
-            <a href="{{ route('student.list.show') }}" class="sc-link">View all →</a>
+            <a href="{{ route('student.list.show') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">View all →</a>
             @endcan
         </div>
-        <div style="padding:8px 10px 14px;flex:1;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
             @if($recentAdmissions->count())
             @foreach($recentAdmissions->take(5) as $s)
-            <div class="row-item">
-                <img src="{{ $s->avatar }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;">
+                <img src="{{ $s->avatar }}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">
                 <div style="flex:1;min-width:0;">
-                    <div style="font-size:12px;font-weight:600;color:#1e293b !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $s->full_name }}</div>
-                    <div style="font-size:10px;color:#94a3b8 !important;">{{ $s->created_at->diffForHumans() }}</div>
+                    <div style="font-size:12px;font-weight:700;color:#0f172a !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $s->full_name }}</div>
+                    <div style="font-size:10px;color:#64748b !important;">{{ $s->created_at->diffForHumans() }}</div>
                 </div>
                 @can('view students')
-                <a href="{{ route('student.profile.show', $s->id) }}" style="font-size:10px;font-weight:700;color:#2563eb !important;text-decoration:none;flex-shrink:0;background:#eff6ff;padding:3px 8px;border-radius:6px;">Profile</a>
+                <a href="{{ route('student.profile.show', $s->id) }}" style="font-size:10px;font-weight:700;color:#2563eb !important;text-decoration:none;flex-shrink:0;background:#eff6ff;border:1px solid #bfdbfe;padding:3px 8px;border-radius:6px;">Profile</a>
                 @endcan
             </div>
             @endforeach
@@ -671,33 +572,28 @@
 
     {{-- Recent Payments --}}
     @can('view payments')
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#818cf8);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-credit-card-fill"></i>
-                </span>
-                Recent Payments
-            </span>
-            <a href="{{ route('payments.index') }}" class="sc-link">View all →</a>
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Recent Payments</span>
+            <a href="{{ route('payments.index') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">View all →</a>
         </div>
-        <div style="padding:8px 10px 14px;flex:1;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
             @if($recentPayments->count())
             @foreach($recentPayments->take(5) as $pmt)
             @php $pSt = $pmt->invoice?->student; @endphp
-            <div class="row-item" style="justify-content:space-between;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;">
                 <div style="display:flex;align-items:center;gap:8px;min-width:0;">
                     @if($pSt)
                     <img src="{{ $pSt->avatar }}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">
                     @else
-                    <div style="width:28px;height:28px;border-radius:50%;background:#f1f5f9;flex-shrink:0;"></div>
+                    <div style="width:28px;height:28px;border-radius:50%;background:#e2e8f0;flex-shrink:0;"></div>
                     @endif
                     <div style="min-width:0;">
-                        <div style="font-size:12px;font-weight:600;color:#1e293b !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $pSt?->full_name ?? '—' }}</div>
-                        <div style="font-size:10px;color:#94a3b8 !important;">{{ $pmt->created_at->format('M d, Y') }}</div>
+                        <div style="font-size:12px;font-weight:700;color:#0f172a !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $pSt?->full_name ?? 'Student Payment' }}</div>
+                        <div style="font-size:10px;color:#64748b !important;">{{ $pmt->created_at->format('M d, Y') }}</div>
                     </div>
                 </div>
-                <span style="font-size:12px;font-weight:800;color:#16a34a !important;flex-shrink:0;background:#f0fdf4;padding:3px 8px;border-radius:6px;">
+                <span style="font-size:12px;font-weight:900;color:#166534 !important;flex-shrink:0;background:#f0fdf4;border:1px solid #dcfce7;padding:3px 8px;border-radius:6px;">
                     Rs.{{ number_format($pmt->amount_paid) }}
                 </span>
             </div>
@@ -712,47 +608,38 @@
 </div>
 
 {{-- ── ROW 6: Today's Schedule + Birthdays + Notice Board ── --}}
-<div style="display:grid;grid-template-columns:1fr;gap:18px;" id="row6-grid">
+<div style="display:grid;grid-template-columns:1fr;gap:18px;margin-top:18px;" id="row6-grid">
 <style>@media(min-width:1024px){#row6-grid{grid-template-columns:repeat(3,1fr)!important;}}</style>
 
     {{-- Today's Schedule --}}
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#6366f1,#818cf8);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-calendar4-range"></i>
-                </span>
-                Today's Schedule
-                <span style="font-size:10px;color:#94a3b8 !important;font-weight:400;">{{ now()->format('l') }}</span>
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">
+                Today's Schedule <span style="font-size:10px;color:#64748b;font-weight:600;">({{ now()->format('l') }})</span>
             </span>
             @can('view routines')
-            <a href="{{ route('section.routine.show') }}" class="sc-link">Timetable →</a>
+            <a href="{{ route('section.routine.show') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">Timetable →</a>
             @endcan
         </div>
         @if($todaySchedule->count())
-        <div style="flex:1;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
             @foreach($todaySchedule->take(6) as $slot)
             @php
                 $slotStart = \Carbon\Carbon::today()->setTimeFromTimeString($slot->start);
                 $slotEnd   = \Carbon\Carbon::today()->setTimeFromTimeString($slot->end);
                 $isNow     = now()->between($slotStart, $slotEnd);
             @endphp
-            <div style="display:flex;align-items:center;gap:10px;padding:9px 16px;
-                {{ $isNow ? 'background:#eef2ff;' : '' }}
-                border-bottom:1px solid #f8fafc;transition:background .15s;">
-                <div style="width:6px;height:6px;border-radius:50%;flex-shrink:0;
-                    {{ $isNow ? 'background:#6366f1;' : 'background:#cbd5e1;' }}
-                    {{ $isNow ? 'box-shadow:0 0 0 3px rgba(99,102,241,.25);' : '' }}">
-                </div>
-                <span style="font-size:10px;font-family:monospace;color:#64748b !important;width:80px;flex-shrink:0;">{{ $slot->start }}–{{ $slot->end }}</span>
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:{{ $isNow ? '#eff6ff' : '#f8fafc' }};border:1px solid {{ $isNow ? '#bfdbfe' : '#f1f5f9' }};border-radius:10px;">
+                <div style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:{{ $isNow ? '#2563eb' : '#cbd5e1' }};"></div>
+                <span style="font-size:10px;font-weight:700;font-family:monospace;color:#475569 !important;width:76px;flex-shrink:0;">{{ $slot->start }}–{{ $slot->end }}</span>
                 <div style="flex:1;min-width:0;">
-                    <div style="font-size:12px;font-weight:600;color:#1e293b !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $slot->course?->course_name ?? '—' }}</div>
-                    <div style="font-size:10px;color:#94a3b8 !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    <div style="font-size:12px;font-weight:700;color:#0f172a !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $slot->course?->course_name ?? '—' }}</div>
+                    <div style="font-size:10px;color:#64748b !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                         {{ $slot->schoolClass?->class_name ?? '' }}{{ $slot->section?->section_name ? ' · '.$slot->section->section_name : '' }}
                     </div>
                 </div>
                 @if($isNow)
-                <span style="font-size:9px;background:#6366f1;color:#fff !important;padding:2px 7px;border-radius:20px;flex-shrink:0;font-weight:700;">Live</span>
+                <span style="font-size:9px;background:#2563eb;color:#ffffff !important;padding:2px 7px;border-radius:20px;flex-shrink:0;font-weight:800;">Live</span>
                 @endif
             </div>
             @endforeach
@@ -763,26 +650,21 @@
     </div>
 
     {{-- Upcoming Birthdays --}}
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#ec4899,#f472b6);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-cake2-fill"></i>
-                </span>
-                Upcoming Birthdays
-            </span>
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Upcoming Birthdays</span>
         </div>
         @if($birthdayUsers->count())
-        <div style="flex:1;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
             @foreach($birthdayUsers->take(6) as $u)
-            <div style="display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid #f8fafc;transition:background .15s;" onmouseover="this.style.background='#fdf2f8'" onmouseout="this.style.background=''">
-                <img src="{{ $u->avatar }}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #fbcfe8;" alt="">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;">
+                <img src="{{ $u->avatar }}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #fbcfe8;" alt="">
                 <div style="flex:1;min-width:0;">
-                    <div style="font-size:12px;font-weight:600;color:#1e293b !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $u->full_name }}</div>
-                    <div style="font-size:10px;color:#94a3b8 !important;text-transform:capitalize;">{{ $u->primary_role }}</div>
+                    <div style="font-size:12px;font-weight:700;color:#0f172a !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $u->full_name }}</div>
+                    <div style="font-size:10px;color:#64748b !important;text-transform:capitalize;">{{ $u->primary_role }}</div>
                 </div>
-                <span style="font-size:10px;font-weight:700;background:#fdf2f8;color:#be185d !important;border:1px solid #fbcfe8;padding:3px 8px;border-radius:6px;flex-shrink:0;">
-                    {{ \Carbon\Carbon::parse($u->birthday)->format('M d') }}
+                <span style="font-size:10px;font-weight:800;background:#fdf2f8;color:#be185d !important;border:1px solid #fbcfe8;padding:3px 8px;border-radius:6px;flex-shrink:0;">
+                    🎂 {{ \Carbon\Carbon::parse($u->birthday)->format('M d') }}
                 </span>
             </div>
             @endforeach
@@ -793,25 +675,20 @@
     </div>
 
     {{-- Notice Board --}}
-    <div class="section-card" style="display:flex;flex-direction:column;">
-        <div class="sc-header">
-            <span class="sc-title">
-                <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#f59e0b,#fbbf24);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                    <i class="bi bi-megaphone-fill"></i>
-                </span>
-                Notice Board
-            </span>
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Notice Board</span>
             @can('create notices')
-            <a href="{{ route('notice.create') }}" class="sc-link" style="background:#fffbeb;padding:3px 10px;border-radius:6px;border:1px solid #fcd34d;">+ New</a>
+            <a href="{{ route('notice.create') }}" style="font-size:11px;font-weight:800;background:#eff6ff;color:#2563eb !important;border:1px solid #bfdbfe;padding:3px 10px;border-radius:6px;text-decoration:none;">+ New Notice</a>
             @endcan
         </div>
         @if($notices->count())
-        <div style="flex:1;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
             @foreach($notices->take(5) as $notice)
-            <div style="padding:10px 16px;border-bottom:1px solid #f8fafc;transition:background .15s;" onmouseover="this.style.background='#fffbeb'" onmouseout="this.style.background=''">
+            <div style="padding:9px 12px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;">
                 <div style="display:flex;gap:8px;align-items:flex-start;">
-                    <span style="width:6px;height:6px;border-radius:50%;background:#f59e0b;flex-shrink:0;margin-top:5px;"></span>
-                    <p style="font-size:12px;color:#475569 !important;line-height:1.5;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                    <span style="font-size:12px;flex-shrink:0;margin-top:1px;">📌</span>
+                    <p style="font-size:11px;font-weight:600;color:#334155 !important;line-height:1.4;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
                         {!! \Stevebauman\Purify\Facades\Purify::clean(strip_tags($notice->notice)) !!}
                     </p>
                 </div>
@@ -827,32 +704,29 @@
 
 {{-- ── ROW 7: Recent Activity Log ── --}}
 @if($activityLog->count())
-<div class="section-card">
-    <div class="sc-header">
-        <span class="sc-title">
-            <span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#64748b,#94a3b8);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;flex-shrink:0;">
-                <i class="bi bi-clock-history"></i>
-            </span>
-            Recent Activity
-        </span>
+<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);margin-top:18px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Recent Activity Log</span>
     </div>
-    <div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
         @foreach($activityLog->take(6) as $log)
-        <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #f8fafc;transition:background .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-            <div style="width:30px;height:30px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#f1f5f9;display:flex;align-items:center;justify-content:center;">
+        <div style="display:flex;align-items:center;gap:12px;padding:9px 12px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;">
+            <div style="width:28px;height:28px;border-radius:50%;overflow:hidden;flex-shrink:0;background:#e2e8f0;display:flex;align-items:center;justify-content:center;">
                 @if($log->user)
-                <img src="{{ $log->user->avatar }}" style="width:30px;height:30px;object-fit:cover;" alt="">
+                <img src="{{ $log->user->avatar }}" style="width:28px;height:28px;object-fit:cover;" alt="">
                 @else
-                <i class="bi bi-person" style="color:#94a3b8;font-size:13px;"></i>
+                <i class="bi bi-person" style="color:#64748b;font-size:12px;"></i>
                 @endif
             </div>
             <div style="flex:1;min-width:0;">
-                <p style="font-size:12px;color:#475569 !important;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    <span style="font-weight:700;color:#1e293b !important;">{{ $log->user?->full_name ?? 'System' }}</span>
+                <p style="font-size:11px;font-weight:600;color:#334155 !important;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    <span style="font-weight:800;color:#0f172a !important;">{{ $log->user?->full_name ?? 'System' }}</span>
                     — {{ $log->description ?? $log->action ?? 'performed an action' }}
                 </p>
             </div>
-            <span style="font-size:10px;color:#94a3b8 !important;flex-shrink:0;white-space:nowrap;">{{ $log->created_at->diffForHumans() }}</span>
+            <span style="font-size:10px;font-weight:700;color:#64748b !important;flex-shrink:0;white-space:nowrap;background:#ffffff;border:1px solid #e2e8f0;padding:2px 8px;border-radius:6px;">
+                {{ $log->created_at->diffForHumans() }}
+            </span>
         </div>
         @endforeach
     </div>
@@ -894,22 +768,74 @@ window.addEventListener('load', function () {
     sparkline('sparkline-classes',  '#7c3aed', @json($sparklineClasses));
     sparkline('sparkline-revenue',  '#0d9488', @json($sparklineRevenue));
 
-    // ── Attendance Donut ──────────────────────────────────────────────────
-    var donutEl = document.getElementById('chart-attendance-donut');
-    if (donutEl) {
-        donutEl.style.height = '180px';
-        new ApexCharts(donutEl, {
-            chart: { type: 'donut', height: 180, parentHeightOffset: 0 },
-            series: [{{ $attendanceDonutData['present'] > 0 || $attendanceDonutData['absent'] > 0 ? $attendanceDonutData['present'] : 1 }}, {{ $attendanceDonutData['absent'] > 0 || $attendanceDonutData['present'] > 0 ? $attendanceDonutData['absent'] : 0 }}],
-            labels: ['Present', 'Absent'],
-            colors: ['#2563eb', '#f43f5e'],
-            dataLabels: { enabled: false },
-            legend: { show: false },
-            plotOptions: { pie: { donut: { size: '75%', labels: { show: false } } } },
-            stroke: { width: 3, colors: ['#fff'] },
-            tooltip: { theme: isDark ? 'dark' : 'light' },
-        }).render();
+    // ── IEMIS Speedometer Gauge Helper ────────────────────────────────────
+    function renderIemisSpeedometer(containerId, percentage, leftLabel, rightLabel, leftColor, rightColor) {
+        var el = document.getElementById(containerId);
+        if (!el) return;
+        
+        var pct = Math.min(100, Math.max(0, parseFloat(percentage) || 0));
+        var rightPct = (100 - pct).toFixed(1);
+        var leftPctStr = pct.toFixed(1) + '%';
+        var rightPctStr = rightPct + '%';
+        
+        leftColor = leftColor || '#2563eb';
+        rightColor = rightColor || '#ec4899';
+        
+        var w = 320, h = 185;
+        var cx = 160, cy = 138, r = 96, strokeW = 38;
+        
+        var pRad = (pct / 100) * Math.PI;
+        var splitAngle = Math.PI - pRad;
+        
+        var xSplit = cx + r * Math.cos(splitAngle);
+        var ySplit = cy - r * Math.sin(splitAngle);
+        
+        // LargeArc is ALWAYS 0 for sub-arcs of a 180° semi-circle
+        var leftPath = "M " + (cx - r) + " " + cy + " A " + r + " " + r + " 0 0 1 " + xSplit + " " + ySplit;
+        var rightPath = "M " + xSplit + " " + ySplit + " A " + r + " " + r + " 0 0 1 " + (cx + r) + " " + cy;
+        
+        var leftMid = Math.PI - (pRad / 2);
+        var xLeftText = cx + r * Math.cos(leftMid);
+        var yLeftText = cy - r * Math.sin(leftMid) + 5;
+        
+        var rightMid = splitAngle / 2;
+        var xRightText = cx + r * Math.cos(rightMid);
+        var yRightText = cy - r * Math.sin(rightMid) + 5;
+        
+        var needleL = 84;
+        var tipX = cx + needleL * Math.cos(splitAngle);
+        var tipY = cy - needleL * Math.sin(splitAngle);
+        
+        var perpX = Math.sin(splitAngle) * 5;
+        var perpY = Math.cos(splitAngle) * 5;
+        
+        var b1X = cx - perpX;
+        var b1Y = cy - perpY;
+        var b2X = cx + perpX;
+        var b2Y = cy + perpY;
+        
+        var svg = `
+        <svg viewBox="0 0 ${w} ${h}" style="width:100%;max-width:320px;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
+            <path d="M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}" fill="none" stroke="#e2e8f0" stroke-width="${strokeW}" stroke-linecap="butt" />
+            ${pct > 0 ? `<path d="${leftPath}" fill="none" stroke="${leftColor}" stroke-width="${strokeW}" stroke-linecap="butt" />` : ''}
+            ${pct < 100 ? `<path d="${rightPath}" fill="none" stroke="${rightColor}" stroke-width="${strokeW}" stroke-linecap="butt" />` : ''}
+            ${pct >= 8 ? `<text x="${xLeftText}" y="${yLeftText}" fill="#ffffff" font-size="12" font-weight="900" text-anchor="middle" dominant-baseline="middle">${leftPctStr}</text>` : ''}
+            ${(100 - pct) >= 8 ? `<text x="${xRightText}" y="${yRightText}" fill="#ffffff" font-size="12" font-weight="900" text-anchor="middle" dominant-baseline="middle">${rightPctStr}</text>` : ''}
+            <polygon points="${tipX},${tipY} ${b1X},${b1Y} ${b2X},${b2Y}" fill="#0f172a" />
+            <circle cx="${cx}" cy="${cy}" r="10" fill="#0f172a" />
+            <circle cx="${cx}" cy="${cy}" r="3.5" fill="#ffffff" />
+            <text x="${cx - r - 2}" y="${cy + 20}" font-size="12" font-weight="800" fill="#64748b" text-anchor="start">0%</text>
+            <text x="${cx - r - 2}" y="${cy + 38}" font-size="14" font-weight="900" fill="${leftColor}" text-anchor="start">${leftLabel}</text>
+            <text x="${cx + r + 2}" y="${cy + 20}" font-size="12" font-weight="800" fill="#64748b" text-anchor="end">100%</text>
+            <text x="${cx + r + 2}" y="${cy + 38}" font-size="14" font-weight="900" fill="${rightColor}" text-anchor="end">${rightLabel}</text>
+        </svg>
+        `;
+        
+        el.innerHTML = svg;
     }
+
+    // ── Today Attendance Speedometer Gauge (Pure Green for Present, Pure Red for Absent) ──
+    renderIemisSpeedometer('chart-attendance-donut', {{ $attendancePct }}, 'Present', 'Absent', '#10b981', '#ef4444');
 
     // ── Fee Collection (grouped bar) ─────────────────────────────────────
     var feeEl = document.getElementById('chart-fee-collection');
@@ -953,7 +879,7 @@ window.addEventListener('load', function () {
             series: [{ name: 'Present', data: trendPresent }, { name: 'Absent', data: trendAbsent }],
             xaxis: { categories: trendDays, labels: { style: { colors: textMuted, fontSize: '10px' } }, axisBorder: { show: false }, axisTicks: { show: false } },
             yaxis: { labels: { style: { colors: textMuted, fontSize: '10px' } } },
-            colors: ['#10b981', '#f43f5e'],
+            colors: ['#10b981', '#ef4444'],
             fill: { type: 'gradient', gradient: { opacityFrom: 0.35, opacityTo: 0.0 } },
             stroke: { curve: 'smooth', width: 2.5 },
             dataLabels: { enabled: false },
@@ -963,60 +889,125 @@ window.addEventListener('load', function () {
         }).render();
     }
 
-    // ── Class Enrollment (horizontal bar) ────────────────────────────────
+    // ── Class Enrollment (Vertical Stacked Column Chart like IEMIS) ──────
     var classEl = document.getElementById('chart-class-enrollment');
     if (classEl) {
-        var classData   = @json($classEnrollment);
-        var classNames  = classData.map(function(c){ return c.name; });
-        var classCounts = classData.map(function(c){ return c.count; });
+        var classData  = @json($classEnrollment);
+        var classNames = classData.map(function(c){ return c.name; });
+        var boysData   = classData.map(function(c){ return parseInt(c.boys) || 0; });
+        var girlsData  = classData.map(function(c){ return parseInt(c.girls) || 0; });
+        
         new ApexCharts(classEl, {
-            chart: { type: 'bar', height: 200, toolbar: { show: false }, fontFamily: 'Inter,sans-serif' },
-            plotOptions: { bar: { horizontal: true, borderRadius: 5, barHeight: '55%',
-                distributed: true } },
-            series: [{ name: 'Students', data: classCounts }],
-            xaxis: { categories: classNames, labels: { style: { colors: textMuted, fontSize: '10px' } } },
-            yaxis: { labels: { style: { colors: textMuted, fontSize: '10px' } } },
-            colors: ['#6366f1','#8b5cf6','#a855f7','#7c3aed','#4f46e5','#3b82f6','#2563eb','#0d9488','#10b981','#f59e0b'],
-            dataLabels: { enabled: true, style: { fontSize: '10px', colors: ['#fff'] } },
-            legend: { show: false },
-            grid: { borderColor: gridColor, strokeDashArray: 4 },
-            tooltip: { theme: isDark ? 'dark' : 'light', y: { formatter: function(v){ return v+' students'; } } },
+            chart: {
+                type: 'bar',
+                height: 250,
+                stacked: true,
+                toolbar: { show: false },
+                fontFamily: 'Inter, sans-serif'
+            },
+            series: [
+                { name: 'Boys', data: boysData },
+                { name: 'Girls', data: girlsData }
+            ],
+            colors: ['#208cf0', '#e9488a'],
+            plotOptions: {
+                bar: {
+                    horizontal: false,
+                    columnWidth: '45%',
+                    borderRadius: 2
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                style: {
+                    fontSize: '10px',
+                    fontWeight: '800',
+                    colors: ['#ffffff']
+                },
+                formatter: function(val) {
+                    return val > 0 ? val : '';
+                }
+            },
+            xaxis: {
+                categories: classNames,
+                title: {
+                    text: 'Grade',
+                    style: { color: textMuted, fontSize: '12px', fontWeight: '700' }
+                },
+                labels: {
+                    rotate: 0,
+                    rotateAlways: false,
+                    hideOverlappingLabels: false,
+                    style: { colors: textMuted, fontSize: '11px', fontWeight: '700' }
+                },
+                axisBorder: { show: true, color: '#e2e8f0' },
+                axisTicks: { show: false }
+            },
+            yaxis: {
+                title: {
+                    text: 'Number of Students',
+                    style: { color: textMuted, fontSize: '11px', fontWeight: '700' }
+                },
+                labels: { style: { colors: textMuted, fontSize: '10px' } }
+            },
+            legend: {
+                position: 'top',
+                horizontalAlign: 'right',
+                fontSize: '11px',
+                fontWeight: 700,
+                markers: { radius: 3 },
+                labels: { colors: textMuted }
+            },
+            grid: { borderColor: gridColor, strokeDashArray: 0 },
+            tooltip: { theme: isDark ? 'dark' : 'light' }
         }).render();
     }
 
-    // ── Gender Donut ──────────────────────────────────────────────────────
-    var genderEl = document.getElementById('chart-gender');
-    if (genderEl) {
-        new ApexCharts(genderEl, {
-            chart: { type: 'donut', height: 160 },
-            series: [{{ $maleStudents }}, {{ $female }}],
-            labels: ['Male', 'Female'],
-            colors: ['#3b82f6', '#ec4899'],
-            dataLabels: { enabled: false },
-            legend: { show: false },
-            plotOptions: { pie: { donut: { size: '72%', labels: { show: false } } } },
-            stroke: { width: 3, colors: ['#fff'] },
-            tooltip: { theme: isDark ? 'dark' : 'light' },
-        }).render();
-    }
+    // ── Student Gender Speedometer Gauge (Blue for Boys, Pink for Girls) ──
+    renderIemisSpeedometer('chart-gender', {{ $malePct }}, 'Boys', 'Girls', '#2563eb', '#ec4899');
 
-    // ── Avg Marks by Course ───────────────────────────────────────────────
+    // ── Avg Marks by Course (Shining Multi-Color Gradient Chart) ─────────
     var courseEl = document.getElementById('chart-course-performance');
     if (courseEl) {
         @php
-            $courseNamesFormatted = $coursePerformance->map(fn($c) => $c->course?->course_name ?? 'Unknown');
+            $courseNamesFormatted = $coursePerformance->map(fn($c) => $c->course?->course_name ?? 'Subject');
             $courseAvgsFormatted  = $coursePerformance->pluck('avg_marks')->map(fn($v) => (float)$v);
         @endphp
         var courseNames = @json($courseNamesFormatted);
         var courseAvgs  = @json($courseAvgsFormatted);
         new ApexCharts(courseEl, {
-            chart: { type: 'bar', height: 220, toolbar: { show: false }, fontFamily: 'Inter,sans-serif' },
-            plotOptions: { bar: { horizontal: true, borderRadius: 5, barHeight: '55%' } },
+            chart: { type: 'bar', height: 235, toolbar: { show: false }, fontFamily: 'Inter,sans-serif' },
+            plotOptions: {
+                bar: {
+                    horizontal: true,
+                    borderRadius: 6,
+                    barHeight: '58%',
+                    distributed: true
+                }
+            },
             series: [{ name: 'Avg Marks (%)', data: courseAvgs }],
             xaxis: { categories: courseNames, labels: { style: { colors: textMuted, fontSize: '10px' } }, max: 100 },
-            yaxis: { labels: { style: { colors: textMuted, fontSize: '10px' } } },
-            colors: ['#7c3aed'],
-            dataLabels: { enabled: true, formatter: function(v){ return v+'%'; }, style: { fontSize: '10px' } },
+            yaxis: { labels: { style: { colors: textMuted, fontSize: '10px', fontWeight: '600' } } },
+            colors: ['#6366f1', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#3b82f6'],
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shade: 'light',
+                    type: 'horizontal',
+                    shadeIntensity: 0.45,
+                    gradientToColors: ['#818cf8', '#22d3ee', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#60a5fa'],
+                    inverseColors: false,
+                    opacityFrom: 1,
+                    opacityTo: 0.9,
+                    stops: [0, 100]
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: function(v){ return v+'%'; },
+                style: { fontSize: '10px', fontWeight: '800', colors: ['#ffffff'] }
+            },
+            legend: { show: false },
             grid: { borderColor: gridColor, strokeDashArray: 4 },
             tooltip: { theme: isDark ? 'dark' : 'light', y: { formatter: function(v){ return v+'%'; } } },
         }).render();

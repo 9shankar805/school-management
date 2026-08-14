@@ -6,12 +6,13 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&display=swap">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'DejaVu Sans',sans-serif;font-size:11px;color:#1e293b;padding:28px;}
+body{font-family:'Noto Sans Devanagari','DejaVu Sans',sans-serif;font-size:11px;color:#1e293b;padding:28px;}
 h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-size:12px;font-weight:700;}
 .watermark{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);font-size:64px;color:rgba(79,70,229,.07);font-weight:900;letter-spacing:.08em;pointer-events:none;z-index:0;}
-.header{text-align:center;border-bottom:2px solid #4f46e5;padding-bottom:12px;margin-bottom:14px;}
+.header{text-align:center;margin-bottom:10px;}
 .header h1{font-size:16px;font-weight:800;color:#1e293b;}
 .header p{font-size:10px;color:#64748b;margin-top:2px;}
 /* Default header: uses inline HTML attributes for DomPDF — see table below */
@@ -60,7 +61,7 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
           $mime     = mime_content_type($absPath) ?: 'image/jpeg';
           $b64      = base64_encode(file_get_contents($absPath));
           $dataUri  = 'data:' . $mime . ';base64,' . $b64;
-          $schoolLogoImgTag = '<img src="' . $dataUri . '" width="60" height="60" style="object-fit:contain;" alt="' . e($schoolName) . '">';
+          $schoolLogoImgTag = '<img src="' . $dataUri . '" width="85" height="85" style="object-fit:contain;" alt="' . e($schoolName) . '">';
       }
   }
 
@@ -70,8 +71,10 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
     '{{SCHOOL_NAME}}'    => $schoolName,
     '{{school_address}}' => $schoolAddress,
     '{{SCHOOL_ADDRESS}}' => $schoolAddress,
-    '{{exam_name}}'      => $paper->exam_name   ?? '',
-    '{{EXAM_NAME}}'      => $paper->exam_name   ?? '',
+    '{{exam_name}}'      => $paper->exam_name ?: ($paper->title ?: '3rd TERMINAL EXAMINATION 2082'),
+    '{{EXAM_NAME}}'      => $paper->exam_name ?: ($paper->title ?: '3rd TERMINAL EXAMINATION 2082'),
+    '{{author}}'         => $paper->creator?->full_name ?: ($paper->creator?->name ?: 'Sunil Yadav'),
+    '{{AUTHOR}}'         => $paper->creator?->full_name ?: ($paper->creator?->name ?: 'Sunil Yadav'),
     '{{subject}}'        => $paper->subject     ?? '',
     '{{SUBJECT}}'        => $paper->subject     ?? '',
     '{{class}}'          => $paper->class_label ?? '',
@@ -84,19 +87,149 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
     '{{PASS_MARKS}}'     => $paper->pass_marks   ?? '',
     '{{date}}'           => $paper->exam_date?->format('d M Y') ?? '',
     '{{DATE}}'           => $paper->exam_date?->format('d M Y') ?? '',
-    '{{school_logo}}'    => $schoolLogoImgTag ? str_replace('<img ', '<img style="height:56px;width:56px;object-fit:contain;vertical-align:middle;" ', $schoolLogoImgTag) : '',
-    '{{SCHOOL_LOGO}}'    => $schoolLogoImgTag ? str_replace('<img ', '<img style="height:56px;width:56px;object-fit:contain;vertical-align:middle;" ', $schoolLogoImgTag) : '',
+    '{{school_logo}}'    => $schoolLogoImgTag ? str_replace('<img ', '<img style="height:85px;width:85px;max-width:85px;max-height:85px;object-fit:contain;vertical-align:middle;" ', $schoolLogoImgTag) : '',
+    '{{SCHOOL_LOGO}}'    => $schoolLogoImgTag ? str_replace('<img ', '<img style="height:85px;width:85px;max-width:85px;max-height:85px;object-fit:contain;vertical-align:middle;" ', $schoolLogoImgTag) : '',
   ];
 @endphp
 
-{{-- Header --}}
+@php
+  $isLandscape = ($paper->orientation === 'landscape');
+
+  // If landscape mode, split questions between Left Column and Right Column
+  if ($isLandscape) {
+      $allFlatItems = [];
+      foreach ($paper->sections as $section) {
+          foreach ($section->questions as $qIndex => $q) {
+              $allFlatItems[] = [
+                  'section'      => $section,
+                  'is_sec_first' => ($qIndex === 0),
+                  'question'     => $q,
+              ];
+          }
+      }
+      $totalFlat  = count($allFlatItems);
+      $halfFlat   = (int) ceil($totalFlat / 2);
+      $leftItems  = array_slice($allFlatItems, 0, $halfFlat);
+      $rightItems = array_slice($allFlatItems, $halfFlat);
+  }
+@endphp
+
+@if($isLandscape)
+{{-- ══════════════════════════════════════════════════════════════════════════
+     LANDSCAPE 2-COLUMN BOOKLET LAYOUT
+     Header title & metadata appears ONLY ONCE on the Left Column (Top Left)
+══════════════════════════════════════════════════════════════════════════ --}}
+<style>
+@page { size: A4 landscape; margin: 6mm 8mm 6mm 8mm; }
+.landscape-page-box { border:2.5px double #000; padding:12px 14px; min-height:880px; height:880px; box-sizing:border-box; position:relative; }
+.landscape-page-box .header > div[style*="double"] { border:none !important; padding:0 !important; margin-bottom:8px !important; }
+</style>
+
+<table width="100%" height="880" cellpadding="0" cellspacing="0" style="border-collapse:collapse; table-layout:fixed;">
+  <tr>
+    {{-- LEFT COLUMN: Wrapped in Full-Page Double-Border Outer Container --}}
+    <td width="48.5%" valign="top" style="height:880px;">
+      <div class="landscape-page-box">
+        @if($template && $template->header_html)
+          <div class="header" style="margin-bottom:10px;">
+            {!! $template->renderHeader($placeholders) !!}
+          </div>
+        @else
+          <div style="padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid #000;">
+            <div style="font-size:16px; font-weight:900; text-align:center;">{{ $schoolName }}</div>
+            <div style="font-size:10px; text-align:center;">{{ $schoolAddress }}</div>
+            <div style="text-align:center; margin-top:4px; font-weight:700;">{{ $paper->exam_name }}</div>
+          </div>
+        @endif
+
+        @php $currentSecIdLeft = null; @endphp
+        @foreach($leftItems as $item)
+          @php
+            $sec = $item['section'];
+            $q   = $item['question'];
+          @endphp
+          @if($currentSecIdLeft !== $sec->id)
+            @php $currentSecIdLeft = $sec->id; @endphp
+            <div style="text-align:center; margin:12px 0 8px 0;">
+              <span style="background:#e2e8f0; border:1.5px solid #000; border-radius:4px; padding:2px 16px; font-weight:800; font-size:11.5px; color:#000; display:inline-block; font-family:sans-serif;">
+                {{ $sec->title }}@if($sec->instructions) — {{ $sec->instructions }}@endif [{{ count($sec->questions) }} &times; {{ $sec->questions->first()?->allocated_marks ?? 1 }} = {{ $sec->total_marks }}]
+              </span>
+            </div>
+          @endif
+
+          <div class="question" style="margin-bottom:10px;">
+            <span class="q-num" style="font-weight:700; color:#000; margin-right:4px;">{{ $q->numbering }}.</span>
+            <span class="q-body" style="font-size:10.5px; color:#000;">{!! $q->question_text !!}</span>
+            @if($q->options)
+            @php $romanMap = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii']; @endphp
+            <div style="margin:3px 0 5px 16px; font-size:10px; color:#000; display:flex; flex-wrap:wrap; gap:12px;">
+              @foreach($q->options as $optIdx => $opt)
+              <span style="margin-right:12px;">({{ $romanMap[$optIdx] ?? ($optIdx + 1) }}) {{ is_array($opt) ? ($opt['text'] ?? $opt) : $opt }}</span>
+              @endforeach
+            </div>
+            @elseif($q->question_type==='true_false')
+            <div style="padding-left:16px;margin-top:3px;font-size:10px;color:#475569;">(i) True &nbsp;&nbsp; (ii) False</div>
+            @endif
+          </div>
+        @endforeach
+      </div>
+    </td>
+
+    {{-- GAP --}}
+    <td width="3%"></td>
+
+    {{-- RIGHT COLUMN: Wrapped in Full-Page Double-Border Outer Container --}}
+    <td width="48.5%" valign="top" style="height:880px;">
+      <div class="landscape-page-box">
+        @php $currentSecIdRight = null; @endphp
+        @foreach($rightItems as $item)
+          @php
+            $sec = $item['section'];
+            $q   = $item['question'];
+          @endphp
+          @if($currentSecIdRight !== $sec->id)
+            @php $currentSecIdRight = $sec->id; @endphp
+            <div style="text-align:center; margin:item-top 0 8px 0;">
+              <span style="background:#e2e8f0; border:1.5px solid #000; border-radius:4px; padding:2px 16px; font-weight:800; font-size:11.5px; color:#000; display:inline-block; font-family:sans-serif;">
+                {{ $sec->title }}@if($sec->instructions) — {{ $sec->instructions }}@endif [{{ count($sec->questions) }} &times; {{ $sec->questions->first()?->allocated_marks ?? 1 }} = {{ $sec->total_marks }}]
+              </span>
+            </div>
+          @endif
+
+          <div class="question" style="margin-bottom:10px;">
+            <span class="q-num" style="font-weight:700; color:#000; margin-right:4px;">{{ $q->numbering }}.</span>
+            <span class="q-body" style="font-size:10.5px; color:#000;">{!! $q->question_text !!}</span>
+            @if($q->options)
+            @php $romanMap = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii']; @endphp
+            <div style="margin:3px 0 5px 16px; font-size:10px; color:#000; display:flex; flex-wrap:wrap; gap:12px;">
+              @foreach($q->options as $optIdx => $opt)
+              <span style="margin-right:12px;">({{ $romanMap[$optIdx] ?? ($optIdx + 1) }}) {{ is_array($opt) ? ($opt['text'] ?? $opt) : $opt }}</span>
+              @endforeach
+            </div>
+            @elseif($q->question_type==='true_false')
+            <div style="padding-left:16px;margin-top:3px;font-size:10px;color:#475569;">(i) True &nbsp;&nbsp; (ii) False</div>
+            @endif
+          </div>
+        @endforeach
+
+        {{-- Footer --}}
+        <div style="position:absolute; bottom:12px; left:0; right:0; text-align:center; font-weight:800; font-size:11px; color:#000;">
+          *** BEST OF LUCK ***
+        </div>
+      </div>
+    </td>
+  </tr>
+</table>
+
+@else
+{{-- ══════════════════════════════════════════════════════════════════════════
+     PORTRAIT SINGLE-COLUMN LAYOUT
+══════════════════════════════════════════════════════════════════════════ --}}
 @if($template && $template->header_html)
-{{-- Custom HTML header from template — all placeholders substituted --}}
 <div class="header">
   {!! $template->renderHeader($placeholders) !!}
 </div>
 @else
-{{-- Default header: logo pinned left, school name + address centred, spacer mirrors logo width --}}
 <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border-bottom:2px solid #4f46e5;padding-bottom:10px;margin-bottom:14px;">
   <tr>
     <td width="70" valign="middle" align="left" style="padding-bottom:10px;">
@@ -113,20 +246,22 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
         <div style="font-size:11px;font-weight:700;color:#3730a3;margin-top:4px;">{{ $paper->exam_name }}</div>
       @endif
     </td>
-    <td width="70" valign="middle" style="padding-bottom:10px;"></td>{{-- balances logo column --}}
+    <td width="70" valign="middle" style="padding-bottom:10px;"></td>
+  </tr>
+{{-- Default Boxed Meta Table --}}
+<table width="100%" cellpadding="0" cellspacing="0" style="border:1.5px solid #000; border-collapse:collapse; margin:10px 0 14px 0; font-size:11px; color:#000; font-family:sans-serif;">
+  <tr>
+    <td style="border:1px solid #000; padding:5px 8px; width:35%;"><strong>Sub:</strong> {{ $paper->subject ?? '—' }}</td>
+    <td style="border:1px solid #000; padding:5px 8px; width:35%;"><strong>Time:</strong> {{ $paper->duration ?? '—' }}</td>
+    <td style="border:1px solid #000; padding:5px 8px; width:30%;"><strong>F.M.:</strong> {{ $paper->full_marks ?: $paper->total_marks }}</td>
+  </tr>
+  <tr>
+    <td style="border:1px solid #000; padding:5px 8px;"><strong>Class:</strong> {{ $paper->class_label ?? '—' }}</td>
+    <td style="border:1px solid #000; padding:5px 8px; text-align:center;">Submitted by: {{ $paper->creator?->full_name ?: ($paper->creator?->name ?: 'Sunil Yadav') }}</td>
+    <td style="border:1px solid #000; padding:5px 8px;"><strong>P.M.:</strong> {{ $paper->pass_marks ?? '—' }}</td>
   </tr>
 </table>
 @endif
-
-{{-- Meta grid --}}
-<div class="meta-grid">
-  <div class="meta-row"><span class="lbl">Subject:</span><span class="val">{{ $paper->subject ?? '—' }}</span></div>
-  <div class="meta-row"><span class="lbl">Class:</span><span class="val">{{ $paper->class_label ?? '—' }}</span></div>
-  <div class="meta-row"><span class="lbl">Date:</span><span class="val">{{ $paper->exam_date?->format('d M Y') ?? '—' }}</span></div>
-  <div class="meta-row"><span class="lbl">Time:</span><span class="val">{{ $paper->duration ?? '—' }}</span></div>
-  <div class="meta-row"><span class="lbl">Full Marks:</span><span class="val">{{ $paper->full_marks ?: $paper->total_marks }}</span></div>
-  <div class="meta-row"><span class="lbl">Pass Marks:</span><span class="val">{{ $paper->pass_marks ?? '—' }}</span></div>
-</div>
 
 {{-- Instructions --}}
 @if($template?->instructions_html)
@@ -138,21 +273,35 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
 
 {{-- Sections & Questions --}}
 @foreach($paper->sections as $section)
+@if($template && (str_contains($template->name, 'Genesis') || str_contains($template->name, 'Terminal')))
+<div style="text-align:center; margin:16px 0 10px 0;">
+  <span style="background:#e2e8f0; border:1.5px solid #000; border-radius:4px; padding:3px 22px; font-weight:800; font-size:12.5px; color:#000; display:inline-block; font-family:sans-serif;">
+    {{ $section->title }}@if($section->instructions) — {{ $section->instructions }}@endif [{{ count($section->questions) }} &times; {{ $section->questions->first()?->allocated_marks ?? 1 }} = {{ $section->total_marks }}]
+  </span>
+</div>
+@else
 <div class="section-header">
   <span>{{ $section->title }}@if($section->instructions) — {{ $section->instructions }}@endif</span>
   <span>[{{ $section->total_marks }} Marks]</span>
 </div>
+@endif
+
 @foreach($section->questions as $q)
-<div class="question">
+<div class="question" style="margin-bottom:12px;">
+  @unless($template && (str_contains($template->name, 'Genesis') || str_contains($template->name, 'Terminal')))
   <span class="marks-float">[{{ $q->allocated_marks }} M]</span>
-  <span class="q-num">{{ $q->numbering }}.</span>
-  <span class="q-body">{!! $q->question_text !!}</span>
+  @endunless
+  <span class="q-num" style="font-weight:700; color:#000; margin-right:4px;">{{ $q->numbering }}.</span>
+  <span class="q-body" style="font-size:11px; color:#000;">{!! $q->question_text !!}</span>
   @if($q->options)
-  <ol class="options" type="A">
-    @foreach($q->options as $opt)<li>{{ is_array($opt) ? ($opt['text'] ?? $opt) : $opt }}</li>@endforeach
-  </ol>
+  @php $romanMap = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii']; @endphp
+  <div style="margin:4px 0 6px 20px; font-size:10.5px; color:#000; display:flex; flex-wrap:wrap; gap:16px;">
+    @foreach($q->options as $optIdx => $opt)
+    <span style="margin-right:16px;">({{ $romanMap[$optIdx] ?? ($optIdx + 1) }}) {{ is_array($opt) ? ($opt['text'] ?? $opt) : $opt }}</span>
+    @endforeach
+  </div>
   @elseif($q->question_type==='true_false')
-  <div style="padding-left:20px;margin-top:4px;font-size:10px;color:#475569;">(a) True &nbsp;&nbsp; (b) False</div>
+  <div style="padding-left:20px;margin-top:4px;font-size:10px;color:#475569;">(i) True &nbsp;&nbsp; (ii) False</div>
   @elseif(in_array($q->question_type,['short_answer','long_answer','essay','numerical','fill_blank']))
   @for($l=0;$l<($q->question_type==='essay'?5:($q->question_type==='long_answer'?3:1));$l++)
   <div class="answer-line"></div>
@@ -164,11 +313,15 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
 
 {{-- Footer --}}
 <div class="footer">
-  {{ $schoolName }}
-  @if($template?->footer_html) &bull; {!! $template->footer_html !!} @endif
-  &bull; {{ $paper->title }}
-  @if($template?->signature_name) &bull; {{ $template->signature_name }}@if($template->signature_title), {{ $template->signature_title }}@endif @endif
+  @if($template?->footer_html)
+    {!! $template->footer_html !!}
+  @else
+    {{ $schoolName }}
+    &bull; {{ $paper->title }}
+    @if($template?->signature_name) &bull; {{ $template->signature_name }}@if($template->signature_title), {{ $template->signature_title }}@endif @endif
+  @endif
 </div>
+@endif
 
 {{-- KaTeX auto-render: convert $...$ and $$...$$ in question text --}}
 <script>

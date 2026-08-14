@@ -16,7 +16,9 @@ class DepartmentController extends Controller
     public function index()
     {
         $departments = Department::with('head', 'teachers')->get();
-        $teachers    = User::role(['teacher', 'class-teacher'])->get();
+        $teachers    = User::whereIn('role', ['teacher', 'class-teacher', 'admin', 'principal'])
+            ->orWhereHas('roles', fn($q) => $q->whereIn('name', ['teacher', 'class-teacher']))
+            ->get();
         return view('teachers.departments.index', compact('departments', 'teachers'));
     }
 

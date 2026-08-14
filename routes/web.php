@@ -63,6 +63,7 @@ use App\Http\Controllers\SchoolLandingController;
 use App\Http\Controllers\Api\V1\SettingController;
 use App\Http\Controllers\StudentTransferController;
 use App\Http\Controllers\StudentIdCardController;
+use App\Http\Controllers\IdCardTemplateController;
 use App\Http\Controllers\GraduationController;
 use App\Http\Controllers\AchievementController;
 use App\Http\Controllers\CertificateController;
@@ -112,6 +113,13 @@ Auth::routes();
 
 // QR attendance scan — public endpoint (auth enforced inside controller)
 Route::get('/attendance/scan/{token}', [QrAttendanceController::class, 'scan'])->name('attendance.qr.scan');
+
+// Public Online Admission Application Routes (no auth required)
+Route::get('/admissions/apply',  [\App\Http\Controllers\PublicAdmissionController::class, 'create'])->name('admissions.public.apply');
+Route::post('/admissions/apply', [\App\Http\Controllers\PublicAdmissionController::class, 'store'])->name('admissions.public.store');
+
+// Official CEHRD IEMIS School Performance Dashboard (Public & Authenticated)
+Route::get('/iemis-school-report-card-dashboard', [\App\Http\Controllers\HomeController::class, 'iemisDashboard'])->name('iemis.school.dashboard');
 
 Route::middleware(['auth'])->group(function () {
 
@@ -305,8 +313,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/create',                    [PaymentController::class, 'create'])->name('create');
         Route::post('/',                         [PaymentController::class, 'store'])->name('store');
         Route::post('/bulk-generate',            [PaymentController::class, 'bulkGenerate'])->name('bulk-generate');
-        Route::get('/student/{studentId}/ledger',[PaymentController::class, 'studentLedger'])->name('student-ledger');
-        Route::get('/{id}',                      [PaymentController::class, 'show'])->name('show');
+        Route::get('/student/{studentId}/ledger',   [PaymentController::class, 'studentLedger'])->name('student-ledger');
+        Route::get('/student/{studentId}/fees-json',[PaymentController::class, 'studentFeesJson'])->name('student-fees-json');
+        Route::get('/{id}',                         [PaymentController::class, 'show'])->name('show');
         Route::get('/{id}/pay',                  [PaymentController::class, 'pay'])->name('pay');
         Route::post('/{id}/pay',                 [PaymentController::class, 'processPayment'])->name('process');
     });
@@ -676,7 +685,20 @@ Route::middleware(['auth'])->group(function () {
 
     // ── STUDENT ID CARDS ─────────────────────────────────────────────────────
     Route::get('students/{studentId}/id-card',   [StudentIdCardController::class, 'generate'])->name('student.id-card');
-    Route::post('students/id-cards/bulk',         [StudentIdCardController::class, 'bulkGenerate'])->name('student.id-card.bulk');
+    Route::get('students/id-cards/bulk',         [StudentIdCardController::class, 'bulkGenerate'])->name('student.id-cards.bulk');
+    Route::post('students/id-cards/bulk',        [StudentIdCardController::class, 'bulkGenerate'])->name('student.id-card.bulk');
+
+    // ── ID CARD TEMPLATES ──────────────────────────────────────────────────
+    Route::prefix('id-card-templates')->name('id-card-templates.')->group(function () {
+        Route::get('/',                          [IdCardTemplateController::class, 'index'])   ->name('index');
+        Route::get('/new',                       [IdCardTemplateController::class, 'designer'])->name('create');
+        Route::post('/',                         [IdCardTemplateController::class, 'save'])    ->name('store');
+        Route::get('/{id}/edit',                 [IdCardTemplateController::class, 'designer'])->name('edit');
+        Route::put('/{id}',                      [IdCardTemplateController::class, 'save'])    ->name('save');
+        Route::patch('/{id}/activate',           [IdCardTemplateController::class, 'activate'])->name('activate');
+        Route::delete('/{id}',                   [IdCardTemplateController::class, 'destroy']) ->name('destroy');
+        Route::post('/preview',                  [IdCardTemplateController::class, 'preview']) ->name('preview');
+    });
 
     // ── GRADUATION / STATUS MANAGEMENT ───────────────────────────────────────
     Route::get('graduation',               [GraduationController::class, 'index'])->name('students.graduation.index');
@@ -1056,11 +1078,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/scans',               [\App\Http\Controllers\RfidController::class, 'scans'])->name('scans');
     });
     Route::prefix('communication')->name('communication.')->group(function () {
-        Route::get('/',          [CommunicationController::class, 'index'])->name('index');
-        Route::get('/bulk',      [CommunicationController::class, 'bulk'])->name('bulk');
-        Route::post('/bulk/send',[CommunicationController::class, 'sendBulk'])->name('bulk.send');
-        Route::get('/chat',      [CommunicationController::class, 'chat'])->name('chat');
-        Route::get('/settings',  [CommunicationController::class, 'settings'])->name('settings');
+        Route::get('/',                    [CommunicationController::class, 'index'])->name('index');
+        Route::get('/bulk',                [CommunicationController::class, 'bulk'])->name('bulk');
+        Route::post('/bulk/send',          [CommunicationController::class, 'sendBulk'])->name('bulk.send');
+        Route::get('/individual',          [CommunicationController::class, 'individual'])->name('individual');
+        Route::get('/individual/search',   [CommunicationController::class, 'searchUsers'])->name('individual.search');
+        Route::post('/individual/send',    [CommunicationController::class, 'sendIndividual'])->name('individual.send');
+        Route::get('/chat',                [CommunicationController::class, 'chat'])->name('chat');
+        Route::get('/settings',            [CommunicationController::class, 'settings'])->name('settings');
     });
     // WhatsApp webhook (no CSRF — Meta posts here)
     Route::get('/webhooks/whatsapp',  [CommunicationController::class, 'whatsappWebhookVerify'])->name('webhooks.whatsapp.verify');
@@ -1179,6 +1204,9 @@ Route::middleware(['auth'])->group(function () {
     // Template CRUD
     Route::prefix('certificates')->name('certificates.')->group(function () {
         Route::get('/',                           [CertificateController::class, 'index'])->name('index');
+        Route::get('/designs',                    [CertificateController::class, 'designsGallery'])->name('designs.index');
+        Route::get('/designs/{designId}/preview', [CertificateController::class, 'designPreview'])->name('design.preview');
+        Route::get('/designs/{designId}/apply',   [CertificateController::class, 'designApply'])->name('design.apply');
         Route::get('/create',                     [CertificateController::class, 'create'])->name('create');
         Route::post('/',                          [CertificateController::class, 'store'])->name('store');
         Route::get('/{id}/edit',                  [CertificateController::class, 'edit'])->name('edit');
@@ -1196,9 +1224,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/issued/{id}/download',       [CertificateController::class, 'download'])->name('download');
         Route::post('/issued/{id}/revoke',        [CertificateController::class, 'revoke'])->name('revoke');
 
-        // Bulk issue (select class)
+        // Bulk & Single issue
         Route::get('/bulk',                       [CertificateController::class, 'bulkForm'])->name('bulk');
         Route::post('/bulk',                      [CertificateController::class, 'bulkIssue'])->name('bulk.issue');
+        Route::post('/issue-single',              [CertificateController::class, 'issueSingle'])->name('issue.single');
     });
 
     // Issue certificate to a specific student
@@ -1209,6 +1238,19 @@ Route::middleware(['auth'])->group(function () {
 
 // ── Certificate public verification (no auth required — accessed via QR) ──
 Route::get('/certificates/verify/{token}', [CertificateController::class, 'verify'])->name('certificates.verify');
+
+// ── Student ID Card Public Verification & QR Quick Login (no auth required) ──
+Route::get('/verify/student/{token}', [\App\Http\Controllers\StudentVerificationController::class, 'show'])->name('student.verify');
+Route::get('/qr-login/{token}', [\App\Http\Controllers\StudentVerificationController::class, 'qrLogin'])->name('student.qr-login');
+Route::post('/login/qr-scan', [\App\Http\Controllers\StudentVerificationController::class, 'loginFromScan'])->name('login.qr-scan');
+
+// ── Teacher ID Card Public Verification & QR Quick Login (no auth required) ──
+Route::get('/verify/teacher/{token}', [\App\Http\Controllers\TeacherVerificationController::class, 'show'])->name('teacher.verify');
+Route::get('/qr-login-teacher/{token}', [\App\Http\Controllers\TeacherVerificationController::class, 'qrLogin'])->name('teacher.qr-login');
+
+// ── Teacher ID Card PDF Generation (authenticated) ──
+Route::middleware(['auth'])->get('/teachers/id-card/{teacherId}', [\App\Http\Controllers\TeacherIdCardController::class, 'single'])->name('teacher.id-card');
+Route::middleware(['auth'])->get('/teachers/id-cards/bulk', [\App\Http\Controllers\TeacherIdCardController::class, 'bulk'])->name('teacher.id-cards.bulk');
 
 // ── Global search for command palette (authenticated) ──
 Route::middleware(['auth'])->get('/search', [SettingController::class, 'globalSearch'])->name('global.search');

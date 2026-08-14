@@ -99,7 +99,7 @@
                         <label for="inputBirthday" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                             Date of Birth <span class="text-rose-500">*</span>
                         </label>
-                        <input type="date" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none" id="inputBirthday" name="birthday" required value="{{$student->birthday}}">
+                        <input type="date" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none" id="inputBirthday" name="birthday" required value="{{$student->birthday?->format('Y-m-d')}}">
                     </div>
 
                     <div>

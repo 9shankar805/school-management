@@ -121,6 +121,32 @@
             </div>
         </div>
 
+        <!-- 1b. Direct WhatsApp (Individual) Card -->
+        <div class="col-12 col-lg-4">
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm h-100 d-flex flex-column justify-content-between relative overflow-hidden hover:border-green-300 transition">
+                <div>
+                    <div class="w-12 h-12 rounded-2xl text-white d-flex align-items-center justify-content-center fs-4 shadow-md mb-4"
+                         style="background:linear-gradient(135deg,#25D366,#128C7E);">
+                        <i class="bi bi-person-lines-fill"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-800 mb-2">Direct WhatsApp</h4>
+                    <p class="text-slate-500 text-sm leading-relaxed mb-4">
+                        Message a single parent, student, or staff member directly — with live preview, quick templates, and delivery tracking.
+                    </p>
+                    <ul class="text-xs text-slate-600 space-y-2 mb-4">
+                        <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-green-500"></i> Search by name, phone or email</li>
+                        <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-green-500"></i> Live WhatsApp phone preview</li>
+                        <li class="d-flex align-items-center gap-2"><i class="bi bi-check-circle-fill text-green-500"></i> Pre-built message templates</li>
+                    </ul>
+                </div>
+                <a href="{{ route('communication.individual') }}"
+                   class="btn text-white font-bold w-100 py-3 rounded-xl shadow-md transition"
+                   style="background:#25D366;">
+                    <i class="bi bi-whatsapp me-1.5"></i> Send Direct Message
+                </a>
+            </div>
+        </div>
+
         <!-- 2. Live Chat / Discussions -->
         <div class="col-12 col-lg-4">
             <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm h-100 d-flex flex-column justify-content-between relative overflow-hidden hover:border-indigo-300 transition">

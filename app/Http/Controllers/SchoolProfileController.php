@@ -28,6 +28,7 @@ class SchoolProfileController extends Controller
         $data = $request->validate([
             // Basic
             'name'              => 'required|string|max:255',
+            'iemis_code'         => 'nullable|string|max:20',
             'email'             => 'required|email|max:255',
             'phone'             => 'nullable|string|max:20',
             'website'           => 'nullable|url|max:255',
@@ -67,7 +68,7 @@ class SchoolProfileController extends Controller
         // ── Logo ─────────────────────────────────────────────────────────────
         if ($request->hasFile('logo')) {
             if ($school->logo) Storage::disk('public')->delete($school->logo);
-            $school->logo = $request->file('logo')->store('school-logos', 'public');
+            $school->logo = \App\Services\ImageWebpService::storeAsWebp($request->file('logo'), 'school-logos', 'public');
         } elseif ($request->remove_logo == '1' && $school->logo) {
             Storage::disk('public')->delete($school->logo);
             $school->logo = null;
@@ -83,8 +84,8 @@ class SchoolProfileController extends Controller
                 if (isset($gallery[$idx])) {
                     Storage::disk('public')->delete($gallery[$idx]);
                 }
-                // Store replacement
-                $gallery[$idx] = $file->store('school-gallery', 'public');
+                // Store replacement as WebP
+                $gallery[$idx] = \App\Services\ImageWebpService::storeAsWebp($file, 'school-gallery', 'public');
             }
         }
 
@@ -104,7 +105,7 @@ class SchoolProfileController extends Controller
         // 3. Append new uploads
         if ($request->hasFile('new_gallery_images')) {
             foreach ($request->file('new_gallery_images') as $file) {
-                $gallery[] = $file->store('school-gallery', 'public');
+                $gallery[] = \App\Services\ImageWebpService::storeAsWebp($file, 'school-gallery', 'public');
             }
         }
 

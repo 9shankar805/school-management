@@ -128,6 +128,98 @@ class CommunicationController extends Controller
     }
 
     /**
+     * UI for Individual WhatsApp message
+     *
+     * GET /communication/individual
+     */
+    public function individual(Request $request)
+    {
+        $this->authorize('create notices');
+
+        // Load the selected user when returning after a successful send
+        $selectedUser = null;
+        if ($request->filled('user_id')) {
+            $selectedUser = User::find((int) $request->user_id);
+        }
+
+        return view('communication.individual', compact('selectedUser'));
+    }
+
+    /**
+     * AJAX — search users by name or phone for the individual-send autocomplete.
+     *
+     * GET /communication/individual/search?q=…
+     */
+    public function searchUsers(Request $request)
+    {
+        $this->authorize('create notices');
+
+        $q = trim($request->query('q', ''));
+
+        if (strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $users = User::where(function ($query) use ($q) {
+                $query->whereRaw("CONCAT(first_name,' ',last_name) LIKE ?", ["%{$q}%"])
+                      ->orWhere('phone', 'LIKE', "%{$q}%")
+                      ->orWhere('email', 'LIKE', "%{$q}%");
+            })
+            ->whereNotNull('phone')
+            ->where('phone', '!=', '')
+            ->orderBy('first_name')
+            ->limit(15)
+            ->get(['id', 'first_name', 'last_name', 'phone', 'role'])
+            ->map(fn($u) => [
+                'id'    => $u->id,
+                'name'  => $u->full_name,
+                'phone' => $u->phone,
+                'role'  => $u->primary_role ?? ($u->role ?? 'user'),
+            ]);
+
+        return response()->json($users);
+    }
+
+    /**
+     * Send a WhatsApp message to one specific person.
+     *
+     * POST /communication/individual/send
+     */
+    public function sendIndividual(Request $request)
+    {
+        $this->authorize('create notices');
+
+        $data = $request->validate([
+            'user_id' => 'required|integer|exists:users,id',
+            'message' => 'required|string|min:5|max:1000',
+        ]);
+
+        $recipient = User::findOrFail($data['user_id']);
+
+        if (! $recipient->phone) {
+            return back()
+                ->withInput()
+                ->with('error', "No phone number on record for {$recipient->full_name}.");
+        }
+
+        $school   = auth()->user()->school;
+        $sent     = $this->whatsapp
+                         ->setSchool($school)
+                         ->setModule('individual')
+                         ->sendText($recipient->phone, $data['message']);
+
+        if ($sent) {
+            return redirect()
+                ->route('communication.individual', ['user_id' => $recipient->id])
+                ->with('status', "WhatsApp message sent to {$recipient->full_name} ({$recipient->phone}).");
+        }
+
+        return back()
+            ->withInput()
+            ->with('error', "Failed to send to {$recipient->full_name}. Check Zavu credentials and phone format.");
+    }
+
+    /**
      * UI for live Chat / Discussion Forums
      */
     public function chat()

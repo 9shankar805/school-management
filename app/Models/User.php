@@ -91,7 +91,8 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function parent_info(): HasOne
     {
-        return $this->hasOne(StudentParentInfo::class, 'student_id');
+        return $this->hasOne(StudentParentInfo::class, 'student_id')
+                    ->withoutGlobalScopes();
     }
 
     public function academic_info(): HasOne

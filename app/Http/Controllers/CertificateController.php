@@ -57,6 +57,64 @@ class CertificateController extends Controller
         return view('certificates.index', compact('templates', 'stats', 'recent'));
     }
 
+    public function designsGallery()
+    {
+        $this->authorize('view students');
+        return view('certificates.designs.index');
+    }
+
+    public function designPreview(int $designId)
+    {
+        $this->authorize('view students');
+        $viewName = "certificates.designs.design-{$designId}-" . match($designId) {
+            1 => 'royal-classic',
+            2 => 'modern-gradient',
+            3 => 'achievement-gold',
+            4 => 'minimalist-pro',
+            5 => 'emerald-honor',
+            6 => 'vibrant-achievement',
+            7 => 'imperial-crimson',
+            8 => 'traditional-parchment',
+            default => 'royal-classic',
+        };
+
+        $dummyStudent = (object)[
+            'first_name' => 'Aarav',
+            'last_name'  => 'Shrestha',
+            'gender'     => 'Male',
+        ];
+
+        $dummyIssued = (object)[
+            'certificate_number' => 'CERT-2082-SAMPLE',
+            'issued_date'        => now(),
+            'verification_token' => 'sample-token-12345',
+        ];
+
+        return view($viewName, [
+            'student'  => $dummyStudent,
+            'issued'   => $dummyIssued,
+            'template' => CertificateTemplate::first(),
+        ]);
+    }
+
+    public function designApply(int $designId)
+    {
+        $this->authorize('create students');
+        $presets = [
+            1 => ['primary_color' => '#1a3a6b', 'secondary_color' => '#b8953e', 'border_style' => 'ornate'],
+            2 => ['primary_color' => '#6c2eb9', 'secondary_color' => '#0ea5e9', 'border_style' => 'modern'],
+            3 => ['primary_color' => '#7b1e1e', 'secondary_color' => '#b8953e', 'border_style' => 'ornate'],
+            4 => ['primary_color' => '#1e293b', 'secondary_color' => '#3b82f6', 'border_style' => 'minimal'],
+            5 => ['primary_color' => '#064e3b', 'secondary_color' => '#d97706', 'border_style' => 'ornate'],
+            6 => ['primary_color' => '#581c87', 'secondary_color' => '#06b6d4', 'border_style' => 'modern'],
+            7 => ['primary_color' => '#881337', 'secondary_color' => '#f59e0b', 'border_style' => 'ornate'],
+            8 => ['primary_color' => '#78350f', 'secondary_color' => '#b45309', 'border_style' => 'classic'],
+        ];
+
+        $p = $presets[$designId] ?? $presets[1];
+        return redirect()->route('certificates.create', $p);
+    }
+
     public function create()
     {
         $this->authorize('create students');
@@ -488,16 +546,43 @@ class CertificateController extends Controller
             $this->authorize('create students');
 
             $templates = CertificateTemplate::where('is_active', true)->latest()->get();
-            $classes   = SchoolClass::orderBy('class_name')->get();
+            if ($templates->isEmpty()) {
+                $templates = CertificateTemplate::withoutGlobalScopes()->where('is_active', true)->latest()->get();
+            }
+            $classes  = SchoolClass::orderBy('class_name')->get();
+            $students = User::where('role', 'student')
+                ->select('id', 'first_name', 'last_name', 'email')
+                ->with('promotions.schoolClass', 'promotions.section')
+                ->orderBy('first_name')
+                ->get();
 
-            return view('certificates.bulk', compact('templates', 'classes'));
+            return view('certificates.bulk', compact('templates', 'classes', 'students'));
         } catch (\Exception $e) {
             return view('certificates.bulk', [
                 'templates' => collect(),
-                'classes' => collect(),
-                'error' => 'Unable to load certificate bulk form: ' . $e->getMessage()
+                'classes'   => collect(),
+                'students'  => collect(),
+                'error'     => 'Unable to load certificate bulk form: ' . $e->getMessage()
             ]);
         }
+    }
+
+    public function issueSingle(Request $request)
+    {
+        $this->authorize('create students');
+
+        $data = $request->validate([
+            'student_id'  => 'required|exists:users,id',
+            'template_id' => 'required|exists:certificate_templates,id',
+            'issued_date' => 'required|date',
+            'valid_until' => 'nullable|date',
+            'purpose'     => 'nullable|string|max:255',
+            'extra_notes' => 'nullable|string|max:1000',
+            'language'    => 'required|in:en,ne',
+            'paper_size'  => 'required|in:A4,Letter',
+        ]);
+
+        return $this->issue($request, $data['student_id']);
     }
 
     public function bulkIssue(Request $request)
@@ -572,11 +657,11 @@ class CertificateController extends Controller
             }
         });
 
-        // Stream bulk PDF
-        [$width, $height] = $this->pdfDimensions($data['paper_size'], $template->orientation);
+        $paper = strtolower($data['paper_size'] ?? 'a4');
+        $orientation = strtolower($template->orientation ?? 'landscape');
 
         $pdf = Pdf::loadView('certificates.pdf-bulk', compact('items', 'template'))
-            ->setPaper([$width, $height], $template->orientation)
+            ->setPaper($paper, $orientation)
             ->setOptions([
                 'dpi'                  => 120,
                 'defaultFont'          => 'DejaVu Sans',
@@ -600,21 +685,39 @@ class CertificateController extends Controller
     {
         $this->authorize('view students');
 
-        $issued   = IssuedCertificate::with('student.academic_info', 'student.parent_info',
-                        'student.promotions.schoolClass', 'student.promotions.section',
-                        'template')->findOrFail($issuedId);
-        $student  = $issued->student;
-        $template = $issued->template;
+        $issued = IssuedCertificate::withoutGlobalScopes()
+            ->with([
+                'student.academic_info',
+                'student.parent_info',
+                'student.promotions.schoolClass',
+                'student.promotions.section'
+            ])
+            ->find($issuedId);
 
-        $bodyText = $template->render($student, [
+        if (!$issued) {
+            return redirect()->route('certificates.issued')
+                ->with('error', 'Issued certificate #' . $issuedId . ' was not found.');
+        }
+
+        $student  = $issued->student;
+        $template = CertificateTemplate::withoutGlobalScopes()->find($issued->template_id);
+
+        if (!$template) {
+            $template = CertificateTemplate::withoutGlobalScopes()
+                ->where('type', $issued->type)
+                ->first() ?? CertificateTemplate::withoutGlobalScopes()->first();
+        }
+
+        $bodyText = $template ? $template->render($student, [
             '{{extra_notes}}' => $issued->extra_notes ?? '',
             '{{purpose}}'     => $issued->purpose ?? '',
-        ], $issued->language);
+        ], $issued->language ?? 'en') : '';
 
-        [$width, $height] = $this->pdfDimensions($issued->paper_size, $template->orientation);
+        $paper = strtolower($issued->paper_size ?? $template->paper_size ?? 'a4');
+        $orientation = strtolower($template->orientation ?? 'landscape');
 
         $pdf = Pdf::loadView('certificates.pdf', compact('student', 'template', 'issued', 'bodyText'))
-            ->setPaper([$width, $height], $template->orientation)
+            ->setPaper($paper, $orientation)
             ->setOptions([
                 'dpi'                  => 150,
                 'defaultFont'          => 'DejaVu Sans',

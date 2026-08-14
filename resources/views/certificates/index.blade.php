@@ -9,16 +9,20 @@
             <p class="text-slate-400 text-sm mt-0.5">Design templates, issue certificates, and manage the digital ledger</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
+            <a href="{{ route('certificates.designs.index') }}"
+               class="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-sm font-semibold rounded-xl hover:from-purple-700 hover:to-indigo-700 shadow-sm transition">
+                <i class="bi bi-palette-fill"></i> Design Gallery
+            </a>
             <a href="{{ route('certificates.bulk') }}"
-               class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition">
+               class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-xl hover:bg-emerald-700 transition">
                 <i class="bi bi-people-fill"></i> Bulk Issue
             </a>
             <a href="{{ route('certificates.issued') }}"
-               class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-700 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition">
+               class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-700 text-white text-sm font-medium rounded-xl hover:bg-slate-800 transition">
                 <i class="bi bi-journal-text"></i> Issued Ledger
             </a>
             <a href="{{ route('certificates.create') }}"
-               class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition">
+               class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 transition">
                 <i class="bi bi-plus-lg"></i> New Template
             </a>
         </div>

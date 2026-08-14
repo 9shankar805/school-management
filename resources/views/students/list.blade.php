@@ -19,7 +19,10 @@
                 Manage enrolled students — filter by class and section
             </p>
         </div>
-        <div class="page-actions">
+        <div class="page-actions flex items-center gap-2">
+            <a href="{{ route('student.id-cards.bulk') }}" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-xl hover:bg-indigo-100 transition shadow-sm">
+                <i class="bi bi-person-vcard-fill text-sm"></i> Bulk ID Cards
+            </a>
             @can('create students')
             @unless(session()->has('browse_session_id'))
             <a href="{{ route('student.create.show') }}" class="btn-primary">
@@ -170,7 +173,7 @@
                         <tr>
                             <td>
                                 @if(isset($student->student->photo) && $student->student->photo)
-                                    <img src="{{ asset('/storage' . $student->student->photo) }}"
+                                    <img src="{{ asset('storage/' . ltrim($student->student->photo, '/')) }}"
                                          class="w-8 h-8 rounded-lg object-cover border" style="border-color:var(--border-card)" alt="">
                                 @else
                                     <div class="avatar avatar-sm">
@@ -235,7 +238,7 @@
             <div class="card-modern p-4 flex flex-col gap-3">
                 <div class="flex items-start gap-3">
                     @if(isset($student->student->photo) && $student->student->photo)
-                        <img src="{{ asset('/storage' . $student->student->photo) }}"
+                        <img src="{{ asset('storage/' . ltrim($student->student->photo, '/')) }}"
                              class="w-12 h-12 rounded-xl object-cover flex-shrink-0 border" style="border-color:var(--border-card)" alt="">
                     @else
                         <div class="avatar avatar-lg flex-shrink-0">
@@ -272,6 +275,10 @@
                        class="flex-1 text-center py-1.5 rounded-lg text-xs font-medium transition"
                        style="background:var(--color-primary-light);color:var(--color-primary-dark)">
                         Profile
+                    </a>
+                    <a href="{{ route('student.id-card', $student->student->id) }}" target="_blank"
+                       class="btn-icon flex-shrink-0 text-blue-600" data-tooltip="Print ID Card">
+                        <i class="bi bi-person-badge text-xs"></i>
                     </a>
                     <a href="{{ route('student.attendance.show', ['id' => $student->student->id]) }}"
                        class="btn-icon flex-shrink-0" data-tooltip="Attendance">

@@ -15,8 +15,7 @@ class SchoolRegistrationController extends Controller
     /** GET /register/school — show the sign-up form */
     public function create()
     {
-        $plans  = School::planLimits();
-        return view('saas.register', compact('plans'));
+        return view('saas.register');
     }
 
     /** POST /register/school — process sign-up */
@@ -24,6 +23,7 @@ class SchoolRegistrationController extends Controller
     {
         $data = $request->validate([
             'school_name'    => 'required|string|max:120',
+            'iemis_code'     => 'nullable|string|max:20',
             'district'       => 'required|string|max:80',
             'province'       => 'required|string|max:80',
             'school_email'   => 'required|email|unique:schools,email',
@@ -44,6 +44,7 @@ class SchoolRegistrationController extends Controller
             $school = School::create([
                 'name'            => $data['school_name'],
                 'slug'            => School::makeSlug($data['school_name']),
+                'iemis_code'      => $data['iemis_code'] ?? null,
                 'email'           => $data['school_email'],
                 'phone'           => $data['school_phone'] ?? null,
                 'district'        => $data['district'],

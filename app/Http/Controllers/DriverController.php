@@ -63,7 +63,7 @@ class DriverController extends Controller
         ]);
 
         if ($request->hasFile('photo')) {
-            $data['photo'] = $request->file('photo')->store('drivers/photos', 'public');
+            $data['photo'] = \App\Services\ImageWebpService::storeAsWebp($request->file('photo'), 'drivers/photos', 'public');
         }
         unset($data['photo_file']);
 
@@ -117,7 +117,7 @@ class DriverController extends Controller
 
         if ($request->hasFile('photo')) {
             if ($driver->photo) Storage::disk('public')->delete($driver->photo);
-            $data['photo'] = $request->file('photo')->store('drivers/photos', 'public');
+            $data['photo'] = \App\Services\ImageWebpService::storeAsWebp($request->file('photo'), 'drivers/photos', 'public');
         }
         unset($data['photo_file']);
 

@@ -141,9 +141,13 @@ $activeStep = max(1, min(4, $activeStep));
                 <i class="bi bi-info-circle text-blue-500"></i> School Details
             </h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div class="sm:col-span-2">
+                <div>
                     <label class="field-label">School Name <span class="text-rose-500">*</span></label>
                     <input type="text" name="name" value="{{ old('name', $school->name) }}" required class="field-input">
+                </div>
+                <div>
+                    <label class="field-label">School IEMIS Code <span class="text-slate-400 font-normal">(9-Digit Code)</span></label>
+                    <input type="text" name="iemis_code" value="{{ old('iemis_code', $school->iemis_code) }}" placeholder="e.g. 270010001" class="field-input">
                 </div>
                 <div>
                     <label class="field-label">Email Address <span class="text-rose-500">*</span></label>

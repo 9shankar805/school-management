@@ -133,6 +133,10 @@
             <a href="{{ route('communication.index') }}" class="btn btn-light border border-slate-200 text-slate-700 font-semibold px-4 py-2.5 rounded-xl flex-shrink-0 shadow-sm hover:bg-slate-100 transition">
                 <i class="bi bi-arrow-left me-1"></i> Back to Hub
             </a>
+            <a href="{{ route('communication.individual') }}" class="btn border border-green-300 font-semibold px-4 py-2.5 rounded-xl flex-shrink-0 shadow-sm transition"
+               style="background:#f0fdf4;color:#16a34a;">
+                <i class="bi bi-person-lines-fill me-1"></i> Direct Message
+            </a>
         </div>
     </div>
 

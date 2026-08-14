@@ -269,16 +269,25 @@
     if (e.persisted) { Progress.done(); } // back-forward cache
   });
 
+  // Also hide on DOMContentLoaded so hash-tab pages don't stay covered
+  document.addEventListener('DOMContentLoaded', function () {
+    hideOverlay();
+  });
+
   window.addEventListener('load', function () {
     hideOverlay();
     Progress.done();
   });
 
-  // popstate (back/forward button)
-  window.addEventListener('popstate', function () {
+  // popstate (back/forward button) — only trigger for real page navigations, not hash changes
+  window.addEventListener('popstate', function (e) {
+    // If only the hash changed (e.g. tab switching via #achievements), skip the loader
+    if (location.pathname === _lastPathname) return;
     Progress.start();
     showOverlay();
   });
+
+  var _lastPathname = location.pathname;
 
   /* ─── 5. AJAX / FETCH INTERCEPTORS ─────────────────────────────── */
   // Show bar on any network call, hide when all done

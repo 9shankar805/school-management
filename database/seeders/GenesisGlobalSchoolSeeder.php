@@ -264,7 +264,7 @@ class GenesisGlobalSchoolSeeder extends Seeder
                         'gender'            => ($sIdx % 2 === 0) ? 'Male' : 'Female',
                         'nationality'       => 'Nepali',
                         'phone'             => '+91 98' . rand(10000000, 99999999),
-                        'address'           => 'Genesis Student Residences, Noida',
+                        'address'           => 'Siraha-7, Nepal',
                         'city'              => 'Noida',
                         'zip'               => '201304',
                         'role'              => 'student',

@@ -153,34 +153,86 @@
                         </table>
                     </div>
                     <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                        <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-                            <span class="font-semibold text-sm text-slate-700"><i class="bi bi-people me-1 text-violet-500"></i> Parent Accounts</span>
+                        <div class="px-5 py-3 border-b border-slate-100 d-flex align-items-center justify-content-between">
+                            <span class="font-semibold text-sm text-slate-700"><i class="bi bi-people-fill me-1 text-violet-500"></i> Parents & Guardian</span>
                             @can('create students')
                             <a href="{{ route('admin.parents.link') }}" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Manage Links</a>
                             @endcan
                         </div>
-                        
+
                         @php
+                            $pi      = $student->parent_info ?? $parent_info ?? null;
                             $parents = $student->parents;
                         @endphp
 
-                        @if($parents->isNotEmpty())
                         <div class="divide-y divide-slate-50">
+
+                            {{-- Father from StudentParentInfo --}}
+                            @if($pi && $pi->father_name)
+                            <div class="px-5 py-3 d-flex align-items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                                    <i class="bi bi-person-fill text-sm"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-slate-800 mb-0">{{ $pi->father_name }}</p>
+                                    <p class="text-xs text-slate-400 mb-0">
+                                        Father
+                                        @if($pi->father_phone)
+                                        · <a href="tel:{{ $pi->father_phone }}" class="hover:text-indigo-600 font-medium">{{ $pi->father_phone }}</a>
+                                        @endif
+                                    </p>
+                                </div>
+                                <span class="badge bg-blue-50 text-blue-700 text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0">Father</span>
+                            </div>
+                            @endif
+
+                            {{-- Mother from StudentParentInfo --}}
+                            @if($pi && $pi->mother_name)
+                            <div class="px-5 py-3 d-flex align-items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-pink-50 text-pink-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                                    <i class="bi bi-person-fill text-sm"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-semibold text-slate-800 mb-0">{{ $pi->mother_name }}</p>
+                                    <p class="text-xs text-slate-400 mb-0">
+                                        Mother
+                                        @if($pi->mother_phone)
+                                        · <a href="tel:{{ $pi->mother_phone }}" class="hover:text-indigo-600 font-medium">{{ $pi->mother_phone }}</a>
+                                        @endif
+                                    </p>
+                                </div>
+                                <span class="badge bg-pink-50 text-pink-700 text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0">Mother</span>
+                            </div>
+                            @endif
+
+                            {{-- Address --}}
+                            @if($pi && $pi->parent_address)
+                            <div class="px-5 py-2.5 d-flex align-items-start gap-2 text-xs text-slate-500">
+                                <i class="bi bi-geo-alt-fill text-slate-300 flex-shrink-0 mt-0.5"></i>
+                                <span>{{ $pi->parent_address }}</span>
+                            </div>
+                            @endif
+
+                            {{-- Portal-linked parent accounts --}}
+                            @if($parents->isNotEmpty())
+                            <div class="px-5 pt-3 pb-1">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Portal Access</p>
+                            </div>
                             @foreach($parents as $parent)
-                            <div class="px-5 py-3 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center font-bold text-xs">
+                            <div class="px-5 py-3 d-flex align-items-center justify-content-between gap-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-violet-100 text-violet-600 d-flex align-items-center justify-content-center font-bold text-xs flex-shrink-0">
                                         {{ substr($parent->first_name, 0, 1) }}{{ substr($parent->last_name, 0, 1) }}
                                     </div>
                                     <div>
-                                        <p class="text-sm font-semibold text-slate-800">
+                                        <p class="text-sm font-semibold text-slate-800 mb-0">
                                             {{ $parent->full_name }}
                                             @if($parent->pivot->is_primary)
-                                            <span class="ml-1 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">Primary</span>
+                                            <span class="ms-1 text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">Primary</span>
                                             @endif
                                         </p>
-                                        <p class="text-xs text-slate-400 capitalize">
-                                            {{ $parent->pivot->relationship }} 
+                                        <p class="text-xs text-slate-400 mb-0 capitalize">
+                                            {{ $parent->pivot->relationship }}
                                             @if($parent->phone || $parent->email)
                                             · {{ $parent->phone ?? $parent->email }}
                                             @endif
@@ -195,15 +247,19 @@
                                 @endcan
                             </div>
                             @endforeach
+                            @endif
+
+                            {{-- Empty state --}}
+                            @if(!$pi && $parents->isEmpty())
+                            <div class="p-5 text-center">
+                                <i class="bi bi-people text-2xl text-slate-200 block mb-2"></i>
+                                <p class="text-sm text-slate-400 mb-2">No parent information recorded.</p>
+                                @can('create students')
+                                <a href="{{ route('student.edit.show', $student->id) }}" class="text-xs bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-100 font-medium">Add Parent Details</a>
+                                @endcan
+                            </div>
+                            @endif
                         </div>
-                        @else
-                        <div class="p-5 text-center">
-                            <p class="text-sm text-slate-400 mb-2">No parent accounts linked.</p>
-                            @can('create students')
-                            <a href="{{ route('admin.parents.link') }}" class="text-xs bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-100 font-medium">Link a Parent</a>
-                            @endcan
-                        </div>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -592,98 +648,122 @@
         </div>
 
         {{-- ═══════════════ TAB: TRANSFERS ═══════════════ --}}
-        <div id="tab-transfers" class="tab-panel hidden">
-            @can('create students')
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-5">
-                <p class="text-sm font-semibold text-slate-700 mb-4"><i class="bi bi-arrow-left-right me-1 text-rose-500"></i>Request Transfer</p>
-                <form method="POST" action="{{ route('student.transfer.store', $student->id) }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    @csrf
-                    <div>
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Transfer Type</label>
-                        <select name="transfer_type" id="transfer_type_sel" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                            <option value="inter_class">Inter-Class</option>
-                            <option value="inter_section">Inter-Section</option>
-                            <option value="inter_school">Inter-School</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Transfer Date</label>
-                        <input type="date" name="transfer_date" value="{{ now()->toDateString() }}" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                    </div>
-                    <div id="to_class_wrap">
-                        <label class="block text-xs font-medium text-slate-500 mb-1">To Class</label>
-                        <select name="to_class_id" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                            <option value="">— Select —</option>
-                            @foreach(\App\Models\SchoolClass::all() as $c)
-                            <option value="{{ $c->id }}" {{ $promotion_info?->class_id == $c->id ? '' : '' }}>{{ $c->class_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div id="to_section_wrap">
-                        <label class="block text-xs font-medium text-slate-500 mb-1">To Section</label>
-                        <select name="to_section_id" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                            <option value="">— Select —</option>
-                            @foreach(\App\Models\Section::all() as $s)
-                            <option value="{{ $s->id }}">{{ $s->section_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div id="to_school_wrap" class="md:col-span-2 hidden">
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Destination School</label>
-                        <input type="text" name="to_school" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Reason</label>
-                        <textarea name="reason" rows="2" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400"></textarea>
-                    </div>
-                    <div class="md:col-span-2">
-                        <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-medium transition">Submit Transfer Request</button>
-                    </div>
-                </form>
-            </div>
-            @endcan
+        </div>
 
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="px-5 py-3 border-b border-slate-100"><p class="text-sm font-semibold text-slate-700">Transfer History</p></div>
-                @if($student->transfers->count())
-                <div class="divide-y divide-slate-50">
-                    @foreach($student->transfers as $tr)
-                    <div class="px-5 py-3 flex justify-between items-center gap-3">
-                        <div>
-                            <div class="flex items-center gap-2 mb-0.5">
-                                <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ $tr->status_badge }}">{{ ucfirst($tr->status) }}</span>
-                                <span class="text-sm font-medium text-slate-700">{{ ucwords(str_replace('_',' ',$tr->transfer_type)) }}</span>
+        {{-- ═══════════════ PARENTS DETAILS (right of Transfers) ═══════════════ --}}
+        <div id="tab-transfers" class="tab-panel hidden">
+            <div class="row g-4">
+                {{-- Left column: Transfer form + history --}}
+                <div class="col-12 col-xl-7">
+                    @can('create students')
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-4">
+                        <p class="text-sm font-semibold text-slate-700 mb-4"><i class="bi bi-arrow-left-right me-1 text-rose-500"></i>Request Transfer</p>
+                        <form method="POST" action="{{ route('student.transfer.store', $student->id) }}" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            @csrf
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Transfer Type</label>
+                                <select name="transfer_type" id="transfer_type_sel" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    <option value="inter_class">Inter-Class</option>
+                                    <option value="inter_section">Inter-Section</option>
+                                    <option value="inter_school">Inter-School</option>
+                                </select>
                             </div>
-                            <p class="text-xs text-slate-400">
-                                {{ $tr->fromClass?->class_name ?? $tr->from_school ?? '—' }}
-                                → {{ $tr->toClass?->class_name ?? $tr->to_school ?? '—' }}
-                                @if($tr->toSection) / {{ $tr->toSection->section_name }}@endif
-                                · {{ $tr->transfer_date->format('d M Y') }}
-                            </p>
-                            @if($tr->reason)<p class="text-xs text-slate-400 mt-0.5">{{ $tr->reason }}</p>@endif
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Transfer Date</label>
+                                <input type="date" name="transfer_date" value="{{ now()->toDateString() }}" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            </div>
+                            <div id="to_class_wrap">
+                                <label class="block text-xs font-medium text-slate-500 mb-1">To Class</label>
+                                <select name="to_class_id" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    <option value="">— Select —</option>
+                                    @foreach(\App\Models\SchoolClass::all() as $c)
+                                    <option value="{{ $c->id }}">{{ $c->class_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div id="to_section_wrap">
+                                <label class="block text-xs font-medium text-slate-500 mb-1">To Section</label>
+                                <select name="to_section_id" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    <option value="">— Select —</option>
+                                    @foreach(\App\Models\Section::all() as $s)
+                                    <option value="{{ $s->id }}">{{ $s->section_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div id="to_school_wrap" class="md:col-span-2 hidden">
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Destination School</label>
+                                <input type="text" name="to_school" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Reason</label>
+                                <textarea name="reason" rows="2" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400"></textarea>
+                            </div>
+                            <div class="md:col-span-2">
+                                <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-sm font-medium transition">Submit Transfer Request</button>
+                            </div>
+                        </form>
+                    </div>
+                    @endcan
+
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="px-5 py-3 border-b border-slate-100"><p class="text-sm font-semibold text-slate-700">Transfer History</p></div>
+                        @if($student->transfers->count())
+                        <div class="divide-y divide-slate-50">
+                            @foreach($student->transfers as $tr)
+                            <div class="px-5 py-3 flex justify-between items-center gap-3">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-0.5">
+                                        <span class="text-xs px-2 py-0.5 rounded-full font-medium {{ $tr->status_badge }}">{{ ucfirst($tr->status) }}</span>
+                                        <span class="text-sm font-medium text-slate-700">{{ ucwords(str_replace('_',' ',$tr->transfer_type)) }}</span>
+                                    </div>
+                                    <p class="text-xs text-slate-400">
+                                        {{ $tr->fromClass?->class_name ?? $tr->from_school ?? '—' }}
+                                        → {{ $tr->toClass?->class_name ?? $tr->to_school ?? '—' }}
+                                        @if($tr->toSection) / {{ $tr->toSection->section_name }}@endif
+                                        · {{ $tr->transfer_date->format('d M Y') }}
+                                    </p>
+                                    @if($tr->reason)<p class="text-xs text-slate-400 mt-0.5">{{ $tr->reason }}</p>@endif
+                                </div>
+                                @if($tr->status === 'pending')
+                                @can('create students')
+                                <div class="flex gap-2">
+                                    <form method="POST" action="{{ route('student.transfer.approve', $tr->id) }}">
+                                        @csrf
+                                        <input type="hidden" name="status" value="approved">
+                                        <button class="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg transition">Approve</button>
+                                    </form>
+                                    <form method="POST" action="{{ route('student.transfer.approve', $tr->id) }}">
+                                        @csrf
+                                        <input type="hidden" name="status" value="rejected">
+                                        <button class="text-xs px-2 py-1 bg-rose-100 text-rose-700 hover:bg-rose-200 rounded-lg transition">Reject</button>
+                                    </form>
+                                </div>
+                                @endcan
+                                @endif
+                            </div>
+                            @endforeach
                         </div>
-                        @if($tr->status === 'pending')
-                        @can('create students')
-                        <div class="flex gap-2">
-                            <form method="POST" action="{{ route('student.transfer.approve', $tr->id) }}">
-                                @csrf
-                                <input type="hidden" name="status" value="approved">
-                                <button class="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-lg transition">Approve</button>
-                            </form>
-                            <form method="POST" action="{{ route('student.transfer.approve', $tr->id) }}">
-                                @csrf
-                                <input type="hidden" name="status" value="rejected">
-                                <button class="text-xs px-2 py-1 bg-rose-100 text-rose-700 hover:bg-rose-200 rounded-lg transition">Reject</button>
-                            </form>
-                        </div>
-                        @endcan
+                        @else
+                        <p class="text-sm text-slate-400 text-center py-8">No transfer history.</p>
                         @endif
                     </div>
-                    @endforeach
                 </div>
-                @else
-                <p class="text-sm text-slate-400 text-center py-8">No transfer history.</p>
-                @endif
+
+                {{-- Right column: link back to overview for parent details --}}
+                <div class="col-12 col-xl-5">
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-2xl px-5 py-4 d-flex align-items-start gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-700 mb-1">Parent & Guardian Details</p>
+                            <p class="text-xs text-slate-500 mb-2">Father, mother, contact numbers and portal access are shown in the Overview tab.</p>
+                            <button onclick="showTab('overview')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 d-flex align-items-center gap-1">
+                                <i class="bi bi-arrow-left-circle"></i> Go to Overview
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -922,6 +1002,14 @@ function showTab(id) {
     if (panel) panel.classList.remove('hidden');
     if (btn) { btn.classList.add('bg-indigo-50','text-indigo-700','font-semibold'); btn.classList.remove('text-slate-500'); }
     history.replaceState(null,'','#' + id);
+    // Dismiss loading overlay — defer slightly so ErpLoader is guaranteed to be initialised
+    if (window.ErpLoader) {
+        window.ErpLoader.done();
+    } else {
+        window.addEventListener('load', function() {
+            if (window.ErpLoader) window.ErpLoader.done();
+        });
+    }
 }
 
 // Show correct tab on load (from URL hash or default)

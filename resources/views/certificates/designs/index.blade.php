@@ -248,6 +248,149 @@
             </div>
         </div>
 
+        {{-- Design 5 — Emerald Honor --}}
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition group mt-6 sm:mt-0">
+            <div class="relative overflow-hidden" style="height:180px; background: linear-gradient(135deg,#064e3b 0%,#047857 100%);">
+                <div class="absolute inset-2 border-2 border-[#d97706] p-2 flex flex-col items-center justify-center text-center">
+                    <div class="text-[7px] font-bold text-amber-300 tracking-widest uppercase">GENESIS GLOBAL SCHOOL</div>
+                    <div class="text-[10px] font-black text-white tracking-wider uppercase mt-1">Certificate of Excellence</div>
+                    <div class="w-12 border-b border-amber-400 my-1"></div>
+                    <div class="text-[8px] font-bold text-amber-200">Aarav Shrestha</div>
+                </div>
+                <div class="absolute top-2 left-2">
+                    <span class="bg-emerald-800 text-amber-300 border border-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-full">Design 5</span>
+                </div>
+            </div>
+            <div class="p-4 flex flex-col flex-1 gap-3">
+                <div>
+                    <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">Emerald Honor & Gold Foil</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Deep emerald green · Gold filigree · Luxury honors style</p>
+                </div>
+                <div class="flex flex-wrap gap-1.5 mt-auto">
+                    <span class="text-[10px] bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full">Emerald</span>
+                    <span class="text-[10px] bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">Gold Foil</span>
+                </div>
+                <div class="flex gap-2 pt-2 border-t border-slate-50 dark:border-slate-700">
+                    <a href="{{ route('certificates.design.preview', 5) }}" target="_blank"
+                       class="flex-1 text-center py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold transition">
+                        <i class="bi bi-eye-fill me-1"></i> Preview
+                    </a>
+                    <a href="{{ route('certificates.design.apply', 5) }}"
+                       class="flex-1 text-center py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition">
+                        <i class="bi bi-check-lg me-1"></i> Use This
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {{-- Design 6 — Vibrant Achievement --}}
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition group">
+            <div class="relative overflow-hidden" style="height:180px; background:#faf5ff;">
+                <div class="h-10 bg-gradient-to-r from-purple-800 via-indigo-600 to-cyan-500 p-2 text-white flex items-center">
+                    <span class="text-[7px] font-bold uppercase tracking-wider">GENESIS GLOBAL SCHOOL</span>
+                </div>
+                <div class="p-3 text-center flex flex-col items-center justify-center gap-1">
+                    <span class="text-[6px] font-bold text-purple-700 uppercase tracking-widest">OUTSTANDING AWARD</span>
+                    <div class="text-[10px] font-extrabold text-slate-900">Certificate of Achievement</div>
+                    <span class="text-[7px] bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full">Aarav Shrestha</span>
+                </div>
+                <div class="absolute top-2 left-2">
+                    <span class="bg-purple-700 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Design 6</span>
+                </div>
+            </div>
+            <div class="p-4 flex flex-col flex-1 gap-3">
+                <div>
+                    <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">Vibrant Achievement</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Flowing gradient header wave · Dynamic badges · Modern UI</p>
+                </div>
+                <div class="flex flex-wrap gap-1.5 mt-auto">
+                    <span class="text-[10px] bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded-full">Gradient Wave</span>
+                    <span class="text-[10px] bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 px-2 py-0.5 rounded-full">Modern</span>
+                </div>
+                <div class="flex gap-2 pt-2 border-t border-slate-50 dark:border-slate-700">
+                    <a href="{{ route('certificates.design.preview', 6) }}" target="_blank"
+                       class="flex-1 text-center py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold transition">
+                        <i class="bi bi-eye-fill me-1"></i> Preview
+                    </a>
+                    <a href="{{ route('certificates.design.apply', 6) }}"
+                       class="flex-1 text-center py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold transition">
+                        <i class="bi bi-check-lg me-1"></i> Use This
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {{-- Design 7 — Imperial Crimson --}}
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition group">
+            <div class="relative overflow-hidden" style="height:180px; background: linear-gradient(135deg,#881337 0%,#4c0519 100%);">
+                <div class="absolute inset-2 border border-amber-400 p-2 flex flex-col items-center justify-center text-center">
+                    <div class="text-[7px] font-bold text-amber-300 uppercase tracking-widest">GENESIS GLOBAL SCHOOL</div>
+                    <div class="text-[10px] font-black text-white uppercase mt-1">Certificate of Appreciation</div>
+                    <div class="w-12 border-b border-amber-400 my-1"></div>
+                    <div class="text-[8px] font-bold text-amber-200">Aarav Shrestha</div>
+                </div>
+                <div class="absolute top-2 left-2">
+                    <span class="bg-rose-900 text-amber-300 border border-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-full">Design 7</span>
+                </div>
+            </div>
+            <div class="p-4 flex flex-col flex-1 gap-3">
+                <div>
+                    <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">Imperial Crimson</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Regal maroon & gold · Double border frame · Honor award style</p>
+                </div>
+                <div class="flex flex-wrap gap-1.5 mt-auto">
+                    <span class="text-[10px] bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-full">Imperial</span>
+                    <span class="text-[10px] bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">Regal</span>
+                </div>
+                <div class="flex gap-2 pt-2 border-t border-slate-50 dark:border-slate-700">
+                    <a href="{{ route('certificates.design.preview', 7) }}" target="_blank"
+                       class="flex-1 text-center py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold transition">
+                        <i class="bi bi-eye-fill me-1"></i> Preview
+                    </a>
+                    <a href="{{ route('certificates.design.apply', 7) }}"
+                       class="flex-1 text-center py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-lg text-xs font-semibold transition">
+                        <i class="bi bi-check-lg me-1"></i> Use This
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {{-- Design 8 — Traditional Parchment --}}
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition group">
+            <div class="relative overflow-hidden" style="height:180px; background:#fffbe6;">
+                <div class="absolute inset-2 border-2 border-[#78350f] p-2 flex flex-col items-center justify-center text-center">
+                    <div class="text-[7px] font-bold text-[#78350f] uppercase">GENESIS GLOBAL SCHOOL</div>
+                    <div class="text-[6px] text-amber-800 font-bold">जेनेसेसि ग्लोबल स्कूल</div>
+                    <div class="text-[10px] font-black text-[#78350f] uppercase mt-0.5">Character Certificate</div>
+                    <div class="w-10 border-b border-[#78350f] my-1"></div>
+                    <div class="text-[8px] font-bold text-[#92400e]">Aarav Shrestha</div>
+                </div>
+                <div class="absolute top-2 left-2">
+                    <span class="bg-amber-900 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">Design 8</span>
+                </div>
+            </div>
+            <div class="p-4 flex flex-col flex-1 gap-3">
+                <div>
+                    <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">Traditional Parchment</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Vintage cream parchment paper · Bilingual English & Nepali</p>
+                </div>
+                <div class="flex flex-wrap gap-1.5 mt-auto">
+                    <span class="text-[10px] bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-full">Parchment</span>
+                    <span class="text-[10px] bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-full">Bilingual</span>
+                </div>
+                <div class="flex gap-2 pt-2 border-t border-slate-50 dark:border-slate-700">
+                    <a href="{{ route('certificates.design.preview', 8) }}" target="_blank"
+                       class="flex-1 text-center py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold transition">
+                        <i class="bi bi-eye-fill me-1"></i> Preview
+                    </a>
+                    <a href="{{ route('certificates.design.apply', 8) }}"
+                       class="flex-1 text-center py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-lg text-xs font-semibold transition">
+                        <i class="bi bi-check-lg me-1"></i> Use This
+                    </a>
+                </div>
+            </div>
+        </div>
+
     </div>{{-- /grid --}}
 
     {{-- Usage note --}}

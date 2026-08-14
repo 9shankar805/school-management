@@ -14,11 +14,11 @@ class AdmissionApplication extends Model
 
     protected $fillable = [
         'school_id',
-        'application_number', 'first_name', 'last_name', 'email', 'phone',
-        'birthday', 'gender', 'nationality', 'religion', 'blood_type', 'address',
+        'application_number', 'iemis_id', 'national_id', 'first_name', 'last_name', 'photo', 'email', 'phone',
+        'birthday', 'gender', 'nationality', 'religion', 'ethnicity', 'mother_tongue', 'blood_type', 'address',
         'session_id', 'class_id',
         'guardian_name', 'guardian_phone', 'guardian_email', 'guardian_relation',
-        'previous_school', 'previous_class',
+        'previous_school', 'previous_class', 'birth_certificate_doc',
         'status', 'reviewer_notes', 'reviewed_by', 'reviewed_at', 'student_id',
     ];
 

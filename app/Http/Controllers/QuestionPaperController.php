@@ -91,6 +91,13 @@ class QuestionPaperController extends Controller
 
         $sessionId = $this->getSchoolCurrentSession();
 
+        if (empty($data['template_id'])) {
+            $defaultTpl = QuestionPaperTemplate::first();
+            if ($defaultTpl) {
+                $data['template_id'] = $defaultTpl->id;
+            }
+        }
+
         $paper = $this->paperRepo->create(array_merge($data, [
             'session_id' => $sessionId,
             'created_by' => auth()->id(),
@@ -303,7 +310,7 @@ class QuestionPaperController extends Controller
             ]);
         }
 
-        $template    = $paper->template;
+        $template    = $paper->template ?: QuestionPaperTemplate::first();
         $school      = config('tenant.school');
         $orientation = $paper->orientation ?? 'portrait';
         $paperSize   = $paper->paper_size  ?? 'A4';

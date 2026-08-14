@@ -395,7 +395,7 @@
   </div>
   <p class="text-xs text-slate-500 mb-3">Plot functions (y=x², y=sin(x), etc.), inequalities, and data. Screenshot and paste into the editor when done.</p>
   <iframe id="desmosFrame"
-          src="https://www.desmos.com/calculator"
+          src="https://www.desmos.com/calculator?embed"
           allow="fullscreen" loading="lazy"
           title="Desmos Calculator"></iframe>
   <p class="text-xs text-slate-400 mt-2">Tip: Press <kbd class="bg-slate-100 px-1 rounded">Share</kbd> inside Desmos to get a PNG link, then upload it via the image button.</p>

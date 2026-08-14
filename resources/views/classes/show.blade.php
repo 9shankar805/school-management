@@ -37,6 +37,10 @@
             </div>
         </div>
         <div class="flex gap-2 flex-wrap">
+            <a href="{{ route('student.id-cards.bulk') }}" target="_blank"
+               class="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-indigo-800 hover:bg-slate-100 rounded-xl text-xs font-bold transition shadow-sm">
+                <i class="bi bi-person-vcard-fill"></i> Bulk ID Cards
+            </a>
             <a href="{{ route('class.edit', $schoolClass->id) }}"
                class="inline-flex items-center gap-1.5 px-4 py-2 bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl text-xs font-semibold transition">
                 <i class="bi bi-pencil"></i> Edit Class
@@ -54,10 +58,11 @@
 @if($sections->count() > 1)
 <div class="flex gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-1 mb-6 overflow-x-auto shadow-sm w-fit">
     @foreach($sections as $sec)
+    @php $cleanName = preg_replace('/^Section\s+/i', '', trim($sec->section_name)); @endphp
     <a href="{{ route('class.detail.show', [$schoolClass->id, 'section' => $sec->id]) }}"
        class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-semibold transition whitespace-nowrap
               {{ $activeSection == $sec->id ? 'bg-indigo-600 text-white shadow' : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-400' }}">
-        Section {{ $sec->section_name }}
+        Section {{ $cleanName }}
     </a>
     @endforeach
 </div>
@@ -349,16 +354,20 @@
         @if($sections->count())
         <div class="divide-y divide-slate-50 dark:divide-slate-700">
             @foreach($sections as $sec)
-            @php $secCount = $promotions->where('section_id', $sec->id)->count(); @endphp
+            @php 
+                $secCount = $promotions->where('section_id', $sec->id)->count(); 
+                $cleanSecName = preg_replace('/^Section\s+/i', '', trim($sec->section_name));
+                $cleanRoomNo  = preg_replace('/^Room:\s*|^Room\s+/i', '', trim($sec->room_no ?? ''));
+            @endphp
             <a href="{{ route('class.detail.show', [$schoolClass->id, 'section' => $sec->id]) }}"
                class="px-5 py-3 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-700/40 transition block">
                 <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center text-xs font-bold text-amber-600 dark:text-amber-400 flex-shrink-0">
-                        {{ $sec->section_name }}
+                        {{ $cleanSecName }}
                     </div>
                     <div>
-                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Section {{ $sec->section_name }}</p>
-                        @if($sec->room_no)<p class="text-[10px] text-slate-400"><i class="bi bi-door-open me-0.5"></i>Room {{ $sec->room_no }}</p>@endif
+                        <p class="text-xs font-semibold text-slate-700 dark:text-slate-200">Section {{ $cleanSecName }}</p>
+                        @if($cleanRoomNo)<p class="text-[10px] text-slate-400"><i class="bi bi-door-open me-0.5"></i>Room {{ $cleanRoomNo }}</p>@endif
                     </div>
                 </div>
                 <div class="flex items-center gap-2 flex-shrink-0">

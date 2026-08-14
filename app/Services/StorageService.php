@@ -43,6 +43,10 @@ class StorageService
     ): string {
         $disk = $this->resolveDisk($category);
 
+        if (\App\Services\ImageWebpService::isImage($file)) {
+            return \App\Services\ImageWebpService::storeAsWebp($file, $directory, $disk, $filename);
+        }
+
         $name = $filename
             ? Str::slug($filename) . '.' . $file->getClientOriginalExtension()
             : $file->hashName();

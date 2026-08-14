@@ -50,6 +50,11 @@ class AppServiceProvider extends ServiceProvider
         Paginator::defaultView('vendor.pagination.tailwind');
         Paginator::defaultSimpleView('vendor.pagination.tailwind');
 
+        // ── Register UploadedFile macros for automatic .webp conversion ──
+        \Illuminate\Http\UploadedFile::macro('storeWebp', function (string $directory = 'uploads', string $disk = 'public', ?string $filename = null, int $quality = 82) {
+            return \App\Services\ImageWebpService::storeAsWebp($this, $directory, $disk, $filename, $quality);
+        });
+
         // ── Set the application-wide password policy default ─────────────
         Password::defaults(function () {
             return Password::min(8)->mixedCase()->numbers()->symbols();

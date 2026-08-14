@@ -217,21 +217,21 @@ table.meta-tbl td.sep { width: 1pt; background: #e2e8f0; padding: 0; }
 
 @php
 /* ── Data ── */
-$promotion   = $student->promotions->sortByDesc('id')->first();
-$academic    = $student->academic_info;
+$promotion   = $student?->promotions ? $student->promotions->sortByDesc('id')->first() : null;
+$academic    = $student?->academic_info;
 $logoUrl     = $template->logo_path             ? Storage::disk('public')->url($template->logo_path)             : null;
 $sigImgUrl   = $template->signature_image_path  ? Storage::disk('public')->url($template->signature_image_path)  : null;
 $bgImgUrl    = $template->background_image_path ? Storage::disk('public')->url($template->background_image_path) : null;
-$photoUrl    = !empty($student->photo)           ? Storage::disk('public')->url($student->photo)                  : null;
+$photoUrl    = ($student && !empty($student->photo)) ? Storage::disk('public')->url($student->photo)              : null;
 
 $admissionNo = $academic?->admission_no ?? $promotion?->id_card_number ?? '';
 $classStr    = $promotion?->schoolClass?->class_name ?? '';
 if ($classStr && ($promotion?->section?->section_name ?? ''))
     $classStr .= ' – ' . $promotion->section->section_name;
-$fullName    = $student->full_name ?? trim(($student->first_name ?? '').' '.($student->last_name ?? ''));
+$fullName    = $student?->full_name ?? trim(($student?->first_name ?? '').' '.($student?->last_name ?? ''));
 $birthDt     = $academic?->date_of_birth ? \Carbon\Carbon::parse($academic->date_of_birth) : null;
 $academicYr  = $promotion?->session?->name ?? '';
-$issuedDate  = isset($issued) ? $issued->issued_date : now();
+$issuedDate  = (isset($issued) && $issued->issued_date) ? \Carbon\Carbon::parse($issued->issued_date) : now();
 $purpose     = isset($issued) ? ($issued->purpose    ?? '') : '';
 $extraNotes  = isset($issued) ? ($issued->extra_notes ?? '') : '';
 $certNo      = isset($issued) ? $issued->certificate_number : 'CERT—PREVIEW';
@@ -239,12 +239,12 @@ $qrUrl       = isset($issued) ? $issued->qrCodeUrl() : '';
 $issuerName  = '';
 if (isset($issued) && !empty($issued->issuer))
     $issuerName = $issued->issuer->full_name ?? (($issued->issuer->first_name ?? '').' '.($issued->issuer->last_name ?? ''));
-$parentInfo  = $student->parent_info ?? null;
+$parentInfo  = $student?->parent_info ?? null;
 
 $tokenMap = [
     '{{student_name}}'  => $fullName,
-    '{{first_name}}'    => $student->first_name ?? '',
-    '{{last_name}}'     => $student->last_name  ?? '',
+    '{{first_name}}'    => $student?->first_name ?? '',
+    '{{last_name}}'     => $student?->last_name  ?? '',
     '{{class}}'         => $classStr,
     '{{section}}'       => $promotion?->section?->section_name ?? '',
     '{{roll_no}}'       => $promotion?->roll_no ?? '',
@@ -253,10 +253,10 @@ $tokenMap = [
     '{{academic_year}}' => $academicYr,
     '{{birthday}}'      => $birthDt ? $birthDt->format('F j, Y') : '',
     '{{age}}'           => $birthDt ? $birthDt->age : '',
-    '{{gender}}'        => ucfirst($student->gender ?? ''),
+    '{{gender}}'        => ucfirst($student?->gender ?? ''),
     '{{father_name}}'   => $parentInfo?->father_name ?? '',
     '{{mother_name}}'   => $parentInfo?->mother_name ?? '',
-    '{{address}}'       => $student->address ?? '',
+    '{{address}}'       => $student?->address ?? '',
     '{{date}}'          => $issuedDate?->format('F j, Y'),
     '{{school_name}}'   => config('app.name'),
     '{{issued_by}}'     => $issuerName,

@@ -44,7 +44,11 @@
                         <div class="flex items-center gap-1 bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full text-xs">
                             {{ $t->full_name }}
                             @can('create teachers')
-                            <form method="POST" action="{{ route('departments.teacher.remove', [$dept->id, $t->id]) }}" class="inline"><@csrf<button class="ml-1 text-indigo-400 hover:text-rose-600">×</button></form>
+                            <form method="POST" action="{{ route('departments.teacher.remove', [$dept->id, $t->id]) }}" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="ml-1 text-indigo-400 hover:text-rose-600 font-bold">&times;</button>
+                            </form>
                             @endcan
                         </div>
                         @endforeach

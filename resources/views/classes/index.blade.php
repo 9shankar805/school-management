@@ -187,48 +187,50 @@
                                 @foreach ($classSections as $section)
                                     @php
                                         $secStudentCount = $section->promotions ? $section->promotions->count() : 0;
+                                        $cleanSecName = preg_replace('/^Section\s+/i', '', trim($section->section_name));
+                                        $cleanRoomNo  = preg_replace('/^Room:\s*|^Room\s+/i', '', trim($section->room_no ?? ''));
                                     @endphp
-                                    <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-800/20 hover:border-indigo-200 dark:hover:border-indigo-900 transition-all flex flex-col justify-between group">
+                                    <div class="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-800/40 hover:border-indigo-300 dark:hover:border-indigo-800 transition-all flex flex-col justify-between group shadow-xs">
                                         <div>
                                             <div class="flex items-center justify-between mb-3">
                                                 <div class="flex items-center gap-2.5">
-                                                    <span class="w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-sm flex items-center justify-center shadow-2xs">
-                                                        {{ $section->section_name }}
+                                                    <span class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-900/50 text-indigo-700 dark:text-indigo-300 font-extrabold text-sm flex items-center justify-center shadow-2xs">
+                                                        {{ $cleanSecName }}
                                                     </span>
                                                     <div>
-                                                        <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100">Section {{ $section->section_name }}</h4>
-                                                        <span class="text-[11px] text-slate-400 flex items-center gap-1">
-                                                            <i class="bi bi-geo-alt"></i> Room: {{ $section->room_no ?? 'N/A' }}
+                                                        <h4 class="text-xs font-extrabold text-slate-800 dark:text-slate-100">Section {{ $cleanSecName }}</h4>
+                                                        <span class="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                                                            <i class="bi bi-geo-alt text-slate-400"></i> Room: {{ $cleanRoomNo ?: 'N/A' }}
                                                         </span>
                                                     </div>
                                                 </div>
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/60">
                                                     {{ $secStudentCount }} Students
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <div class="pt-3 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between gap-2">
+                                        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
                                             <div class="flex items-center gap-1.5">
-                                                <a href="{{ route('student.list.show', ['class_id' => $school_class->id, 'section_id' => $section->id, 'section_name' => $section->section_name]) }}" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-medium hover:bg-slate-100 transition">
+                                                <a href="{{ route('student.list.show', ['class_id' => $school_class->id, 'section_id' => $section->id, 'section_name' => $section->section_name]) }}" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-medium hover:bg-slate-100 transition shadow-2xs">
                                                     <i class="bi bi-people me-1"></i> Students
                                                 </a>
-                                                <a href="{{ route('section.routine.show', ['class_id' => $school_class->id, 'section_id' => $section->id]) }}" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-medium hover:bg-slate-100 transition">
+                                                <a href="{{ route('section.routine.show', ['class_id' => $school_class->id, 'section_id' => $section->id]) }}" class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-medium hover:bg-slate-100 transition shadow-2xs">
                                                     <i class="bi bi-calendar-event me-1"></i> Timetable
                                                 </a>
                                             </div>
 
                                             <div class="flex items-center gap-1">
                                                 @can('edit sections')
-                                                <a href="{{ route('section.edit', ['id' => $section->id]) }}" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-white dark:hover:bg-slate-800 transition" title="Edit Section">
+                                                <a href="{{ route('section.edit', ['id' => $section->id]) }}" class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Edit Section">
                                                     <i class="bi bi-pencil text-xs"></i>
                                                 </a>
                                                 @endcan
 
                                                 @can('delete sections')
-                                                <form action="{{ route('school.section.delete', ['id' => $section->id]) }}" method="POST" onsubmit="return confirm('Delete Section {{ $section->section_name }}?');">
+                                                <form action="{{ route('school.section.delete', ['id' => $section->id]) }}" method="POST" onsubmit="return confirm('Delete Section {{ $cleanSecName }}?');" class="inline">
                                                     @csrf
-                                                    <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition" title="Delete Section">
+                                                    <button type="submit" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition border-0 bg-transparent" title="Delete Section">
                                                         <i class="bi bi-trash3 text-xs"></i>
                                                     </button>
                                                 </form>

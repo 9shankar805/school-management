@@ -73,8 +73,11 @@ class SecurityHeaders
         ]));
 
         // Cross-Origin isolation headers
-        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
-        $response->headers->set('Cross-Origin-Resource-Policy', 'same-origin');
+        // same-origin-allow-popups allows OAuth popups while still protecting
+        // against Spectre-style cross-origin leaks
+        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+        // cross-origin allows CDN resources to load without CORP headers on their end
+        $response->headers->set('Cross-Origin-Resource-Policy', 'cross-origin');
 
         // HSTS — browsers ignore over HTTP; safe to always send
         // preload requires registration at https://hstspreload.org/
@@ -95,8 +98,12 @@ class SecurityHeaders
     {
         $response->headers->set('Content-Security-Policy', $this->buildCsp());
 
-        // Required for SharedArrayBuffer / high-resolution timers (cross-origin isolation)
-        $response->headers->set('Cross-Origin-Embedder-Policy', 'require-corp');
+        // NOTE: Cross-Origin-Embedder-Policy: require-corp is intentionally
+        // NOT set here. It would block all cross-origin resources (CDN fonts,
+        // avatars, analytics) that don't include CORP headers, causing
+        // ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep.
+        // Re-enable only if you need SharedArrayBuffer and can ensure all
+        // cross-origin resources send the required CORP header.
     }
 
     /**
@@ -117,11 +124,12 @@ class SecurityHeaders
             "default-src 'self'",
 
             // Scripts — unsafe-inline/eval needed by ApexCharts, Tiptap, etc.
-            // TODO: replace with nonces when libraries are bundled
+            // Cloudflare Insights (static.cloudflareinsights.com) added for analytics.
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
                 . "https://cdn.jsdelivr.net "
                 . "https://cdnjs.cloudflare.com "
-                . "https://cdn.tailwindcss.com",
+                . "https://cdn.tailwindcss.com "
+                . "https://static.cloudflareinsights.com",
 
             // Styles — unsafe-inline needed by inline-styled components
             "style-src 'self' 'unsafe-inline' "
@@ -135,12 +143,19 @@ class SecurityHeaders
                 . "https://cdn.jsdelivr.net",
 
             // Images — data: for base64 inline; blob: for canvas exports
+            // ui-avatars.com serves generated initials avatars used across the app
             "img-src 'self' data: blob: "
                 . "https://ui-avatars.com "
-                . "https://api.qrserver.com",
+                . "https://api.qrserver.com "
+                . "https://cdn.jsdelivr.net",
 
             // XHR / fetch / WebSocket
-            "connect-src 'self'",
+            // cdn.jsdelivr.net needed for sourcemap fetches by browser DevTools
+            // cloudflareinsights.com needed for analytics beacon
+            "connect-src 'self' "
+                . "https://cdn.jsdelivr.net "
+                . "https://cloudflareinsights.com "
+                . "https://static.cloudflareinsights.com",
 
             // No plugins (Flash, Silverlight, etc.)
             "object-src 'none'",
@@ -151,8 +166,16 @@ class SecurityHeaders
             // No web workers except from same origin
             "worker-src 'self' blob:",
 
-            // No iframes (this app does not embed external frames)
-            "frame-src 'none'",
+            // Allow iframes for interactive tools (Desmos, GeoGebra, Excalidraw, YouTube)
+            "frame-src 'self' "
+                . "https://www.desmos.com "
+                . "https://*.desmos.com "
+                . "https://www.geogebra.org "
+                . "https://*.geogebra.org "
+                . "https://excalidraw.com "
+                . "https://*.excalidraw.com "
+                . "https://www.youtube.com "
+                . "https://www.youtube-nocookie.com",
 
             // Prevent this app from being framed by others
             "frame-ancestors 'none'",
