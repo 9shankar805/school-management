@@ -22,7 +22,13 @@ class AttendanceResource extends JsonResource
                 'name' => $this->course->course_name,
             ]),
             'date'       => $this->date?->format('Y-m-d'),
-            'status'     => $this->attendance_type, // present|absent|late|leave
+            // Normalise 'on'/'off' DB values to readable labels for the API
+            'status'     => match($this->status) {
+                'on'  => 'present',
+                'off' => 'absent',
+                default => $this->status ?? 'unknown',
+            },
+            'late_minutes' => (int) ($this->late_minutes ?? 0),
             'notes'      => $this->notes ?? null,
             'created_at' => $this->created_at?->toIso8601String(),
         ];

@@ -361,8 +361,11 @@
                     @endauth
                 </div>
             </a>
-            <button onclick="closeSidebar()" class="lg:hidden p-1 rounded-md transition" style="color:rgba(255,255,255,.4)">
-                <i class="bi bi-x text-xl"></i>
+            <button onclick="closeSidebar()"
+                    class="lg:hidden"
+                    style="background: rgba(255, 255, 255, 0.12) !important; color: #ffffff !important; border: 1px solid rgba(255, 255, 255, 0.25) !important; border-radius: 0.5rem !important; padding: 0.35rem 0.6rem !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important;"
+                    aria-label="Close sidebar">
+                <i class="bi bi-x-lg" style="font-size: 1.125rem !important; color: #ffffff !important;"></i>
             </button>
         </div>
 
@@ -423,13 +426,16 @@
     {{-- ─── MAIN AREA ───────────────────────────────────────────────── --}}
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-        {{-- ─── TOP BAR ────────────────────────────────────────────── --}}
-        <header class="flex-shrink-0 h-14 flex items-center px-4 lg:px-5 gap-3 z-20 sticky top-0"
+        {{-- ─── TOP BAR (Constant across screen sizes) ────────────── --}}
+        <header class="flex-shrink-0 h-14 flex items-center px-4 lg:px-5 gap-3 z-30 sticky top-0 w-full transition-colors"
                 style="background:#ffffff;border-bottom:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,.06)">
 
             {{-- Mobile hamburger (hidden on large screens) --}}
-            <button onclick="openSidebar()" class="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition" aria-label="Open sidebar">
-                <i class="bi bi-list text-xl"></i>
+            <button onclick="openSidebar()"
+                    class="lg:hidden"
+                    style="background: #f1f5f9 !important; color: #0f172a !important; border: 1px solid #cbd5e1 !important; border-radius: 0.5rem !important; padding: 0.35rem 0.6rem !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important;"
+                    aria-label="Open sidebar">
+                <i class="bi bi-list" style="font-size: 1.25rem !important; color: #0f172a !important;"></i>
             </button>
 
             {{-- Search bar --}}
@@ -608,6 +614,32 @@
             {{-- Softening overlay — tones down the bg so cards pop cleanly --}}
             <div class="absolute inset-0 pointer-events-none" style="background:rgba(248,250,252,0.55);z-index:0"></div>
 
+            {{-- ── Offline status banner (hidden when online) ──────────── --}}
+            <div id="offline-banner"
+                 class="hidden sticky top-0 z-50 w-full flex items-center justify-between gap-3 px-4 py-2 text-xs font-semibold"
+                 style="background:#fef3c7;border-bottom:1px solid #fde68a;color:#92400e;">
+                <span class="flex items-center gap-2">
+                    <i class="bi bi-wifi-off"></i>
+                    You're offline — attendance will be saved locally and synced when you reconnect.
+                    <span id="offline-pending-wrapper" class="hidden items-center gap-1 bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">
+                        <i class="bi bi-clock-history"></i>
+                        <span id="offline-pending-count">0</span> pending
+                    </span>
+                </span>
+                <button onclick="window.flushAttendanceSync && window.flushAttendanceSync()"
+                        class="px-2.5 py-1 rounded-lg bg-amber-200 hover:bg-amber-300 transition text-amber-900 font-bold whitespace-nowrap">
+                    <i class="bi bi-arrow-repeat me-1"></i>Sync Now
+                </button>
+            </div>
+
+            {{-- ── Online restored toast (injected by JS) ──────────────── --}}
+            <div id="online-restored-toast"
+                 class="hidden fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-lg"
+                 style="background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;">
+                <i class="bi bi-check-circle-fill"></i>
+                Back online — syncing pending data…
+            </div>
+
             <div class="relative" style="z-index:1">
             {{-- Flash messages (session) --}}
             @if(session('success') || session('status'))
@@ -746,6 +778,51 @@
 ═══════════════════════════════════════════════════════════ --}}
 <script src="{{ asset('js/app.js') }}"></script>
 
+{{-- ── Offline-first PWA layer ─────────────────────────────────────────── --}}
+@auth
+<script src="{{ asset('js/offline-db.js') }}"></script>
+<script src="{{ asset('js/offline-seed.js') }}"></script>
+<script src="{{ asset('js/attendance-sync.js') }}"></script>
+<script>
+(function () {
+    var banner      = document.getElementById('offline-banner');
+    var toast       = document.getElementById('online-restored-toast');
+    var toastTimer  = null;
+
+    function showBanner()  { if (banner) banner.classList.remove('hidden'); }
+    function hideBanner()  { if (banner) banner.classList.add('hidden'); }
+
+    function showOnlineToast() {
+        if (!toast) return;
+        toast.classList.remove('hidden');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.classList.add('hidden'); }, 4000);
+    }
+
+    // Set initial state
+    if (!navigator.onLine) { showBanner(); } else { hideBanner(); }
+
+    window.addEventListener('offline', function () {
+        showBanner();
+    });
+
+    window.addEventListener('online', function () {
+        hideBanner();
+        showOnlineToast();
+        // attendance-sync.js also listens to 'online' and flushes automatically
+    });
+
+    // Listen for attendance-synced event to update pending count in the banner
+    document.addEventListener('attendance-synced', function (e) {
+        var count = e.detail?.count ?? 0;
+        if (count > 0 && typeof showToast === 'function') {
+            showToast(count + ' attendance record(s) synced successfully.', 'success');
+        }
+    });
+}());
+</script>
+@endauth
+
 @stack('scripts')
 
 <script>
@@ -863,5 +940,136 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 </script>
+
+@auth
+@if(config('services.fcm.api_key'))
+{{-- ═══════════════════════════════════════════════════════════════════════
+     Firebase SDK — Cloud Messaging + App Check (reCAPTCHA Enterprise)
+     Loaded only when FIREBASE_API_KEY is set in .env
+═══════════════════════════════════════════════════════════════════════ --}}
+<script type="module">
+// ── 1. Firebase config (all values are PUBLIC — safe in HTML) ─────────────
+const firebaseConfig = {
+    apiKey:            "{{ config('services.fcm.api_key') }}",
+    authDomain:        "{{ config('services.fcm.auth_domain') }}",
+    projectId:         "{{ config('services.fcm.project_id') }}",
+    storageBucket:     "{{ config('services.fcm.storage_bucket') }}",
+    messagingSenderId: "{{ config('services.fcm.sender_id') }}",
+    appId:             "{{ config('services.fcm.app_id') }}",
+    measurementId:     "{{ config('services.fcm.measurement_id') }}",
+};
+const VAPID_KEY          = "{{ config('services.fcm.vapid_key') }}";
+const APP_CHECK_SITE_KEY = "{{ config('services.recaptcha.app_check_site_key') }}";
+const CSRF               = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+// ── 2. Import Firebase SDK modules ────────────────────────────────────────
+import { initializeApp }              from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getMessaging, getToken, onMessage }
+                                      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken as getAppCheckToken }
+                                      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js';
+
+// ── 3. Init Firebase app ──────────────────────────────────────────────────
+const app = initializeApp(firebaseConfig);
+
+// ── 4. Firebase App Check with reCAPTCHA Enterprise ──────────────────────
+// App Check protects your Firebase resources from abuse.
+// It attaches a short-lived attestation token to every Firebase request.
+let appCheck = null;
+if (APP_CHECK_SITE_KEY) {
+    try {
+        appCheck = initializeAppCheck(app, {
+            provider: new ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY),
+            isTokenAutoRefreshEnabled: true,   // auto-refresh token silently
+        });
+        console.log('[AppCheck] Initialised with reCAPTCHA Enterprise.');
+    } catch (err) {
+        console.warn('[AppCheck] Init failed:', err.message);
+    }
+}
+
+// ── 5. Init Firebase Messaging ────────────────────────────────────────────
+const messaging = getMessaging(app);
+
+// ── 6. Tell the service worker the Firebase config ────────────────────────
+async function sendConfigToSW() {
+    if (!('serviceWorker' in navigator)) return;
+    const reg = await navigator.serviceWorker.ready;
+    if (reg.active) {
+        reg.active.postMessage({ type: 'FIREBASE_CONFIG', config: firebaseConfig });
+    }
+}
+
+// ── 7. Request permission + get FCM token ─────────────────────────────────
+async function initPush() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'denied') return;
+
+    let permission = Notification.permission;
+    if (permission === 'default') {
+        permission = await Notification.requestPermission();
+    }
+    if (permission !== 'granted') return;
+
+    await sendConfigToSW();
+
+    try {
+        const swReg = await navigator.serviceWorker.ready;
+        const opts  = { serviceWorkerRegistration: swReg };
+        if (VAPID_KEY) opts.vapidKey = VAPID_KEY;
+
+        const token = await getToken(messaging, opts);
+
+        if (token) {
+            await fetch('/push/token', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF },
+                body:    JSON.stringify({ token, platform: 'web', device_name: navigator.userAgent.substring(0, 200) }),
+            });
+            console.log('[FCM] Push token registered.');
+        }
+    } catch (err) {
+        console.warn('[FCM] Could not get push token:', err.message);
+    }
+}
+
+// ── 8. Foreground message handler ─────────────────────────────────────────
+onMessage(messaging, (payload) => {
+    const notif = payload.notification || {};
+    const data  = payload.data         || {};
+    const title = notif.title || data.title || 'New Notification';
+    const body  = notif.body  || data.body  || '';
+    const url   = data.click_action || data.url || null;
+
+    if (typeof showToast === 'function') {
+        showToast(`<strong>${title}</strong>${body ? '<br>' + body : ''}`, 'info', 6000);
+    } else {
+        if (Notification.permission === 'granted') {
+            const n = new Notification(title, { body, icon: '/favicon_io/android-chrome-192x192.png' });
+            if (url) n.addEventListener('click', () => { window.focus(); window.location.href = url; });
+        }
+    }
+});
+
+// ── 9. Expose App Check token getter globally (for AJAX calls) ────────────
+// Usage: const { token } = await window.getAppCheckToken?.() ?? {};
+window.getFirebaseAppCheckToken = async () => {
+    if (!appCheck) return null;
+    try {
+        const result = await getAppCheckToken(appCheck);
+        return result.token;
+    } catch (e) {
+        return null;
+    }
+};
+
+// ── 10. Init on load ──────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+    setTimeout(initPush, 2000);
+});
+</script>
+@endif
+@endauth
+
 </body>
 </html>

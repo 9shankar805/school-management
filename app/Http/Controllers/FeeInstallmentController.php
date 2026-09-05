@@ -128,11 +128,8 @@ class FeeInstallmentController extends Controller
                 'status'    => 'paid',
                 'paid_date' => $data['payment_date'],
             ]);
-
-            // Update parent invoice status
-            $totalPaid  = $invoice->payments()->sum('amount');
-            $newStatus  = $totalPaid >= $invoice->amount ? 'paid' : 'partial';
-            $invoice->update(['status' => $newStatus]);
+            // Invoice status auto-updated by Payment::booted() → updateInvoiceStatus()
+            // Student ledger credit auto-posted by Payment::booted() → postLedgerCredit()
         });
 
         return back()->with('status', "Instalment #{$installment->installment_number} marked as paid.");

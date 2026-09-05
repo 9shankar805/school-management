@@ -125,17 +125,27 @@ class SecurityHeaders
 
             // Scripts — unsafe-inline/eval needed by ApexCharts, Tiptap, etc.
             // Cloudflare Insights (static.cloudflareinsights.com) added for analytics.
+            // unpkg.com used by MathLive math equation editor.
+            // www.google.com + www.gstatic.com: Google reCAPTCHA v3 scripts
+            // www.gstatic.com/firebasejs: Firebase JS SDK (ESM modules)
             "script-src 'self' 'unsafe-inline' 'unsafe-eval' "
                 . "https://cdn.jsdelivr.net "
                 . "https://cdnjs.cloudflare.com "
                 . "https://cdn.tailwindcss.com "
-                . "https://static.cloudflareinsights.com",
+                . "https://static.cloudflareinsights.com "
+                . "https://unpkg.com "
+                . "https://www.google.com "
+                . "https://www.gstatic.com",
 
             // Styles — unsafe-inline needed by inline-styled components
+            // unpkg.com used by MathLive static stylesheet.
+            // www.gstatic.com: reCAPTCHA widget styles
             "style-src 'self' 'unsafe-inline' "
                 . "https://cdn.jsdelivr.net "
                 . "https://cdnjs.cloudflare.com "
-                . "https://fonts.googleapis.com",
+                . "https://fonts.googleapis.com "
+                . "https://unpkg.com "
+                . "https://www.gstatic.com",
 
             // Web fonts
             "font-src 'self' data: "
@@ -144,18 +154,31 @@ class SecurityHeaders
 
             // Images — data: for base64 inline; blob: for canvas exports
             // ui-avatars.com serves generated initials avatars used across the app
+            // www.gstatic.com: reCAPTCHA badge image
             "img-src 'self' data: blob: "
                 . "https://ui-avatars.com "
                 . "https://api.qrserver.com "
-                . "https://cdn.jsdelivr.net",
+                . "https://cdn.jsdelivr.net "
+                . "https://www.gstatic.com "
+                . "https://www.google.com",
 
             // XHR / fetch / WebSocket
             // cdn.jsdelivr.net needed for sourcemap fetches by browser DevTools
             // cloudflareinsights.com needed for analytics beacon
+            // www.google.com + www.gstatic.com: reCAPTCHA API + Firebase token verification
+            // fcm.googleapis.com + firebaseinstallations.googleapis.com: Firebase SDK
             "connect-src 'self' "
                 . "https://cdn.jsdelivr.net "
                 . "https://cloudflareinsights.com "
-                . "https://static.cloudflareinsights.com",
+                . "https://static.cloudflareinsights.com "
+                . "https://www.google.com "
+                . "https://www.gstatic.com "
+                . "https://recaptchaenterprise.googleapis.com "
+                . "https://fcm.googleapis.com "
+                . "https://firebase.googleapis.com "
+                . "https://firebaseinstallations.googleapis.com "
+                . "https://identitytoolkit.googleapis.com "
+                . "https://securetoken.googleapis.com",
 
             // No plugins (Flash, Silverlight, etc.)
             "object-src 'none'",
@@ -167,7 +190,9 @@ class SecurityHeaders
             "worker-src 'self' blob:",
 
             // Allow iframes for interactive tools (Desmos, GeoGebra, Excalidraw, YouTube)
+            // www.google.com: reCAPTCHA v3 challenge iframe
             "frame-src 'self' "
+                . "https://www.google.com "
                 . "https://www.desmos.com "
                 . "https://*.desmos.com "
                 . "https://www.geogebra.org "

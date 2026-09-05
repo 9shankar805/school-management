@@ -21,6 +21,7 @@ use App\Observers\StudentTransportObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Http\RedirectResponse;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -46,6 +47,37 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // ── withError() macro: back()->withError('msg') flashes session('error')
+        // This fills the gap left by the non-existent native method, so any
+        // controller that still uses the old signature works correctly.
+        if (! RedirectResponse::hasMacro('withError')) {
+            RedirectResponse::macro('withError', function (string $message) {
+                /** @var RedirectResponse $this */
+                return $this->with('error', $message);
+            });
+        }
+
+        // ── Blade directives for Nepali/BS dates ──────────────────────────────
+        // @bsDate('2026-04-14')           → २०८३ बैशाख १४  (Devanagari)
+        // @bsDateEn('2026-04-14')         → 2083 Baisakh 14 (English)
+        // @bsShort('2026-04-14')          → २०८३-०१-०१  (short Devanagari)
+        // @bsDateDual('2026-04-14')       → 2026-04-14 (२०८३ बैशाख १४)
+        \Illuminate\Support\Facades\Blade::directive('bsDate', function ($expression) {
+            return "<?php echo \\App\\Services\\NepaliDateService::formatBS({$expression}, true, 'long'); ?>";
+        });
+        \Illuminate\Support\Facades\Blade::directive('bsDateEn', function ($expression) {
+            return "<?php echo \\App\\Services\\NepaliDateService::formatBS({$expression}, false, 'long'); ?>";
+        });
+        \Illuminate\Support\Facades\Blade::directive('bsShort', function ($expression) {
+            return "<?php echo \\App\\Services\\NepaliDateService::formatBS({$expression}, true, 'short'); ?>";
+        });
+        \Illuminate\Support\Facades\Blade::directive('bsDateDual', function ($expression) {
+            return "<?php \$_adDate = {$expression}; echo \$_adDate . ' (' . \\App\\Services\\NepaliDateService::formatBS(\$_adDate, true, 'long') . ')'; ?>";
+        });
+        \Illuminate\Support\Facades\Blade::directive('fiscalYear', function () {
+            return "<?php echo \\App\\Services\\NepaliDateService::currentFiscalYear(); ?>";
+        });
+
         // ── Use our modern Tailwind pagination view ─────────────────────
         Paginator::defaultView('vendor.pagination.tailwind');
         Paginator::defaultSimpleView('vendor.pagination.tailwind');

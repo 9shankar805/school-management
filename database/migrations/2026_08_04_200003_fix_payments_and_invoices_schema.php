@@ -23,8 +23,11 @@ return new class extends Migration
         $paymentCols = Schema::getColumnListing('payments');
 
         if (in_array('amount_paid', $paymentCols) && ! in_array('amount', $paymentCols)) {
-            // MySQL ALTER TABLE CHANGE renames + redefines in one step — no doctrine needed
-            DB::statement('ALTER TABLE `payments` CHANGE `amount_paid` `amount` DECIMAL(10,2) NOT NULL DEFAULT 0');
+            if (DB::getDriverName() === 'mysql') {
+                DB::statement('ALTER TABLE `payments` CHANGE `amount_paid` `amount` DECIMAL(10,2) NOT NULL DEFAULT 0');
+            } else {
+                DB::statement('ALTER TABLE payments RENAME COLUMN amount_paid TO amount');
+            }
         }
 
         // ── invoices: add new columns ─────────────────────────────────────────
@@ -130,7 +133,11 @@ return new class extends Migration
         // Reverse payments: rename amount → amount_paid
         $paymentCols = Schema::getColumnListing('payments');
         if (in_array('amount', $paymentCols) && ! in_array('amount_paid', $paymentCols)) {
-            DB::statement('ALTER TABLE `payments` CHANGE `amount` `amount_paid` DECIMAL(10,2) NOT NULL DEFAULT 0');
+            if (DB::getDriverName() === 'mysql') {
+                DB::statement('ALTER TABLE `payments` CHANGE `amount` `amount_paid` DECIMAL(10,2) NOT NULL DEFAULT 0');
+            } else {
+                DB::statement('ALTER TABLE payments RENAME COLUMN amount TO amount_paid');
+            }
         }
 
         Schema::table('payments', function (Blueprint $table) {

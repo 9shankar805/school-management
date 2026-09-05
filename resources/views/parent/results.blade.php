@@ -16,7 +16,7 @@
                 <select name="exam_id" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300">
                     <option value="">All Exams</option>
                     @foreach($exams as $exam)
-                    <option value="{{ $exam->id }}" {{ $examId == $exam->id ? 'selected' : '' }}>{{ $exam->name }}</option>
+                    <option value="{{ $exam->id }}" {{ $examId == $exam->id ? 'selected' : '' }}>{{ $exam->exam_name ?? $exam->name }}</option>
                     @endforeach
                 </select>
             </div>

@@ -32,12 +32,14 @@ class SetSchoolContext
 
         // ── 1. Subdomain resolution ──────────────────────────────────────
         $host = $request->getHost();
-        // Matches anything like "schoolslug.nepalschoolhub.com"
-        if (preg_match('/^([a-z0-9\-]+)\.(nepalschoolhub\.com|localhost)$/i', $host, $matches)) {
-            $slug = $matches[1];
-            // Ignore www and bare domain
-            if (!in_array($slug, ['www', 'app', 'api'])) {
+        // Matches anything like "genesisglobalschool.nshlms.com" or "genesis-global-school.nshlms.com"
+        if (preg_match('/^([a-z0-9\-]+)\.(nshlms\.com|nepalschoolhub\.com|techprocod\.com\.np|localhost)$/i', $host, $matches)) {
+            $slug = strtolower($matches[1]);
+            // Ignore www and system subdomains
+            if (!in_array($slug, ['www', 'app', 'admin', 'super', 'api', 'mail'])) {
+                $cleanSlug = str_replace('-', '', $slug);
                 $school = School::where('slug', $slug)
+                                ->orWhereRaw("REPLACE(slug, '-', '') = ?", [$cleanSlug])
                                 ->where('status', 'active')
                                 ->first();
             }

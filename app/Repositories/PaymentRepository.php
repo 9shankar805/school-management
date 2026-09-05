@@ -49,7 +49,7 @@ class PaymentRepository implements PaymentInterface {
     }
     
     private function updateInvoiceStatus(Invoice $invoice) {
-        $totalPaid = $invoice->payments()->sum('amount_paid');
+        $totalPaid = $invoice->payments()->sum('amount');
         
         if ($totalPaid >= $invoice->amount) {
             $invoice->update(['status' => 'paid']);

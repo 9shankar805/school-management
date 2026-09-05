@@ -87,7 +87,7 @@ class SchoolClassController extends Controller
 
             return back()->with('status', 'Class "' . $class->class_name . '" created successfully!');
         } catch (\Exception $e) {
-            return back()->withError('Failed to create class. ' . $e->getMessage());
+            return back()->with('error', 'Failed to create class. ' . $e->getMessage());
         }
     }
 
@@ -126,9 +126,10 @@ class SchoolClassController extends Controller
             ->where('session_id', $sessionId)
             ->get();
 
-        // Class teacher — teacher who teaches the most subjects in this class,
-        // or the one explicitly marked (first assigned, as a convention)
-        $classTeacher = $assignedTeachers->first()?->teacher;
+        // Class teacher — teacher explicitly designated as Class Teacher (is_class_teacher = 1),
+        // or falling back to first assigned subject teacher
+        $classTeacher = $assignedTeachers->where('is_class_teacher', true)->first()?->teacher ?? $assignedTeachers->first()?->teacher;
+
 
         // Timetable for this class — all sections, grouped by section → weekday
         $timetableSlots = \App\Models\Routine::with(['course', 'section', 'teacher'])
@@ -181,7 +182,7 @@ class SchoolClassController extends Controller
 
             return back()->with('status', 'Class updated successfully!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -201,7 +202,7 @@ class SchoolClassController extends Controller
 
             return back()->with('status', 'Class "' . $className . '" deleted successfully!');
         } catch (\Exception $e) {
-            return back()->withError('Failed to delete class. ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete class. ' . $e->getMessage());
         }
     }
 }

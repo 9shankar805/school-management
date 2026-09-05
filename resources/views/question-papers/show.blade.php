@@ -47,9 +47,13 @@
                         <i class="bi bi-pencil me-1"></i> Edit
                     </a>
                     @endif
+                    <button onclick="window.print()" type="button"
+                       class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-medium transition cursor-pointer">
+                        <i class="bi bi-printer me-1"></i> Print / Save PDF
+                    </button>
                     <a href="{{ route('question-papers.pdf', $paper->id) }}" target="_blank"
                        class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-medium transition">
-                        <i class="bi bi-file-earmark-pdf me-1"></i> PDF
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
                     </a>
                     <a href="{{ route('question-papers.versions', $paper->id) }}"
                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition">
@@ -170,4 +174,58 @@
         </div>
     </div>
 </div>
+
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+@endpush
+
+@push('scripts')
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+<script>
+function renderShowPageMath(retryCount) {
+    retryCount = retryCount || 0;
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise();
+    }
+    if (typeof renderMathInElement !== 'undefined') {
+        renderMathInElement(document.body, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '\\[', right: '\\]', display: true},
+                {left: '$', right: '$', display: false},
+                {left: '\\(', right: '\\)', display: false}
+            ],
+            throwOnError: false
+        });
+    } else if (retryCount < 30) {
+        setTimeout(function() { renderShowPageMath(retryCount + 1); }, 150);
+    }
+}
+document.addEventListener('DOMContentLoaded', function() {
+    renderShowPageMath();
+    setTimeout(renderShowPageMath, 300);
+    setTimeout(renderShowPageMath, 1000);
+});
+window.addEventListener('load', renderShowPageMath);
+</script>
+<style>
+@media print {
+  nav, header, .sidebar, button, a, form { display: none !important; }
+  body { background: #fff !important; color: #000 !important; padding: 0 !important; margin: 0 !important; }
+  .max-w-5xl, .container { max-width: 100% !important; width: 100% !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
+  .shadow-sm, .shadow-md, .shadow-xl { box-shadow: none !important; border: none !important; }
+}
+</style>
+@endpush
 @endsection

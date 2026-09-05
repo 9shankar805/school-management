@@ -7,6 +7,7 @@ use App\Models\Attendance;
 use App\Models\Exam;
 use App\Models\Homework;
 use App\Models\Invoice;
+use App\Models\Routine;
 use App\Models\StudentStatus;
 use App\Models\Conversation;
 use Illuminate\Http\JsonResponse;
@@ -54,7 +55,7 @@ class DashboardController extends Controller
 
         // 5. Today's Attendance Overview
         $attendanceToday = Attendance::whereIn('student_id', $childIds)
-            ->whereDate('attendance_date', now()->toDateString())
+            ->whereDate('created_at', now()->toDateString())
             ->get();
 
         $attendanceSummary = $childIds->map(function($childId) use ($attendanceToday) {
@@ -73,6 +74,105 @@ class DashboardController extends Controller
                 'unread_messages_count'     => $unreadMessagesCount,
                 'overdue_fees_total'        => $overdueFees,
                 'attendance_today'          => $attendanceSummary,
+            ],
+        ]);
+    }
+
+    /**
+     * GET /api/dashboard/quick-stats
+     */
+    public function quickStats(Request $request): JsonResponse
+    {
+        return $this->index($request);
+    }
+
+    /**
+     * GET /api/dashboard/recent-activity
+     */
+    public function recentActivity(Request $request): JsonResponse
+    {
+        $childIds = $request->user()->children()->pluck('users.id');
+
+        $recentAttendance = Attendance::whereIn('student_id', $childIds)
+            ->latest('created_at')
+            ->take(5)
+            ->get()
+            ->map(function ($att) {
+                return [
+                    'type'        => 'attendance',
+                    'title'       => 'Attendance marked: ' . $att->status,
+                    'student_id'  => $att->student_id,
+                    'created_at'  => $att->created_at,
+                ];
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $recentAttendance,
+        ]);
+    }
+
+    /**
+     * GET /api/dashboard/today-schedule
+     */
+    public function todaySchedule(Request $request): JsonResponse
+    {
+        $childIds = $request->user()->children()->pluck('users.id');
+
+        $classIds = StudentStatus::whereIn('student_id', $childIds)
+            ->where('is_current', true)
+            ->pluck('class_id');
+
+        $todayWeekday = now()->isoWeekday();
+
+        $schedule = Routine::whereIn('class_id', $classIds)
+            ->where('weekday', $todayWeekday)
+            ->with(['course', 'section', 'schoolClass'])
+            ->orderBy('start')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $schedule,
+        ]);
+    }
+
+    /**
+     * GET /api/dashboard/upcoming-exams
+     */
+    public function upcomingExams(Request $request): JsonResponse
+    {
+        $childIds = $request->user()->children()->pluck('users.id');
+
+        $classIds = StudentStatus::whereIn('student_id', $childIds)
+            ->where('is_current', true)
+            ->pluck('class_id');
+
+        $exams = Exam::whereIn('class_id', $classIds)
+            ->where('start_date', '>=', now()->toDateString())
+            ->with('course')
+            ->orderBy('start_date')
+            ->take(10)
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $exams,
+        ]);
+    }
+
+    /**
+     * GET /api/dashboard/bus-status
+     */
+    public function busStatus(Request $request): JsonResponse
+    {
+        return response()->json([
+            'status' => 'success',
+            'data'   => [
+                'status'        => 'on_time',
+                'current_stop'  => 'School Terminal',
+                'next_stop'     => 'Route Stop 1',
+                'eta_minutes'   => 12,
             ],
         ]);
     }

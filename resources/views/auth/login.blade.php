@@ -162,7 +162,11 @@
                 </div>
 
                 {{-- Submit --}}
+                @if(config('services.recaptcha.site_key'))
+                <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response-login">
+                @endif
                 <button type="submit"
+                        id="login-submit-btn"
                         class="w-full btn-primary justify-center py-2.5 text-sm font-semibold mt-2">
                     <i class="bi bi-box-arrow-in-right"></i>
                     Sign In
@@ -291,4 +295,48 @@ function togglePassword() {
     icon.className = show ? 'bi bi-eye-slash text-sm' : 'bi bi-eye text-sm';
 }
 </script>
+
+@if(config('services.recaptcha.site_key'))
+{{-- reCAPTCHA v3 — invisible, auto-runs on form submit --}}
+<script src="https://www.google.com/recaptcha/api.js?render={{ config('services.recaptcha.site_key') }}"></script>
+<script>
+(function() {
+    const form     = document.querySelector('form[action="{{ route('login') }}"]');
+    const siteKey  = '{{ config('services.recaptcha.site_key') }}';
+    const tokenField = document.getElementById('g-recaptcha-response-login');
+    const btn      = document.getElementById('login-submit-btn');
+
+    if (!form || !tokenField) return;
+
+    form.addEventListener('submit', function(e) {
+        // If token already filled (retry after grecaptcha loaded), proceed
+        if (tokenField.value) return;
+
+        // If grecaptcha not loaded yet (e.g. slow network), just submit without token
+        if (typeof grecaptcha === 'undefined') {
+            console.warn('[reCAPTCHA] Not loaded — submitting without token.');
+            return;
+        }
+
+        e.preventDefault();
+
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Verifying...'; }
+
+        grecaptcha.ready(function() {
+            grecaptcha.execute(siteKey, { action: 'login' })
+                .then(function(token) {
+                    tokenField.value = token;
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Sign In'; }
+                    form.submit();
+                })
+                .catch(function(err) {
+                    console.warn('[reCAPTCHA] Execute error:', err);
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-box-arrow-in-right"></i> Sign In'; }
+                    form.submit(); // fail open — don't block login
+                });
+        });
+    });
+})();
+</script>
+@endif
 @endpush

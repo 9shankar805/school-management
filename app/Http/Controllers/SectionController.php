@@ -64,7 +64,7 @@ class SectionController extends Controller
 
             return back()->with('status', 'Section creation was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -119,7 +119,7 @@ class SectionController extends Controller
 
             return back()->with('status', 'Section edit was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -138,7 +138,7 @@ class SectionController extends Controller
 
             return back()->with('status', 'Section "' . $secName . '" deleted successfully!');
         } catch (\Exception $e) {
-            return back()->withError('Failed to delete section. ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete section. ' . $e->getMessage());
         }
     }
 }

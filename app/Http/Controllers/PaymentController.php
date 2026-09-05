@@ -192,7 +192,15 @@ class PaymentController extends Controller
             abort(403);
         }
 
-        return view('payments.pay', compact('invoice'));
+        // Resolve school for QR display — try invoice school_id first,
+        // then authenticated user's school, then invoice student's school
+        $paySchool = \App\Models\School::find(
+            $invoice->school_id
+            ?? $user->school_id
+            ?? optional($invoice->student)->school_id
+        );
+
+        return view('payments.pay', compact('invoice', 'paySchool'));
     }
 
     public function processPayment(Request $request, int $id)
@@ -212,8 +220,10 @@ class PaymentController extends Controller
             'gateway_transaction_id' => 'nullable|string|max:100',
         ]);
 
-        DB::transaction(function () use ($invoice, $data) {
-            Payment::create([
+        $paymentId = null;
+
+        DB::transaction(function () use ($invoice, $data, &$paymentId) {
+            $payment = Payment::create([
                 'invoice_id'             => $invoice->id,
                 'amount'                 => $data['amount'],
                 'payment_date'           => $data['payment_date'],
@@ -222,13 +232,46 @@ class PaymentController extends Controller
                 'gateway_transaction_id' => $data['gateway_transaction_id'] ?? null,
                 'notes'                  => $data['notes'] ?? null,
                 'recorded_by'            => auth()->id(),
+                'school_id'              => $invoice->school_id ?? auth()->user()->school_id,
             ]);
-            // Invoice status update is handled by Payment::booted() → updateInvoiceStatus()
-            // Student ledger + school ledger entries handled by PaymentObserver
+            // Invoice status updated by Payment::booted() → updateInvoiceStatus()
+            // Student ledger credit posted by Payment::booted() → postLedgerCredit()
+            $paymentId = $payment->id;
         });
 
-        return redirect()->route('payments.index')
-            ->with('status', 'Payment recorded. Receipt: ' . Payment::latest()->first()?->receipt_number);
+        return redirect()->route('payments.receipt', $paymentId)
+            ->with('status', '✅ Payment recorded successfully.');
+    }
+
+    // ── HTML receipt page (web view) ─────────────────────────────────────────
+
+    public function receiptPage(int $paymentId)
+    {
+        $payment = Payment::with([
+            'invoice.student',
+            'invoice.items.feeType',
+            'invoice.payments',
+            'recordedBy',
+        ])->findOrFail($paymentId);
+
+        $user = auth()->user();
+        if ($user->hasRole('student') && $payment->invoice?->student_id !== $user->id) {
+            abort(403);
+        }
+        if ($user->hasRole('parent')) {
+            $childIds = $user->children()->pluck('users.id');
+            if ($payment->invoice && !$childIds->contains($payment->invoice->student_id)) {
+                abort(403);
+            }
+        }
+
+        $school = \App\Models\School::find(
+            $payment->invoice?->school_id
+            ?? $user->school_id
+            ?? optional($payment->invoice?->student)->school_id
+        );
+
+        return view('payments.receipt', compact('payment', 'school'));
     }
 
     // ── Student ledger view ───────────────────────────────────────────────────
@@ -264,7 +307,13 @@ class PaymentController extends Controller
             abort(403);
         }
 
-        return view('payments.invoice-detail', compact('invoice'));
+        $paySchool = \App\Models\School::find(
+            $invoice->school_id
+            ?? $user->school_id
+            ?? optional($invoice->student)->school_id
+        );
+
+        return view('payments.invoice-detail', compact('invoice', 'paySchool'));
     }
 
     // ── PDF receipt ───────────────────────────────────────────────────────────
@@ -291,7 +340,7 @@ class PaymentController extends Controller
             ->orderBy('id')
             ->get()
             ->map(function ($inv) {
-                $paid = $inv->payments->sum('amount_paid');
+                $paid = $inv->payments->sum('amount');
                 $due  = max(0, $inv->amount - $paid);
                 return [
                     'id'             => $inv->id,

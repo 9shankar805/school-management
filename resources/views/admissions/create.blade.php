@@ -38,8 +38,55 @@
                         </select>
                     </div>
                     <div class="md:col-span-2">
-                        <label class="block text-xs font-medium text-slate-500 mb-1">Address</label>
+                        <label class="block text-xs font-medium text-slate-500 mb-1">Current Address (टोल / सहर)</label>
                         <textarea name="address" rows="2" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ old('address') }}</textarea>
+                    </div>
+
+                    {{-- Nepal three-tier address ─────────────────────────────── --}}
+                    <div class="md:col-span-2">
+                        <p class="text-xs font-semibold text-indigo-600 mb-3 mt-1 flex items-center gap-1.5">
+                            <i class="bi bi-geo-alt-fill"></i> Permanent Address (Nepal)
+                        </p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Province (प्रदेश)</label>
+                                <select name="province" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    <option value="">— Select Province —</option>
+                                    @foreach([
+                                        '1' => 'Koshi Pradesh (कोशी प्रदेश)',
+                                        '2' => 'Madhesh Pradesh (मधेश प्रदेश)',
+                                        '3' => 'Bagmati Pradesh (बागमती प्रदेश)',
+                                        '4' => 'Gandaki Pradesh (गण्डकी प्रदेश)',
+                                        '5' => 'Lumbini Pradesh (लुम्बिनी प्रदेश)',
+                                        '6' => 'Karnali Pradesh (कर्णाली प्रदेश)',
+                                        '7' => 'Sudurpashchim Pradesh (सुदूरपश्चिम प्रदेश)',
+                                    ] as $val => $label)
+                                    <option value="{{ $label }}" {{ old('province') === $label ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">District (जिल्ला)</label>
+                                <input type="text" name="district" value="{{ old('district') }}" placeholder="e.g. Kathmandu, Lalitpur, Pokhara..."
+                                    class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Municipality / VDC (पालिका)</label>
+                                <input type="text" name="municipality" value="{{ old('municipality') }}" placeholder="e.g. Kathmandu Metropolitan, Pokhara Sub-Metropolitan..."
+                                    class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Ward No. (वडा नं.)</label>
+                                <input type="text" name="ward_no" value="{{ old('ward_no') }}" placeholder="e.g. 3"
+                                    class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-medium text-slate-500 mb-1">Permanent Address / Tole (स्थायी ठेगाना)</label>
+                                <textarea name="permanent_address" rows="2" placeholder="Village / Tole name..." class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400">{{ old('permanent_address') }}</textarea>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -85,6 +85,13 @@ class AdmissionController extends Controller
             'religion'          => 'nullable|string|max:100',
             'blood_type'        => 'nullable|string|max:10',
             'address'           => 'nullable|string|max:500',
+            // Nepal administrative address fields
+            'province'          => 'nullable|string|max:100',
+            'district'          => 'nullable|string|max:100',
+            'municipality'      => 'nullable|string|max:150',
+            'ward_no'           => 'nullable|string|max:10',
+            'permanent_address' => 'nullable|string|max:500',
+            // Academic
             'session_id'        => 'nullable|exists:school_sessions,id',
             'class_id'          => 'nullable|exists:school_classes,id',
             'guardian_name'     => 'nullable|string|max:255',

@@ -181,7 +181,7 @@ $contactSection = <<<HTML
                         </div>
                         <div>
                             <h4 class="contact-item-title">Call Us</h4>
-                            <p class="contact-item-text"><a href="tel:+9779767585122" style="color:white; text-decoration:none;">+977 976-758-5122</a></p>
+                            <p class="contact-item-text"><a href="tel:+9779744911550" style="color:white; text-decoration:none;">+977 9744911550</a></p>
                         </div>
                     </div>
                 </div>

@@ -47,7 +47,7 @@ class UserController extends Controller
 
             return back()->with('status', 'Teacher creation was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -70,7 +70,7 @@ class UserController extends Controller
 
             return view('students.list', $data);
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -100,9 +100,10 @@ class UserController extends Controller
         ]);
 
         // Gather attendance stats for the timeline
+        // Student Attendance model uses 'on'/'off' as canonical status values
         $attendanceStats = [
             'total'   => \App\Models\Attendance::where('student_id', $id)->count(),
-            'present' => \App\Models\Attendance::where('student_id', $id)->where('status', 'present')->count(),
+            'present' => \App\Models\Attendance::where('student_id', $id)->whereIn('status', ['on', 'present'])->count(),
         ];
         $attendanceStats['pct'] = $attendanceStats['total'] > 0
             ? round($attendanceStats['present'] / $attendanceStats['total'] * 100)
@@ -210,7 +211,7 @@ class UserController extends Controller
 
             return back()->with('status', 'Student creation was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -236,7 +237,7 @@ class UserController extends Controller
 
             return back()->with('status', 'Student update was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -255,7 +256,7 @@ class UserController extends Controller
 
             return back()->with('status', 'Teacher update was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 

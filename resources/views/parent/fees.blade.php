@@ -52,9 +52,9 @@
                     <div class="flex items-center gap-2">
                         <span class="text-xs px-2.5 py-1 rounded-full font-semibold {{ $badge }} capitalize">{{ $inv->display_status }}</span>
                         @if(in_array($inv->display_status, ['unpaid', 'overdue', 'partial']))
-                        <a href="{{ route('parent.fees.pay', [$child->id, $inv->id]) }}"
-                           class="text-xs px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium">
-                            Pay Now
+                        <a href="{{ route('payment-proof.show', $inv->id) }}"
+                           class="text-xs px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium flex items-center gap-1.5">
+                            <i class="bi bi-qr-code-scan"></i> Pay Online
                         </a>
                         @endif
                     </div>
@@ -84,7 +84,7 @@
                         @foreach($paymentHistory as $pay)
                         <tr>
                             <td class="px-4 py-2 text-slate-700">{{ $pay->invoice?->title ?? '—' }}</td>
-                            <td class="px-4 py-2 text-center font-semibold text-emerald-700">{{ number_format($pay->amount_paid, 2) }}</td>
+                            <td class="px-4 py-2 text-center font-semibold text-emerald-700">{{ number_format($pay->amount, 2) }}</td>
                             <td class="px-4 py-2 text-center text-slate-500">{{ \Carbon\Carbon::parse($pay->payment_date)->format('d M Y') }}</td>
                             <td class="px-4 py-2 text-center capitalize text-slate-500">{{ str_replace('_', ' ', $pay->payment_method ?? '—') }}</td>
                         </tr>

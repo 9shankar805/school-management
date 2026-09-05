@@ -271,6 +271,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function children()
     {
         return $this->belongsToMany(User::class, 'parent_student', 'parent_id', 'student_id')
+                    ->select('users.*')          // qualify to avoid ambiguous 'id' from pivot join + TenantScope
                     ->withPivot('relationship', 'is_primary')
                     ->withTimestamps();
     }
@@ -279,6 +280,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function parents()
     {
         return $this->belongsToMany(User::class, 'parent_student', 'student_id', 'parent_id')
+                    ->select('users.*')          // qualify to avoid ambiguous 'id' from pivot join + TenantScope
                     ->withPivot('relationship', 'is_primary')
                     ->withTimestamps();
     }

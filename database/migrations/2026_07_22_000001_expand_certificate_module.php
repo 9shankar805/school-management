@@ -11,7 +11,9 @@ return new class extends Migration {
     {
         // ── 1. Expand the certificate_templates table ───────────────────────
         // Convert enum → varchar with raw SQL (avoids doctrine/dbal requirement)
-        DB::statement('ALTER TABLE certificate_templates MODIFY COLUMN `type` VARCHAR(80) NOT NULL DEFAULT \'custom\'');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE certificate_templates MODIFY COLUMN `type` VARCHAR(80) NOT NULL DEFAULT \'custom\'');
+        }
 
         Schema::table('certificate_templates', function (Blueprint $table) {
             // Bilingual body text
@@ -73,6 +75,8 @@ return new class extends Migration {
         });
 
         // Restore original enum (approximate rollback)
-        DB::statement("ALTER TABLE certificate_templates MODIFY COLUMN `type` ENUM('completion','merit','participation','graduation','transfer','custom') NOT NULL DEFAULT 'completion'");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE certificate_templates MODIFY COLUMN `type` ENUM('completion','merit','participation','graduation','transfer','custom') NOT NULL DEFAULT 'completion'");
+        }
     }
 };

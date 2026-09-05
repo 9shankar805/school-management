@@ -83,6 +83,7 @@
                     <thead>
                         <tr class="text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-50">
                             <th class="py-3 px-4 rounded-s-xl">ID Card Number</th>
+                            <th class="py-3 px-4">Roll No.</th>
                             <th class="py-3 px-4">Student Name</th>
                             <th class="py-3 px-4">Current Placement</th>
                             <th class="py-3 px-4">Promote to Class <span class="text-rose-500">*</span></th>
@@ -94,6 +95,9 @@
                         <tr>
                             <td class="py-3 px-4">
                                 <input type="text" class="form-control form-control-sm rounded-lg border-slate-200 text-xs font-semibold" name="id_card_number[{{ $student->student->id }}]" value="{{ $student->id_card_number }}">
+                            </td>
+                            <td class="py-3 px-4">
+                                <input type="text" class="form-control form-control-sm rounded-lg border-slate-200 text-xs font-semibold" name="roll_no[{{ $student->student->id }}]" value="{{ $student->roll_no ?? $student->student->roll_no ?? '' }}" placeholder="Roll No">
                             </td>
                             <td class="py-3 px-4 font-bold text-slate-800">
                                 {{ $student->student->first_name }} {{ $student->student->last_name }}

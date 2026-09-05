@@ -58,6 +58,7 @@ class StudentStoreRequest extends FormRequest
             'board_reg_no'      => 'nullable|string',
             'session_id'        => 'required',
             'id_card_number'    => 'required',
+            'roll_no'           => 'nullable|string|max:30',
         ];
     }
 }

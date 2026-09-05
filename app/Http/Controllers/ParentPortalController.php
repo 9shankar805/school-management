@@ -71,18 +71,18 @@ class ParentPortalController extends Controller
             ->get();
 
         $total   = $all->count();
-        $present = $all->where('status', 'present')->count();
-        $absent  = $all->where('status', 'absent')->count();
+        $present = $all->filter(fn($a) => in_array($a->status, ['on', 'present', '1']))->count();
+        $absent  = $all->filter(fn($a) => in_array($a->status, ['off', 'absent', '0']))->count();
         $pct     = $total > 0 ? round(($present / $total) * 100, 1) : 0;
         $deficit = $total > 0 ? max(0, (int) ceil(($total * 0.75 - $present) / (1 - 0.75))) : 0;
 
         // Monthly records for calendar
         $monthly = Attendance::where('student_id', $studentId)
             ->where('session_id', $sessionId)
-            ->whereMonth('created_at', $month)
-            ->whereYear('created_at', $year)
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
             ->get()
-            ->groupBy(fn($a) => Carbon::parse($a->created_at)->day);
+            ->groupBy(fn($a) => \Carbon\Carbon::parse($a->date)->day);
 
         // Per-course breakdown
         $courseBreakdown = Attendance::where('student_id', $studentId)
@@ -92,7 +92,7 @@ class ParentPortalController extends Controller
             ->groupBy('course_id')
             ->map(function ($records) {
                 $t = $records->count();
-                $p = $records->where('status', 'present')->count();
+                $p = $records->filter(fn($a) => in_array($a->status, ['on', 'present', '1']))->count();
                 return (object) [
                     'course'   => $records->first()->course,
                     'total'    => $t,
@@ -105,11 +105,11 @@ class ParentPortalController extends Controller
         // 12-week trend (ApexCharts)
         $trendRaw = Attendance::where('student_id', $studentId)
             ->where('session_id', $sessionId)
-            ->where('created_at', '>=', now()->subWeeks(12))
+            ->where('date', '>=', now()->subWeeks(12)->toDateString())
             ->select(
-                DB::raw('YEARWEEK(created_at, 1) as yw'),
-                DB::raw("SUM(status='present') as present"),
-                DB::raw("SUM(status='absent') as absent")
+                DB::raw('YEARWEEK(date, 1) as yw'),
+                DB::raw("SUM(CASE WHEN status IN ('on','present','1') THEN 1 ELSE 0 END) as present"),
+                DB::raw("SUM(CASE WHEN status IN ('off','absent','0') THEN 1 ELSE 0 END) as absent")
             )
             ->groupBy('yw')
             ->orderBy('yw')
@@ -187,14 +187,14 @@ class ParentPortalController extends Controller
             ->latest()
             ->get()
             ->map(function ($inv) {
-                $paid      = $inv->payments->sum('amount_paid');
+                $paid      = $inv->payments->sum('amount');
                 $remaining = max(0, $inv->amount - $paid);
                 $display   = $inv->status;
                 if ($inv->status === 'unpaid' && $inv->due_date && $inv->due_date < now()->toDateString()) {
                     $display = 'overdue';
                 }
-                $inv->amount_paid  = $paid;
-                $inv->remaining    = $remaining;
+                $inv->amount_paid    = $paid;
+                $inv->remaining      = $remaining;
                 $inv->display_status = $display;
                 return $inv;
             });
@@ -214,9 +214,10 @@ class ParentPortalController extends Controller
     public function payInvoice(int $studentId, int $invoiceId)
     {
         $child   = $this->resolveChild($studentId);
-        $invoice = Invoice::where('student_id', $studentId)->findOrFail($invoiceId);
+        $invoice = Invoice::with('payments')->where('student_id', $studentId)->findOrFail($invoiceId);
 
-        $paid      = $invoice->payments->sum('amount_paid');
+        // Use the canonical 'amount' column (amount_paid was renamed to amount)
+        $paid      = $invoice->payments->sum('amount');
         $remaining = max(0, $invoice->amount - $paid);
 
         return view('parent.pay-invoice', compact('child', 'invoice', 'remaining'));
@@ -229,31 +230,38 @@ class ParentPortalController extends Controller
 
         $request->validate([
             'amount_paid'    => 'required|numeric|min:0.01',
-            'payment_method' => 'required|in:cash,bank_transfer,online,cheque',
+            'payment_method' => 'required|in:cash,bank_transfer,online,cheque,esewa,khalti,fonepay,bank',
         ]);
 
+        $amountPaid = (float) $request->amount_paid;
+
+        // Payment::booted() → created() automatically calls updateInvoiceStatus()
+        // so we do NOT need to manually update invoice status here.
         $payment = Payment::create([
             'invoice_id'     => $invoice->id,
-            'amount_paid'    => $request->amount_paid,
+            'amount'         => $amountPaid,
             'payment_date'   => now()->toDateString(),
             'payment_method' => $request->payment_method,
+            'gateway'        => $request->payment_method,
+            'recorded_by'    => auth()->id(),
+            'school_id'      => $invoice->school_id ?? auth()->user()->school_id,
         ]);
 
-        // Update invoice status
-        $totalPaid = $invoice->payments()->sum('amount_paid') + $payment->amount_paid;
-        $invoice->update([
-            'status' => $totalPaid >= $invoice->amount ? 'paid' : 'unpaid',
-        ]);
+        // Notify parent with correct amount from the saved Payment record
+        try {
+            auth()->user()->notify(new GeneralNotification(
+                title:      '✅ Payment Received',
+                message:    "NPR " . number_format($payment->amount, 2) . " payment recorded for invoice: \"{$invoice->title}\". Receipt: {$payment->receipt_number}.",
+                type:       'fee',
+                actionUrl:  route('parent.fees', $studentId),
+                actionText: 'View Fees',
+            ));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Parent payment notification failed: ' . $e->getMessage());
+        }
 
-        // Notify parent via general notification (receipt)
-        auth()->user()->notify(new GeneralNotification(
-            title:   'Payment Received',
-            message: "Payment of {$payment->amount_paid} recorded for invoice: {$invoice->title}.",
-            type:    'fee',
-            actionUrl: '/parent/' . $studentId . '/fees',
-        ));
-
-        return redirect()->route('parent.fees', $studentId)->with('status', 'Payment recorded successfully.');
+        return redirect()->route('parent.fees', $studentId)
+            ->with('status', '✅ Payment of NPR ' . number_format($amountPaid, 2) . ' recorded. Receipt: ' . $payment->receipt_number);
     }
 
     // -------------------------------------------------------------------------

@@ -34,16 +34,16 @@ class CertificateTemplateSeeder extends Seeder
 
         $query = fn () => CertificateTemplate::withoutGlobalScope(TenantScope::class);
 
-        // ── 1. ROYAL GOLD ─────────────────────────────────────────────────────
+        // ── 1. ROYAL GOLD / CLASSIC ───────────────────────────────────────────
         $query()->updateOrCreate(
             ['name' => 'Royal Gold', 'school_id' => $schoolId],
             [
-                'type'               => 'merit',
+                'type'               => 'character',
                 'language'           => 'en',
-                'header_text'        => 'Certificate of Merit',
-                'body_text'          => 'This is to certify that {{student_name}}, a student of {{class}}, Section {{section}}, has demonstrated outstanding academic excellence and commendable conduct during the academic year {{academic_year}}. This certificate is awarded in recognition of exceptional performance and dedication to learning.',
+                'header_text'        => 'CERTIFICATE OF GOOD CONDUCT',
+                'body_text'          => 'has successfully demonstrated outstanding academic performance and exemplary conduct throughout the academic year, and is hereby recognized and awarded this certificate in testament of their dedication and merit.',
                 'body_text_ne'       => null,
-                'footer_text'        => 'This certificate is issued with pride and recognition of the student\'s outstanding achievement.',
+                'footer_text'        => null,
                 'signature_name'     => 'Principal',
                 'signature_title'    => 'Head of Institution',
                 'logo_path'          => null,
@@ -52,9 +52,9 @@ class CertificateTemplateSeeder extends Seeder
                 'paper_size'         => 'A4',
                 'orientation'        => 'landscape',
                 'border_style'       => 'ornate',
-                'primary_color'      => '#b45309',
-                'secondary_color'    => '#d97706',
-                'show_student_photo' => false,
+                'primary_color'      => '#1a3a6b',
+                'secondary_color'    => '#b8953e',
+                'show_student_photo' => true,
                 'show_qr_code'       => true,
                 'show_serial_number' => true,
                 'verification_url'   => null,

@@ -52,7 +52,7 @@ class PromotionController extends Controller
         $previousSession = $this->schoolSessionRepository->getPreviousSession();
 
         if(count($previousSession) < 1) {
-            return back()->withError('No previous session');
+            return back()->with('error', 'No previous session');
         }
 
         $previousSessionClasses = $promotionRepository->getClasses($previousSession['id']);
@@ -111,7 +111,7 @@ class PromotionController extends Controller
 
             return view('promotions.promote', $data);
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -132,6 +132,7 @@ class PromotionController extends Controller
             $row = [
                 'student_id'    => $student_id,
                 'id_card_number'=> $id_card_number,
+                'roll_no'       => $request->roll_no[$student_id] ?? null,
                 'class_id'      => $request->class_id[$i],
                 'section_id'    => $request->section_id[$i],
                 'session_id'    => $latest_school_session->id,
@@ -146,7 +147,7 @@ class PromotionController extends Controller
 
             return back()->with('status', 'Promoting students was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 

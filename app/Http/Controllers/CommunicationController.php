@@ -261,8 +261,48 @@ class CommunicationController extends Controller
         $parsed  = $this->whatsapp->parseWebhook($payload);
 
         if ($parsed) {
-            // TODO: store message, auto-reply, or notify staff
-            \Illuminate\Support\Facades\Log::info('WhatsApp incoming message', $parsed);
+            // Store the incoming message and notify relevant staff
+            try {
+                \Illuminate\Support\Facades\Log::info('WhatsApp incoming message', $parsed);
+
+                $from    = $parsed['from']    ?? null;
+                $body    = $parsed['message'] ?? $parsed['text'] ?? $parsed['body'] ?? '';
+                $msgId   = $parsed['message_id'] ?? $parsed['id'] ?? null;
+
+                if ($from && $body) {
+                    // Record the inbound message in whats_app_messages as 'received'
+                    \App\Models\WhatsAppMessage::create([
+                        'school_id'       => null, // may be resolved by from-number lookup
+                        'recipient_phone' => $from,
+                        'module'          => 'inbound',
+                        'status'          => 'received',
+                        'error_message'   => null,
+                    ]);
+
+                    // Try to find the user (parent/student) by phone number
+                    $user = \App\Models\User::where('phone', 'like', '%' . substr($from, -9))
+                        ->first();
+
+                    // Notify school admins via database notification
+                    if ($user) {
+                        $admins = \App\Models\User::role(['admin', 'principal', 'receptionist'])
+                            ->whereNotNull('school_id')
+                            ->when($user->school_id, fn($q) => $q->where('school_id', $user->school_id))
+                            ->take(5)
+                            ->get();
+
+                        foreach ($admins as $admin) {
+                            $admin->notify(new \App\Notifications\GeneralNotification(
+                                title:     'WhatsApp Message Received',
+                                message:   'From: ' . ($user->full_name ?? $from) . ' — ' . \Str::limit($body, 80),
+                                actionUrl: null,
+                            ));
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('WhatsApp webhook handler error: ' . $e->getMessage());
+            }
         }
 
         return response('OK', 200);

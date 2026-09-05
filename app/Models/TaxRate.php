@@ -17,7 +17,7 @@ class TaxRate extends Model
     protected $fillable = [
         'school_id',
         'code',
-        'name',          // e.g. "Income Tax Slab A", "VAT 15%"
+        'name',          // e.g. "Income Tax Slab A", "VAT 13%" (Nepal VAT rate)
         'type',          // income_tax | vat | provident_fund | other
         'rate',          // percentage (0-100)
         'min_salary',    // applicable from this gross salary

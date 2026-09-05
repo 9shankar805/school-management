@@ -17,7 +17,61 @@ class SchoolProfileController extends Controller
 
         $presetThemes = School::PRESET_THEMES;
 
-        return view('school-profile.edit', compact('school', 'presetThemes'));
+        $steps = [
+            ['icon' => 'bi-building',       'label' => 'Basic Info'],
+            ['icon' => 'bi-palette',         'label' => 'Branding'],
+            ['icon' => 'bi-file-text',       'label' => 'Content'],
+            ['icon' => 'bi-images',          'label' => 'Gallery'],
+            ['icon' => 'bi-qr-code',         'label' => 'Payment QR'],
+        ];
+
+        $activeStep = (int) request('step', 1);
+        $activeStep = max(1, min(count($steps), $activeStep));
+
+        return view('school-profile.edit', compact('school', 'presetThemes', 'steps', 'activeStep'));
+    }
+
+    // ── Dedicated Payment QR page ──────────────────────────────────────────
+
+    public function paymentQr(): View
+    {
+        $school = auth()->user()->school;
+        if (! $school) abort(404, 'School not found');
+
+        return view('school-profile.payment-qr', compact('school'));
+    }
+
+    public function updatePaymentQr(Request $request): RedirectResponse
+    {
+        $school = auth()->user()->school;
+        if (! $school) abort(404, 'School not found');
+
+        $request->validate([
+            'payment_qr_esewa'     => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'payment_qr_khalti'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'payment_qr_bank'      => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'payment_qr_fonepay'   => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'payment_instructions' => 'nullable|string|max:1000',
+        ]);
+
+        foreach (['payment_qr_esewa', 'payment_qr_khalti', 'payment_qr_bank', 'payment_qr_fonepay'] as $field) {
+            if ($request->hasFile($field)) {
+                if ($school->$field) {
+                    Storage::disk('public')->delete($school->$field);
+                }
+                $school->$field = \App\Services\ImageWebpService::storeAsWebp(
+                    $request->file($field), 'payment-qr', 'public'
+                );
+            } elseif ($request->input("remove_{$field}") == '1' && $school->$field) {
+                Storage::disk('public')->delete($school->$field);
+                $school->$field = null;
+            }
+        }
+
+        $school->payment_instructions = $request->input('payment_instructions', $school->payment_instructions);
+        $school->save();
+
+        return back()->with('success', 'Payment QR codes saved successfully.');
     }
 
     public function update(Request $request): RedirectResponse
@@ -63,6 +117,12 @@ class SchoolProfileController extends Controller
             'logo'                       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'new_gallery_images.*'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'replace_gallery_image.*'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            // Payment QR codes
+            'payment_qr_esewa'           => 'nullable|image|mimes:jpeg,png,jpg,webp|max:1024',
+            'payment_qr_khalti'          => 'nullable|image|mimes:jpeg,png,jpg,webp|max:1024',
+            'payment_qr_bank'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:1024',
+            'payment_qr_fonepay'         => 'nullable|image|mimes:jpeg,png,jpg,webp|max:1024',
+            'payment_instructions'       => 'nullable|string|max:1000',
         ]);
 
         // ── Logo ─────────────────────────────────────────────────────────────
@@ -107,6 +167,25 @@ class SchoolProfileController extends Controller
             foreach ($request->file('new_gallery_images') as $file) {
                 $gallery[] = \App\Services\ImageWebpService::storeAsWebp($file, 'school-gallery', 'public');
             }
+        }
+
+        // ── Payment QR codes ──────────────────────────────────────────────────
+        foreach (['payment_qr_esewa', 'payment_qr_khalti', 'payment_qr_bank', 'payment_qr_fonepay'] as $qrField) {
+            if ($request->hasFile($qrField)) {
+                // Delete old file
+                if ($school->$qrField) {
+                    Storage::disk('public')->delete($school->$qrField);
+                }
+                $school->$qrField = \App\Services\ImageWebpService::storeAsWebp(
+                    $request->file($qrField), 'payment-qr', 'public'
+                );
+            } elseif ($request->input("remove_{$qrField}") == '1' && $school->$qrField) {
+                Storage::disk('public')->delete($school->$qrField);
+                $school->$qrField = null;
+            }
+        }
+        if (isset($data['payment_instructions'])) {
+            $school->payment_instructions = $data['payment_instructions'];
         }
 
         // ── Theme: if a preset was chosen, apply its colours unless the user

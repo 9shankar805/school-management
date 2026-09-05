@@ -90,6 +90,7 @@ class UserRepository implements UserInterface {
                     'birthday'      => $request['birthday'],
                     'religion'      => $request['religion'],
                     'blood_type'    => $request['blood_type'],
+                    'roll_no'       => $request['roll_no'] ?? null,
                     'role'          => 'student',
                     'password'      => Hash::make($request['password']),
                 ]);
@@ -177,6 +178,10 @@ class UserRepository implements UserInterface {
                     'religion'      => $request['religion'],
                     'blood_type'    => $request['blood_type'],
                 ];
+
+                if (array_key_exists('roll_no', $request)) {
+                    $fields['roll_no'] = $request['roll_no'];
+                }
 
                 // Only update photo if a new base64 image was submitted
                 if (!empty($request['photo'])) {

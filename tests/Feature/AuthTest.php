@@ -44,8 +44,17 @@ class AuthTest extends TestCase
     public function user_can_login_successfully_with_correct_credentials()
     {
         $password = '::password::';
+        $school = \App\Models\School::create([
+            'name'   => 'Test School',
+            'slug'   => 'test-school',
+            'email'  => 'test@school.local',
+            'phone'  => '9800000000',
+            'status' => 'active',
+            'domain' => 'test.school.local',
+        ]);
         $user = User::factory()->create([
-            'password' => Hash::make($password),
+            'school_id' => $school->id,
+            'password'  => Hash::make($password),
         ]);
 
         $response = $this->post('/login', [

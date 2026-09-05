@@ -38,9 +38,11 @@ return new class extends Migration
 
         $existing = Schema::getColumnListing('medical_records');
 
-        foreach ($mrCols as $col) {
-            if (in_array($col, $existing)) {
-                DB::statement("ALTER TABLE `medical_records` MODIFY `{$col}` LONGTEXT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            foreach ($mrCols as $col) {
+                if (in_array($col, $existing)) {
+                    DB::statement("ALTER TABLE `medical_records` MODIFY `{$col}` LONGTEXT NULL");
+                }
             }
         }
     }
@@ -55,18 +57,20 @@ return new class extends Migration
             }
         });
 
-        // Revert to text/string — data may be truncated if encrypted payloads stored
-        $existing = Schema::getColumnListing('medical_records');
-        $textCols = ['allergies', 'chronic_conditions', 'medications',
-                     'vaccination_history', 'special_needs', 'emergency_medical_notes'];
-        foreach ($textCols as $col) {
-            if (in_array($col, $existing)) {
-                DB::statement("ALTER TABLE `medical_records` MODIFY `{$col}` TEXT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            // Revert to text/string — data may be truncated if encrypted payloads stored
+            $existing = Schema::getColumnListing('medical_records');
+            $textCols = ['allergies', 'chronic_conditions', 'medications',
+                         'vaccination_history', 'special_needs', 'emergency_medical_notes'];
+            foreach ($textCols as $col) {
+                if (in_array($col, $existing)) {
+                    DB::statement("ALTER TABLE `medical_records` MODIFY `{$col}` TEXT NULL");
+                }
             }
-        }
-        foreach (['doctor_name', 'doctor_phone'] as $col) {
-            if (in_array($col, $existing)) {
-                DB::statement("ALTER TABLE `medical_records` MODIFY `{$col}` VARCHAR(191) NULL");
+            foreach (['doctor_name', 'doctor_phone'] as $col) {
+                if (in_array($col, $existing)) {
+                    DB::statement("ALTER TABLE `medical_records` MODIFY `{$col}` VARCHAR(191) NULL");
+                }
             }
         }
     }

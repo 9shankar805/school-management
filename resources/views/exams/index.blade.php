@@ -150,10 +150,14 @@
                                 </span>
                             </td>
                             <td class="py-3 px-4 text-xs text-slate-600 font-medium">
-                                <i class="bi bi-calendar-event text-slate-400 me-1"></i> {{ $startDate->format('M d, Y - h:i A') }}
+                                <i class="bi bi-calendar-event text-slate-400 me-1"></i>
+                                {{ $startDate->format('M d, Y - h:i A') }}
+                                <span class="text-slate-400 text-xs ms-1">({{ bsDate($startDate->format('Y-m-d'), true, 'short') }})</span>
                             </td>
                             <td class="py-3 px-4 text-xs text-slate-600 font-medium">
-                                <i class="bi bi-calendar-check text-slate-400 me-1"></i> {{ $endDate->format('M d, Y - h:i A') }}
+                                <i class="bi bi-calendar-check text-slate-400 me-1"></i>
+                                {{ $endDate->format('M d, Y - h:i A') }}
+                                <span class="text-slate-400 text-xs ms-1">({{ bsDate($endDate->format('Y-m-d'), true, 'short') }})</span>
                             </td>
                             <td class="py-3 px-4">
                                 @if($now->lt($startDate))
@@ -171,16 +175,30 @@
                                 @endif
                             </td>
                             <td class="py-3 px-4 text-end">
-                                <div class="btn-group shadow-sm rounded-xl overflow-hidden" role="group">
+                                <div class="d-flex justify-content-end gap-1 flex-wrap">
                                     @can('create exams rule')
-                                    <a href="{{ route('exam.rule.create', ['exam_id' => $exam->id]) }}" class="btn btn-sm btn-indigo bg-indigo-600 text-white font-semibold text-xs py-1.5 px-3">
-                                        <i class="bi bi-plus-circle me-1"></i> Add Rule
+                                    <a href="{{ route('exam.rule.create', ['exam_id' => $exam->id]) }}" class="btn btn-sm btn-indigo bg-indigo-600 text-white font-semibold text-xs py-1.5 px-3 rounded-lg">
+                                        <i class="bi bi-plus-circle me-1"></i> Rule
                                     </a>
                                     @endcan
                                     @can('view exams rule')
-                                    <a href="{{ route('exam.rule.show', ['exam_id' => $exam->id]) }}" class="btn btn-sm btn-light border border-slate-200 text-slate-700 font-semibold text-xs py-1.5 px-3">
+                                    <a href="{{ route('exam.rule.show', ['exam_id' => $exam->id]) }}" class="btn btn-sm btn-light border border-slate-200 text-slate-700 font-semibold text-xs py-1.5 px-3 rounded-lg">
                                         <i class="bi bi-eye me-1"></i> Rules
                                     </a>
+                                    @endcan
+                                    @can('edit exams')
+                                    <a href="{{ route('exam.edit', $exam->id) }}" class="btn btn-sm btn-warning border-0 text-white font-semibold text-xs py-1.5 px-3 rounded-lg">
+                                        <i class="bi bi-pencil me-1"></i> Edit
+                                    </a>
+                                    @endcan
+                                    @can('delete exams')
+                                    <form action="{{ route('exam.delete') }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this exam? This cannot be undone.');">
+                                        @csrf
+                                        <input type="hidden" name="exam_id" value="{{ $exam->id }}">
+                                        <button type="submit" class="btn btn-sm btn-danger border-0 font-semibold text-xs py-1.5 px-3 rounded-lg">
+                                            <i class="bi bi-trash me-1"></i> Delete
+                                        </button>
+                                    </form>
                                     @endcan
                                 </div>
                             </td>

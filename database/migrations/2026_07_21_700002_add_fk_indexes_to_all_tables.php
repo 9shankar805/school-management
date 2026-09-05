@@ -199,16 +199,18 @@ return new class extends Migration
 
                     $indexName = "{$table}_{$column}_m21_idx";
 
-                    // Skip if this index (or any index on this column) already exists
-                    $exists = DB::selectOne(
-                        "SELECT COUNT(*) as cnt
-                         FROM INFORMATION_SCHEMA.STATISTICS
-                         WHERE TABLE_SCHEMA = ?
-                           AND TABLE_NAME   = ?
-                           AND COLUMN_NAME  = ?
-                           AND SEQ_IN_INDEX = 1",
-                        [$db, $table, $column]
-                    );
+                    $exists = null;
+                    if (DB::getDriverName() === 'mysql') {
+                        $exists = DB::selectOne(
+                            "SELECT COUNT(*) as cnt
+                             FROM INFORMATION_SCHEMA.STATISTICS
+                             WHERE TABLE_SCHEMA = ?
+                               AND TABLE_NAME   = ?
+                               AND COLUMN_NAME  = ?
+                               AND SEQ_IN_INDEX = 1",
+                            [$db, $table, $column]
+                        );
+                    }
 
                     if ($exists && $exists->cnt > 0) {
                         continue;

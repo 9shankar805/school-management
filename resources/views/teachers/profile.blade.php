@@ -22,6 +22,12 @@
                 <div class="flex flex-wrap items-center gap-3 mb-1">
                     <h1 class="text-xl font-bold text-slate-800">{{ $teacher->full_name }}</h1>
                     <span class="text-xs bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full font-medium capitalize">{{ str_replace('-',' ',$teacher->primary_role) }}</span>
+                    @php $ctAssignments = $teacher->assignedCourses->where('is_class_teacher', true); @endphp
+                    @if($ctAssignments->isNotEmpty())
+                    <span class="text-xs bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm">
+                        <i class="bi bi-star-fill text-amber-500"></i> Class Teacher: {{ $ctAssignments->map(fn($a) => ($a->schoolClass?->class_name ?? '').' '.($a->section?->section_name ? '('.$a->section->section_name.')' : ''))->unique()->join(', ') }}
+                    </span>
+                    @endif
                     @if($teacher->departments->count())
                     @foreach($teacher->departments as $d)
                     <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">{{ $d->name }}</span>
@@ -41,6 +47,11 @@
                 </div>
             </div>
             <div class="flex flex-wrap gap-2 flex-shrink-0">
+                @can('assign teachers')
+                <button type="button" onclick="openAssignTeacherModal()" class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition shadow-sm">
+                    <i class="bi bi-person-plus-fill"></i> Assign Subject / Class Teacher
+                </button>
+                @endcan
                 <a href="{{ route('teacher.id-card', $teacher->id) }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition shadow-sm">
                     <i class="bi bi-person-badge"></i> ID Card
                 </a>
@@ -48,6 +59,7 @@
                 <a href="{{ route('teacher.edit.show', $teacher->id) }}" class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition"><i class="bi bi-pencil"></i> Edit</a>
                 @endcan
             </div>
+
         </div>
 
         {{-- Tab nav --}}
@@ -109,30 +121,59 @@
                         </table>
                     </div>
                     @endif
-                    {{-- Assigned courses --}}
+                    {{-- Assigned courses & Class Teacher status --}}
                     <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                        <div class="px-5 py-3 border-b border-slate-100 text-sm font-semibold text-slate-700"><i class="bi bi-journal-medical me-1 text-blue-500"></i>Assigned Subjects</div>
+                        <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between text-sm font-semibold text-slate-700">
+                            <span class="flex items-center gap-1.5"><i class="bi bi-journal-medical text-blue-500"></i>Assigned Subjects & Roles</span>
+                            @can('assign teachers')
+                            <button type="button" onclick="openAssignTeacherModal()" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                                <i class="bi bi-plus-circle-fill"></i> Assign New
+                            </button>
+                            @endcan
+                        </div>
                         @if($teacher->assignedCourses->count())
                         <div class="divide-y divide-slate-50">
-                            @foreach($teacher->assignedCourses->take(8) as $ac)
-                            <div class="px-5 py-2.5 flex items-center justify-between text-sm gap-2">
-                                <span class="text-slate-700 font-medium">{{ $ac->course?->course_name ?? '—' }}</span>
-                                <div class="flex items-center gap-1.5 flex-shrink-0">
+                            @foreach($teacher->assignedCourses->take(10) as $ac)
+                            <div class="px-5 py-3 flex items-center justify-between text-sm gap-2">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="text-slate-800 font-semibold truncate">{{ $ac->course?->course_name ?? 'Subject' }}</span>
+                                    @if($ac->is_class_teacher)
+                                    <span class="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 flex-shrink-0 shadow-sm">
+                                        <i class="bi bi-star-fill text-amber-500"></i> Class Teacher
+                                    </span>
+                                    @endif
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
                                     @if($ac->schoolClass)
-                                    <span class="text-[10px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded-full">{{ $ac->schoolClass->class_name }}</span>
+                                    <span class="text-[10px] bg-indigo-50 text-indigo-700 font-medium px-2 py-0.5 rounded-full">{{ $ac->schoolClass->class_name }}</span>
                                     @endif
                                     @if($ac->section)
-                                    <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">{{ $ac->section->section_name }}</span>
+                                    <span class="text-[10px] bg-slate-100 text-slate-600 font-medium px-2 py-0.5 rounded-full">Sec {{ $ac->section->section_name }}</span>
                                     @endif
+                                    @can('assign teachers')
+                                    <form action="{{ route('teacher.toggle-class-teacher', $ac->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        @if($ac->is_class_teacher)
+                                        <button type="submit" title="Remove Class Teacher Designation" class="text-[10px] bg-rose-50 hover:bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full font-semibold transition">
+                                            <i class="bi bi-x-circle me-1"></i>Unset
+                                        </button>
+                                        @else
+                                        <button type="submit" title="Set as Class Teacher for this section" class="text-[10px] bg-amber-50 hover:bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold transition border border-amber-200">
+                                            <i class="bi bi-star me-1"></i>Make Class Teacher
+                                        </button>
+                                        @endif
+                                    </form>
+                                    @endcan
                                 </div>
                             </div>
                             @endforeach
-                            @if($teacher->assignedCourses->count() > 8)
-                            <div class="px-5 py-2 text-xs text-slate-400">+{{ $teacher->assignedCourses->count() - 8 }} more</div>
+                            @if($teacher->assignedCourses->count() > 10)
+                            <div class="px-5 py-2 text-xs text-slate-400">+{{ $teacher->assignedCourses->count() - 10 }} more subjects</div>
                             @endif
                         </div>
-                        @else<p class="text-sm text-slate-400 text-center py-6">No subjects assigned.</p>@endif
+                        @else<p class="text-sm text-slate-400 text-center py-6">No subjects assigned yet.</p>@endif
                     </div>
+
                 </div>
             </div>
         </div>
@@ -773,6 +814,65 @@
 
     </div>{{-- /content --}}
 </div>{{-- /flex --}}
+
+{{-- ── Modal: Assign Subject & Class Teacher ── --}}
+<div id="assignTeacherModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 relative animate-in fade-in zoom-in duration-200">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                <i class="bi bi-person-badge-fill text-indigo-600"></i> Assign Subject & Class Teacher
+            </h3>
+            <button type="button" onclick="closeAssignTeacherModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+        </div>
+        <form action="{{ route('teacher.assign') }}" method="POST" class="space-y-4">
+            @csrf
+            <input type="hidden" name="teacher_id" value="{{ $teacher->id }}">
+            <input type="hidden" name="session_id" value="{{ $sessionId ?? 1 }}">
+            <input type="hidden" name="semester_id" value="1">
+            
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Select Class *</label>
+                <select name="class_id" id="assign_class_select" onchange="loadAssignSectionsAndCourses(this.value)" required class="w-full text-xs p-2.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">-- Select Class --</option>
+                    @if(isset($allClasses))
+                    @foreach($allClasses as $c)
+                    <option value="{{ $c->id }}">{{ $c->class_name }}</option>
+                    @endforeach
+                    @endif
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Select Section *</label>
+                <select name="section_id" id="assign_section_select" required class="w-full text-xs p-2.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">-- Select Class First --</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Select Subject (Course) *</label>
+                <select name="course_id" id="assign_course_select" required class="w-full text-xs p-2.5 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">-- Select Class First --</option>
+                </select>
+            </div>
+
+            <div class="p-3.5 bg-amber-50 border border-amber-200 rounded-xl shadow-xs">
+                <label class="flex items-center gap-2.5 cursor-pointer">
+                    <input type="checkbox" name="is_class_teacher" value="1" class="w-4 h-4 text-amber-600 rounded border-amber-300 focus:ring-amber-500">
+                    <span class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                        <i class="bi bi-star-fill text-amber-500"></i> Designate as Class Teacher
+                    </span>
+                </label>
+                <p class="text-[11px] text-amber-700 mt-1 leading-tight">Checking this will make {{ $teacher->full_name }} the official primary Class Teacher for this section.</p>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button type="button" onclick="closeAssignTeacherModal()" class="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-semibold hover:bg-slate-200 transition">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition shadow-sm">Assign Teacher</button>
+            </div>
+        </form>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -787,6 +887,47 @@ function showTab(id) {
     history.replaceState(null,'','#' + id);
 }
 (function(){ showTab(location.hash.replace('#','') || 'overview'); })();
+
+// ── Assign Teacher Modal Logic ──
+function openAssignTeacherModal() {
+    document.getElementById('assignTeacherModal').classList.remove('hidden');
+}
+function closeAssignTeacherModal() {
+    document.getElementById('assignTeacherModal').classList.add('hidden');
+}
+
+function loadAssignSectionsAndCourses(classId) {
+    const sectionSel = document.getElementById('assign_section_select');
+    const courseSel  = document.getElementById('assign_course_select');
+    if (!sectionSel || !courseSel || !classId) return;
+
+    // Use tt_section_id options as reference if available
+    const ttSectionSel = document.getElementById('tt_section_id');
+    const ttCourseSel  = document.getElementById('tt_course_id');
+
+    sectionSel.innerHTML = '<option value="">-- Select Section --</option>';
+    courseSel.innerHTML = '<option value="">-- Select Subject --</option>';
+
+    if (ttSectionSel) {
+        Array.from(ttSectionSel.options).forEach(opt => {
+            if (opt.value && opt.dataset.class == classId) {
+                const newOpt = opt.cloneNode(true);
+                newOpt.hidden = false;
+                sectionSel.appendChild(newOpt);
+            }
+        });
+    }
+
+    if (ttCourseSel) {
+        Array.from(ttCourseSel.options).forEach(opt => {
+            if (opt.value && opt.dataset.class == classId) {
+                const newOpt = opt.cloneNode(true);
+                newOpt.hidden = false;
+                courseSel.appendChild(newOpt);
+            }
+        });
+    }
+}
 
 // ── Timetable form: cascade class → sections & courses ───────────────
 function loadCoursesForClass(classId) {
@@ -816,3 +957,4 @@ function loadCoursesForClass(classId) {
 })();
 </script>
 @endpush
+

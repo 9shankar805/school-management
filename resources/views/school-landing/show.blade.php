@@ -1,10 +1,83 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" prefix="og: https://ogp.me/ns#">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ $school->name }} - Official School Website</title>
-<meta name="description" content="{{ $school->description && strlen($school->description) > 20 ? Str::limit($school->description, 160) : $school->name . ' — Quality education for a brighter future.' }}">
+
+{{-- ── Subdomain Auto-SEO Engine ── --}}
+@php
+    $seoTitle = $school->name . ' — Official School Portal | Nepal School Hub (NSH LMS)';
+    $seoDesc  = $school->description && strlen($school->description) > 20 
+        ? Str::limit(strip_tags($school->description), 160) 
+        : $school->name . ' located in ' . ($school->city ?? 'Nepal') . ', ' . ($school->district ?? '') . '. Quality education, admissions, notices, exam results & online LMS portal powered by Nepal School Hub (NSH LMS).';
+    $seoKeywords = implode(', ', array_filter([
+        $school->name,
+        $school->name . ' Nepal',
+        $school->name . ' ' . ($school->city ?? ''),
+        $school->name . ' portal',
+        $school->name . ' LMS',
+        'nepal school hub',
+        'Nepal School Hub',
+        'NSH LMS',
+        'nshlms.com',
+        ($school->city ?? '') . ' school management',
+        ($school->district ?? '') . ' school software',
+        'school portal Nepal'
+    ]));
+    $schoolLogoUrl = $school->logo ? asset('storage/' . $school->logo) : asset('imgs/logo_icon.webp');
+    $canonicalUrl  = url('/school/' . $school->slug);
+@endphp
+
+<title>{{ $seoTitle }}</title>
+<meta name="description" content="{{ $seoDesc }}">
+<meta name="keywords" content="{{ $seoKeywords }}">
+<meta name="author" content="{{ $school->name }} / Nepal School Hub (NSH LMS)">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<meta name="googlebot" content="index, follow">
+<link rel="canonical" href="{{ $canonicalUrl }}">
+
+{{-- ── Open Graph Social Sharing (Facebook/LinkedIn) ── --}}
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="{{ $school->name }} — Nepal School Hub">
+<meta property="og:url" content="{{ $canonicalUrl }}">
+<meta property="og:title" content="{{ $seoTitle }}">
+<meta property="og:description" content="{{ $seoDesc }}">
+<meta property="og:image" content="{{ $schoolLogoUrl }}">
+<meta property="og:locale" content="en_US">
+
+{{-- ── Twitter Card ── --}}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@NepalSchoolHub">
+<meta name="twitter:url" content="{{ $canonicalUrl }}">
+<meta name="twitter:title" content="{{ $seoTitle }}">
+<meta name="twitter:description" content="{{ $seoDesc }}">
+<meta name="twitter:image" content="{{ $schoolLogoUrl }}">
+
+{{-- ── Auto-SEO Schema.org JSON-LD Structured Data ── --}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  "name": "{{ $school->name }}",
+  "url": "{{ $canonicalUrl }}",
+  "logo": "{{ $schoolLogoUrl }}",
+  "description": "{{ $seoDesc }}",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "{{ $school->address ?? '' }}",
+    "addressLocality": "{{ $school->city ?? '' }}",
+    "addressRegion": "{{ $school->province ?? '' }}",
+    "addressCountry": "NP"
+  },
+  "telephone": "{{ $school->phone ?? '' }}",
+  "email": "{{ $school->email ?? '' }}",
+  "parentOrganization": {
+    "@type": "EducationalOrganization",
+    "name": "Nepal School Hub (NSH LMS)",
+    "url": "https://nshlms.com"
+  }
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -105,10 +178,14 @@ body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; }
 
 /* ── Navbar ── */
 .navbar-glass {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
     background: rgba(255,255,255,.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(30,64,128,.08);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
 }
 .nav-link { position: relative; }
 .nav-link::after {

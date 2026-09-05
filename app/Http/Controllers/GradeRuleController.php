@@ -64,7 +64,7 @@ class GradeRuleController extends Controller
 
             return back()->with('status', 'Creating grading system rule was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -116,7 +116,7 @@ class GradeRuleController extends Controller
 
             return back()->with('status', 'Deleting grading system rule was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 }

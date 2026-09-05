@@ -3,9 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <title>{{ $paper->title }}</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/contrib/auto-render.min.js"></script>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;600;700;800;900&display=swap">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -36,6 +46,9 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
 .footer{text-align:center;font-size:9px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:8px;margin-top:20px;}
 /* Math rendered via KaTeX inline */
 .katex{font-size:1.1em;}
+/* Server-side LaTeX Math Styles for DomPDF */
+.math-latex-inline { font-family: "DejaVu Sans", sans-serif !important; font-size: 1em; display: inline; }
+.math-sym { font-family: "DejaVu Sans", sans-serif !important; font-weight: normal; }
 /* Images from question content */
 .tiptap-editor img,.q-body img{max-width:220px;max-height:180px;object-fit:contain;border-radius:6px;margin:4px 0;}
 </style>
@@ -48,6 +61,111 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
 
 {{-- Resolve school info: template overrides > school profile > app name --}}
 @php
+  if (!function_exists('parseBraceContents')) {
+      function parseBraceContents(string $str, int $startOffset): ?array {
+          $len = strlen($str);
+          if ($startOffset >= $len || $str[$startOffset] !== '{') return null;
+          $depth = 0;
+          for ($i = $startOffset; $i < $len; $i++) {
+              if ($str[$i] === '{') $depth++;
+              elseif ($str[$i] === '}') {
+                  $depth--;
+                  if ($depth === 0) {
+                      return ['content' => substr($str, $startOffset + 1, $i - $startOffset - 1), 'end' => $i];
+                  }
+              }
+          }
+          return null;
+      }
+  }
+
+  if (!function_exists('parseLatexExpression')) {
+      function parseLatexExpression(string $latex): string {
+          $html = str_replace(['\left(', '\right)', '\left[', '\right]', '\left\{', '\right\}', '\left', '\right'], ['(', ')', '[', ']', '{', '}', '', ''], $latex);
+          $replacements = [
+              '/\\\\parallel/'       => '<span style="font-weight:bold; margin:0 2px;">||</span>',
+              '/\\\\angle/'          => '<span class="math-sym">&ang;</span>',
+              '/\\\\times/'          => '&times;',
+              '/\\\\div/'            => '&divide;',
+              '/\\\\pm/'             => '&plusmn;',
+              '/\\\\cdot/'           => '&middot;',
+              '/\\\\le\b|\\\\leq\b/' => '&le;',
+              '/\\\\ge\b|\\\\geq\b/' => '&ge;',
+              '/\\\\neq/'            => '&ne;',
+              '/\\\\approx/'         => '&approx;',
+              '/\\\\alpha/'          => '&alpha;',
+              '/\\\\beta/'           => '&beta;',
+              '/\\\\theta/'          => '&theta;',
+              '/\\\\pi/'             => '&pi;',
+              '/\\\\infty/'          => '&infin;',
+          ];
+          $html = preg_replace(array_keys($replacements), array_values($replacements), $html);
+
+          while (($pos = strpos($html, '\sqrt')) !== false) {
+              $index = '';
+              $afterSqrt = $pos + 5;
+              if (isset($html[$afterSqrt]) && $html[$afterSqrt] === '[') {
+                  $closeBracket = strpos($html, ']', $afterSqrt);
+                  if ($closeBracket !== false) {
+                      $index = substr($html, $afterSqrt + 1, $closeBracket - $afterSqrt - 1);
+                      $afterSqrt = $closeBracket + 1;
+                  }
+              }
+              $bracePos = strpos($html, '{', $afterSqrt);
+              if ($bracePos === false) break;
+              $b = parseBraceContents($html, $bracePos);
+              if (!$b) break;
+
+              $radicandHtml = parseLatexExpression($b['content']);
+              $idxHtml = $index ? '<sup style="font-size:0.7em;">' . $index . '</sup>' : '';
+              $sqrtHtml = $idxHtml . '<span class="math-sym" style="font-size:1.1em;">&radic;</span><span style="border-top:1px solid #000; padding-top:1px; display:inline-block;">' . $radicandHtml . '</span>';
+              $html = substr_replace($html, $sqrtHtml, $pos, $b['end'] - $pos + 1);
+          }
+
+          while (($pos = strpos($html, '\frac')) !== false) {
+              $brace1Pos = strpos($html, '{', $pos);
+              if ($brace1Pos === false) break;
+              $b1 = parseBraceContents($html, $brace1Pos);
+              if (!$b1) break;
+
+              $brace2Pos = strpos($html, '{', $b1['end'] + 1);
+              if ($brace2Pos === false) break;
+              $b2 = parseBraceContents($html, $brace2Pos);
+              if (!$b2) break;
+
+              $numHtml = parseLatexExpression($b1['content']);
+              $denHtml = parseLatexExpression($b2['content']);
+
+              $fracHtml = '<span style="display:inline-block; vertical-align:middle; text-align:center; margin:0 2px;"><span style="display:block; border-bottom:1px solid #000; padding:0 2px 1px; font-weight:bold; font-size:0.9em; line-height:1;">' . $numHtml . '</span><span style="display:block; padding:1px 2px 0; font-weight:bold; font-size:0.9em; line-height:1;">' . $denHtml . '</span></span>';
+              $html = substr_replace($html, $fracHtml, $pos, $b2['end'] - $pos + 1);
+          }
+
+          $html = preg_replace('/\^\{([^{}]+)\}/', '<sup>$1</sup>', $html);
+          $html = preg_replace('/\^([0-9a-zA-Z+-]+)/', '<sup>$1</sup>', $html);
+          $html = preg_replace('/_\{([^{}]+)\}/', '<sub>$1</sub>', $html);
+          $html = preg_replace('/_([0-9a-zA-Z+-]+)/', '<sub>$1</sub>', $html);
+
+          return $html;
+      }
+  }
+
+  if (!function_exists('renderLatexToHtmlForDomPdf')) {
+      function renderLatexToHtmlForDomPdf(string $text): string {
+          if (!str_contains($text, '\\') && !str_contains($text, '$')) {
+              return $text;
+          }
+          // Normalize double backslashes from DB (\\( -> \( and \\) -> \))
+          $textClean = str_replace(['\\\\(', '\\\\)', '\\\\[', '\\\\]'], ['\\(', '\\)', '\\[', '\\]'], $text);
+          $textClean = str_replace(['\\left(', '\\right)'], ['(', ')'], $textClean);
+
+          return preg_replace_callback('/\\\\\\(\\s*(.*?)\\s*\\\\\\)|\\\\\\[\\s*(.*?)\\s*\\\\\\]|\\$\\$\\s*(.*?)\\s*\\$\\$|\\$\\s*(.*?)\\s*\\$/s', function ($m) {
+              $latex = trim($m[1] ?: $m[2] ?: $m[3] ?: $m[4] ?: '');
+              if (empty($latex)) return '';
+              return '<span class="math-latex-inline">' . parseLatexExpression($latex) . '</span>';
+          }, $textClean);
+      }
+  }
+
   $schoolName    = $template?->school_name    ?: ($school?->name    ?? config('app.name'));
   $schoolAddress = $template?->school_address ?: (trim(implode(', ', array_filter([
       $school?->address, $school?->city, $school?->district, $school?->province
@@ -152,19 +270,19 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
             @php $currentSecIdLeft = $sec->id; @endphp
             <div style="text-align:center; margin:12px 0 8px 0;">
               <span style="background:#e2e8f0; border:1.5px solid #000; border-radius:4px; padding:2px 16px; font-weight:800; font-size:11.5px; color:#000; display:inline-block; font-family:sans-serif;">
-                {{ $sec->title }}@if($sec->instructions) — {{ $sec->instructions }}@endif [{{ count($sec->questions) }} &times; {{ $sec->questions->first()?->allocated_marks ?? 1 }} = {{ $sec->total_marks }}]
+                {!! renderLatexToHtmlForDomPdf($sec->title) !!}@if($sec->instructions) — {!! renderLatexToHtmlForDomPdf($sec->instructions) !!}@endif [{{ count($sec->questions) }} &times; {{ $sec->questions->first()?->allocated_marks ?? 1 }} = {{ $sec->total_marks }}]
               </span>
             </div>
           @endif
 
           <div class="question" style="margin-bottom:10px;">
             <span class="q-num" style="font-weight:700; color:#000; margin-right:4px;">{{ $q->numbering }}.</span>
-            <span class="q-body" style="font-size:10.5px; color:#000;">{!! $q->question_text !!}</span>
+            <span class="q-body" style="font-size:10.5px; color:#000;">{!! renderLatexToHtmlForDomPdf($q->question_text) !!}</span>
             @if($q->options)
             @php $romanMap = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii']; @endphp
             <div style="margin:3px 0 5px 16px; font-size:10px; color:#000; display:flex; flex-wrap:wrap; gap:12px;">
               @foreach($q->options as $optIdx => $opt)
-              <span style="margin-right:12px;">({{ $romanMap[$optIdx] ?? ($optIdx + 1) }}) {{ is_array($opt) ? ($opt['text'] ?? $opt) : $opt }}</span>
+              <span style="margin-right:12px;">({{ $romanMap[$optIdx] ?? ($optIdx + 1) }}) {!! renderLatexToHtmlForDomPdf(is_array($opt) ? ($opt['text'] ?? '') : (string)$opt) !!}</span>
               @endforeach
             </div>
             @elseif($q->question_type==='true_false')
@@ -191,19 +309,19 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
             @php $currentSecIdRight = $sec->id; @endphp
             <div style="text-align:center; margin:item-top 0 8px 0;">
               <span style="background:#e2e8f0; border:1.5px solid #000; border-radius:4px; padding:2px 16px; font-weight:800; font-size:11.5px; color:#000; display:inline-block; font-family:sans-serif;">
-                {{ $sec->title }}@if($sec->instructions) — {{ $sec->instructions }}@endif [{{ count($sec->questions) }} &times; {{ $sec->questions->first()?->allocated_marks ?? 1 }} = {{ $sec->total_marks }}]
+                {!! renderLatexToHtmlForDomPdf($sec->title) !!}@if($sec->instructions) — {!! renderLatexToHtmlForDomPdf($sec->instructions) !!}@endif [{{ count($sec->questions) }} &times; {{ $sec->questions->first()?->allocated_marks ?? 1 }} = {{ $sec->total_marks }}]
               </span>
             </div>
           @endif
 
           <div class="question" style="margin-bottom:10px;">
             <span class="q-num" style="font-weight:700; color:#000; margin-right:4px;">{{ $q->numbering }}.</span>
-            <span class="q-body" style="font-size:10.5px; color:#000;">{!! $q->question_text !!}</span>
+            <span class="q-body" style="font-size:10.5px; color:#000;">{!! renderLatexToHtmlForDomPdf($q->question_text) !!}</span>
             @if($q->options)
             @php $romanMap = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii']; @endphp
             <div style="margin:3px 0 5px 16px; font-size:10px; color:#000; display:flex; flex-wrap:wrap; gap:12px;">
               @foreach($q->options as $optIdx => $opt)
-              <span style="margin-right:12px;">({{ $romanMap[$optIdx] ?? ($optIdx + 1) }}) {{ is_array($opt) ? ($opt['text'] ?? $opt) : $opt }}</span>
+              <span style="margin-right:12px;">({{ $romanMap[$optIdx] ?? ($optIdx + 1) }}) {!! renderLatexToHtmlForDomPdf(is_array($opt) ? ($opt['text'] ?? '') : (string)$opt) !!}</span>
               @endforeach
             </div>
             @elseif($q->question_type==='true_false')
@@ -276,12 +394,12 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
 @if($template && (str_contains($template->name, 'Genesis') || str_contains($template->name, 'Terminal')))
 <div style="text-align:center; margin:16px 0 10px 0;">
   <span style="background:#e2e8f0; border:1.5px solid #000; border-radius:4px; padding:3px 22px; font-weight:800; font-size:12.5px; color:#000; display:inline-block; font-family:sans-serif;">
-    {{ $section->title }}@if($section->instructions) — {{ $section->instructions }}@endif [{{ count($section->questions) }} &times; {{ $section->questions->first()?->allocated_marks ?? 1 }} = {{ $section->total_marks }}]
+    {!! renderLatexToHtmlForDomPdf($section->title) !!}@if($section->instructions) — {!! renderLatexToHtmlForDomPdf($section->instructions) !!}@endif [{{ count($section->questions) }} &times; {{ $section->questions->first()?->allocated_marks ?? 1 }} = {{ $section->total_marks }}]
   </span>
 </div>
 @else
 <div class="section-header">
-  <span>{{ $section->title }}@if($section->instructions) — {{ $section->instructions }}@endif</span>
+  <span>{!! renderLatexToHtmlForDomPdf($section->title) !!}@if($section->instructions) — {!! renderLatexToHtmlForDomPdf($section->instructions) !!}@endif</span>
   <span>[{{ $section->total_marks }} Marks]</span>
 </div>
 @endif
@@ -292,12 +410,12 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
   <span class="marks-float">[{{ $q->allocated_marks }} M]</span>
   @endunless
   <span class="q-num" style="font-weight:700; color:#000; margin-right:4px;">{{ $q->numbering }}.</span>
-  <span class="q-body" style="font-size:11px; color:#000;">{!! $q->question_text !!}</span>
+  <span class="q-body" style="font-size:11px; color:#000;">{!! renderLatexToHtmlForDomPdf($q->question_text) !!}</span>
   @if($q->options)
   @php $romanMap = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii']; @endphp
   <div style="margin:4px 0 6px 20px; font-size:10.5px; color:#000; display:flex; flex-wrap:wrap; gap:16px;">
     @foreach($q->options as $optIdx => $opt)
-    <span style="margin-right:16px;">({{ $romanMap[$optIdx] ?? ($optIdx + 1) }}) {{ is_array($opt) ? ($opt['text'] ?? $opt) : $opt }}</span>
+    <span style="margin-right:16px;">({{ $romanMap[$optIdx] ?? ($optIdx + 1) }}) {!! renderLatexToHtmlForDomPdf(is_array($opt) ? ($opt['text'] ?? '') : (string)$opt) !!}</span>
     @endforeach
   </div>
   @elseif($q->question_type==='true_false')
@@ -323,19 +441,29 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
 </div>
 @endif
 
-{{-- KaTeX auto-render: convert $...$ and $$...$$ in question text --}}
+{{-- MathJax + KaTeX auto-render: convert LaTeX expressions in question text --}}
 <script>
-document.addEventListener('DOMContentLoaded',function(){
-  renderMathInElement(document.body,{
-    delimiters:[
-      {left:'$$',right:'$$',display:true},
-      {left:'$',right:'$',display:false},
-      {left:'\\(',right:'\\)',display:false},
-      {left:'\\[',right:'\\]',display:true}
-    ],
-    throwOnError:false
-  });
-});
+function renderPaperMath() {
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    window.MathJax.typesetPromise();
+  }
+  if (typeof renderMathInElement !== 'undefined') {
+    try {
+      renderMathInElement(document.body, {
+        delimiters: [
+          {left: '$$', right: '$$', display: true},
+          {left: '\\[', right: '\\]', display: true},
+          {left: '$', right: '$', display: false},
+          {left: '\\(', right: '\\)', display: false}
+        ],
+        throwOnError: false
+      });
+    } catch(e) {}
+  }
+}
+document.addEventListener('DOMContentLoaded', renderPaperMath);
+window.addEventListener('load', renderPaperMath);
+setTimeout(renderPaperMath, 500);
 </script>
 </body>
 </html>

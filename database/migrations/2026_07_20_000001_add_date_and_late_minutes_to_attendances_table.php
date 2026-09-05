@@ -24,7 +24,9 @@ return new class extends Migration
         DB::statement('UPDATE attendances SET date = DATE(created_at) WHERE date IS NULL');
 
         // Make date NOT NULL using raw ALTER (avoids doctrine/dbal requirement)
-        DB::statement('ALTER TABLE attendances MODIFY date DATE NOT NULL');
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE attendances MODIFY date DATE NOT NULL');
+        }
     }
 
     public function down(): void

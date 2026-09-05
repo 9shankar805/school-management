@@ -431,7 +431,7 @@ class CertificateController extends Controller
                 '{{gender}}', '{{nationality}}', '{{religion}}', '{{blood_type}}',
                 '{{father_name}}', '{{mother_name}}', '{{address}}', '{{phone}}',
                 '{{date}}', '{{school_name}}', '{{issued_by}}',
-                '{{extra_notes}}', '{{purpose}}',
+                '{{extra_notes}}', '{{purpose}}', '{{character}}',
             ],
             [
                 'Ram Sharma', 'Ram', 'Sharma',
@@ -440,7 +440,7 @@ class CertificateController extends Controller
                 'Male', 'Nepali', 'Hindu', 'B+',
                 'Hari Sharma', 'Sita Sharma', 'Kathmandu, Nepal', '9800000000',
                 now()->format('F j, Y'), config('app.name'), auth()->user()?->full_name ?? 'Administrator',
-                'This is a preview certificate.', 'Preview',
+                'This is a preview certificate.', 'Preview', 'good',
             ],
             ($template->language === 'ne' && $template->body_text_ne)
                 ? $template->body_text_ne

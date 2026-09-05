@@ -92,12 +92,60 @@ class AssignedTeacherController extends Controller
     public function store(TeacherAssignRequest $request)
     {
         try {
-            $assignedTeacherRepository = new AssignedTeacherRepository();
-            $assignedTeacherRepository->assign($request->validated());
+            $validated = $request->validated();
+            $isClassTeacher = !empty($request->is_class_teacher);
 
-            return back()->with('status', 'Assigning teacher was successful!');
+            if ($isClassTeacher) {
+                // Remove Class Teacher status from previous assignments for this section
+                \App\Models\AssignedTeacher::where('session_id', $validated['session_id'])
+                    ->where('class_id', $validated['class_id'])
+                    ->where('section_id', $validated['section_id'])
+                    ->update(['is_class_teacher' => false]);
+            }
+
+            $validated['is_class_teacher'] = $isClassTeacher;
+
+            $assignedTeacherRepository = new AssignedTeacherRepository();
+            $assignedTeacherRepository->assign($validated);
+
+            $msg = $isClassTeacher 
+                ? 'Teacher assigned as Class Teacher successfully!' 
+                : 'Teacher subject assignment saved successfully!';
+
+            return back()->with('status', $msg);
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Toggle Class Teacher designation for an assignment.
+     */
+    public function toggleClassTeacher($id)
+    {
+        try {
+            $assignment = \App\Models\AssignedTeacher::findOrFail($id);
+            $newStatus = !$assignment->is_class_teacher;
+
+            if ($newStatus) {
+                // Clear existing Class Teacher for this class section
+                \App\Models\AssignedTeacher::where('session_id', $assignment->session_id)
+                    ->where('class_id', $assignment->class_id)
+                    ->where('section_id', $assignment->section_id)
+                    ->update(['is_class_teacher' => false]);
+            }
+
+            $assignment->is_class_teacher = $newStatus;
+            $assignment->save();
+
+            $msg = $newStatus
+                ? 'Teacher designated as Class Teacher!'
+                : 'Class Teacher designation removed.';
+
+            return back()->with('status', $msg);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
     }
 }
+

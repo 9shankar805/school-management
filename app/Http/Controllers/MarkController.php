@@ -321,11 +321,11 @@ class MarkController extends Controller
                 }
 
                 if(!$maxMarksByExamId->has($exam)) {
-                    return back()->withInput()->withError('Please create exam rules with total marks before submitting marks.');
+                    return back()->withInput()->with('error', 'Please create exam rules with total marks before submitting marks.');
                 }
 
                 if((float) $mark > (float) $maxMarksByExamId[$exam]) {
-                    return back()->withInput()->withError("Marks must be between 0 and {$maxMarksByExamId[$exam]} for each exam.");
+                    return back()->withInput()->with('error', "Marks must be between 0 and {$maxMarksByExamId[$exam]} for each exam.");
                 }
 
                 $row = [];
@@ -346,7 +346,7 @@ class MarkController extends Controller
 
             return back()->with('status', 'Saving marks was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -381,7 +381,7 @@ class MarkController extends Controller
 
             return back()->with('status', 'Submitting final marks was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 

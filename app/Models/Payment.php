@@ -40,9 +40,10 @@ class Payment extends Model
             }
         });
 
-        // After payment saved → update invoice status + post to student ledger
+        // After payment saved → update invoice status + post credit to student ledger
         static::created(function (Payment $payment) {
             $payment->updateInvoiceStatus();
+            $payment->postLedgerCredit();
         });
     }
 
@@ -74,6 +75,33 @@ class Payment extends Model
         }
 
         $invoice->update(['status' => $status]);
+    }
+
+    /**
+     * Post a credit entry to the student's ledger when a payment is recorded.
+     * This reduces the student's outstanding balance.
+     */
+    public function postLedgerCredit(): void
+    {
+        try {
+            $invoice = $this->invoice;
+            if (! $invoice || ! $invoice->student_id) return;
+
+            \App\Models\StudentLedger::credit(
+                studentId:   $invoice->student_id,
+                amount:      (float) $this->amount,
+                description: 'Payment received — ' . $this->receipt_number
+                             . ' (' . ucfirst($this->payment_method ?? 'cash') . ')',
+                type:        'payment',
+                sessionId:   $invoice->session_id,
+                reference:   $this,
+                date:        $this->payment_date
+                             ? \Carbon\Carbon::parse($this->payment_date)->toDateString()
+                             : today()->toDateString(),
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Payment::postLedgerCredit failed: ' . $e->getMessage());
+        }
     }
 
     // ── Relationships ─────────────────────────────────────────────────────────

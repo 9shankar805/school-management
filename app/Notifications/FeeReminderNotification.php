@@ -19,7 +19,15 @@ class FeeReminderNotification extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        $channels = ['database'];
+
+        // Only add mail channel if SMTP credentials are configured
+        // to prevent queue job failures when MAIL_PASSWORD is empty
+        if ($notifiable->email && config('mail.mailers.smtp.password')) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     public function toDatabase(object $notifiable): array

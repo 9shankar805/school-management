@@ -32,7 +32,7 @@ tbody td:first-child, tbody td:nth-child(2) { text-align:left; }
 <div class="meta">
     <span>Class: <b>{{ $class?->class_name }}</b></span>
     <span>Semester: <b>{{ $semester?->semester_name }}</b></span>
-    <span>Generated: <b>{{ now()->format('d M Y H:i') }}</b></span>
+    <span>Generated: <b>{{ now()->format('d M Y') }}</b> <span style="color:#64748b;font-size:9px;">({{ bsDate(now()->format('Y-m-d'), true, 'short') }})</span></span>
     <span>Students: <b>{{ count($results) }}</b></span>
 </div>
 <table>

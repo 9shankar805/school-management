@@ -26,15 +26,26 @@ class ExamRepository implements ExamInterface {
 
     public function getAll($session_id, $semester_id, $class_id)
     {
-        if($semester_id == 0 || $class_id == 0) {
-            $semester_id = Semester::where('session_id', $session_id)
-            ->first()->id;
-            $class_id = SchoolClass::where('session_id', $session_id)
-                                    ->first()->id;
+        // If no filter provided, try to fall back to the first available values.
+        // Guard against the case where the session has no semesters or classes yet
+        // (e.g. a brand-new school that hasn't set up terms) — return empty collection
+        // rather than crashing with a "Call to a member function on null" error.
+        if ($semester_id == 0 || $class_id == 0) {
+            $firstSemester = Semester::where('session_id', $session_id)->first();
+            $firstClass    = SchoolClass::where('session_id', $session_id)->first();
+
+            if (! $firstSemester || ! $firstClass) {
+                return collect();
+            }
+
+            $semester_id = $firstSemester->id;
+            $class_id    = $firstClass->id;
         }
-        return Exam::with('course')->where('session_id', $session_id)
-                    ->where('semester_id', $semester_id)
-                    ->where('class_id', $class_id)
-                    ->get();
+
+        return Exam::with('course')
+            ->where('session_id',  $session_id)
+            ->where('semester_id', $semester_id)
+            ->where('class_id',    $class_id)
+            ->get();
     }
 }

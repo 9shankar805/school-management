@@ -77,7 +77,7 @@ class RoleSeeder extends Seeder
             'create invoices', 'view invoices', 'edit invoices', 'delete invoices',
             'create payments', 'view payments', 'edit payments', 'delete payments',
             'view financial reports', 'export financial reports',
-            'manage fee structure', 'manage discounts', 'manage scholarships',
+            'manage fee structure', 'manage discounts', 'manage scholarships', 'manage finance',
             'create books', 'view books', 'edit books', 'delete books',
             'issue books', 'return books', 'view library reports', 'manage library members',
             'manage transport', 'view transport', 'assign student transport', 'view transport routes',
@@ -89,6 +89,8 @@ class RoleSeeder extends Seeder
             'send sms', 'send email', 'send bulk messages', 'manage communication templates',
             'view chat', 'send chat messages',
             'view audit logs', 'manage roles', 'manage permissions',
+            'view settings', 'manage settings',
+            'create homework', 'create assignment', 'create study note', 'create lesson plan', 'create online class',
         ],
 
         // ----------------------------------------------------------------
@@ -284,7 +286,7 @@ class RoleSeeder extends Seeder
             'create invoices', 'view invoices', 'edit invoices',
             'create payments', 'view payments', 'edit payments',
             'view financial reports', 'export financial reports',
-            'manage fee structure', 'manage discounts', 'manage scholarships',
+            'manage fee structure', 'manage discounts', 'manage scholarships', 'manage finance',
             'view students', 'view student profile',
             'view payroll', 'manage payroll',
             'view reports', 'export reports',

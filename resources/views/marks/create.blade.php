@@ -141,6 +141,7 @@
                     <table class="w-full text-left text-xs">
                         <thead>
                             <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-semibold bg-slate-50/50 dark:bg-slate-800/20">
+                                <th class="py-3 px-4 min-w-[80px]">Roll No.</th>
                                 <th class="py-3 px-4 min-w-[180px]">Student Name</th>
                                 @foreach ($exams as $exam)
                                 <th class="py-3 px-4 min-w-[140px]">
@@ -157,13 +158,19 @@
                         <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
                             @if(count($students_with_marks) > 0)
                                 @foreach ($students_with_marks as $id => $students_with_mark)
-                                    @php $markedExamCount = 0; @endphp
+                                    @php 
+                                        $markedExamCount = 0; 
+                                        $stu = $students_with_mark[0]->student ?? null;
+                                    @endphp
                                     <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                                        <td class="py-3 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                                            {{ $stu?->roll_no ?? '—' }}
+                                        </td>
                                         <td class="py-3 px-4 font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                                             <div class="w-7 h-7 rounded-full bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center text-xs">
-                                                {{ substr($students_with_mark[0]->student->first_name ?? 'S', 0, 1) }}
+                                                {{ substr($stu->first_name ?? 'S', 0, 1) }}
                                             </div>
-                                            {{ $students_with_mark[0]->student->first_name ?? '' }} {{ $students_with_mark[0]->student->last_name ?? '' }}
+                                            {{ $stu->first_name ?? '' }} {{ $stu->last_name ?? '' }}
                                         </td>
                                         @foreach ($students_with_mark as $st)
                                             @php $currentExamId = $exams[$markedExamCount]->id; @endphp

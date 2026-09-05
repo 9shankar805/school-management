@@ -16,7 +16,7 @@
 * { margin:0; padding:0; box-sizing:border-box; }
 
 html, body {
-    font-family: DejaVu Sans, sans-serif;
+    font-family: 'DejaVu Serif', Georgia, serif;
     background: #fff;
     color: #1e293b;
     font-size: 10pt;
@@ -263,7 +263,9 @@ $tokenMap = [
     '{{cert_no}}'       => $certNo,
     '{{purpose}}'       => $purpose,
     '{{extra_notes}}'   => $extraNotes,
+    '{{character}}'     => 'good',
 ];
+$bodyText = str_replace(array_keys($tokenMap), array_values($tokenMap), $bodyText);
 $footerCaption = $template->footer_text
     ? str_replace(array_keys($tokenMap), array_values($tokenMap), $template->footer_text)
     : '';
@@ -308,9 +310,9 @@ if (!function_exists('resolveField')) {
 $ctx = compact('student','promotion','academic','parentInfo','classStr','admissionNo',
                'fullName','birthDt','academicYr','issuedDate','purpose','extraNotes','certNo','issuerName');
 
-$pc  = $template->primary_color   ?? '#1e3a6b';
-$sc  = $template->secondary_color ?? '#b8953e';
-$bs  = $template->border_style    ?? 'classic';
+$pc  = '#1a3a6b';
+$sc  = '#b8953e';
+$bs  = 'ornate';
 
 /* ── Builder mode ── */
 $useBuilder  = $template->builder_mode && !empty($template->builder_layout);
@@ -412,109 +414,118 @@ try {
 
     {{-- HEADER --}}
     <table width="100%" cellpadding="0" cellspacing="0"
-           style="border-collapse:collapse;border-bottom:1pt solid {{ $pc }}33;margin-bottom:4mm;padding-bottom:3mm;table-layout:fixed;">
+           style="border-collapse:collapse;border-bottom:1pt solid {{ $sc }};margin-bottom:3mm;padding-bottom:2.5mm;table-layout:fixed;">
         <tr>
-            <td width="18mm" style="vertical-align:middle;overflow:hidden;padding-right:2mm;">
-                @if($logoUrl)<img src="{{ $logoUrl }}" style="max-width:17mm;max-height:17mm;display:block;" alt="Logo">@endif
+            <td width="24mm" style="vertical-align:middle;overflow:hidden;padding-right:2mm;">
+                @if($logoUrl)
+                    <img src="{{ $logoUrl }}" style="max-width:22mm;max-height:22mm;display:block;" alt="Logo">
+                @else
+                    <svg width="54" height="54" viewBox="0 0 54 54" style="display:block;">
+                        <circle cx="27" cy="27" r="25" fill="{{ $pc }}" stroke="{{ $sc }}" stroke-width="2" />
+                        <text x="27" y="24" font-family="DejaVu Sans, sans-serif" font-size="6.5" font-weight="bold" fill="{{ $sc }}" text-anchor="middle">SCHOOL</text>
+                        <text x="27" y="34" font-family="DejaVu Sans, sans-serif" font-size="6.5" font-weight="bold" fill="{{ $sc }}" text-anchor="middle">LOGO</text>
+                    </svg>
+                @endif
             </td>
             <td style="text-align:center;vertical-align:middle;padding:0 2mm;word-break:break-word;overflow:hidden;">
-                <div class="school-name" style="color:{{ $pc }};">{{ config('app.name') }}</div>
-                @if($schoolAddr)<div class="school-address">{{ $schoolAddr }}</div>@endif
+                <div class="school-name" style="color:{{ $pc }};font-size:14pt;font-weight:bold;letter-spacing:2.5pt;">{{ config('app.name') }}</div>
+                <div class="school-address" style="color:{{ $sc }};font-size:8pt;letter-spacing:1.5pt;font-style:italic;margin-top:1mm;">Excellence in Education</div>
             </td>
-            <td width="18mm" style="vertical-align:middle;text-align:right;overflow:hidden;padding-left:2mm;">
+            <td width="24mm" style="vertical-align:middle;text-align:right;overflow:hidden;padding-left:2mm;">
                 @if($template->show_student_photo && $photoUrl)
-                    <img src="{{ $photoUrl }}" style="width:17mm;height:21mm;object-fit:cover;border-radius:1mm;border:1.5pt solid {{ $pc }}44;display:block;margin-left:auto;" alt="Photo">
+                    <img src="{{ $photoUrl }}" style="width:18mm;height:22mm;object-fit:cover;border-radius:1mm;border:1.5pt solid {{ $sc }};display:block;margin-left:auto;" alt="Photo">
+                @else
+                    <div style="width:18mm;height:22mm;border:1pt dashed #cbd5e1;border-radius:1mm;background:#fafafa;display:table;margin-left:auto;">
+                        <div style="display:table-cell;vertical-align:middle;text-align:center;font-size:6pt;color:#94a3b8;line-height:1.1;">Student<br>Photo</div>
+                    </div>
                 @endif
             </td>
         </tr>
     </table>
 
-    {{-- TITLE --}}
-    <div class="of-label" style="color:{{ $sc }};">presents this</div>
-    <div class="cert-title" style="color:{{ $pc }};">{{ $template->header_text ?: $template->typeLabel() }}</div>
-    <div class="cert-sub">{{ $template->typeLabel() }}</div>
+    {{-- TITLE BLOCK --}}
+    <div class="of-label" style="color:{{ $sc }};font-size:7.5pt;letter-spacing:4pt;text-transform:uppercase;font-style:italic;margin:3mm 0 1mm;text-align:center;">presents this</div>
+    <div class="cert-title" style="color:{{ $pc }};font-size:24pt;font-weight:bold;letter-spacing:2pt;text-transform:uppercase;margin:0.5mm 0;text-align:center;">CERTIFICATE OF GOOD CONDUCT</div>
+    <div class="cert-sub" style="color:{{ $sc }};font-size:8pt;letter-spacing:3.5pt;text-transform:uppercase;margin-top:0.5mm;text-align:center;">CHARACTER CERTIFICATE</div>
 
     {{-- DIVIDER --}}
-    <div class="orn">
-        <div class="orn-line"><div class="orn-rule" style="background:{{ $pc }}44;"></div></div>
-        <div class="orn-star" style="color:{{ $sc }};">&#10022; &#9733; &#10022;</div>
-        <div class="orn-line"><div class="orn-rule" style="background:{{ $pc }}44;"></div></div>
+    <div class="orn" style="margin:2.5mm 0;">
+        <div class="orn-line"><div class="orn-rule" style="background:{{ $sc }};"></div></div>
+        <div class="orn-star" style="color:{{ $sc }};font-size:9.5pt;width:24mm;text-align:center;">&#9670; &#9670; &#9670;</div>
+        <div class="orn-line"><div class="orn-rule" style="background:{{ $sc }};"></div></div>
     </div>
 
     {{-- PREAMBLE --}}
-    <p class="preamble">This is to certify that</p>
+    <p class="preamble" style="font-size:8.5pt;color:#475569;letter-spacing:2.5pt;text-transform:uppercase;font-style:italic;margin-bottom:2mm;text-align:center;">THIS IS TO PROUDLY CERTIFY THAT</p>
 
     {{-- STUDENT NAME --}}
-    <div class="student-nm" style="color:{{ $pc }};">{{ $fullName }}</div>
-    <div class="name-rule" style="border-bottom:1.5pt solid {{ $pc }}55;"></div>
+    <div class="student-nm" style="color:{{ $pc }};font-size:24pt;font-weight:bold;margin-bottom:1.5mm;text-align:center;">{{ $fullName }}</div>
+    <div class="name-rule" style="border-bottom:1.5pt solid {{ $sc }};width:90mm;margin:0 auto 3mm;"></div>
 
     {{-- BODY TEXT --}}
-    <div class="body-text">{!! nl2br(e($bodyText)) !!}</div>
+    <div class="body-text" style="font-size:9.5pt;color:#334155;line-height:1.8;text-align:center;max-width:200mm;margin:0 auto 3mm;">{!! nl2br(e($bodyText)) !!}</div>
 
     {{-- META ROW — real HTML table avoids DomPDF cellmap bug --}}
-    <table class="meta-tbl" style="border-top:0.5pt solid {{ $pc }}22;border-bottom:0.5pt solid {{ $pc }}22;background:{{ $pc }}05;">
+    <table class="meta-tbl" style="width:100%;border-collapse:collapse;border-top:0.5pt solid #cbd5e1;border-bottom:0.5pt solid #cbd5e1;background:#f8fafc;margin:3mm 0;">
         <tr>
-            @if($classStr)
-            <td><span class="ml">Class</span><span class="mv">{{ $classStr }}</span></td>
-            <td class="sep"></td>
-            @endif
-            @if($admissionNo)
-            <td><span class="ml">Admission No.</span><span class="mv">{{ $admissionNo }}</span></td>
-            @if($academicYr || isset($issued))<td class="sep"></td>@endif
-            @endif
-            @if($academicYr)
-            <td><span class="ml">Academic Year</span><span class="mv">{{ $academicYr }}</span></td>
-            @if(isset($issued))<td class="sep"></td>@endif
-            @endif
-            @if(isset($issued))
-            <td><span class="ml">Issue Date</span><span class="mv">{{ $issued->issued_date->format('d M Y') }}</span></td>
-            @if($issued->valid_until)
-            <td class="sep"></td>
-            <td><span class="ml">Valid Until</span><span class="mv">{{ $issued->valid_until->format('d M Y') }}</span></td>
-            @endif
-            @endif
+            <td width="25%" style="text-align:center;padding:2.5mm 1mm;border-right:0.5pt solid #e2e8f0;">
+                <span class="ml" style="font-size:6pt;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5pt;display:block;margin-bottom:0.5mm;">CLASS</span>
+                <span class="mv" style="font-size:9pt;font-weight:bold;color:{{ $pc }};display:block;">{{ $classStr ?: 'Grade X' }}</span>
+            </td>
+            <td width="25%" style="text-align:center;padding:2.5mm 1mm;border-right:0.5pt solid #e2e8f0;">
+                <span class="ml" style="font-size:6pt;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5pt;display:block;margin-bottom:0.5mm;">ADMISSION NO.</span>
+                <span class="mv" style="font-size:9pt;font-weight:bold;color:{{ $pc }};display:block;">{{ $admissionNo ?: 'ADM-0001' }}</span>
+            </td>
+            <td width="25%" style="text-align:center;padding:2.5mm 1mm;border-right:0.5pt solid #e2e8f0;">
+                <span class="ml" style="font-size:6pt;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5pt;display:block;margin-bottom:0.5mm;">ACADEMIC YEAR</span>
+                <span class="mv" style="font-size:9pt;font-weight:bold;color:{{ $pc }};display:block;">{{ $academicYr ?: '2081–82' }}</span>
+            </td>
+            <td width="25%" style="text-align:center;padding:2.5mm 1mm;">
+                <span class="ml" style="font-size:6pt;color:#94a3b8;text-transform:uppercase;letter-spacing:1.5pt;display:block;margin-bottom:0.5mm;">ISSUE DATE</span>
+                <span class="mv" style="font-size:9pt;font-weight:bold;color:{{ $pc }};display:block;">{{ isset($issued) && $issued->issued_date ? $issued->issued_date->format('d M Y') : now()->format('d M Y') }}</span>
+            </td>
         </tr>
     </table>
 
+    {{-- OFFICIAL SEAL --}}
+    <div style="text-align:center;margin:2mm 0 1mm;">
+        <svg width="56" height="56" viewBox="0 0 56 56" style="display:block;margin:0 auto;">
+            <circle cx="28" cy="28" r="26" fill="none" stroke="{{ $sc }}" stroke-width="2" />
+            <circle cx="28" cy="28" r="22" fill="none" stroke="{{ $sc }}" stroke-width="1" />
+            <text x="28" y="25" font-family="DejaVu Sans, sans-serif" font-size="6.5" font-weight="bold" fill="{{ $sc }}" text-anchor="middle">OFFICIAL</text>
+            <text x="28" y="36" font-family="DejaVu Sans, sans-serif" font-size="6.5" font-weight="bold" fill="{{ $sc }}" text-anchor="middle">SEAL</text>
+        </svg>
+        <div style="font-size:7pt;font-weight:bold;color:{{ $pc }};letter-spacing:1pt;margin-top:1mm;">No. {{ $certNo }}</div>
+    </div>
+
     {{-- FOOTER CAPTION --}}
-    @if($footerCaption)<p class="foot-cap">{{ $footerCaption }}</p>@endif
+    @if($footerCaption)<p class="foot-cap" style="margin-bottom:2mm;">{{ $footerCaption }}</p>@endif
 
-    {{-- SIGNATURES — real HTML table avoids DomPDF cellmap bug --}}
-    <div class="sigs-rule" style="background:{{ $pc }}22;"></div>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+    {{-- SIGNATURES ROW — 2-column layout matching Design 1 --}}
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:3mm;">
         <tr>
-            {{-- Left: date / purpose --}}
-            <td width="30%" style="text-align:left;vertical-align:bottom;overflow:hidden;padding-right:3mm;">
-                <span class="dt-label">Date of Issue</span>
-                <span class="dt-value">{{ isset($issued) ? $issued->issued_date->format('F j, Y') : now()->format('F j, Y') }}</span>
-                @if(isset($issued) && $issued->purpose)
-                <span class="dt-purpose">For: {{ $issued->purpose }}</span>
-                @endif
+            {{-- Left: Class Teacher --}}
+            <td width="40%" style="text-align:left;vertical-align:bottom;padding-right:3mm;">
+                <div style="border-top:0.8pt solid #cbd5e1;width:50mm;margin:0 0 1.5mm 0;height:0;display:block;"></div>
+                <div class="sig-name" style="color:{{ $pc }};font-size:9pt;font-weight:bold;">Class Teacher</div>
+                <div class="sig-title" style="color:#64748b;font-size:7.5pt;">Homeroom Instructor</div>
             </td>
 
-            {{-- Centre: signature --}}
-            <td style="text-align:center;vertical-align:bottom;overflow:hidden;">
-                @if($sigImgUrl)
-                    <img src="{{ $sigImgUrl }}" class="sig-img" alt="Sig">
-                @else
-                    <div style="height:11mm;"></div>
-                @endif
-                <div style="border-top:0.8pt solid {{ $pc }}55;width:40mm;margin:0 auto 1.5mm;height:0;display:block;"></div>
-                @if($template->signature_name)
-                <div class="sig-name">{{ $template->signature_name }}</div>
-                @if($template->signature_title)<div class="sig-title">{{ $template->signature_title }}</div>@endif
-                @endif
-            </td>
-
-            {{-- Right: QR + cert number --}}
-            <td width="30%" style="text-align:right;vertical-align:bottom;overflow:hidden;padding-left:3mm;">
+            {{-- Center: QR Code if present --}}
+            <td width="20%" style="text-align:center;vertical-align:bottom;">
                 @if($template->show_qr_code && isset($issued) && $qrUrl)
-                <img src="{{ $qrUrl }}" class="qr-img" alt="QR">
+                <img src="{{ $qrUrl }}" style="width:14mm;height:14mm;display:block;margin:0 auto 1mm;" alt="QR">
                 @endif
-                @if($template->show_serial_number && isset($issued))
-                <span class="cn-label">Certificate No.</span>
-                <span class="cn-value">{{ $issued->certificate_number }}</span>
+            </td>
+
+            {{-- Right: Principal --}}
+            <td width="40%" style="text-align:right;vertical-align:bottom;padding-left:3mm;">
+                @if($sigImgUrl)
+                    <img src="{{ $sigImgUrl }}" class="sig-img" style="margin-left:auto;margin-right:0;" alt="Sig">
                 @endif
+                <div style="border-top:0.8pt solid #cbd5e1;width:50mm;margin:0 0 1.5mm auto;height:0;display:block;"></div>
+                <div class="sig-name" style="color:{{ $pc }};font-size:9pt;font-weight:bold;">{{ $template->signature_name ?: 'Principal' }}</div>
+                <div class="sig-title" style="color:#64748b;font-size:7.5pt;">{{ $template->signature_title ?: 'Head of Institution' }}</div>
             </td>
         </tr>
     </table>

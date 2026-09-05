@@ -103,7 +103,7 @@ class ReExamController extends Controller
             ->first();
 
         if ($existing) {
-            return back()->withError('You already have an active re-exam application for this course.');
+            return back()->with('error', 'You already have an active re-exam application for this course.');
         }
 
         // Get original marks
@@ -142,7 +142,7 @@ class ReExamController extends Controller
         $app = ReExamApplication::findOrFail($id);
 
         if (! $app->isPending) {
-            return back()->withError('Only pending applications can be reviewed.');
+            return back()->with('error', 'Only pending applications can be reviewed.');
         }
 
         $newStatus = $request->action === 'approved' ? 'approved' : 'rejected';
@@ -173,7 +173,7 @@ class ReExamController extends Controller
         $app = ReExamApplication::findOrFail($id);
 
         if (! in_array($app->status, ['approved', 'scheduled'])) {
-            return back()->withError('Re-exam must be approved or scheduled before entering results.');
+            return back()->with('error', 'Re-exam must be approved or scheduled before entering results.');
         }
 
         $app->update([
@@ -202,7 +202,7 @@ class ReExamController extends Controller
         $app = ReExamApplication::findOrFail($id);
 
         if ($app->status !== 'result_entered') {
-            return back()->withError('Result must be entered before marking as completed.');
+            return back()->with('error', 'Result must be entered before marking as completed.');
         }
 
         $app->update(['status' => 'completed']);

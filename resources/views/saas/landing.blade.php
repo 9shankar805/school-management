@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     {{-- ── Primary SEO ── --}}
-    <title>NepalSchoolHub — #1 School Management Software in Nepal | Free to Start</title>
-    <meta name="description" content="NepalSchoolHub is Nepal's leading school management software. Manage students, teachers, attendance, fees, exams, hostel & transport from one dashboard. Free plan available. No credit card needed.">
-    <meta name="keywords" content="school management system Nepal, school ERP Nepal, student management software Nepal, fee management software Nepal, school software Kathmandu, attendance system Nepal, exam management Nepal, hostel management software, school management SaaS Nepal, NepalSchoolHub, विद्यालय व्यवस्थापन सफ्टवेयर नेपाल">
-    <meta name="author" content="NepalSchoolHub">
+    <title>Nepal School Hub (NSH LMS) — #1 School Management System in Nepal | nshlms.com</title>
+    <meta name="description" content="Nepal School Hub (NSH LMS) is Nepal's #1 leading school management software & LMS. Manage students, teachers, attendance, fees, exams, IEMIS, hostel, transport & parent portal from one dashboard. Free plan available.">
+    <meta name="keywords" content="nepal school hub, Nepal School Hub, NepalSchoolHub, nepal schoolhub, nepal school hub lms, nshlms, nsh lms, nshlms.com, school management system Nepal, school ERP Nepal, student management software Nepal, fee management software Nepal, school software Kathmandu, attendance system Nepal, exam management Nepal, hostel management software, school management SaaS Nepal, IEMIS Nepal school software, Nepali school management app, best school software Nepal, विद्यालय व्यवस्थापन सफ्टवेयर नेपाल, नेपाल स्कूल हब, नेपाल स्कूल हब LMS">
+    <meta name="author" content="Nepal School Hub (NSH LMS)">
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
     <meta name="googlebot" content="index, follow">
     <meta name="rating" content="general">
@@ -24,14 +24,14 @@
 
     {{-- ── Open Graph (Facebook / LinkedIn) ── --}}
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="NepalSchoolHub">
+    <meta property="og:site_name" content="Nepal School Hub (NSH LMS)">
     <meta property="og:url" content="{{ url('/') }}">
-    <meta property="og:title" content="NepalSchoolHub — #1 School Management Software in Nepal">
-    <meta property="og:description" content="Nepal's most complete school management platform. Students, teachers, fees, exams, hostel & transport — all in one dashboard. Free plan available.">
+    <meta property="og:title" content="Nepal School Hub (NSH LMS) — #1 School Management System in Nepal">
+    <meta property="og:description" content="Nepal's most complete school management platform & LMS. Students, teachers, fees, exams, hostel & transport — all in one dashboard at nshlms.com. Free plan available.">
     <meta property="og:image" content="{{ asset('imgs/nepalwithourschool.webp') }}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="NepalSchoolHub school management dashboard screenshot">
+    <meta property="og:image:alt" content="Nepal School Hub dashboard screenshot">
     <meta property="og:locale" content="en_US">
 
     {{-- ── Twitter / X Card ── --}}
@@ -39,8 +39,8 @@
     <meta name="twitter:site" content="@NepalSchoolHub">
     <meta name="twitter:creator" content="@NepalSchoolHub">
     <meta name="twitter:url" content="{{ url('/') }}">
-    <meta name="twitter:title" content="NepalSchoolHub — School Management Software Nepal">
-    <meta name="twitter:description" content="Nepal's most complete school ERP. Students, fees, exams, attendance & more — free to start.">
+    <meta name="twitter:title" content="Nepal School Hub (NSH LMS) — School Management Software Nepal">
+    <meta name="twitter:description" content="Nepal's most complete school ERP & LMS. Students, fees, exams, attendance & more at nshlms.com — free to start.">
     <meta name="twitter:image" content="{{ asset('imgs/nepalwithourschool.webp') }}">
     <meta name="twitter:image:alt" content="NepalSchoolHub dashboard">
 
@@ -83,7 +83,7 @@
         {
           "@type": "Offer",
           "name": "Yearly Premium",
-          "price": "50000",
+          "price": "15000",
           "priceCurrency": "NPR",
           "description": "Full-featured yearly plan with AI tools, 9999 students"
         }
@@ -115,7 +115,7 @@
       "logo": "{{ asset('imgs/logo_icon.webp') }}",
       "contactPoint": {
         "@type": "ContactPoint",
-        "telephone": "+977-9767585122",
+        "telephone": "+977-9744911550",
         "contactType": "customer support",
         "contactOption": "TollFree",
         "areaServed": "NP",
@@ -140,9 +140,9 @@
       "@type": "FAQPage",
       "mainEntity": [
         {"@type":"Question","name":"What is NepalSchoolHub?","acceptedAnswer":{"@type":"Answer","text":"NepalSchoolHub is Nepal's #1 cloud-based school management software — a complete School ERP for Nepali schools covering students, teachers, fees, attendance, exams, hostel, transport, HR and more."}},
-        {"@type":"Question","name":"Is NepalSchoolHub free?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub offers a permanently free plan with no credit card required. Paid yearly plans start at NPR 50,000 and include all 24 modules, AI features and priority support."}},
+        {"@type":"Question","name":"Is NepalSchoolHub free?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub offers a permanently free plan with no credit card required. Paid yearly plans start at NPR 15,000 and include all 24 modules, AI features and priority support."}},
         {"@type":"Question","name":"What is the best school management software in Nepal?","acceptedAnswer":{"@type":"Answer","text":"NepalSchoolHub is the most feature-complete school management SaaS in Nepal with 24 integrated modules, AI tools, WhatsApp alerts, QR/RFID attendance, online exams and a parent portal."}},
-        {"@type":"Question","name":"How much does school management software cost in Nepal?","acceptedAnswer":{"@type":"Answer","text":"NepalSchoolHub's yearly premium plan costs NPR 50,000/year and includes all 24 modules, AI features, unlimited students and WhatsApp alerts — the best value school ERP in Nepal."}},
+        {"@type":"Question","name":"How much does school management software cost in Nepal?","acceptedAnswer":{"@type":"Answer","text":"NepalSchoolHub's yearly premium plan costs NPR 15,000/year and includes all 24 modules, AI features, unlimited students and WhatsApp alerts — the best value school ERP in Nepal."}},
         {"@type":"Question","name":"Does NepalSchoolHub support fee management?","acceptedAnswer":{"@type":"Answer","text":"Yes. The fee management module handles invoice generation, payment tracking, outstanding fees, discounts, WhatsApp payment reminders and Nepali fiscal year (Shrawan–Ashad) billing cycles."}},
         {"@type":"Question","name":"Can parents receive WhatsApp attendance alerts?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every time a student is marked absent, parents receive an instant WhatsApp notification. Parents can also log into the parent portal to view attendance, results and fee status."}},
         {"@type":"Question","name":"Does NepalSchoolHub have an online exam system?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub has a built-in online examination system with MCQ, short-answer and long-answer support, time limits, auto-grading and detailed analytics."}},
@@ -151,11 +151,11 @@
         {"@type":"Question","name":"Does NepalSchoolHub have AI features?","acceptedAnswer":{"@type":"Answer","text":"Yes. AI features include automated performance insights, smart attendance pattern detection, AI lesson plan suggestions, predictive fee defaulter alerts and AI question paper generation."}},
         {"@type":"Question","name":"Does NepalSchoolHub support hostel management?","acceptedAnswer":{"@type":"Answer","text":"Yes. The hostel module manages room allocation, bed assignment, hostel fees, check-in/check-out, hostel attendance and expense tracking."}},
         {"@type":"Question","name":"Does NepalSchoolHub have transport and GPS tracking?","acceptedAnswer":{"@type":"Answer","text":"Yes. The transport module includes route planning, vehicle assignment, driver management and real-time GPS tracking for parents via WhatsApp notifications."}},
-        {"@type":"Question","name":"How do I register my school on NepalSchoolHub?","acceptedAnswer":{"@type":"Answer","text":"Go to nepalschoolhub.techprocod.com.np, click Get Started Free, fill in your school details and your school is live instantly. Setup takes under 5 minutes. WhatsApp support: +977 9767585122."}},
+        {"@type":"Question","name":"How do I register my school on NepalSchoolHub?","acceptedAnswer":{"@type":"Answer","text":"Go to nepalschoolhub.techprocod.com.np, click Get Started Free, fill in your school details and your school is live instantly. Setup takes under 5 minutes. WhatsApp support: +977 9744911550."}},
         {"@type":"Question","name":"Is NepalSchoolHub cloud-based?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub is 100% cloud-based. No installation needed — just a browser and internet connection. Data is stored securely with daily encrypted backups."}},
         {"@type":"Question","name":"Is student data safe on NepalSchoolHub?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub uses 256-bit SSL encryption, role-based access control, daily backups and full data isolation between schools. School data is never shared or sold."}},
         {"@type":"Question","name":"What makes NepalSchoolHub better than other school software in Nepal?","acceptedAnswer":{"@type":"Answer","text":"NepalSchoolHub is the only Nepali school software with all 24 modules in one platform, a genuine free plan, AI features, WhatsApp alerts, GPS transport tracking and support for Nepali calendar, NEB curriculum and NPR fees."}},
-        {"@type":"Question","name":"How do I contact NepalSchoolHub support?","acceptedAnswer":{"@type":"Answer","text":"WhatsApp: +977 9767585122 (instant reply). Email: support@nepalschoolhub.com. Or use the contact form on nepalschoolhub.techprocod.com.np. Available Sunday–Friday, 9 AM–6 PM NST."}},
+        {"@type":"Question","name":"How do I contact NepalSchoolHub support?","acceptedAnswer":{"@type":"Answer","text":"WhatsApp: +977 9744911550 (instant reply). Email: support@nepalschoolhub.com. Or use the contact form on nepalschoolhub.techprocod.com.np. Available Sunday–Friday, 9 AM–6 PM NST."}},
         {"@type":"Question","name":"Does NepalSchoolHub work on mobile phones?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub is fully mobile-responsive and works on any smartphone browser. Dedicated Android and iOS apps are available for teachers, parents, students and drivers."}},
         {"@type":"Question","name":"Can I import student data into NepalSchoolHub?","acceptedAnswer":{"@type":"Answer","text":"Yes. Bulk import of students, teachers and fee records from Excel/CSV is supported. Download our templates, fill in your data and upload in one click."}},
         {"@type":"Question","name":"Does NepalSchoolHub have payroll and HR management?","acceptedAnswer":{"@type":"Answer","text":"Yes. The HR and payroll module handles salary calculation, allowances, PF/CIT deductions, leave management, salary slips and payroll reports aligned with Nepal's Labour Act."}},
@@ -182,7 +182,7 @@
         img{max-width:100%;display:block}
 
         /* Nav */
-        .topnav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.92);backdrop-filter:blur(16px);border-bottom:1px solid #e2e8f0;padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+        .topnav{position:sticky;top:0;z-index:1000;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid #e2e8f0;padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;box-shadow:0 2px 10px rgba(0,0,0,0.04);}
         .nav-logo{display:flex;align-items:center;gap:.6rem}
         .nav-logo img{width:38px;height:38px;border-radius:.6rem;object-fit:cover}
         .nav-logo span{font-weight:800;font-size:1rem;color:#1e1b4b}
@@ -358,7 +358,7 @@
         }
         @media(max-width:767px){
             html, body { overflow-x: hidden; }
-            .topnav { padding: .75rem 1rem; }
+            .topnav { padding: .75rem 1rem; position: sticky; top: 0; z-index: 1000; width: 100%; background: rgba(255,255,255,.96); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
             .nav-links, .nav-actions-desktop { display: none !important; }
             .mobile-toggle-btn { display: block; }
             
@@ -1329,7 +1329,7 @@
                         </div>
                         <div>
                             <h4 class="contact-item-title">Email Us</h4>
-                            <p class="contact-item-text"><a href="mailto:support@nepalschoolhub.com" style="color:white; text-decoration:none;">support@nepalschoolhub.com</a></p>
+                            <p class="contact-item-text"><a href="mailto:support@nshlms.com" style="color:white; text-decoration:none;">support@nshlms.com</a></p>
                         </div>
                     </div>
                     <div class="contact-item">
@@ -1338,7 +1338,7 @@
                         </div>
                         <div>
                             <h4 class="contact-item-title">Call Us</h4>
-                            <p class="contact-item-text"><a href="tel:+9779767585122" style="color:white; text-decoration:none;">+977 976-758-5122</a></p>
+                            <p class="contact-item-text"><a href="tel:+9779744911550" style="color:white; text-decoration:none;">+977 9744911550</a></p>
                         </div>
                     </div>
                 </div>
@@ -1445,21 +1445,21 @@
         ['q'=>'Is NepalSchoolHub the best school management software in Nepal?',
          'a'=>'NepalSchoolHub is the most feature-complete school management SaaS platform in Nepal. With 24 integrated modules, AI-powered tools, WhatsApp alerts, QR/RFID attendance, online exams and a parent portal — no other Nepali school software comes close. Hundreds of schools across Nepal use NepalSchoolHub and rate it 5 stars.'],
         ['q'=>'What is the website of NepalSchoolHub?',
-         'a'=>'The official website of NepalSchoolHub is nepalschoolhub.techprocod.com.np. You can register your school, log in, and contact support all from this website. The WhatsApp support number is +977 9767585122.'],
+         'a'=>'The official website of NepalSchoolHub is nepalschoolhub.techprocod.com.np. You can register your school, log in, and contact support all from this website. The WhatsApp support number is +977 9744911550.'],
         ['q'=>'Is NepalSchoolHub available in Nepali language (नेपाली)?',
          'a'=>'The dashboard interface is in English, but the system fully supports Nepali names, Nepali calendar (BS — Bikram Sambat), Nepali Rupee (NPR) fees and all Nepali curriculum standards. A full Nepali-language interface (विद्यालय व्यवस्थापन प्रणाली) is on our roadmap. NepalSchoolHub is the best विद्यालय व्यवस्थापन सफ्टवेयर नेपाल has to offer.'],
       ],
       'Pricing & Plans' => [
         ['q'=>'Is NepalSchoolHub free to use?',
-         'a'=>'Yes! NepalSchoolHub offers a permanently free plan with no credit card required. The free plan includes student management, attendance, basic fee tracking and timetable. For larger schools, yearly plans start at NPR 50,000/year — the most affordable school ERP pricing in Nepal.'],
+         'a'=>'Yes! NepalSchoolHub offers a permanently free plan with no credit card required. The free plan includes student management, attendance, basic fee tracking and timetable. For larger schools, yearly plans start at NPR 15,000/year — the most affordable school ERP pricing in Nepal.'],
         ['q'=>'How much does school management software cost in Nepal?',
-         'a'=>'Most school management software in Nepal costs between NPR 30,000 to NPR 200,000 per year. NepalSchoolHub\'s yearly premium plan is NPR 50,000/year and includes ALL 24 modules, AI features, unlimited students, WhatsApp/SMS alerts, API access and dedicated support — the best value school software in Nepal.'],
+         'a'=>'Most school management software in Nepal costs between NPR 30,000 to NPR 200,000 per year. NepalSchoolHub\'s yearly premium plan is NPR 15,000/year and includes ALL 24 modules, AI features, unlimited students, WhatsApp/SMS alerts, API access and dedicated support — the best value school software in Nepal.'],
         ['q'=>'Is there a free trial for NepalSchoolHub paid plans?',
          'a'=>'Yes. All paid plans come with a 14-day free trial. Start with the free plan, explore the full platform, and upgrade at any time. No payment information is required to start.'],
         ['q'=>'Are there any hidden charges in NepalSchoolHub?',
          'a'=>'No hidden charges. The yearly plan price includes everything — all modules, updates, support, and storage. There are no per-user fees, no setup fees, and no extra charges for new features added during your subscription period.'],
         ['q'=>'Can multiple schools use one NepalSchoolHub account?',
-         'a'=>'Each school has its own separate account with fully isolated data. Volume discounts are available for groups of 3 or more schools — contact us at +977 9767585122 for group pricing.'],
+         'a'=>'Each school has its own separate account with fully isolated data. Volume discounts are available for groups of 3 or more schools — contact us at +977 9744911550 for group pricing.'],
       ],
       'Features & Modules' => [
         ['q'=>'What features does NepalSchoolHub include?',
@@ -1493,7 +1493,7 @@
       ],
       'Technical & Setup' => [
         ['q'=>'How do I register my school on NepalSchoolHub?',
-         'a'=>'Go to nepalschoolhub.techprocod.com.np, click "Get Started Free", fill in your school details and create an admin account. Your school is live instantly — no waiting, no approval. Setup takes under 5 minutes. For help, WhatsApp us at +977 9767585122.'],
+         'a'=>'Go to nepalschoolhub.techprocod.com.np, click "Get Started Free", fill in your school details and create an admin account. Your school is live instantly — no waiting, no approval. Setup takes under 5 minutes. For help, WhatsApp us at +977 9744911550.'],
         ['q'=>'How long does it take to set up NepalSchoolHub?',
          'a'=>'Basic setup (school profile, classes, sections, teachers and students) takes 30–60 minutes. Full setup including fee structures, timetable, hostel and transport takes 2–4 hours. Free onboarding assistance is provided for yearly plan subscribers.'],
         ['q'=>'Can I import existing student data into NepalSchoolHub?',
@@ -1505,7 +1505,7 @@
         ['q'=>'Does NepalSchoolHub have an API for third-party integrations?',
          'a'=>'Yes. NepalSchoolHub provides a REST API for integration with accounting software, SMS gateways, biometric devices, payment gateways and custom school websites. API documentation is available for yearly plan subscribers.'],
         ['q'=>'Can NepalSchoolHub handle multiple branches of the same school?',
-         'a'=>'Yes. Schools with multiple branches register each branch separately. Volume discounts apply for multi-branch setups. Contact us at +977 9767585122 for multi-branch pricing.'],
+         'a'=>'Yes. Schools with multiple branches register each branch separately. Volume discounts apply for multi-branch setups. Contact us at +977 9744911550 for multi-branch pricing.'],
       ],
       'Comparison & Support' => [
         ['q'=>'What makes NepalSchoolHub better than other school software in Nepal?',
@@ -1513,9 +1513,9 @@
         ['q'=>'How is NepalSchoolHub different from Hamro School, SchoolPad or similar software?',
          'a'=>'Unlike competitors, NepalSchoolHub offers: a permanently free plan, 24 modules in one subscription, built-in AI, real-time WhatsApp alerts, online exams with auto-grading, GPS transport tracking, a modern cloud architecture and dedicated Nepali customer support. We are the most comprehensive and affordable school ERP in Nepal.'],
         ['q'=>'How do I contact NepalSchoolHub support?',
-         'a'=>'Contact us via: WhatsApp at +977 9767585122 (fastest), email at support@nepalschoolhub.com, or the contact form on this page. Support is available Sunday–Friday, 9 AM–6 PM NST.'],
+         'a'=>'Contact us via: WhatsApp at +977 9744911550 (fastest), email at support@nepalschoolhub.com, or the contact form on this page. Support is available Sunday–Friday, 9 AM–6 PM NST.'],
         ['q'=>'Does NepalSchoolHub offer demo or training?',
-         'a'=>'Yes. We offer free live demos via Google Meet or on-site in Kathmandu. Free training sessions for admins and teachers are included with yearly plans. WhatsApp us at +977 9767585122 to book your demo.'],
+         'a'=>'Yes. We offer free live demos via Google Meet or on-site in Kathmandu. Free training sessions for admins and teachers are included with yearly plans. WhatsApp us at +977 9744911550 to book your demo.'],
         ['q'=>'When I search "NepalSchoolHub" on Google, will it appear first?',
          'a'=>'Yes. nepalschoolhub.techprocod.com.np is the official website of NepalSchoolHub and is the top result when you search "NepalSchoolHub", "Nepal school management software", "school ERP Nepal", "school management system Nepal", "विद्यालय व्यवस्थापन सफ्टवेयर" and related terms on Google Nepal.'],
       ],
@@ -1550,7 +1550,7 @@
 
     <div style="text-align:center;margin-top:2.5rem;padding:1.5rem;background:#f8fafc;border-radius:1rem;border:1px solid #e2e8f0;">
         <p style="font-size:.875rem;color:#64748b;margin-bottom:.75rem;">Still have questions about NepalSchoolHub school management software?</p>
-        <a href="https://wa.me/9779767585122?text={{ urlencode('Hello! I have a question about NepalSchoolHub.') }}"
+        <a href="https://wa.me/9779744911550?text={{ urlencode('Hello! I have a question about NepalSchoolHub.') }}"
            target="_blank" rel="noopener"
            style="display:inline-flex;align-items:center;gap:.5rem;background:#25d366;color:#fff;padding:.65rem 1.5rem;border-radius:.75rem;font-weight:700;font-size:.875rem;text-decoration:none;">
             <i class="bi bi-whatsapp"></i> Ask on WhatsApp — instant reply
@@ -1667,7 +1667,7 @@
 {{-- ── WhatsApp Floating Button ── --}}
 <div class="wa-float" id="wa-float">
     <div class="wa-tooltip" id="wa-tip">💬 Chat with us — instant reply!</div>
-    <a href="https://wa.me/9779767585122?text={{ urlencode('Hello! I am interested in NepalSchoolHub. Can you help me?') }}"
+    <a href="https://wa.me/9779744911550?text={{ urlencode('Hello! I am interested in NepalSchoolHub. Can you help me?') }}"
        target="_blank" rel="noopener" class="wa-btn" title="Chat on WhatsApp"
        onclick="document.getElementById('wa-tip').style.display='none'">
         <div class="wa-pulse-ring"></div>

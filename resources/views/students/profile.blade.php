@@ -113,7 +113,12 @@
                     <table class="w-full text-sm">
                         <tbody class="divide-y divide-slate-50">
                             @foreach([
-                                ['Birthday', $student->birthday?->format('d M Y') ?? '—'],
+                                ['Birthday', $student->birthday
+                                    ? $student->birthday->format('d M Y') .
+                                      ' <span class="text-slate-400 text-xs">(' .
+                                      \App\Services\NepaliDateService::formatBS($student->birthday->format('Y-m-d'), true, 'short') .
+                                      ' BS)</span>'
+                                    : '—'],
                                 ['Gender', $student->gender ?? '—'],
                                 ['Blood Type', $student->blood_type ?? '—'],
                                 ['Nationality', $student->nationality ?? '—'],
@@ -122,7 +127,7 @@
                             ] as [$label, $val])
                             <tr class="hover:bg-slate-50">
                                 <td class="px-5 py-2.5 text-slate-400 font-medium w-1/3">{{ $label }}</td>
-                                <td class="px-5 py-2.5 text-slate-700">{{ $val }}</td>
+                                <td class="px-5 py-2.5 text-slate-700">{!! $val !!}</td>
                             </tr>
                             @endforeach
                         </tbody>

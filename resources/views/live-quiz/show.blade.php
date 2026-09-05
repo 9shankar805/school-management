@@ -1,0 +1,308 @@
+@extends('layouts.app')
+
+@section('title', $quiz->title . ' - Live Quiz Details')
+
+@section('content')
+<div class="container-fluid px-4 py-4">
+    <!-- Header with Action Buttons -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <a href="{{ route('live-quiz.index') }}" class="text-decoration-none text-muted small">
+                <i class="bi bi-arrow-left"></i> Back to All Quizzes
+            </a>
+            <h2 class="fw-bold text-dark mb-1">{{ $quiz->title }}</h2>
+            <div class="d-flex flex-wrap gap-2 align-items-center mt-1">
+                <span class="badge bg-indigo bg-opacity-10 text-primary fw-bold px-3 py-1">
+                    <i class="bi bi-tag-fill me-1"></i> {{ $quiz->category ?: 'General' }}
+                </span>
+                <span class="badge {{ $quiz->mode === 'buzzer' ? 'bg-danger' : 'bg-success' }} px-2 py-1">
+                    {{ strtoupper($quiz->mode) }} MODE
+                </span>
+                <span class="text-muted small">
+                    Created by <strong>{{ $quiz->creator->first_name ?? 'Teacher' }}</strong> • {{ $quiz->created_at->format('M d, Y') }}
+                </span>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ route('live-quiz.edit', $quiz->id) }}" class="btn btn-outline-secondary rounded-pill px-3">
+                <i class="bi bi-pencil-square me-1"></i> Edit Settings
+            </a>
+            <button type="button" class="btn btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+                <i class="bi bi-plus-circle me-1"></i> Add Question
+            </button>
+            <a href="{{ route('live-quiz.host.create-session', $quiz->id) }}" class="btn btn-success btn-lg rounded-pill px-4 fw-bold shadow">
+                <i class="bi bi-broadcast me-1"></i> Host Live Match Now
+            </a>
+        </div>
+    </div>
+
+    <!-- Feedback Alerts -->
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <div class="row g-4">
+        <!-- Sidebar Info -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white mb-4">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-info-circle me-2 text-primary"></i> Competition Info</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted small mb-3">{{ $quiz->description ?: 'No additional description provided.' }}</p>
+
+                    <div class="list-group list-group-flush small">
+                        <div class="list-group-item d-flex justify-content-between px-0 py-2">
+                            <span class="text-muted">Total Questions</span>
+                            <span class="fw-bold text-dark">{{ $quiz->questions_count }}</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0 py-2">
+                            <span class="text-muted">Time per Question</span>
+                            <span class="fw-bold text-dark">{{ $quiz->default_time_limit }} seconds</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0 py-2">
+                            <span class="text-muted">Base Points</span>
+                            <span class="fw-bold text-dark">{{ $quiz->default_points }} pts</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0 py-2">
+                            <span class="text-muted">Speed Bonus</span>
+                            <span class="badge {{ $quiz->speed_bonus ? 'bg-success' : 'bg-secondary' }}">{{ $quiz->speed_bonus ? 'Enabled' : 'Disabled' }}</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-0 py-2">
+                            <span class="text-muted">Total Live Sessions Hosted</span>
+                            <span class="fw-bold text-primary">{{ $quiz->sessions_count }} matches</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-2">
+                        <a href="{{ route('live-quiz.host.create-session', $quiz->id) }}" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm">
+                            <i class="bi bi-play-circle-fill me-1"></i> Launch Projector Lobby
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions List -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 bg-white">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-2 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-card-checklist me-2 text-indigo"></i> Questions Repository ({{ $quiz->questions->count() }})
+                    </h5>
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+                        <i class="bi bi-plus-lg me-1"></i> Add Question
+                    </button>
+                </div>
+                <div class="card-body p-4">
+                    @if($quiz->questions->isEmpty())
+                        <div class="text-center py-5">
+                            <i class="bi bi-chat-square-dots text-muted" style="font-size: 3rem;"></i>
+                            <h6 class="fw-bold mt-2 text-dark">No Questions in this Quiz</h6>
+                            <p class="text-muted small">Click "Add Question" to start adding challenge questions for the students.</p>
+                            <button type="button" class="btn btn-primary btn-sm rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addQuestionModal">
+                                Add First Question
+                            </button>
+                        </div>
+                    @else
+                        <div class="d-flex flex-column gap-3">
+                            @foreach($quiz->questions as $index => $q)
+                                <div class="border rounded-4 p-3 p-md-4 bg-light position-relative">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div class="d-flex gap-2 align-items-center">
+                                            <span class="badge bg-primary rounded-pill px-3 py-1 fw-bold">Q{{ $index + 1 }}</span>
+                                            @if($q->question_type === 'direct')
+                                            <span class="badge bg-warning text-dark px-2 py-1">👑 Verbal</span>
+                                            @elseif($q->question_type === 'buzzer')
+                                            <span class="badge bg-danger px-2 py-1">🔔 Buzzer</span>
+                                            @elseif($q->question_type === 'true_false')
+                                            <span class="badge bg-info px-2 py-1">⚖️ T/F</span>
+                                            @else
+                                            <span class="badge bg-success px-2 py-1">⚡ MCQ</span>
+                                            @endif
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="text-muted small"><i class="bi bi-stopwatch text-warning"></i> {{ $q->time_limit_seconds }}s</span>
+                                            @if($q->question_type === 'direct')
+                                            <span class="text-muted small"><i class="bi bi-arrow-repeat text-info"></i> {{ $q->pass_time_seconds ?? 30 }}s pass</span>
+                                            @endif
+                                            <span class="text-muted small"><i class="bi bi-star-fill text-warning"></i> {{ $q->points }}pts</span>
+                                            <form action="{{ route('live-quiz.questions.destroy', [$quiz->id, $q->id]) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this question?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger border-0 p-1" title="Delete Question">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+
+                                    <h6 class="fw-bold text-dark mb-3">{{ $q->question_text }}</h6>
+
+                                    @if($q->question_type === 'direct')
+                                    <div class="p-2 rounded-3 small border border-success bg-success bg-opacity-10 text-success fw-semibold mb-2">
+                                        <i class="bi bi-mic-fill me-1"></i>
+                                        Verbal Answer: <span class="fw-bold">{{ $q->direct_answer ?: '(Not set)' }}</span>
+                                        &nbsp;·&nbsp; Phase 1: <strong>{{ $q->time_limit_seconds }}s</strong>
+                                        &nbsp;·&nbsp; Phase 2 (pass): <strong>{{ $q->pass_time_seconds ?? 30 }}s</strong>
+                                        &nbsp;·&nbsp; Pass pts: <strong>{{ $q->pass_points ?? 50 }}</strong>
+                                    </div>
+                                    @endif
+
+                                    <div class="row g-2 mb-2">
+                                        @if(!empty($q->options) && is_array($q->options))
+                                            @foreach($q->options as $opt)
+                                                <div class="col-sm-6">
+                                                    <div class="p-2 rounded-3 small d-flex align-items-center gap-2 border {{ strtoupper($q->correct_option) === strtoupper($opt['key']) ? 'bg-success bg-opacity-10 border-success text-success fw-bold' : 'bg-white' }}">
+                                                        <span class="badge {{ strtoupper($q->correct_option) === strtoupper($opt['key']) ? 'bg-success text-white' : 'bg-secondary text-white' }} px-2 py-1">
+                                                            {{ $opt['key'] }}
+                                                        </span>
+                                                        <span>{{ $opt['text'] }}</span>
+                                                        @if(strtoupper($q->correct_option) === strtoupper($opt['key']))
+                                                            <i class="bi bi-check-circle-fill ms-auto text-success"></i>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        @endif
+                                    </div>
+
+                                    @if($q->explanation)
+                                        <div class="small text-muted mt-2 border-top pt-2">
+                                            <i class="bi bi-info-circle text-primary me-1"></i> <strong>Explanation:</strong> {{ $q->explanation }}
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Question Modal -->
+<div class="modal fade" id="addQuestionModal" tabindex="-1" aria-labelledby="addQuestionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <h5 class="modal-title fw-bold text-dark" id="addQuestionModalLabel">
+                    <i class="bi bi-plus-circle me-2 text-primary"></i> Add Question to Quiz
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ route('live-quiz.questions.store', $quiz->id) }}" method="POST">
+                @csrf
+                <div class="modal-body p-4">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Question Type</label>
+                            <select name="question_type" id="modalQuestionType" class="form-select rounded-3 fw-bold text-primary" onchange="handleModalTypeChange(this.value)">
+                                <option value="direct" selected>👑 Direct Turn & Pass Round (Inter-House School Bowl)</option>
+                                <option value="mcq">⚡ Multiple Choice (4 Options)</option>
+                                <option value="buzzer">🔔 Fast Buzzer Round</option>
+                                <option value="true_false">⚖️ True / False</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Direct Text Answer <span class="text-danger">*</span></label>
+                            <input type="text" name="direct_answer" id="modalDirectAnswer" class="form-control rounded-3" placeholder="e.g. Red, Green, Blue">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Question Prompt <span class="text-danger">*</span></label>
+                        <textarea name="question_text" class="form-control rounded-3" rows="2" placeholder="e.g. Name the three primary colors of light in physics." required></textarea>
+                    </div>
+
+                    <!-- Options Grid (Hidden for Direct) -->
+                    <div class="row g-2 mb-3 d-none" id="modalOptionsGrid">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-danger">Option A</label>
+                            <input type="text" name="option_a" id="modalOptA" class="form-control" placeholder="Option A text">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-primary">Option B</label>
+                            <input type="text" name="option_b" id="modalOptB" class="form-control" placeholder="Option B text">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-warning">Option C</label>
+                            <input type="text" name="option_c" id="modalOptC" class="form-control" placeholder="Option C text">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-success">Option D</label>
+                            <input type="text" name="option_d" id="modalOptD" class="form-control" placeholder="Option D text">
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-3" id="modalCorrectOptionCol" style="display: none;">
+                            <label class="form-label fw-semibold">Correct Option</label>
+                            <select name="correct_option" class="form-select rounded-3 fw-bold text-success">
+                                <option value="A">Option A</option>
+                                <option value="B">Option B</option>
+                                <option value="C">Option C</option>
+                                <option value="D">Option D</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Main Timer (s)</label>
+                            <input type="number" name="time_limit_seconds" class="form-control rounded-3" value="60" min="5" max="180">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Pass Timer (s)</label>
+                            <input type="number" name="pass_time_seconds" class="form-control rounded-3" value="30" min="5" max="180">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Main Points</label>
+                            <input type="number" name="points" class="form-control rounded-3" value="100" min="10" max="1000">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Pass Points</label>
+                            <input type="number" name="pass_points" class="form-control rounded-3" value="50" min="5" max="500">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted small">Explanation / Fun Fact (Optional)</label>
+                            <input type="text" name="explanation" class="form-control rounded-3" placeholder="Displayed to audience when answer is revealed...">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold">Save Question</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function handleModalTypeChange(val) {
+    const optsGrid = document.getElementById('modalOptionsGrid');
+    const correctCol = document.getElementById('modalCorrectOptionCol');
+    if (val === 'direct') {
+        optsGrid.classList.add('d-none');
+        correctCol.style.display = 'none';
+    } else {
+        optsGrid.classList.remove('d-none');
+        correctCol.style.display = 'block';
+    }
+}
+</script>
+
+<style>
+.bg-indigo { background-color: #4f46e5 !important; }
+.text-indigo { color: #4f46e5 !important; }
+</style>
+@endsection

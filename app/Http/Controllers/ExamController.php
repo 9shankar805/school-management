@@ -130,63 +130,89 @@ class ExamController extends Controller
     {
         try {
             $examRepository = new ExamRepository();
-            $examRepository->create($request->validated());
+            $data = $request->validated();
+            // Ensure school_id is stamped (HasTenant trait may not set it on
+            // repositories that call Exam::create() directly with only validated fields)
+            $data['school_id'] = auth()->user()->school_id ?? null;
+            $examRepository->create($data);
 
             return back()->with('status', 'Exam creation was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
     /**
      * Display the specified resource.
-     *
-     * @param  \App\Models\Exam  $exam
-     * @return \Illuminate\Http\Response
      */
     public function show(Exam $exam)
     {
-        //
+        $this->authorize('view exams');
+
+        return view('exams.show', ['exam' => $exam]);
     }
 
     /**
      * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Exam  $exam
-     * @return \Illuminate\Http\Response
      */
     public function edit(Exam $exam)
     {
-        //
+        $this->authorize('edit exams');
+
+        try {
+            $current_school_session_id = $this->getSchoolCurrentSession();
+            $semesters   = $this->semesterRepository->getAll($current_school_session_id);
+            $school_classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
+
+            return view('exams.edit', [
+                'exam'                       => $exam,
+                'current_school_session_id'  => $current_school_session_id,
+                'semesters'                  => $semesters,
+                'classes'                    => $school_classes,
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->route('exam.list.show')->with('error', 'Unable to load exam edit form: ' . $e->getMessage());
+        }
     }
 
     /**
      * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Exam  $exam
-     * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Exam $exam)
     {
-        //
+        $this->authorize('edit exams');
+
+        $validated = $request->validate([
+            'exam_name'   => 'required|string',
+            'start_date'  => 'required|date',
+            'end_date'    => 'required|date|after:start_date',
+            'semester_id' => 'required|integer|gt:0',
+            'class_id'    => 'required|integer|gt:0',
+            'course_id'   => 'required|integer|gt:0',
+        ]);
+
+        try {
+            $exam->update($validated);
+            return redirect()->route('exam.list.show')->with('status', 'Exam updated successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to update exam: ' . $e->getMessage());
+        }
     }
 
     /**
      * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Exam  $exam
-     * @return \Illuminate\Http\Response
      */
     public function destroy(Request $request)
     {
+        $this->authorize('delete exams');
+
         try {
             $examRepository = new ExamRepository();
             $examRepository->delete($request->exam_id);
 
             return back()->with('status', 'Exam deletion was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 }

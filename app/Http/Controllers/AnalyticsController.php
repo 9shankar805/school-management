@@ -49,7 +49,7 @@ class AnalyticsController extends Controller
 
         // YTD Fee collection (NPR, Rs.)
         $ytdStart = $now->copy()->startOfYear();
-        $ytdFees  = (float) Payment::where('created_at', '>=', $ytdStart)->sum('amount_paid');
+        $ytdFees  = (float) Payment::where('created_at', '>=', $ytdStart)->sum('amount');
         // Target = sum of all invoices raised YTD; delta pct = (collected / target - 1)*100
         $ytdInvoicesTarget = (float) Invoice::where('created_at', '>=', $ytdStart)->sum('amount');
         $feeDeltaPct = $ytdInvoicesTarget > 0
@@ -114,7 +114,7 @@ class AnalyticsController extends Controller
             $revenueData['categories'][] = $dt->format('M');
             $sum = (float) Payment::whereYear('created_at', $dt->year)
                                   ->whereMonth('created_at', $dt->month)
-                                  ->sum('amount_paid');
+                                  ->sum('amount');
             $revenueData['actual'][] = $sum;
             $last6[] = $sum;
         }

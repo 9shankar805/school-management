@@ -33,7 +33,7 @@
     </div>
 
     @php
-        $paidTotal   = $invoice->payments->sum('amount_paid') ?? 0;
+        $paidTotal   = $invoice->payments->sum('amount') ?? 0;
         $amountDue   = max(0, $invoice->amount - $paidTotal);
         $student     = $invoice->student;
         $latestClass = optional(optional($student?->promotions)->last())->schoolClass;
@@ -143,46 +143,72 @@
                 </form>
             </div>
 
-            {{-- Online Payment Quick Gateways --}}
-            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 shadow-xs space-y-3">
-                <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                    <i class="bi bi-globe2 text-indigo-500"></i> Instant Online Payment Gateways
+            {{-- Payment QR Codes (scan to pay) --}}
+            @php
+                $hasQR = $paySchool && (
+                    $paySchool->payment_qr_esewa  ||
+                    $paySchool->payment_qr_khalti ||
+                    $paySchool->payment_qr_bank   ||
+                    $paySchool->payment_qr_fonepay
+                );
+            @endphp
+            @if($hasQR)
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-5 shadow-xs">
+                <h4 class="text-xs font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5 mb-3">
+                    <i class="bi bi-qr-code-scan text-emerald-600"></i> Scan to Pay
                 </h4>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <form method="POST" action="{{ route('finance.payment.initiate') }}">
-                        @csrf
-                        <input type="hidden" name="invoice_id" value="{{ $invoice->id }}">
-                        <input type="hidden" name="gateway" value="esewa">
-                        <button type="submit" class="w-full py-2.5 px-3 rounded-xl text-xs font-black text-white transition flex items-center justify-center gap-1 shadow-xs hover:opacity-95 cursor-pointer" style="background:#60bb46">
-                            🟢 eSewa
-                        </button>
-                    </form>
-                    <form method="POST" action="{{ route('finance.payment.initiate') }}">
-                        @csrf
-                        <input type="hidden" name="invoice_id" value="{{ $invoice->id }}">
-                        <input type="hidden" name="gateway" value="khalti">
-                        <button type="submit" class="w-full py-2.5 px-3 rounded-xl text-xs font-black text-white transition flex items-center justify-center gap-1 shadow-xs hover:opacity-95 cursor-pointer" style="background:#5c2d91">
-                            🟣 Khalti
-                        </button>
-                    </form>
-                    <form method="POST" action="{{ route('finance.payment.initiate') }}">
-                        @csrf
-                        <input type="hidden" name="invoice_id" value="{{ $invoice->id }}">
-                        <input type="hidden" name="gateway" value="fonepay">
-                        <button type="submit" class="w-full py-2.5 px-3 rounded-xl text-xs font-black text-white transition flex items-center justify-center gap-1 shadow-xs hover:opacity-95 cursor-pointer" style="background:#c026d3">
-                            📲 Fonepay
-                        </button>
-                    </form>
-                    <form method="POST" action="{{ route('finance.payment.initiate') }}">
-                        @csrf
-                        <input type="hidden" name="invoice_id" value="{{ $invoice->id }}">
-                        <input type="hidden" name="gateway" value="stripe">
-                        <button type="submit" class="w-full py-2.5 px-3 rounded-xl text-xs font-black text-white transition flex items-center justify-center gap-1 shadow-xs hover:opacity-95 cursor-pointer" style="background:#6366f1">
-                            💳 Card
-                        </button>
-                    </form>
+                <p class="text-[11px] text-slate-400 dark:text-slate-500 mb-4">
+                    Open eSewa, Khalti or banking app → Scan QR →
+                    Enter <span class="font-bold text-slate-600 dark:text-slate-300">Rs. {{ number_format($amountDue, 2) }}</span> → Pay.
+                </p>
+                <div class="grid grid-cols-2 gap-3">
+                    @foreach([
+                        ['field' => 'payment_qr_esewa',   'label' => 'eSewa',   'color' => '#60bb46'],
+                        ['field' => 'payment_qr_khalti',  'label' => 'Khalti',  'color' => '#5c2d91'],
+                        ['field' => 'payment_qr_bank',    'label' => 'Bank/ConnectIPS', 'color' => '#1d4ed8'],
+                        ['field' => 'payment_qr_fonepay', 'label' => 'FonePay', 'color' => '#dc2626'],
+                    ] as $qr)
+                    @if($paySchool->{$qr['field']})
+                    <div class="flex flex-col items-center gap-2 p-3 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style="background:{{ $qr['color'] }}">
+                            {{ $qr['label'] }}
+                        </span>
+                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($paySchool->{$qr['field']}) }}"
+                             alt="{{ $qr['label'] }} QR"
+                             class="w-28 h-28 object-contain rounded-lg bg-white p-1 border border-slate-200 dark:border-slate-700 cursor-pointer"
+                             onclick="document.getElementById('pay-qr-modal-{{ $loop->index }}').classList.remove('hidden')">
+                        <span class="text-[10px] text-slate-400">Tap to enlarge</span>
+
+                        <div id="pay-qr-modal-{{ $loop->index }}"
+                             class="hidden fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+                             onclick="this.classList.add('hidden')">
+                            <div class="bg-white rounded-3xl p-6 flex flex-col items-center gap-3 shadow-2xl max-w-xs w-full" onclick="event.stopPropagation()">
+                                <span class="text-sm font-bold px-3 py-1 rounded-full text-white" style="background:{{ $qr['color'] }}">{{ $qr['label'] }}</span>
+                                <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($paySchool->{$qr['field']}) }}"
+                                     class="w-56 h-56 object-contain" alt="{{ $qr['label'] }} QR">
+                                <p class="text-xs text-slate-500 text-center font-semibold">
+                                    Amount: <span class="text-slate-800">Rs. {{ number_format($amountDue, 2) }}</span>
+                                </p>
+                                @if($paySchool->payment_instructions)
+                                <p class="text-[11px] text-slate-400 text-center whitespace-pre-line">{{ $paySchool->payment_instructions }}</p>
+                                @endif
+                                <button onclick="this.closest('[id^=pay-qr-modal]').classList.add('hidden')"
+                                        class="text-xs text-slate-500 hover:text-slate-700 mt-1">
+                                    <i class="bi bi-x-circle mr-1"></i>Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    @endforeach
                 </div>
+                @if($paySchool->payment_instructions)
+                <div class="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-xl">
+                    <p class="text-[11px] text-amber-800 dark:text-amber-300 whitespace-pre-line">{{ $paySchool->payment_instructions }}</p>
+                </div>
+                @endif
             </div>
+            @endif
         </div>
 
         {{-- RIGHT COLUMN: POS Cash Desk & Return Calculator Studio (5 Cols) --}}

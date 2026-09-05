@@ -68,13 +68,13 @@ class WebhookController extends Controller
                     Payment::create([
                         'invoice_id'     => $invoice->id,
                         'amount'         => $result['amount'],
-                        'amount_paid'    => $result['amount'],
                         'payment_date'   => today()->toDateString(),
                         'payment_method' => $driver,
+                        'gateway'        => $driver,
                     ]);
 
                     // Mark invoice paid if fully settled
-                    $totalPaid = $invoice->payments()->sum('amount_paid');
+                    $totalPaid = $invoice->payments()->sum('amount');
                     if ($totalPaid >= $invoice->amount) {
                         $invoice->update(['status' => 'paid']);
                     } else {

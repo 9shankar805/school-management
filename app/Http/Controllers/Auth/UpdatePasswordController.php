@@ -29,10 +29,10 @@ class UpdatePasswordController extends Controller
 
                 return back()->with('status', 'Changing password was successful!');
             } catch (\Exception $e) {
-                return back()->withError($e->getMessage());
+                return back()->with('error', $e->getMessage());
             }
         } else {
-            return back()->withError('Password mismatched!');
+            return back()->with('error', 'Password mismatched!');
         }
     }
 }

@@ -28,7 +28,7 @@ class SemesterController extends Controller
 
             return back()->with('status', 'Semester creation was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 }

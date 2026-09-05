@@ -81,7 +81,7 @@ class SyllabusController extends Controller
 
             return back()->with('status', 'Creating syllabus was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 

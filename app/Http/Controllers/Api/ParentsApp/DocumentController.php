@@ -36,6 +36,40 @@ class DocumentController extends Controller
     }
 
     /**
+     * GET /api/documents/child/{childId}
+     */
+    public function byChild(Request $request, $childId): JsonResponse
+    {
+        return $this->index($request, $childId);
+    }
+
+    /**
+     * GET /api/documents/type/{type}
+     */
+    public function byType(Request $request, $type): JsonResponse
+    {
+        $childIds = $request->user()->children()->pluck('users.id');
+
+        $documents = StudentDocument::whereIn('student_id', $childIds)
+            ->where('document_type', $type)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($doc) {
+                return collect($doc)->merge([
+                    'url'        => $doc->url,
+                    'human_size' => $doc->human_size,
+                    'is_image'   => $doc->isImage(),
+                    'is_pdf'     => $doc->isPdf(),
+                ]);
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $documents,
+        ]);
+    }
+
+    /**
      * POST /api/documents/child/{childId}/upload
      */
     public function upload(Request $request, $childId): JsonResponse
@@ -87,5 +121,26 @@ class DocumentController extends Controller
         }
 
         return Storage::disk('public')->download($document->file_path, $document->file_name);
+    }
+
+    /**
+     * DELETE /api/documents/{id}
+     */
+    public function destroy(Request $request, $id): JsonResponse
+    {
+        $childIds = $request->user()->children()->pluck('users.id');
+        
+        $document = StudentDocument::whereIn('student_id', $childIds)->findOrFail($id);
+
+        if (Storage::disk('public')->exists($document->file_path)) {
+            Storage::disk('public')->delete($document->file_path);
+        }
+
+        $document->delete();
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Document deleted successfully.',
+        ]);
     }
 }

@@ -34,7 +34,7 @@ class SchoolSessionController extends Controller
 
             return back()->with('status', 'Session creation was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
         
     }
@@ -53,7 +53,7 @@ class SchoolSessionController extends Controller
 
             return back()->with('status', 'Browsing session set was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
         
     }

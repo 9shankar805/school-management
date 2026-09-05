@@ -1,12 +1,26 @@
 @extends('layouts.app')
 @push('head-scripts')
+{{-- MathJax v3 for robust LaTeX math typesetting --}}
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true
+  },
+  options: {
+    processHtmlClass: 'math-render|math-content'
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 {{-- KaTeX --}}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/contrib/auto-render.min.js"></script>
-{{-- MathLive --}}
-<script type="module" src="https://unpkg.com/mathlive@0.100/dist/mathlive.min.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/mathlive@0.100/dist/mathlive-static.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+{{-- MathLive — UMD build (no type="module") so it doesn't interfere with Tiptap UMD globals --}}
+<script src="https://cdn.jsdelivr.net/npm/mathlive@0.100/dist/mathlive.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mathlive@0.100/dist/mathlive-static.css">
 {{-- Cropper.js for image editing --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6/dist/cropper.min.css">
 <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6/dist/cropper.min.js"></script>
@@ -77,6 +91,12 @@
     </span>
   </div>
   <div class="flex gap-2 flex-wrap">
+    @if(!$paper->is_locked)
+    <button onclick="openAiGeneratorModal()" type="button"
+       class="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+      <i class="bi bi-magic text-sm"></i> AI Question Generator
+    </button>
+    @endif
     @if($paper->status==='draft')
     <form method="POST" action="{{ route('question-papers.submit',$paper->id) }}" class="inline">
       @csrf
@@ -176,7 +196,7 @@
           <div class="text-sm text-slate-800 leading-relaxed math-render">{!! $q->question_text !!}</div>
           @if($q->options)
           <ol class="mt-2 space-y-0.5 pl-4 text-sm text-slate-600" style="list-style-type:upper-alpha">
-            @foreach($q->options as $opt)<li>{{ $opt }}</li>@endforeach
+            @foreach($q->options as $opt)<li class="math-render">{{ $opt }}</li>@endforeach
           </ol>
           @endif
           <div class="flex gap-2 mt-2 flex-wrap">
@@ -190,7 +210,14 @@
           <p class="font-bold text-indigo-600 text-sm">{{ $q->allocated_marks }}</p>
           <p class="text-[10px] text-slate-400">marks</p>
           @if($paper->is_editable)
-          <button onclick="deleteQuestion({{ $q->id }})" class="text-slate-300 hover:text-rose-500 transition mt-1 opacity-0 group-hover:opacity-100"><i class="bi bi-x-lg text-xs"></i></button>
+          <div class="flex items-center gap-1 mt-1 justify-end">
+            <button onclick='openEditQuestion({{ json_encode($q) }})' type="button" class="p-1.5 text-slate-400 hover:text-indigo-600 transition rounded-lg hover:bg-indigo-50" title="Edit Question">
+              <i class="bi bi-pencil-square text-xs"></i>
+            </button>
+            <button onclick="deleteQuestion({{ $q->id }})" type="button" class="p-1.5 text-slate-400 hover:text-rose-600 transition rounded-lg hover:bg-rose-50" title="Delete Question">
+              <i class="bi bi-trash text-xs"></i>
+            </button>
+          </div>
           @endif
         </div>
       </div>
@@ -542,12 +569,42 @@ setInterval(()=>{
 },60000);
 
 // ── DOM ready: math render + SortableJS drag-drop ─────────────────────────
-document.addEventListener('DOMContentLoaded',()=>{
+window.renderAllMath = function(container, retryCount) {
+  container = container || document;
+  retryCount = retryCount || 0;
 
-  // KaTeX
-  document.querySelectorAll('.math-render').forEach(el=>{
-    renderMathInElement(el,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false});
-  });
+  // MathJax Typesetting
+  if (window.MathJax && window.MathJax.typesetPromise) {
+    window.MathJax.typesetPromise([container]).catch(function(err) {
+      console.warn('MathJax error:', err);
+    });
+  }
+
+  // KaTeX Typesetting
+  if (typeof renderMathInElement !== 'undefined') {
+    const elements = container.querySelectorAll('.math-render, .math-content, [data-section-id], #sectionsContainer');
+    elements.forEach(function(el) {
+      try {
+        renderMathInElement(el, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '\\[', right: '\\]', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false}
+          ],
+          throwOnError: false
+        });
+      } catch(e) { console.warn('KaTeX render error:', e); }
+    });
+  } else if (retryCount < 30) {
+    setTimeout(function() { window.renderAllMath(container, retryCount + 1); }, 150);
+  }
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  window.renderAllMath();
+  setTimeout(window.renderAllMath, 300);
+  setTimeout(window.renderAllMath, 1000);
 
   // Quality slider label
   const qs=document.getElementById('cropQuality');
@@ -578,6 +635,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   @endif
 });
+
+window.addEventListener('load', window.renderAllMath);
 
 // ── Section actions ─────────────────────────────────────────────────────────
 function addSection(){
@@ -799,6 +858,302 @@ function insertBankQuestion(bankId){
     body:JSON.stringify({bank_id:bankId,question_text:'',question_type:'essay',allocated_marks:1,difficulty:'medium'})
   }).then(r=>r.json()).then(()=>location.reload());
 }
+
+// ── AI Question Generator Modal ──────────────────────────────────────────
+function openAiGeneratorModal(){
+  document.getElementById('aiGeneratorModal').classList.remove('hidden');
+  document.getElementById('aiGenError').classList.add('hidden');
+}
+function closeAiGeneratorModal(){
+  document.getElementById('aiGeneratorModal').classList.add('hidden');
+}
+function updateFileName(input){
+  const nameEl = document.getElementById('aiFileName');
+  if(input.files && input.files[0]){
+    nameEl.textContent = 'Selected: ' + input.files[0].name;
+  } else {
+    nameEl.textContent = 'Click to select file or drag & drop';
+  }
+}
+function submitAiGenerator(e){
+  e.preventDefault();
+  const form = document.getElementById('aiGenForm');
+  const errDiv = document.getElementById('aiGenError');
+  const btn = document.getElementById('aiSubmitBtn');
+
+  errDiv.classList.add('hidden');
+  errDiv.textContent = '';
+
+  const formData = new FormData(form);
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Reading file & generating questions...';
+
+  fetch(`/question-papers/${PAPER_ID}/ai-generate`, {
+    method: 'POST',
+    headers: { 'X-CSRF-TOKEN': CSRF },
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if(data.success){
+      btn.innerHTML = '<i class="bi bi-check-circle"></i> Success! Reloading...';
+      location.reload();
+    } else {
+      errDiv.textContent = data.error || 'Failed to generate questions.';
+      errDiv.classList.remove('hidden');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-magic"></i> Generate & Populate Questions';
+    }
+  })
+  .catch(err => {
+    errDiv.textContent = 'Server error occurred during generation: ' + err.message;
+    errDiv.classList.remove('hidden');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-magic"></i> Generate & Populate Questions';
+  });
+}
+
+// ── Individual Question Edit ────────────────────────────────────────────────
+let currentEditingQ = null;
+
+function openEditQuestion(q){
+  currentEditingQ = q;
+  document.getElementById('eqId').value = q.id;
+  document.getElementById('eqType').value = q.question_type || 'short_answer';
+  document.getElementById('eqMarks').value = q.allocated_marks || 1;
+  document.getElementById('eqDiff').value = q.difficulty || 'medium';
+  document.getElementById('eqBloom').value = q.bloom_taxonomy || '';
+  document.getElementById('eqText').value = (q.question_text || '').replace(/<[^>]*>/g, '');
+  document.getElementById('eqAnswer').value = q.answer_text || '';
+
+  renderEditOptions(q.options || []);
+  toggleEditOptions(q.question_type || 'short_answer');
+
+  document.getElementById('editQuestionModal').classList.remove('hidden');
+}
+
+function closeEditQuestion(){
+  document.getElementById('editQuestionModal').classList.add('hidden');
+}
+
+function toggleEditOptions(type){
+  const sec = document.getElementById('eqOptionsSection');
+  if(type === 'mcq' || type === 'single_choice' || type === 'match'){
+    sec.classList.remove('hidden');
+  } else {
+    sec.classList.add('hidden');
+  }
+}
+
+function renderEditOptions(opts){
+  const container = document.getElementById('eqOptionsContainer');
+  if(!opts || !opts.length) opts = ['', ''];
+  container.innerHTML = opts.map((opt, idx) => `
+    <div class="flex items-center gap-2 eq-opt-row">
+      <span class="w-6 text-center text-xs font-bold text-slate-500">${String.fromCharCode(65 + idx)}.</span>
+      <input type="text" value="${(opt || '').replace(/"/g, '&quot;')}" class="flex-1 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-indigo-400 outline-none eq-opt-input" placeholder="Option ${idx + 1}">
+      <button type="button" onclick="this.closest('.eq-opt-row').remove()" class="text-slate-300 hover:text-rose-500 p-1 text-xs"><i class="bi bi-trash"></i></button>
+    </div>
+  `).join('');
+}
+
+function addEditOption(){
+  const container = document.getElementById('eqOptionsContainer');
+  const count = container.querySelectorAll('.eq-opt-row').length;
+  const div = document.createElement('div');
+  div.className = 'flex items-center gap-2 eq-opt-row';
+  div.innerHTML = `
+    <span class="w-6 text-center text-xs font-bold text-slate-500">${String.fromCharCode(65 + count)}.</span>
+    <input type="text" value="" class="flex-1 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-indigo-400 outline-none eq-opt-input" placeholder="Option ${count + 1}">
+    <button type="button" onclick="this.closest('.eq-opt-row').remove()" class="text-slate-300 hover:text-rose-500 p-1 text-xs"><i class="bi bi-trash"></i></button>
+  `;
+  container.appendChild(div);
+}
+
+function saveEditQuestion(e){
+  e.preventDefault();
+  const qId = document.getElementById('eqId').value;
+  const qType = document.getElementById('eqType').value;
+  const qMarks = parseFloat(document.getElementById('eqMarks').value) || 1;
+  const qDiff = document.getElementById('eqDiff').value;
+  const qBloom = document.getElementById('eqBloom').value;
+  const qText = document.getElementById('eqText').value;
+  const qAnswer = document.getElementById('eqAnswer').value;
+
+  const optInputs = document.querySelectorAll('.eq-opt-input');
+  let options = null;
+  if(qType === 'mcq' || qType === 'single_choice' || qType === 'match'){
+    options = Array.from(optInputs).map(inp => inp.value.trim()).filter(val => val.length > 0);
+  }
+
+  const btn = document.getElementById('eqSaveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  fetch(`/question-papers/questions/${qId}`, {
+    method: 'PUT',
+    headers: {
+      'X-CSRF-TOKEN': CSRF,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      question_type: qType,
+      question_text: qText,
+      answer_text: qAnswer,
+      options: options,
+      allocated_marks: qMarks,
+      difficulty: qDiff,
+      bloom_taxonomy: qBloom
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if(data.success){
+      location.reload();
+    } else {
+      alert('Error updating question: ' + (data.error || 'Unknown error'));
+      btn.disabled = false;
+      btn.textContent = 'Save Changes';
+    }
+  })
+  .catch(err => {
+    alert('Failed to update question: ' + err.message);
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+  });
+}
 </script>
+
+{{-- ── AI Question Generator Modal Markup ────────────────────────────────── --}}
+<div id="aiGeneratorModal" class="qm-modal-bg hidden z-50">
+  <div class="qm-modal max-w-xl">
+    <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-4">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-lg">
+          <i class="bi bi-magic"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-800 text-base">AI Section Question Generator</h3>
+          <p class="text-xs text-slate-500">Upload paper/document or enter topic to auto-generate section questions</p>
+        </div>
+      </div>
+      <button onclick="closeAiGeneratorModal()" class="text-slate-400 hover:text-slate-600 text-lg"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <form id="aiGenForm" onsubmit="submitAiGenerator(event)" class="space-y-4">
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+          Upload Reference Document (PDF, DOCX, TXT, Image)
+        </label>
+        <div class="border-2 border-dashed border-purple-200 hover:border-purple-400 bg-purple-50/40 rounded-xl p-4 text-center cursor-pointer transition relative" onclick="document.getElementById('aiDocFile').click()">
+          <input type="file" id="aiDocFile" name="document_file" accept=".txt,.pdf,.docx,.doc,.jpg,.jpeg,.png,.webp" class="hidden" onchange="updateFileName(this)">
+          <i class="bi bi-cloud-arrow-up text-2xl text-purple-500"></i>
+          <p class="text-xs font-semibold text-purple-700 mt-1" id="aiFileName">Click to select file or drag & drop</p>
+          <p class="text-[11px] text-slate-400">Supported: PDF, Word (.docx), Plain Text (.txt), Images</p>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-700 mb-1">
+          Paste Raw Unformatted Questions / Topic / Instructions
+        </label>
+        <textarea id="aiPromptText" name="prompt_text" rows="4" class="w-full text-xs p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none" placeholder="Paste your raw, messy, or unformatted questions here (e.g. copied from chat, notes, or Word). The AI will clean up grammar, format MCQs & options, assign marks, and organize them into proper sections automatically."></textarea>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Difficulty</label>
+          <select id="aiDifficulty" name="difficulty" class="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none bg-white">
+            <option value="mixed">Mixed (Balanced)</option>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard / Challenging</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Action Mode</label>
+          <select id="aiMode" name="mode" class="w-full text-xs p-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none bg-white">
+            <option value="append">Append to existing paper</option>
+            <option value="replace">Replace existing questions</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="aiGenError" class="hidden text-xs text-rose-600 bg-rose-50 border border-rose-100 rounded-xl p-3"></div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeAiGeneratorModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition">Cancel</button>
+        <button type="submit" id="aiSubmitBtn" class="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold shadow-md transition flex items-center gap-2">
+          <i class="bi bi-magic"></i> Generate & Populate Questions
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{-- ── EDIT QUESTION MODAL ────────────────────────────────────────────────── --}}
+<div id="editQuestionModal" class="qm-modal-bg hidden z-50">
+  <div class="qm-modal max-w-2xl">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+      <h3 class="text-base font-bold text-slate-800"><i class="bi bi-pencil-square me-2 text-indigo-600"></i>Edit Question</h3>
+      <button onclick="closeEditQuestion()" class="text-slate-400 hover:text-slate-700 text-lg"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <form id="editQuestionForm" onsubmit="saveEditQuestion(event)" class="space-y-4">
+      <input type="hidden" id="eqId">
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Type</label>
+          <select id="eqType" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-400 outline-none" onchange="toggleEditOptions(this.value)">
+            @foreach($bankTypes as $k=>$v)<option value="{{ $k }}">{{ $v }}</option>@endforeach
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Marks</label>
+          <input type="number" id="eqMarks" min="0.25" step="0.25" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-400 outline-none">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Difficulty</label>
+          <select id="eqDiff" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-400 outline-none">
+            @foreach($bankDiffs as $k=>$v)<option value="{{ $k }}">{{ $v }}</option>@endforeach
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Bloom's Taxonomy</label>
+          <select id="eqBloom" class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-indigo-400 outline-none">
+            <option value="">None</option>
+            @foreach($blooms as $k=>$v)<option value="{{ $k }}">{{ $v }}</option>@endforeach
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Question Text</label>
+        <textarea id="eqText" rows="4" class="w-full border border-slate-200 rounded-xl p-3 text-xs focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="Enter question wording..."></textarea>
+      </div>
+
+      {{-- MCQ Options Section --}}
+      <div id="eqOptionsSection" class="hidden space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-semibold text-slate-700">Multiple Choice Options</label>
+          <button type="button" onclick="addEditOption()" class="text-xs text-indigo-600 font-semibold hover:underline"><i class="bi bi-plus-circle me-1"></i>Add Option</button>
+        </div>
+        <div id="eqOptionsContainer" class="space-y-2"></div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-600 mb-1">Answer Key / Explanation (Optional)</label>
+        <textarea id="eqAnswer" rows="2" class="w-full border border-slate-200 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-indigo-400 outline-none" placeholder="Sample answer or solution notes..."></textarea>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+        <button type="button" onclick="closeEditQuestion()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-medium transition">Cancel</button>
+        <button type="submit" id="eqSaveBtn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-md transition">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
 @endpush
 @endsection

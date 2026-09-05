@@ -67,7 +67,7 @@ class LedgerController extends Controller
                     'type'           => 'fee_payment',
                     'account'        => 'Tuition & Fee Income',
                     'debit'          => 0,
-                    'credit'         => $p->amount ?? $p->amount_paid,
+                    'credit'         => $p->amount,
                     'balance'        => 0,
                     'reference_type' => Payment::class,
                     'reference_id'   => $p->id,
@@ -232,5 +232,128 @@ class LedgerController extends Controller
         ))->setPaper('A4');
 
         return $pdf->download("profit-loss-{$year}.pdf");
+    }
+
+    /**
+     * Balance Sheet — Assets vs Liabilities + Equity snapshot for a given year-end.
+     *
+     * Assets:
+     *   - Cash / Bank (net fee income collected)
+     *   - Fixed Assets (from assets table at purchase price)
+     *   - Receivables (unpaid invoice outstanding)
+     *
+     * Liabilities:
+     *   - Salaries Payable (unpaid salary slips)
+     *   - TDS Payable (accrued, not yet remitted)
+     *
+     * Equity:
+     *   - Retained Earnings = cumulative net profit (all-time P&L)
+     */
+    public function balanceSheet(Request $request)
+    {
+        $year    = (int) $request->input('year', now()->year);
+        $asOf    = Carbon::create($year)->endOfYear()->toDateString();
+        $dateFrom = Carbon::create($year)->startOfYear()->toDateString();
+
+        // ── ASSETS ──────────────────────────────────────────────────────────
+        // Cash/Bank: total fees collected up to year-end
+        $cashAndBank = Payment::where('payment_date', '<=', $asOf)->sum('amount');
+
+        // Add other income
+        $otherIncomeCash = IncomeRecord::where('income_date', '<=', $asOf)->sum('amount');
+        $cashAndBank += $otherIncomeCash;
+
+        // Subtract expenses paid (cash outflows)
+        $expensesPaid   = Expense::where('expense_date', '<=', $asOf)->sum('amount');
+        $payrollPaid    = TeacherPayroll::where('status', 'paid')->where('payment_date', '<=', $asOf)->sum('net_salary');
+        $staffPayPaid   = SalarySlip::where('status', 'paid')->where('payment_date', '<=', $asOf)->sum('net_salary');
+        $cashAndBank    = max(0, $cashAndBank - $expensesPaid - $payrollPaid - $staffPayPaid);
+
+        // Fixed Assets (at book value — purchase price, no depreciation yet)
+        $fixedAssets = \App\Models\Asset::where('purchase_date', '<=', $asOf)
+            ->whereIn('status', ['active', 'in_use'])
+            ->sum('purchase_price');
+
+        // Accounts Receivable (unpaid invoices outstanding as of year-end)
+        $receivables = \App\Models\Invoice::where('status', '!=', 'paid')
+            ->where('created_at', '<=', $asOf)
+            ->sum('amount');
+
+        $totalAssets = $cashAndBank + $fixedAssets + $receivables;
+
+        // ── LIABILITIES ──────────────────────────────────────────────────────
+        // Unpaid salary slips (draft / approved, not yet paid)
+        $salariesPayable = SalarySlip::whereIn('status', ['draft', 'approved'])
+            ->where('year', '<=', $year)
+            ->sum('net_salary');
+        $teacherSalariesPayable = TeacherPayroll::where('status', 'pending')
+            ->where('year', '<=', $year)
+            ->sum('net_salary');
+
+        // TDS payable (estimated at 15% of payroll costs — Nepal flat rate)
+        $tdsRate        = 0.15;
+        $tdsPayable     = round(($payrollPaid + $staffPayPaid) * $tdsRate, 2);
+
+        $totalLiabilities = $salariesPayable + $teacherSalariesPayable + $tdsPayable;
+
+        // ── EQUITY ────────────────────────────────────────────────────────────
+        // Retained earnings = all-time P&L (income - expenses)
+        $allTimeIncome    = Payment::sum('amount') + IncomeRecord::sum('amount');
+        $allTimeExpenses  = Expense::sum('amount')
+                          + TeacherPayroll::where('status', 'paid')->sum('net_salary')
+                          + SalarySlip::where('status', 'paid')->sum('net_salary');
+        $retainedEarnings = $allTimeIncome - $allTimeExpenses;
+
+        $totalEquity    = $retainedEarnings;
+        $balanceCheck   = $totalAssets - ($totalLiabilities + $totalEquity); // should be ~0
+
+        return view('finance.balance-sheet', compact(
+            'year', 'asOf',
+            'cashAndBank', 'fixedAssets', 'receivables', 'totalAssets',
+            'salariesPayable', 'teacherSalariesPayable', 'tdsPayable', 'totalLiabilities',
+            'retainedEarnings', 'totalEquity',
+            'balanceCheck'
+        ));
+    }
+
+    /** PDF version of the balance sheet */
+    public function balanceSheetPdf(Request $request)
+    {
+        $year    = (int) $request->input('year', now()->year);
+        $asOf    = Carbon::create($year)->endOfYear()->toDateString();
+
+        $cashAndBank    = max(0,
+            Payment::where('payment_date', '<=', $asOf)->sum('amount')
+            + IncomeRecord::where('income_date', '<=', $asOf)->sum('amount')
+            - Expense::where('expense_date', '<=', $asOf)->sum('amount')
+            - TeacherPayroll::where('status', 'paid')->where('payment_date', '<=', $asOf)->sum('net_salary')
+            - SalarySlip::where('status', 'paid')->where('payment_date', '<=', $asOf)->sum('net_salary')
+        );
+        $fixedAssets    = \App\Models\Asset::where('purchase_date', '<=', $asOf)->whereIn('status', ['active', 'in_use'])->sum('purchase_price');
+        $receivables    = \App\Models\Invoice::where('status', '!=', 'paid')->where('created_at', '<=', $asOf)->sum('amount');
+        $totalAssets    = $cashAndBank + $fixedAssets + $receivables;
+
+        $salariesPayable        = SalarySlip::whereIn('status', ['draft', 'approved'])->where('year', '<=', $year)->sum('net_salary');
+        $teacherSalariesPayable = TeacherPayroll::where('status', 'pending')->where('year', '<=', $year)->sum('net_salary');
+        $payrollPaid            = TeacherPayroll::where('status', 'paid')->where('payment_date', '<=', $asOf)->sum('net_salary')
+                                + SalarySlip::where('status', 'paid')->where('payment_date', '<=', $asOf)->sum('net_salary');
+        $tdsPayable             = round($payrollPaid * 0.15, 2);
+        $totalLiabilities       = $salariesPayable + $teacherSalariesPayable + $tdsPayable;
+
+        $retainedEarnings = (Payment::sum('amount') + IncomeRecord::sum('amount'))
+                          - (Expense::sum('amount')
+                             + TeacherPayroll::where('status', 'paid')->sum('net_salary')
+                             + SalarySlip::where('status', 'paid')->sum('net_salary'));
+        $totalEquity  = $retainedEarnings;
+        $balanceCheck = $totalAssets - ($totalLiabilities + $totalEquity);
+
+        $pdf = Pdf::loadView('finance.balance-sheet-pdf', compact(
+            'year', 'asOf',
+            'cashAndBank', 'fixedAssets', 'receivables', 'totalAssets',
+            'salariesPayable', 'teacherSalariesPayable', 'tdsPayable', 'totalLiabilities',
+            'retainedEarnings', 'totalEquity', 'balanceCheck'
+        ))->setPaper('A4');
+
+        return $pdf->download("balance-sheet-{$year}.pdf");
     }
 }

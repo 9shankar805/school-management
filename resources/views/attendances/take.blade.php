@@ -124,6 +124,7 @@
                     <table class="w-full text-left text-xs">
                         <thead>
                             <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-semibold bg-slate-50/50 dark:bg-slate-800/20">
+                                <th class="py-3 px-4">Roll No.</th>
                                 <th class="py-3 px-4"># ID Card</th>
                                 <th class="py-3 px-4">Student Name</th>
                                 <th class="py-3 px-4 text-center">Status (Present / Absent)</th>
@@ -133,6 +134,9 @@
                             @foreach ($student_list as $student)
                             <input type="hidden" name="student_ids[]" value="{{ $student->student_id }}">
                             <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                                <td class="py-3 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                                    {{ $student->roll_no ?? $student->student->roll_no ?? '—' }}
+                                </td>
                                 <td class="py-3 px-4 font-mono font-bold text-slate-700 dark:text-slate-300">
                                     {{ $student->id_card_number ?? '—' }}
                                 </td>
@@ -162,8 +166,10 @@
                     <p class="text-xs text-slate-400">Total Students: <span class="font-bold text-slate-700 dark:text-slate-200">{{ count($student_list) }}</span></p>
                     
                     @if($attendance_count < 1)
-                    <button type="submit" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-lg shadow-indigo-600/25 transition flex items-center gap-2">
-                        <i class="bi bi-check2-circle text-base"></i> Save Attendance
+                    <button type="submit" id="attendanceSubmitBtn"
+                            class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-lg shadow-indigo-600/25 transition flex items-center gap-2">
+                        <i class="bi bi-check2-circle text-base"></i>
+                        <span id="attendanceSubmitLabel">Save Attendance</span>
                     </button>
                     @else
                     <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-1.5 rounded-xl">
@@ -220,5 +226,89 @@ function setAllAttendance(isPresent) {
         }
     });
 }
+
+// ── Offline-first attendance submit ─────────────────────────────────────────
+(function () {
+    const form = document.querySelector('form[action*="attendances/store"], form[action*="attendances.store"]');
+    if (!form) return;
+
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const btn   = document.getElementById('attendanceSubmitBtn');
+        const label = document.getElementById('attendanceSubmitLabel');
+
+        if (btn) { btn.disabled = true; }
+        if (label) { label.textContent = 'Saving…'; }
+
+        // Read hidden meta fields from the form
+        const sessionId  = parseInt(form.querySelector('[name="session_id"]')?.value  || 0);
+        const classId    = parseInt(form.querySelector('[name="class_id"]')?.value    || 0);
+        const sectionId  = parseInt(form.querySelector('[name="section_id"]')?.value  || 0);
+        const courseId   = parseInt(form.querySelector('[name="course_id"]')?.value   || 0);
+
+        // Collect student IDs and their status (checked = 'on', unchecked = 'off')
+        const studentIds = [...form.querySelectorAll('[name="student_ids[]"]')].map(i => parseInt(i.value));
+        const statusMap  = {};
+        form.querySelectorAll('.attendance-checkbox').forEach(cb => {
+            const sid = parseInt(cb.name.replace('status[', '').replace(']', ''));
+            statusMap[sid] = cb.checked ? 'on' : 'off';
+        });
+
+        const payload = {
+            session_id:  sessionId,
+            class_id:    classId,
+            section_id:  sectionId,
+            course_id:   courseId,
+            student_ids: studentIds,
+            status:      statusMap,
+        };
+
+        try {
+            // window.submitAttendance is defined in attendance-sync.js
+            if (typeof window.submitAttendance === 'function') {
+                const result = await window.submitAttendance(payload);
+
+                if (result.synced) {
+                    // Online path — reload to show server-rendered confirmation
+                    window.location.reload();
+                } else {
+                    // Offline path — show saved-offline confirmation in-page
+                    if (label) { label.textContent = 'Saved offline ✓'; }
+                    if (btn)   { btn.className = btn.className.replace('bg-indigo-600 hover:bg-indigo-700', 'bg-emerald-600'); }
+
+                    // Replace the submit button area with a clear offline notice
+                    const submitArea = btn?.closest('div');
+                    if (submitArea) {
+                        submitArea.innerHTML = `
+                            <span class="inline-flex items-center gap-2 text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-4 py-2 rounded-xl">
+                                <i class="bi bi-cloud-slash"></i>
+                                Attendance saved offline — will sync when connected
+                            </span>`;
+                    }
+                }
+            } else {
+                // Fallback: sync JS not loaded, submit the form normally
+                form.submit();
+            }
+        } catch (err) {
+            console.error('[Attendance] Submit error:', err);
+            if (btn)   { btn.disabled = false; }
+            if (label) { label.textContent = 'Save Attendance'; }
+            alert('Error saving attendance: ' + err.message);
+        }
+    });
+
+    // Live checkbox label update
+    form.querySelectorAll('.attendance-checkbox').forEach(cb => {
+        cb.addEventListener('change', function () {
+            const lbl = this.closest('label')?.querySelector('.status-label');
+            if (lbl) {
+                lbl.textContent  = this.checked ? 'Present' : 'Absent';
+                lbl.className    = 'text-xs font-bold ' + (this.checked ? 'text-emerald-600' : 'text-rose-600');
+            }
+        });
+    });
+}());
 </script>
 @endsection

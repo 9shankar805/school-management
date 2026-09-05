@@ -19,6 +19,8 @@ class PermissionSeeder extends Seeder
         // ------------------------------------------------------------------
         'view system settings',
         'edit system settings',
+        'view settings',
+        'manage settings',
         'view audit logs',
         'manage roles',
         'manage permissions',
@@ -191,11 +193,19 @@ class PermissionSeeder extends Seeder
         // ASSIGNMENTS & SYLLABUS
         // ------------------------------------------------------------------
         'create assignments',
+        'create assignment',
         'view assignments',
         'edit assignments',
         'delete assignments',
         'submit assignments',
         'grade assignments',
+        'create homework',
+        'create study note',
+        'create study notes',
+        'create lesson plan',
+        'create lesson plans',
+        'create online class',
+        'create online classes',
         'create syllabi',
         'view syllabi',
         'edit syllabi',
@@ -245,6 +255,7 @@ class PermissionSeeder extends Seeder
         'manage fee structure',
         'manage discounts',
         'manage scholarships',
+        'manage finance',
 
         // ------------------------------------------------------------------
         // LIBRARY

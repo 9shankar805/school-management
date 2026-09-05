@@ -47,7 +47,14 @@ class AttendanceShortageAlert extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        $channels = ['database'];
+
+        // Only add mail channel if SMTP credentials are configured
+        if ($notifiable->email && config('mail.mailers.smtp.password')) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     // ── In-app (database) ────────────────────────────────────────────────────

@@ -3,6 +3,7 @@
 namespace App\Models;
 use App\Traits\HasTenant;
 
+use App\Models\GradeRule;
 use App\Models\Semester;
 use App\Models\SchoolClass;
 use Illuminate\Database\Eloquent\Model;
@@ -27,5 +28,9 @@ class GradingSystem extends Model
 
     public function schoolClass() {
         return $this->belongsTo(SchoolClass::class, 'class_id');
+    }
+
+    public function gradeRules() {
+        return $this->hasMany(GradeRule::class, 'grading_system_id');
     }
 }

@@ -61,7 +61,7 @@ class CourseController extends Controller
 
             return back()->with('status', 'Course creation was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -117,7 +117,7 @@ class CourseController extends Controller
 
             return back()->with('status', 'Course update was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 

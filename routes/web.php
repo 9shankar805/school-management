@@ -16,6 +16,7 @@ use App\Http\Controllers\SemesterController;
 use App\Http\Controllers\SyllabusController;
 use App\Http\Controllers\GradeRuleController;
 use App\Http\Controllers\PromotionController;
+use App\Http\Controllers\RollNumberController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\QrAttendanceController;
@@ -121,6 +122,14 @@ Route::post('/admissions/apply', [\App\Http\Controllers\PublicAdmissionControlle
 // Official CEHRD IEMIS School Performance Dashboard (Public & Authenticated)
 Route::get('/iemis-school-report-card-dashboard', [\App\Http\Controllers\HomeController::class, 'iemisDashboard'])->name('iemis.school.dashboard');
 
+// IEMIS data export (admin/principal only)
+Route::middleware(['auth'])->prefix('iemis')->name('iemis.')->group(function () {
+    Route::get('/export',       [\App\Http\Controllers\IemisExportController::class, 'index'])->name('export');
+    Route::post('/export/excel',[\App\Http\Controllers\IemisExportController::class, 'exportExcel'])->name('export.excel');
+    Route::post('/export/csv',  [\App\Http\Controllers\IemisExportController::class, 'exportCsv'])->name('export.csv');
+    Route::post('/export/pdf',  [\App\Http\Controllers\IemisExportController::class, 'exportPdf'])->name('export.pdf');
+});
+
 Route::middleware(['auth'])->group(function () {
 
     Route::prefix('school')->name('school.')->group(function () {
@@ -150,6 +159,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('teacher/create', [UserController::class, 'storeTeacher'])->name('teacher.create');
         Route::post('teacher/update', [UserController::class, 'updateTeacher'])->name('teacher.update');
         Route::post('teacher/assign', [AssignedTeacherController::class, 'store'])->name('teacher.assign');
+        Route::post('teacher/toggle-class-teacher/{id}', [AssignedTeacherController::class, 'toggleClassTeacher'])->name('teacher.toggle-class-teacher');
+
 
         // Student
         Route::post('student/create', [UserController::class, 'storeStudent'])->name('student.create');
@@ -166,9 +177,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/attendances', [AttendanceController::class, 'store'])->name('attendances.store');
 
     // Attendance — analytics
-    Route::get('/attendances/analytics', [AttendanceController::class, 'analytics'])->name('attendance.analytics');
-
-    // Attendance — analytics dashboard
     Route::get('/attendances/analytics', [AttendanceController::class, 'analytics'])->name('attendance.analytics');
 
     // Attendance — shortage alerts
@@ -239,12 +247,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Exams
     Route::get('/exams/view', [ExamController::class, 'index'])->name('exam.list.show');
-    // Route::get('/exams/view/history', function () {
-    //     return view('exams.history');
-    // });
     Route::post('/exams/create', [ExamController::class, 'store'])->name('exam.create');
-    // Route::post('/exams/delete', [ExamController::class, 'delete'])->name('exam.delete');
     Route::get('/exams/create', [ExamController::class, 'create'])->name('exam.create.show');
+    Route::post('/exams/delete', [ExamController::class, 'destroy'])->name('exam.delete');
     Route::get('/exams/add-rule', [ExamRuleController::class, 'create'])->name('exam.rule.create');
     Route::post('/exams/add-rule', [ExamRuleController::class, 'store'])->name('exam.rule.store');
     Route::get('/exams/edit-rule', [ExamRuleController::class, 'edit'])->name('exam.rule.edit');
@@ -257,11 +262,20 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/exams/grade/add-rule', [GradeRuleController::class, 'store'])->name('exam.grade.system.rule.store');
     Route::get('/exams/grade/view-rules', [GradeRuleController::class, 'index'])->name('exam.grade.system.rule.show');
     Route::post('/exams/grade/delete-rule', [GradeRuleController::class, 'destroy'])->name('exam.grade.system.rule.delete');
+    // Dynamic exam routes — must come AFTER all static /exams/* paths
+    Route::get('/exams/{exam}/edit', [ExamController::class, 'edit'])->name('exam.edit');
+    Route::put('/exams/{exam}', [ExamController::class, 'update'])->name('exam.update');
+    Route::get('/exams/{exam}', [ExamController::class, 'show'])->name('exam.show');
 
     // Promotions
     Route::get('/promotions/index', [PromotionController::class, 'index'])->name('promotions.index');
     Route::get('/promotions/promote', [PromotionController::class, 'create'])->name('promotions.create');
     Route::post('/promotions/promote', [PromotionController::class, 'store'])->name('promotions.store');
+
+    // Roll Numbers
+    Route::get('/roll-numbers', [RollNumberController::class, 'index'])->name('roll-numbers.index');
+    Route::post('/roll-numbers/update-bulk', [RollNumberController::class, 'updateBulk'])->name('roll-numbers.update-bulk');
+    Route::post('/roll-numbers/auto-assign', [RollNumberController::class, 'autoAssign'])->name('roll-numbers.auto-assign');
 
     // Academic settings
     Route::get('/academics/settings', [AcademicSettingController::class, 'index']);
@@ -318,6 +332,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}',                         [PaymentController::class, 'show'])->name('show');
         Route::get('/{id}/pay',                  [PaymentController::class, 'pay'])->name('pay');
         Route::post('/{id}/pay',                 [PaymentController::class, 'processPayment'])->name('process');
+        Route::get('/receipt/{paymentId}',       [PaymentController::class, 'receiptPage'])->name('receipt');
     });
 
     // ── LIBRARY (Module 12) ────────────────────────────────────────────────────
@@ -678,9 +693,20 @@ Route::middleware(['auth'])->group(function () {
 
     // ── TRANSFERS ────────────────────────────────────────────────────────────
     Route::get('transfers',                                    [StudentTransferController::class, 'index'])->name('student.transfers.index');
+    Route::get('transfers/{id}',                               [StudentTransferController::class, 'show'])->name('student.transfer.show');
+    // Outgoing transfer (from a student's profile)
     Route::get('students/{studentId}/transfer/create',         [StudentTransferController::class, 'create'])->name('student.transfer.create');
     Route::post('students/{studentId}/transfer',               [StudentTransferController::class, 'store'])->name('student.transfer.store');
+    // Incoming transfer (Scenario 3) — admit a new student with TC
+    Route::get('transfers/incoming/create',                    [StudentTransferController::class, 'createIncoming'])->name('student.transfer.incoming.create');
+    Route::post('transfers/incoming',                          [StudentTransferController::class, 'storeIncoming'])->name('student.transfer.incoming.store');
+    // Approve / Reject
     Route::post('transfers/{id}/approve',                      [StudentTransferController::class, 'approve'])->name('student.transfer.approve');
+    // Accept (destination school accepts a same-platform Scenario 1 transfer)
+    Route::post('transfers/{id}/accept',                       [StudentTransferController::class, 'accept'])->name('student.transfer.accept');
+    // TC PDF download
+    Route::get('transfers/{id}/tc',                            [StudentTransferController::class, 'downloadTC'])->name('student.transfer.tc');
+    // Delete
     Route::delete('transfers/{id}',                            [StudentTransferController::class, 'destroy'])->name('student.transfer.destroy');
 
     // ── STUDENT ID CARDS ─────────────────────────────────────────────────────
@@ -980,6 +1006,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}/versions',  [QuestionPaperController::class, 'versions'])->name('versions');
         Route::post('/versions/{versionId}/restore', [QuestionPaperController::class, 'restoreVersion'])->name('versions.restore');
         Route::post('/{id}/auto-save',[QuestionPaperController::class, 'autoSave'])->name('auto-save');
+        Route::post('/{id}/ai-generate', [QuestionPaperController::class, 'aiGenerate'])->name('ai-generate');
         // Approval workflow
         Route::post('/{id}/submit',   [QuestionApprovalController::class, 'submit'])->name('submit');
         Route::post('/{id}/review',   [QuestionApprovalController::class, 'review'])->name('review');
@@ -1164,6 +1191,8 @@ Route::middleware(['auth'])->group(function () {
         // Profit & Loss
         Route::get('/profit-loss',     [\App\Http\Controllers\LedgerController::class, 'profitLoss'])->name('profit-loss');
         Route::get('/profit-loss/pdf', [\App\Http\Controllers\LedgerController::class, 'profitLossPdf'])->name('profit-loss.pdf');
+        Route::get('/balance-sheet',   [\App\Http\Controllers\LedgerController::class, 'balanceSheet'])->name('balance-sheet');
+        Route::get('/balance-sheet/pdf',[\App\Http\Controllers\LedgerController::class, 'balanceSheetPdf'])->name('balance-sheet.pdf');
 
         // Fee types master list
         Route::prefix('fee-types')->name('fee-types.')->group(function () {
@@ -1199,6 +1228,16 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/finance/esewa/failure',  [\App\Http\Controllers\OnlinePaymentController::class, 'esewaFailure'])->name('finance.esewa.failure');
     Route::get('/finance/khalti/callback',[\App\Http\Controllers\OnlinePaymentController::class, 'khaltiCallback'])->name('finance.khalti.callback');
     Route::post('/finance/initiate',      [\App\Http\Controllers\OnlinePaymentController::class, 'initiate'])->name('finance.payment.initiate');
+
+    // ── PAYMENT PROOF (QR payment evidence submission & approval) ─────────
+    // Parent/student: submit proof after scanning QR
+    Route::get('/payment-proof/{invoiceId}',  [\App\Http\Controllers\PaymentProofController::class, 'showForm'])->name('payment-proof.show');
+    Route::post('/payment-proof/{invoiceId}', [\App\Http\Controllers\PaymentProofController::class, 'submit'])->name('payment-proof.submit');
+
+    // Admin/Accountant: review queue
+    Route::get('/payment-proofs',                   [\App\Http\Controllers\PaymentProofController::class, 'index'])->name('payment-proofs.index');
+    Route::post('/payment-proofs/{proofId}/approve',[\App\Http\Controllers\PaymentProofController::class, 'approve'])->name('payment-proofs.approve');
+    Route::post('/payment-proofs/{proofId}/reject', [\App\Http\Controllers\PaymentProofController::class, 'reject'])->name('payment-proofs.reject');
 
     // ── CERTIFICATE MANAGEMENT ────────────────────────────────────────────
     // Template CRUD
@@ -1239,6 +1278,15 @@ Route::middleware(['auth'])->group(function () {
 // ── Certificate public verification (no auth required — accessed via QR) ──
 Route::get('/certificates/verify/{token}', [CertificateController::class, 'verify'])->name('certificates.verify');
 
+// TC public verification (no auth required — receiving school scans QR)
+Route::get('/transfer/verify/{token}', [StudentTransferController::class, 'verifyTC'])->name('student.transfer.verify');
+
+// ── Firebase Push Notification token endpoints ────────────────────────────
+Route::middleware('auth')->group(function () {
+    Route::post  ('/push/token', [\App\Http\Controllers\PushTokenController::class, 'store'])->name('push.token.store');
+    Route::delete('/push/token', [\App\Http\Controllers\PushTokenController::class, 'destroy'])->name('push.token.destroy');
+});
+
 // ── Student ID Card Public Verification & QR Quick Login (no auth required) ──
 Route::get('/verify/student/{token}', [\App\Http\Controllers\StudentVerificationController::class, 'show'])->name('student.verify');
 Route::get('/qr-login/{token}', [\App\Http\Controllers\StudentVerificationController::class, 'qrLogin'])->name('student.qr-login');
@@ -1255,15 +1303,22 @@ Route::middleware(['auth'])->get('/teachers/id-cards/bulk', [\App\Http\Controlle
 // ── Global search for command palette (authenticated) ──
 Route::middleware(['auth'])->get('/search', [SettingController::class, 'globalSearch'])->name('global.search');
 
+// ── Offline PWA — seed data (GET) + sync batch (POST) ─────────────────────
+Route::middleware(['auth'])->get('/api/offline/seed-data', \App\Http\Controllers\OfflineSeedController::class)->name('offline.seed');
+Route::middleware(['auth'])->post('/api/offline/sync', [\App\Http\Controllers\OfflineSyncController::class, 'sync'])->name('offline.sync');
+
 // ── School Profile Management (authenticated) ──
 Route::middleware(['auth'])->prefix('school/profile')->name('school.profile.')->group(function () {
     Route::get('/', [SchoolProfileController::class, 'edit'])->name('edit');
     Route::post('/', [SchoolProfileController::class, 'update'])->name('update');
     Route::get('/preview', [SchoolLandingController::class, 'preview'])->name('preview');
+    // Dedicated Payment QR management page
+    Route::get('/payment-qr',  [SchoolProfileController::class, 'paymentQr'])->name('payment-qr');
+    Route::post('/payment-qr', [SchoolProfileController::class, 'updatePaymentQr'])->name('payment-qr.update');
 });
-
 // ── Public School Landing Pages (no auth required) ──
 Route::get('/school/{slug}', [SchoolLandingController::class, 'show'])->name('school.landing');
+Route::domain('{subdomain}.nshlms.com')->get('/', [SchoolLandingController::class, 'showBySubdomain'])->name('school.subdomain');
 
 // Payment gateway webhooks — no CSRF (raw POST from gateways)
 Route::post('/webhooks/stripe',      [\App\Http\Controllers\WebhookController::class, 'stripe'])->name('webhooks.stripe');
@@ -1277,58 +1332,46 @@ Route::post('/webhooks/khalti',      [\App\Http\Controllers\WebhookController::c
 // NEPALSCHOOLHUB SAAS ROUTES
 // ═══════════════════════════════════════════════════════════════════════════
 
-// Dynamic Sitemap
+// Dynamic Auto-SEO Sitemap
 Route::get('/sitemap.xml', function () {
     $lastmod = now()->toAtomString();
-    $xml = '<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-    <url>
-        <loc>'.url('/').'</loc>
-        <lastmod>'.$lastmod.'</lastmod>
-        <changefreq>daily</changefreq>
-        <priority>1.0</priority>
-    </url>
-    <url>
-        <loc>'.route('saas.register').'</loc>
-        <lastmod>'.$lastmod.'</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.9</priority>
-    </url>
-    <url>
-        <loc>'.url('/#features').'</loc>
-        <lastmod>'.$lastmod.'</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.7</priority>
-    </url>
-    <url>
-        <loc>'.url('/#pricing').'</loc>
-        <lastmod>'.$lastmod.'</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    <url>
-        <loc>'.url('/#faq').'</loc>
-        <lastmod>'.$lastmod.'</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.7</priority>
-    </url>
-    <url>
-        <loc>'.url('/#contact').'</loc>
-        <lastmod>'.$lastmod.'</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.6</priority>
-    </url>
-    <url>
-        <loc>'.route('login').'</loc>
-        <lastmod>'.$lastmod.'</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.5</priority>
-    </url>
-</urlset>';
-    return response($xml, 200)->header('Content-Type', 'application/xml');
+    $schools = \App\Models\School::where('status', 'active')->get();
+
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+    $xml .= '    <url>' . "\n";
+    $xml .= '        <loc>' . htmlspecialchars(url('/')) . '</loc>' . "\n";
+    $xml .= '        <lastmod>' . $lastmod . '</lastmod>' . "\n";
+    $xml .= '        <changefreq>daily</changefreq>' . "\n";
+    $xml .= '        <priority>1.0</priority>' . "\n";
+    $xml .= '    </url>' . "\n";
+    $xml .= '    <url>' . "\n";
+    $xml .= '        <loc>' . htmlspecialchars(route('saas.register')) . '</loc>' . "\n";
+    $xml .= '        <lastmod>' . $lastmod . '</lastmod>' . "\n";
+    $xml .= '        <changefreq>weekly</changefreq>' . "\n";
+    $xml .= '        <priority>0.9</priority>' . "\n";
+    $xml .= '    </url>' . "\n";
+    $xml .= '    <url>' . "\n";
+    $xml .= '        <loc>' . htmlspecialchars(route('login')) . '</loc>' . "\n";
+    $xml .= '        <lastmod>' . $lastmod . '</lastmod>' . "\n";
+    $xml .= '        <changefreq>monthly</changefreq>' . "\n";
+    $xml .= '        <priority>0.8</priority>' . "\n";
+    $xml .= '    </url>' . "\n";
+
+    foreach ($schools as $school) {
+        $schoolUrl = url('/school/' . $school->slug);
+        $schoolMod = $school->updated_at ? $school->updated_at->toAtomString() : $lastmod;
+        $xml .= '    <url>' . "\n";
+        $xml .= '        <loc>' . htmlspecialchars($schoolUrl) . '</loc>' . "\n";
+        $xml .= '        <lastmod>' . $schoolMod . '</lastmod>' . "\n";
+        $xml .= '        <changefreq>daily</changefreq>' . "\n";
+        $xml .= '        <priority>0.8</priority>' . "\n";
+        $xml .= '    </url>' . "\n";
+    }
+
+    $xml .= '</urlset>';
+
+    return response($xml, 200)->header('Content-Type', 'text/xml; charset=UTF-8');
 });
 
 Route::get('/robots.txt', function () {
@@ -1370,6 +1413,14 @@ Route::middleware(['auth', 'role:super-admin'])
          Route::post('/schools/{school}/impersonate', [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'impersonate'])->name('schools.impersonate');
          Route::get('/impersonate/stop',           [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'stopImpersonate'])->name('impersonate.stop');
 
+         // ── SMC / Governance ────────────────────────────────────────────────
+         Route::get('/schools/{school}/committee',          [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'showCommittee'])->name('schools.committee');
+         Route::post('/schools/{school}/committee/members', [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'storeCommitteeMember'])->name('schools.committee.members.store');
+         Route::patch('/schools/{school}/committee/members/{member}', [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'updateCommitteeMember'])->name('schools.committee.members.update');
+         Route::delete('/schools/{school}/committee/members/{member}', [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'destroyCommitteeMember'])->name('schools.committee.members.destroy');
+         Route::post('/schools/{school}/committee/members/{member}/document', [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'uploadCommitteeDocument'])->name('schools.committee.document.upload');
+         Route::delete('/schools/{school}/committee/documents/{mediaFile}', [\App\Http\Controllers\SuperAdmin\SchoolManagementController::class, 'destroyCommitteeDocument'])->name('schools.committee.document.destroy');
+
          // ── Contact Messages Inbox ────────────────────────────────────────
          Route::get('/contact-messages',                                    [\App\Http\Controllers\ContactMessagesController::class, 'index'])->name('contact-messages.index');
          Route::get('/contact-messages/{contactMessage}',                   [\App\Http\Controllers\ContactMessagesController::class, 'show'])->name('contact-messages.show');
@@ -1400,3 +1451,57 @@ if (class_exists(\Laravel\Horizon\Horizon::class)) {
         return redirect(config('horizon.path', 'horizon'));
     })->middleware(['auth'])->name('horizon.index');
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MODULE 24 — INTERACTIVE LIVE QUIZ COMPETITION SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════
+
+// ── Teacher / Host Management & Projector Console (Authenticated) ────────
+Route::middleware(['auth'])->group(function () {
+    Route::resource('live-quiz', \App\Http\Controllers\LiveQuizController::class);
+    Route::post('live-quiz/seed-demo', [\App\Http\Controllers\LiveQuizController::class, 'seedDemoQuiz'])->name('live-quiz.seed-demo');
+    Route::post('live-quiz/{quiz}/questions', [\App\Http\Controllers\LiveQuizController::class, 'storeQuestion'])->name('live-quiz.questions.store');
+    Route::delete('live-quiz/{quiz}/questions/{question}', [\App\Http\Controllers\LiveQuizController::class, 'deleteQuestion'])->name('live-quiz.questions.destroy');
+
+    // Host Projector Views
+    Route::get('live-quiz/host/create/{quiz}', [\App\Http\Controllers\LiveQuizHostController::class, 'createSession'])->name('live-quiz.host.create-session');
+    Route::get('live-quiz/host/lobby/{session}', [\App\Http\Controllers\LiveQuizHostController::class, 'lobbyView'])->name('live-quiz.host.lobby');
+    Route::get('quiz/host/game/{session}', [\App\Http\Controllers\LiveQuizHostController::class, 'gameView'])->name('live-quiz.host.game');
+
+    // Host Real-Time Control APIs
+    Route::get('quiz/host/api/state/{session}', [\App\Http\Controllers\LiveQuizHostController::class, 'getHostLiveState'])->name('live-quiz.host.state');
+    Route::post('quiz/host/api/start/{session}', [\App\Http\Controllers\LiveQuizHostController::class, 'startLobbyGame'])->name('live-quiz.host.start');
+    Route::post('quiz/host/api/next/{session}', [\App\Http\Controllers\LiveQuizHostController::class, 'nextQuestion'])->name('live-quiz.host.next');
+    Route::post('quiz/host/api/lock/{session}', [\App\Http\Controllers\LiveQuizHostController::class, 'lockQuestion'])->name('live-quiz.host.lock');
+    Route::post('quiz/host/api/pass/{session}', [\App\Http\Controllers\LiveQuizHostController::class, 'passQuestion'])->name('live-quiz.host.pass');
+    Route::post('quiz/host/api/judge/{session}', [\App\Http\Controllers\LiveQuizHostController::class, 'judgeDirectAnswer'])->name('live-quiz.host.judge');
+    Route::post('quiz/host/api/reveal/{session}', [\App\Http\Controllers\LiveQuizHostController::class, 'revealAnswer'])->name('live-quiz.host.reveal');
+    Route::post('quiz/host/api/leaderboard/{session}', [\App\Http\Controllers\LiveQuizHostController::class, 'showLeaderboard'])->name('live-quiz.host.leaderboard');
+    Route::post('quiz/host/api/finish/{session}', [\App\Http\Controllers\LiveQuizHostController::class, 'finishGame'])->name('live-quiz.host.finish');
+    Route::delete('quiz/host/api/team/{session}/{team}', [\App\Http\Controllers\LiveQuizHostController::class, 'removeTeam'])->name('live-quiz.host.remove-team');
+});
+
+// ── Captain Mobile Player Routes (Public Access via 6-Digit PIN) ──────────
+Route::get('quiz/join', [\App\Http\Controllers\LiveQuizPlayerController::class, 'joinView'])->name('live-quiz.player.join');
+Route::get('quiz/play/{pin}', [\App\Http\Controllers\LiveQuizPlayerController::class, 'playerGameView'])->name('live-quiz.player.play');
+Route::post('quiz/player/api/join', [\App\Http\Controllers\LiveQuizPlayerController::class, 'joinSession'])->name('live-quiz.player.api-join');
+Route::post('quiz/player/api/submit', [\App\Http\Controllers\LiveQuizPlayerController::class, 'submitAnswer'])->name('live-quiz.player.submit');
+Route::post('quiz/player/api/buzz', [\App\Http\Controllers\LiveQuizPlayerController::class, 'buzzIn'])->name('live-quiz.player.buzz');
+Route::post('quiz/player/api/pass', [\App\Http\Controllers\LiveQuizPlayerController::class, 'passMyTurn'])->name('live-quiz.player.pass');
+Route::post('quiz/player/api/security-event', [\App\Http\Controllers\LiveQuizPlayerController::class, 'recordSecurityEvent'])->name('live-quiz.player.security-event');
+Route::get('quiz/player/api/state/{pin}', [\App\Http\Controllers\LiveQuizPlayerController::class, 'getPlayerLiveState'])->name('live-quiz.player.state');
+
+// Error Page Previews
+Route::get('/500', fn() => view('errors.500'));
+Route::get('/419', fn() => view('errors.419'));
+Route::get('/404', fn() => view('errors.404'));
+Route::get('/403', fn() => view('errors.403'));
+Route::get('/503', fn() => view('errors.503'));
+Route::get('/401', fn() => view('errors.401'));
+Route::get('/429', fn() => view('errors.429'));
+
+
+
+
+
+

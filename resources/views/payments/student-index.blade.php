@@ -43,7 +43,7 @@
             <div>
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Recent Payments</p>
                 <p class="text-3xl font-bold text-emerald-600 mt-1">
-                    NPR {{ number_format($paymentHistory->sum('amount_paid'), 2) }}
+                    NPR {{ number_format($paymentHistory->sum('amount'), 2) }}
                 </p>
             </div>
             <span class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl font-bold">
@@ -66,7 +66,7 @@
             <div class="divide-y divide-slate-50">
                 @foreach($invoices as $inv)
                 @php
-                    $paidAmount = $inv->payments->sum('amount_paid');
+                    $paidAmount = $inv->payments->sum('amount');
                     $remaining  = max(0, $inv->amount - $paidAmount);
                     $badgeClass = match($inv->status) {
                         'paid'    => 'bg-emerald-100 text-emerald-700',
@@ -125,7 +125,7 @@
                     @foreach($paymentHistory as $pay)
                     <tr>
                         <td class="px-5 py-3.5 font-medium text-slate-800">{{ $pay->invoice?->title ?? '—' }}</td>
-                        <td class="px-5 py-3.5 text-center font-bold text-emerald-600">NPR {{ number_format($pay->amount_paid, 2) }}</td>
+                        <td class="px-5 py-3.5 text-center font-bold text-emerald-600">NPR {{ number_format($pay->amount, 2) }}</td>
                         <td class="px-5 py-3.5 text-center text-slate-500">{{ \Carbon\Carbon::parse($pay->payment_date)->format('M d, Y') }}</td>
                         <td class="px-5 py-3.5 text-center capitalize text-slate-500">{{ str_replace('_', ' ', $pay->payment_method ?? 'Cash') }}</td>
                     </tr>

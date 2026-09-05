@@ -16,17 +16,24 @@ class FeeStructure extends Model
         'school_id',
         'name', 'session_id', 'class_id', 'category_id',
         'amount', 'frequency', 'due_date', 'is_active', 'description',
+        'fee_type_id', 'is_taxable', 'tax_rate', 'applies_to',
     ];
 
     protected $casts = [
-        'amount'    => 'decimal:2',
-        'due_date'  => 'date',
-        'is_active' => 'boolean',
+        'amount'     => 'decimal:2',
+        'tax_rate'   => 'decimal:2',
+        'due_date'   => 'date',
+        'is_active'  => 'boolean',
+        'is_taxable' => 'boolean',
     ];
 
     public function category()
     {
         return $this->belongsTo(FeeCategory::class, 'category_id');
+    }
+    public function feeType()
+    {
+        return $this->belongsTo(FeeType::class, 'fee_type_id');
     }
 
     public function session()

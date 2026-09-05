@@ -596,6 +596,84 @@ $activeStep = max(1, min(4, $activeStep));
 </div>{{-- /step-4 --}}
 
 {{-- ════════════════════════════════════════════════
+     STEP 5 — PAYMENT QR CODES
+════════════════════════════════════════════════ --}}
+<div class="step-panel hidden" id="step-5">
+<div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-6 mb-6">
+    <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-1 flex items-center gap-2">
+        <i class="bi bi-qr-code text-emerald-600"></i> Payment QR Codes
+    </h3>
+    <p class="text-xs text-slate-400 mb-6">
+        Upload QR images for eSewa, Khalti, FonePay or your bank account.
+        These will appear on every fee invoice so parents can scan and pay directly from their phone — no gateway setup needed.
+    </p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        @foreach([
+            ['field'=>'payment_qr_esewa',   'label'=>'eSewa QR',   'color'=>'#60bb46', 'icon'=>'bi-phone'],
+            ['field'=>'payment_qr_khalti',  'label'=>'Khalti QR',  'color'=>'#5c2d91', 'icon'=>'bi-phone'],
+            ['field'=>'payment_qr_bank',    'label'=>'Bank / Connect IPS QR', 'color'=>'#1d4ed8', 'icon'=>'bi-bank'],
+            ['field'=>'payment_qr_fonepay', 'label'=>'FonePay QR', 'color'=>'#e3001e', 'icon'=>'bi-upc-scan'],
+        ] as $qr)
+        @php $field = $qr['field']; $current = $school->$field ?? null; @endphp
+        <div class="border border-slate-200 dark:border-slate-700 rounded-2xl p-4">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="w-7 h-7 rounded-lg flex items-center justify-center text-white text-sm"
+                      style="background:{{ $qr['color'] }}">
+                    <i class="bi {{ $qr['icon'] }}"></i>
+                </span>
+                <span class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ $qr['label'] }}</span>
+                @if($current)
+                <span class="ml-auto text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">Active</span>
+                @endif
+            </div>
+
+            {{-- Current QR preview --}}
+            @if($current)
+            <div class="flex items-start gap-3 mb-3 p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                <img src="{{ Storage::disk('public')->url($current) }}"
+                     alt="{{ $qr['label'] }}"
+                     class="w-24 h-24 object-contain rounded-lg border border-slate-200 dark:border-slate-600 bg-white">
+                <div class="flex flex-col gap-2">
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Current QR active. Upload a new one to replace it.</p>
+                    <label class="flex items-center gap-2 cursor-pointer text-xs text-rose-600">
+                        <input type="checkbox" name="remove_{{ $field }}" value="1" class="rounded accent-rose-500">
+                        Remove QR
+                    </label>
+                </div>
+            </div>
+            @endif
+
+            {{-- Upload --}}
+            <label class="flex flex-col items-center justify-center gap-1.5 w-full border-2 border-dashed
+                           border-slate-300 dark:border-slate-600 rounded-xl py-5 cursor-pointer
+                           hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition">
+                <i class="bi bi-qr-code-scan text-2xl text-slate-400"></i>
+                <span class="text-xs text-slate-500 font-semibold">
+                    {{ $current ? 'Replace' : 'Upload' }} {{ $qr['label'] }}
+                </span>
+                <span class="text-[10px] text-slate-400">PNG / JPG / WebP · max 1 MB</span>
+                <input type="file" name="{{ $field }}" accept="image/*" class="hidden"
+                       onchange="previewQR(this, '{{ $field }}-preview')">
+            </label>
+            <img id="{{ $field }}-preview" class="hidden mt-3 mx-auto w-24 h-24 object-contain rounded-xl border border-slate-200" alt="Preview">
+        </div>
+        @endforeach
+    </div>
+
+    {{-- Payment instructions --}}
+    <div class="mt-6">
+        <label class="field-label">Payment Instructions <span class="text-slate-400 font-normal">(optional)</span></label>
+        <p class="text-[11px] text-slate-400 mb-2">
+            Text shown below the QR on every invoice — e.g. account name, phone number for eSewa, or notes for parents.
+        </p>
+        <textarea name="payment_instructions" rows="4" class="field-input resize-y"
+                  placeholder="eSewa / Khalti: 98XXXXXXXX (School Name)&#10;Bank: Nepal Investment Bank, A/C 012345XXXXX, Branch: Kathmandu">{{ old('payment_instructions', $school->payment_instructions) }}</textarea>
+    </div>
+</div>
+</div>{{-- /step-5 --}}
+
+{{-- ════════════════════════════════════════════════
      FOOTER NAV (Prev / Next / Save)
 ════════════════════════════════════════════════ --}}
 <div class="mt-6 flex items-center justify-between gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm px-6 py-4">
@@ -605,7 +683,7 @@ $activeStep = max(1, min(4, $activeStep));
     </button>
 
     <div class="flex items-center gap-1.5">
-        @for($i=1;$i<=4;$i++)
+        @for($i=1;$i<=5;$i++)
         <div class="w-2 h-2 rounded-full transition-all duration-300 dot-indicator
                     {{ $i === $activeStep ? 'bg-indigo-600 w-6' : ($i < $activeStep ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600') }}"
              id="dot-{{ $i }}"></div>
@@ -654,7 +732,7 @@ $activeStep = max(1, min(4, $activeStep));
 <script>
 /* ── Baked data from PHP ──────────────────────────────────────── */
 const STEP_ICONS  = @json(collect($steps)->pluck('icon')->values());
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 let currentStep   = {{ $activeStep }};
 
 function goStep(n) {
@@ -899,6 +977,21 @@ function replaceGalleryPreview(input, idx) {
 /* ── Init ─────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
     goStep({{ $activeStep }});
+
+    // QR image preview
+    function previewQR(input, previewId) {
+        const preview = document.getElementById(previewId);
+        if (!preview) return;
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
     updatePreview();
 });
 </script>

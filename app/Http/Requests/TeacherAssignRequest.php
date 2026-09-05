@@ -29,7 +29,9 @@ class TeacherAssignRequest extends FormRequest
             'class_id'              => 'required|integer',
             'section_id'            => 'required|integer',
             'teacher_id'            => 'required|integer',
+            'is_class_teacher'      => 'nullable|boolean',
             'session_id'            => 'required|integer',
         ];
+
     }
 }

@@ -239,7 +239,7 @@
                         </div>
                     </div>
                     <div class="flex-shrink-0 text-right">
-                        <p class="text-sm font-black text-emerald-600 dark:text-emerald-400">+ Rs. {{ number_format($p->amount_paid) }}</p>
+                        <p class="text-sm font-black text-emerald-600 dark:text-emerald-400">+ Rs. {{ number_format($p->amount) }}</p>
                         <p class="text-[10px] text-slate-400">{{ $p->created_at->format('M d, H:i') }}</p>
                     </div>
                 </div>

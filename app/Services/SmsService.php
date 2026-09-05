@@ -34,7 +34,7 @@ class SmsService
 
     public function __construct()
     {
-        $this->provider = config('services.sms.provider', 'twilio');
+        $this->provider = config('services.sms.provider', 'sparrow');
     }
 
     /**

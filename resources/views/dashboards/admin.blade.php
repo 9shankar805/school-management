@@ -162,6 +162,7 @@
         </h1>
         <p style="font-size:11px; color:#94a3b8 !important; margin:3px 0 0; font-weight:500;">
             {{ now()->format('l, F j, Y') }} &bull; {{ now()->format('g:i A') }}
+            &bull; <span style="color:#6366f1;font-weight:700;">आ.व. {{ \App\Services\NepaliDateService::currentFiscalYear() }}</span>
         </p>
     </div>
     <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
@@ -199,7 +200,15 @@
         <span class="iemis-title">Students</span>
         <div class="iemis-num-group">
             <span class="iemis-value">{{ number_format($studentCount) }}</span>
-            <span class="iemis-badge-green">13.86 %</span>
+            @if($enrollmentGrowthPct !== null)
+                @if($enrollmentGrowthPct >= 0)
+                    <span class="iemis-badge-green">+{{ $enrollmentGrowthPct }}%</span>
+                @else
+                    <span class="iemis-badge-rose">{{ $enrollmentGrowthPct }}%</span>
+                @endif
+            @else
+                <span class="iemis-badge-amber">New</span>
+            @endif
         </div>
     </div>
 </a>
@@ -426,6 +435,7 @@
                 </div>
                 <span style="font-size:10px;font-weight:800;background:#eef2ff;color:#4f46e5 !important;border:1px solid #c7d2fe;padding:3px 8px;border-radius:6px;flex-shrink:0;">
                     {{ \Carbon\Carbon::parse($exam->start_date)->format('M d') }}
+                    <span style="font-size:9px;color:#818cf8;display:block;text-align:center;">{{ bsDate(\Carbon\Carbon::parse($exam->start_date)->format('Y-m-d'), true, 'short') }}</span>
                 </span>
             </div>
             @endforeach
@@ -594,7 +604,7 @@
                     </div>
                 </div>
                 <span style="font-size:12px;font-weight:900;color:#166534 !important;flex-shrink:0;background:#f0fdf4;border:1px solid #dcfce7;padding:3px 8px;border-radius:6px;">
-                    Rs.{{ number_format($pmt->amount_paid) }}
+                    Rs.{{ number_format($pmt->amount) }}
                 </span>
             </div>
             @endforeach

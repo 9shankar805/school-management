@@ -104,7 +104,7 @@ class AttendanceController extends Controller
                 'attendance_count'          => $attendance_count,
             ]);
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -120,7 +120,7 @@ class AttendanceController extends Controller
 
             return back()->with('status', 'Attendance saved successfully!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -160,7 +160,7 @@ class AttendanceController extends Controller
                 'current_school_session_id' => $current_school_session_id,
             ]);
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -406,11 +406,11 @@ class AttendanceController extends Controller
 
         } catch (\Throwable $e) {
             Storage::delete($path);
-            return back()->withError('Failed to read CSV: ' . $e->getMessage());
+            return back()->with('error', 'Failed to read CSV: ' . $e->getMessage());
         }
 
         if (empty($rows)) {
-            return back()->withError('The CSV file appears to be empty or has only a header row.');
+            return back()->with('error', 'The CSV file appears to be empty or has only a header row.');
         }
 
         $repo   = new AttendanceRepository();

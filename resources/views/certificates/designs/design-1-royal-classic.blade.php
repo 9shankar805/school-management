@@ -447,8 +447,8 @@ body {
         {{-- Title --}}
         <div class="title-block">
             <div class="cert-title-label">presents this</div>
-            <div class="cert-title">{{ $template->header_text ?? 'Certificate of Achievement' }}</div>
-            <div class="cert-subtitle">{{ $template->typeLabel() ?? 'Academic Excellence' }}</div>
+            <div class="cert-title">CERTIFICATE OF GOOD CONDUCT</div>
+            <div class="cert-subtitle">CHARACTER CERTIFICATE</div>
         </div>
 
         {{-- Ornamental divider --}}

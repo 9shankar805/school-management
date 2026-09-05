@@ -106,7 +106,7 @@ class RoutineController extends Controller
 
             return back()->with('status', 'Timetable slot saved successfully!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 

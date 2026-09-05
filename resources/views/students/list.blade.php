@@ -161,6 +161,7 @@
                     <thead>
                         <tr>
                             <th style="width:3rem"></th>
+                            <th class="sortable">Roll No <span class="sort-icon"></span></th>
                             <th class="sortable">ID Card <span class="sort-icon"></span></th>
                             <th class="sortable">Name <span class="sort-icon"></span></th>
                             <th class="sortable">Email <span class="sort-icon"></span></th>
@@ -180,6 +181,11 @@
                                         {{ strtoupper(substr($student->student->first_name ?? '?', 0, 1)) }}
                                     </div>
                                 @endif
+                            </td>
+                            <td>
+                                <span class="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                                    {{ $student->roll_no ?? $student->student->roll_no ?? '—' }}
+                                </span>
                             </td>
                             <td>
                                 <span class="font-mono text-xs badge-neutral">
@@ -249,8 +255,10 @@
                         <p class="font-semibold text-sm truncate" style="color:var(--text-heading)">
                             {{ $student->student->first_name }} {{ $student->student->last_name }}
                         </p>
-                        <p class="text-xs mt-0.5 font-mono" style="color:var(--text-muted)">
-                            #{{ $student->id_card_number ?? '—' }}
+                        <p class="text-xs mt-0.5 font-mono flex items-center gap-1.5" style="color:var(--text-muted)">
+                            <span class="font-bold text-indigo-600 dark:text-indigo-400">Roll: {{ $student->roll_no ?? $student->student->roll_no ?? '—' }}</span>
+                            <span>•</span>
+                            <span>ID: {{ $student->id_card_number ?? '—' }}</span>
                         </p>
                     </div>
                 </div>

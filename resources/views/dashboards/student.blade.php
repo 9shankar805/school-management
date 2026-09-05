@@ -156,7 +156,7 @@
                 <div class="divide-y divide-slate-50">
                     @foreach($marks as $mark)
                     <div class="px-5 py-3 flex justify-between items-center">
-                        <span class="text-sm text-slate-600">{{ $mark->exam->name ?? 'Exam' }}</span>
+                        <span class="text-sm text-slate-600">{{ $mark->exam->exam_name ?? 'Exam' }}</span>
                         <span class="text-sm font-bold text-slate-800 bg-slate-100 px-2.5 py-0.5 rounded-lg">{{ $mark->mark }}</span>
                     </div>
                     @endforeach

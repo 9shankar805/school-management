@@ -65,7 +65,7 @@ if (is_dir($viewsCache)) {
 }
 echo "\nDeleted {$deleted} compiled view file(s). Failed: {$failed}\n";
 
-// ── 3. Delete framework cache data files ──────────────────────────────────
+// ── 3. Delete framework cache data files & bootstrap caches ─────────────────
 $cacheData = $storage . '/framework/cache/data';
 $cdeleted  = 0;
 
@@ -80,6 +80,22 @@ if (is_dir($cacheData)) {
     }
 }
 echo "Deleted {$cdeleted} cache data file(s).\n";
+
+// Clear bootstrap route/config cache
+$bootstrapCaches = [
+    $cache . '/routes-v7.php',
+    $cache . '/config.php',
+    $cache . '/services.php',
+    $cache . '/packages.php',
+];
+foreach ($bootstrapCaches as $bfile) {
+    if (file_exists($bfile)) {
+        if (@unlink($bfile)) {
+            echo "Deleted bootstrap cache: " . basename($bfile) . "\n";
+        }
+    }
+}
+
 
 // ── 4. Verify the exact broken path ───────────────────────────────────────
 $broken = $storage . '/framework/cache/data/85/5f/855f92484c8c414d36c1b25cb24876e30229cbbf';

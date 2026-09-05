@@ -12,26 +12,26 @@
   "categories": ["education", "productivity", "business"],
   "icons": [
     {
-      "src": "/imgs/logo_icon_512.png",
+      "src": "/imgs/logo_icon_512.webp",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/webp",
       "purpose": "any maskable"
     },
     {
-      "src": "/imgs/logo_icon_192.png",
+      "src": "/imgs/logo_icon_192.webp",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/webp",
       "purpose": "any"
     },
     {
-      "src": "/imgs/logo_icon_64.png",
+      "src": "/imgs/logo_icon_64.webp",
       "sizes": "64x64",
-      "type": "image/png"
+      "type": "image/webp"
     },
     {
-      "src": "/imgs/logo_icon_32.png",
+      "src": "/imgs/logo_icon_32.webp",
       "sizes": "32x32",
-      "type": "image/png"
+      "type": "image/webp"
     }
   ],
   "shortcuts": [
@@ -40,28 +40,28 @@
       "short_name": "Home",
       "description": "Open the main dashboard",
       "url": "/home",
-      "icons": [{ "src": "/imgs/logo_icon.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/imgs/logo_icon_192.webp", "sizes": "192x192", "type": "image/webp" }]
     },
     {
       "name": "Students",
       "short_name": "Students",
       "description": "View student list",
-      "url": "/students",
-      "icons": [{ "src": "/imgs/logo_icon.png", "sizes": "192x192" }]
+      "url": "/students/view/list",
+      "icons": [{ "src": "/imgs/logo_icon_192.webp", "sizes": "192x192", "type": "image/webp" }]
     },
     {
       "name": "Attendance",
       "short_name": "Attendance",
       "description": "Mark today's attendance",
       "url": "/attendances",
-      "icons": [{ "src": "/imgs/logo_icon.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/imgs/logo_icon_192.webp", "sizes": "192x192", "type": "image/webp" }]
     },
     {
       "name": "Notifications",
       "short_name": "Alerts",
       "description": "View notifications",
       "url": "/notifications",
-      "icons": [{ "src": "/imgs/logo_icon.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/imgs/logo_icon_192.webp", "sizes": "192x192", "type": "image/webp" }]
     }
   ],
   "screenshots": [],

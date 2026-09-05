@@ -27,8 +27,19 @@ class AssignedTeacher extends Model
         'class_id',
         'section_id',
         'course_id',
+        'is_class_teacher',
         'session_id',
     ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'is_class_teacher' => 'boolean',
+    ];
+
 
     /**
      * Get the teacher.

@@ -176,33 +176,73 @@
                 <i class="bi bi-cash-coin mr-2"></i> Pay Rs. {{ number_format($invoice->amount_due, 2) }}
             </a>
 
-            {{-- Online payment gateway buttons --}}
+            {{-- Payment QR codes — scan & pay (eSewa / Khalti / Bank / FonePay) --}}
+            @php
+                $hasQR = $paySchool && (
+                    $paySchool->payment_qr_esewa  ||
+                    $paySchool->payment_qr_khalti ||
+                    $paySchool->payment_qr_bank   ||
+                    $paySchool->payment_qr_fonepay
+                );
+            @endphp
+            @if($invoice->status !== 'paid' && $hasQR)
             <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4">
-                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wide">Pay Online</p>
-                <div class="space-y-2">
-                    <form method="POST" action="{{ route('finance.payment.initiate') }}">
-                        @csrf
-                        <input type="hidden" name="invoice_id" value="{{ $invoice->id }}">
-                        <input type="hidden" name="gateway" value="esewa">
-                        <button type="submit"
-                            class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white transition"
-                            style="background:#60bb46">
-                            <span class="font-bold tracking-wide">eSewa</span>
-                            <span class="text-xs opacity-80">Rs. {{ number_format($invoice->amount_due, 2) }}</span>
-                        </button>
-                    </form>
-                    <form method="POST" action="{{ route('finance.payment.initiate') }}">
-                        @csrf
-                        <input type="hidden" name="invoice_id" value="{{ $invoice->id }}">
-                        <input type="hidden" name="gateway" value="khalti">
-                        <button type="submit"
-                            class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-semibold text-white transition"
-                            style="background:#5c2d91">
-                            <span class="font-bold tracking-wide">Khalti</span>
-                            <span class="text-xs opacity-80">Rs. {{ number_format($invoice->amount_due, 2) }}</span>
-                        </button>
-                    </form>
+                <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wide flex items-center gap-1.5">
+                    <i class="bi bi-qr-code text-emerald-600"></i> Scan to Pay
+                </p>
+                <p class="text-[11px] text-slate-400 mb-4">
+                    Open your eSewa, Khalti or banking app → Scan QR → Enter
+                    <span class="font-bold text-slate-600 dark:text-slate-300">Rs. {{ number_format($invoice->amount_due, 2) }}</span>
+                    → Pay.
+                </p>
+                <div class="grid grid-cols-2 gap-3">
+                    @foreach([
+                        ['field'=>'payment_qr_esewa',   'label'=>'eSewa',   'color'=>'#60bb46'],
+                        ['field'=>'payment_qr_khalti',  'label'=>'Khalti',  'color'=>'#5c2d91'],
+                        ['field'=>'payment_qr_bank',    'label'=>'Bank/ConnectIPS', 'color'=>'#1d4ed8'],
+                        ['field'=>'payment_qr_fonepay', 'label'=>'FonePay', 'color'=>'#e3001e'],
+                    ] as $qr)
+                    @if($paySchool->{$qr['field']})
+                    <div class="flex flex-col items-center gap-2 p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
+                              style="background:{{ $qr['color'] }}">{{ $qr['label'] }}</span>
+                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($paySchool->{$qr['field']}) }}"
+                             alt="{{ $qr['label'] }} QR"
+                             class="w-28 h-28 object-contain rounded-lg bg-white p-1 border border-slate-200 dark:border-slate-700 cursor-pointer"
+                             onclick="document.getElementById('qr-modal-{{ $loop->index }}').classList.remove('hidden')">
+                        <span class="text-[10px] text-slate-400">Tap to enlarge</span>
+
+                        {{-- Full-screen QR modal --}}
+                        <div id="qr-modal-{{ $loop->index }}"
+                             class="hidden fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4"
+                             onclick="this.classList.add('hidden')">
+                            <div class="bg-white rounded-3xl p-6 flex flex-col items-center gap-3 shadow-2xl max-w-xs w-full" onclick="event.stopPropagation()">
+                                <span class="text-sm font-bold px-3 py-1 rounded-full text-white"
+                                      style="background:{{ $qr['color'] }}">{{ $qr['label'] }}</span>
+                                <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($paySchool->{$qr['field']}) }}"
+                                     alt="{{ $qr['label'] }} QR"
+                                     class="w-56 h-56 object-contain">
+                                <p class="text-xs text-slate-500 text-center font-semibold">
+                                    Amount: <span class="text-slate-800">Rs. {{ number_format($invoice->amount_due, 2) }}</span>
+                                </p>
+                                @if($paySchool->payment_instructions)
+                                <p class="text-[11px] text-slate-400 text-center whitespace-pre-line">{{ $paySchool->payment_instructions }}</p>
+                                @endif
+                                <button onclick="this.closest('[id^=qr-modal]').classList.add('hidden')"
+                                        class="text-xs text-slate-500 hover:text-slate-700 mt-1">
+                                    <i class="bi bi-x-circle mr-1"></i>Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    @endforeach
                 </div>
+                @if($paySchool->payment_instructions)
+                <div class="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800 rounded-xl">
+                    <p class="text-[11px] text-amber-800 dark:text-amber-300 whitespace-pre-line">{{ $paySchool->payment_instructions }}</p>
+                </div>
+                @endif
             </div>
             @endif
 

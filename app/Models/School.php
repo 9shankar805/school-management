@@ -27,6 +27,9 @@ class School extends Model
         'ai_features_enabled', 'trial_ends_at', 'plan_expires_at',
         'status', 'approved_at', 'approved_by', 'owner_id',
         'contact_person', 'contact_email', 'settings',
+        // Payment QR codes (principal uploads; shown to parents on invoices)
+        'payment_qr_esewa', 'payment_qr_khalti', 'payment_qr_bank',
+        'payment_qr_fonepay', 'payment_instructions',
     ];
 
     protected $casts = [
@@ -56,6 +59,12 @@ class School extends Model
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /** School Management Committee (SMC) members. */
+    public function committeeMembers(): HasMany
+    {
+        return $this->hasMany(SchoolCommitteeMember::class, 'school_id');
     }
 
     // ── Scopes ───────────────────────────────────────────────────────────────
@@ -168,7 +177,7 @@ class School extends Model
     {
         return [
             'free'       => ['students' => 100,  'teachers' => 20,  'staff' => 10,  'ai' => false, 'whatsapp' => 0,    'price_npr' => 0],
-            'yearly'     => ['students' => 9999, 'teachers' => 999, 'staff' => 500, 'ai' => true,  'whatsapp' => 5000, 'price_npr' => 50000],
+            'yearly'     => ['students' => 9999, 'teachers' => 999, 'staff' => 500, 'ai' => true,  'whatsapp' => 5000, 'price_npr' => 15000],
             // Kept for backward compatibility if already in DB
             'starter'    => ['students' => 500,  'teachers' => 50,  'staff' => 30,  'ai' => false, 'whatsapp' => 500,  'price_npr' => 2999],
             'growth'     => ['students' => 2000, 'teachers' => 150, 'staff' => 80,  'ai' => true,  'whatsapp' => 2000, 'price_npr' => 7999],

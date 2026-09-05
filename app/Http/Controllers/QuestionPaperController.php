@@ -13,6 +13,7 @@ use App\Models\QuestionPaper;
 use App\Models\QuestionPaperTemplate;
 use App\Models\QuestionPrintLog;
 use App\Models\QuestionSection;
+use App\Models\QuestionQuestion;
 use App\Traits\SchoolSession;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -238,15 +239,17 @@ class QuestionPaperController extends Controller
         $this->authorize('create', QuestionPaper::class);
 
         $data = $request->validate([
+            'question_type'   => 'nullable|string',
             'question_text'   => 'required|string',
             'answer_text'     => 'nullable|string',
             'options'         => 'nullable|array',
             'allocated_marks' => 'required|numeric|min:0.25',
             'difficulty'      => 'required|in:easy,medium,hard',
             'chapter'         => 'nullable|string|max:100',
+            'bloom_taxonomy'  => 'nullable|string',
         ]);
 
-        $q = $this->paperRepo->updateQuestion($questionId, $data);
+        $q = $this->paperRepo->updateQuestion($questionId, array_filter($data, fn($v) => !is_null($v)));
         return response()->json(['question' => $q, 'success' => true]);
     }
 
@@ -504,5 +507,110 @@ class QuestionPaperController extends Controller
         }
 
         return response()->json(['success' => true, 'saved_at' => now()->toTimeString()]);
+    }
+
+    /** POST /question-papers/{id}/ai-generate — Read uploaded file or topic and auto-generate section-wise questions */
+    public function aiGenerate(Request $request, int $id, \App\Services\AiQuestionExtractorService $aiExtractor)
+    {
+        $paper = QuestionPaper::findOrFail($id);
+        $this->authorize('update', $paper);
+
+        if ($paper->is_locked) {
+            return response()->json(['error' => 'This paper is locked and cannot be modified.'], 422);
+        }
+
+        $request->validate([
+            'document_file' => 'nullable|file|mimes:txt,pdf,docx,doc,jpg,jpeg,png,webp|max:10240',
+            'prompt_text'   => 'nullable|string|max:5000',
+            'difficulty'    => 'required|in:mixed,easy,medium,hard',
+            'mode'          => 'required|in:append,replace',
+        ]);
+
+        if (!$request->hasFile('document_file') && empty($request->input('prompt_text'))) {
+            return response()->json(['error' => 'Please upload a file or enter instructions/topics.'], 422);
+        }
+
+        try {
+            $sectionsData = $aiExtractor->generateSectionsAndQuestions(
+                $request->file('document_file'),
+                $request->input('prompt_text'),
+                $request->input('difficulty', 'mixed'),
+                $paper->class_label ?: 'Secondary'
+            );
+
+            if (empty($sectionsData)) {
+                return response()->json(['error' => 'AI could not extract questions from the provided input.'], 422);
+            }
+
+            // If mode === 'replace', clear existing sections
+            if ($request->input('mode') === 'replace') {
+                foreach ($paper->sections as $sec) {
+                    $sec->questions()->delete();
+                    $sec->delete();
+                }
+            }
+
+            $createdSectionsCount  = 0;
+            $createdQuestionsCount = 0;
+
+            $sortOrder = $paper->sections()->max('sort_order') ?? 0;
+
+            foreach ($sectionsData as $secItem) {
+                if (empty($secItem['questions']) || !is_array($secItem['questions'])) {
+                    continue;
+                }
+
+                $sortOrder++;
+                $section = QuestionSection::create([
+                    'school_id'    => $paper->school_id,
+                    'paper_id'     => $paper->id,
+                    'title'        => $secItem['title'] ?? 'Group ' . $sortOrder,
+                    'instructions' => $secItem['instructions'] ?? null,
+                    'sort_order'   => $sortOrder,
+                ]);
+
+                $createdSectionsCount++;
+
+                $qSortOrder = 0;
+                foreach ($secItem['questions'] as $qItem) {
+                    $qSortOrder++;
+                    $qType = strtolower($qItem['question_type'] ?? 'short_answer');
+                    if (!array_key_exists($qType, QuestionBank::QUESTION_TYPES)) {
+                        $qType = 'short_answer';
+                    }
+
+                    QuestionQuestion::create([
+                        'school_id'       => $paper->school_id,
+                        'section_id'      => $section->id,
+                        'question_type'   => $qType,
+                        'question_text'   => $qItem['question_text'] ?? 'Question',
+                        'answer_text'     => $qItem['answer_text'] ?? null,
+                        'options'         => !empty($qItem['options']) && is_array($qItem['options']) ? $qItem['options'] : null,
+                        'correct_answer'  => $qItem['correct_answer'] ?? null,
+                        'allocated_marks' => !empty($qItem['allocated_marks']) ? (float)$qItem['allocated_marks'] : 1.0,
+                        'difficulty'      => in_array($qItem['difficulty'] ?? '', ['easy', 'medium', 'hard']) ? $qItem['difficulty'] : 'medium',
+                        'bloom_taxonomy'  => $qItem['bloom_taxonomy'] ?? null,
+                        'sort_order'      => $qSortOrder,
+                    ]);
+
+                    $createdQuestionsCount++;
+                }
+
+                $section->recalcMarks();
+            }
+
+            $this->paperRepo->renumberQuestions($paper->id);
+            $paper->fresh()->saveVersion('AI generated questions from file/prompt');
+
+            return response()->json([
+                'success'           => true,
+                'message'           => "Successfully generated {$createdQuestionsCount} question(s) across {$createdSectionsCount} section(s).",
+                'sections_created'  => $createdSectionsCount,
+                'questions_created' => $createdQuestionsCount,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('AI Paper Generation error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json(['error' => 'AI Generation Error: ' . $e->getMessage()], 500);
+        }
     }
 }

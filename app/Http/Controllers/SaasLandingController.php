@@ -10,12 +10,21 @@ use Illuminate\Support\Facades\Log;
 
 class SaasLandingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $host = strtolower($request->getHost());
+        // Automatically check if request is for a school subdomain (e.g. genesisglobalschool.nshlms.com)
+        if (preg_match('/^([a-z0-9\-]+)\.(nshlms\.com|nepalschoolhub\.com|techprocod\.com\.np|localhost)$/i', $host, $matches)) {
+            $subdomain = strtolower($matches[1]);
+            if (!in_array($subdomain, ['www', 'app', 'admin', 'super', 'api', 'mail', 'blog', 'support'])) {
+                return app(SchoolLandingController::class)->showBySubdomain($subdomain);
+            }
+        }
+
         $allPlans = School::planLimits();
         $plans = [
             'free'   => $allPlans['free'],
-            'yearly' => $allPlans['yearly'] ?? ['students' => 9999, 'teachers' => 999, 'staff' => 500, 'ai' => true, 'price_npr' => 50000],
+            'yearly' => $allPlans['yearly'] ?? ['students' => 9999, 'teachers' => 999, 'staff' => 500, 'ai' => true, 'price_npr' => 15000],
         ];
         $schoolCount = School::where('status', 'active')->count();
         return view('saas.landing', compact('plans', 'schoolCount'));

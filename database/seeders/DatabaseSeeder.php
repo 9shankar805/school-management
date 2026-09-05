@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             CourseSeeder::class,
             GradingSystemSeeder::class,
             GradeRuleSeeder::class,
+            NebGradingSeeder::class,
             ExamSeeder::class,
             ExamRuleSeeder::class,
             AssignedTeacherSeeder::class,

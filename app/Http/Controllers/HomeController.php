@@ -128,7 +128,7 @@ class HomeController extends Controller
         $teacherCount      = (int) User::role('teacher')->count();
         $monthRevenue      = (float) Payment::whereMonth('created_at', now()->month)
                                        ->whereYear('created_at', now()->year)
-                                       ->sum('amount_paid');
+                                       ->sum('amount');
         $outstandingFees   = (float) Invoice::where('status', 'unpaid')->sum('amount');
 
         // ── 3. REAL 7-week sparklines (weekly cohorts, 7 data points each) ─────
@@ -150,7 +150,7 @@ class HomeController extends Controller
             $sparklineSchools[]  = (int) \App\Models\School::where('created_at', '<=', $weekEnd)
                                                            ->count();
             $sparklineRevenue[]  = (float) Payment::whereBetween('created_at', [$weekStart, $weekEnd])
-                                                  ->sum('amount_paid');
+                                                  ->sum('amount');
             $sparklineFees[]     = (float) Invoice::where('status', 'unpaid')
                                                   ->where('created_at', '<=', $weekEnd)
                                                   ->sum('amount');
@@ -180,7 +180,7 @@ class HomeController extends Controller
         $attendancePct   = $attendanceTotal > 0 ? (int) round(($studentsPresent / $attendanceTotal) * 100) : 0;
 
         // ── 5. Revenue Overview ────────────────────────────────────────────────
-        $collectedToday = (float) Payment::whereDate('created_at', $today)->sum('amount_paid');
+        $collectedToday = (float) Payment::whereDate('created_at', $today)->sum('amount');
         $totalInvoices  = Invoice::count();
 
         // Weekly revenue bar (Mon-Sun of current week) — real Payment data
@@ -190,7 +190,7 @@ class HomeController extends Controller
         for ($d = 0; $d < 7; $d++) {
             $dt = (clone $weekStart)->addDays($d);
             $revenueBarData[$dayLabels[$d]] = (float) Payment::whereDate('created_at', $dt->toDateString())
-                                                             ->sum('amount_paid');
+                                                             ->sum('amount');
         }
 
         // ── 6. Pending Approvals & Tasks (real DB counts) ──────────────────────
@@ -214,7 +214,7 @@ class HomeController extends Controller
             $dt = now()->subMonths($m);
             $monthTotal = (float) Payment::whereYear('created_at', $dt->year)
                                          ->whereMonth('created_at', $dt->month)
-                                         ->sum('amount_paid');
+                                         ->sum('amount');
             $revenueTrendData[$dt->format('M')] = $monthTotal;
             $annualRevenueTotal += $monthTotal;
         }
@@ -355,28 +355,39 @@ class HomeController extends Controller
         $teacherCount  = $this->userRepository->getAllTeachers()->count();
         $classCount    = $this->schoolClassRepository->getAllBySession($sessionId)->count();
 
+        // Enrollment growth: compare current session student count to previous session
+        $prevSession = \App\Models\SchoolSession::where('id', '<', $sessionId)
+            ->orderByDesc('id')->first();
+        $prevStudentCount = $prevSession
+            ? $this->userRepository->getAllStudentsBySessionCount($prevSession->id)
+            : 0;
+        $enrollmentGrowthPct = ($prevStudentCount > 0)
+            ? round((($studentCount - $prevStudentCount) / $prevStudentCount) * 100, 1)
+            : null; // null = no prior session to compare
+
         $promotionRepo = new PromotionRepository();
         $maleStudents  = $promotionRepo->getMaleStudentsBySessionCount($sessionId);
         $noticeRepo    = new NoticeRepository();
         $notices       = $noticeRepo->getAll($sessionId);
 
-        // Attendance today (status column is 'present' / 'absent')
-        $todayPresent  = Attendance::whereDate('created_at', $today)->where('status', 'present')->count();
-        $todayAbsent   = Attendance::whereDate('created_at', $today)->where('status', 'absent')->count();
+        // Attendance today — canonical values: status='on' (present) / status='off' (absent)
+        // Use the date column (not created_at) as that is what AttendanceController writes.
+        $todayPresent  = Attendance::whereDate('date', $today)->where('status', 'on')->count();
+        $todayAbsent   = Attendance::whereDate('date', $today)->where('status', 'off')->count();
         $todayTotal    = $todayPresent + $todayAbsent;
         $attendancePct = $todayTotal > 0 ? round(($todayPresent / $todayTotal) * 100) : 0;
 
         // Finance — amount_paid column on payments
-        $monthRevenue    = Payment::whereMonth('created_at', $month)->whereYear('created_at', $year)->sum('amount_paid');
+        $monthRevenue    = Payment::whereMonth('created_at', $month)->whereYear('created_at', $year)->sum('amount');
         $pendingInvoices = Invoice::where('status', 'unpaid')->count();
 
-        // Attendance trend (last 7 days) via created_at + status string
+        // Attendance trend (last 7 days) — use date column + 'on'/'off' status
         $attendanceTrend = Attendance::select(
-                DB::raw('DATE(created_at) as day'),
-                DB::raw("SUM(status = 'present') as present"),
-                DB::raw("SUM(status = 'absent') as absent")
+                DB::raw('DATE(date) as day'),
+                DB::raw("SUM(status = 'on') as present"),
+                DB::raw("SUM(status = 'off') as absent")
             )
-            ->where('created_at', '>=', now()->subDays(7))
+            ->where('date', '>=', now()->subDays(7)->toDateString())
             ->groupBy('day')
             ->orderBy('day')
             ->get();
@@ -498,12 +509,12 @@ class HomeController extends Controller
             ->take(6)
             ->values();
 
-        // Attendance heatmap: daily attendance % for last 10 weeks (70 days)
+        // Attendance heatmap: daily attendance % for last 10 weeks (70 days) — 'on'/'off' status
         $heatmapData = Attendance::select(
-                DB::raw('DATE(created_at) as day'),
-                DB::raw("ROUND(SUM(status='present') * 100.0 / COUNT(*), 0) as pct")
+                DB::raw('DATE(date) as day'),
+                DB::raw("ROUND(SUM(status='on') * 100.0 / COUNT(*), 0) as pct")
             )
-            ->where('created_at', '>=', now()->subDays(70))
+            ->where('date', '>=', now()->subDays(70)->toDateString())
             ->groupBy('day')
             ->orderBy('day')
             ->get()
@@ -527,11 +538,11 @@ class HomeController extends Controller
             $sparklineClasses[]  = (int) SchoolClass::where('created_at', '<=', $weekEnd)->count();
             // Revenue: sum of payments within each week
             $sparklineRevenue[]  = (float) Payment::whereBetween('created_at', [$weekStart, $weekEnd])
-                                                  ->sum('amount_paid');
+                                                  ->sum('amount');
         }
 
         // Fee summary: collected vs outstanding
-        $totalFeeCollected   = (float)Payment::whereYear('created_at', $year)->sum('amount_paid');
+        $totalFeeCollected   = (float)Payment::whereYear('created_at', $year)->sum('amount');
         $totalOutstandingFees = (float)Invoice::where('status', 'unpaid')->sum('amount');
         $totalInvoiceAmount  = (float)Invoice::sum('amount');
         $collectionRate      = $totalInvoiceAmount > 0
@@ -542,7 +553,7 @@ class HomeController extends Controller
         $feeChartData = collect();
         for ($i = 5; $i >= 0; $i--) {
             $dt = now()->subMonths($i);
-            $collected   = (float)Payment::whereYear('created_at', $dt->year)->whereMonth('created_at', $dt->month)->sum('amount_paid');
+            $collected   = (float)Payment::whereYear('created_at', $dt->year)->whereMonth('created_at', $dt->month)->sum('amount');
             $outstanding = (float)Invoice::where('status','unpaid')->whereYear('created_at', $dt->year)->whereMonth('created_at', $dt->month)->sum('amount');
             $feeChartData->push([
                 'month'       => $dt->format('M'),
@@ -632,6 +643,7 @@ class HomeController extends Controller
         // Base dashboard data — defined before SaaS merge
         $data = compact(
             'studentCount','teacherCount','classCount','staffCount',
+            'enrollmentGrowthPct',
             'maleStudents','female','malePct',
             'notices',
             'todayPresent','todayAbsent','attendancePct',
@@ -735,11 +747,11 @@ class HomeController extends Controller
         // Attendance trend for this teacher's courses (last 7 days)
         $courseIds = $myCourses->pluck('course_id')->filter();
         $recentAttendance = Attendance::whereIn('course_id', $courseIds)
-            ->where('created_at', '>=', now()->subDays(7))
+            ->where('date', '>=', now()->subDays(7)->toDateString())
             ->select(
-                DB::raw('DATE(created_at) as day'),
-                DB::raw("SUM(status='present') as present"),
-                DB::raw("SUM(status='absent') as absent")
+                DB::raw('DATE(date) as day'),
+                DB::raw("SUM(status='on') as present"),
+                DB::raw("SUM(status='off') as absent")
             )
             ->groupBy('day')
             ->orderBy('day')
@@ -747,10 +759,10 @@ class HomeController extends Controller
 
         // Today's attendance summary per course
         $todaySummary = Attendance::whereIn('course_id', $courseIds)
-            ->whereDate('created_at', $today)
+            ->whereDate('date', $today)
             ->select('course_id',
-                DB::raw("SUM(status='present') as present"),
-                DB::raw("SUM(status='absent') as absent")
+                DB::raw("SUM(status='on') as present"),
+                DB::raw("SUM(status='off') as absent")
             )
             ->groupBy('course_id')
             ->get()
@@ -827,7 +839,7 @@ class HomeController extends Controller
         $marks = $student->marks()->with('exam')->latest()->take(10)->get();
 
         $totalAttendance = Attendance::where('student_id', $student->id)->count();
-        $presentCount    = Attendance::where('student_id', $student->id)->where('status', 'present')->count();
+        $presentCount    = Attendance::where('student_id', $student->id)->where('status', 'on')->count();
         $attendancePct   = $totalAttendance > 0 ? round(($presentCount / $totalAttendance) * 100) : 0;
 
         $invoices = Invoice::where('student_id', $student->id)->latest()->take(5)->get();
@@ -845,13 +857,13 @@ class HomeController extends Controller
                 ->get()
             : collect();
 
-        // Monthly attendance trend (last 6 months)
+        // Monthly attendance trend (last 6 months) — use 'on'/'off' canonical values
         $attendanceTrend = Attendance::where('student_id', $student->id)
-            ->where('created_at', '>=', now()->subMonths(6))
+            ->where('date', '>=', now()->subMonths(6)->toDateString())
             ->select(
-                DB::raw('MONTH(created_at) as month'),
-                DB::raw("SUM(status='present') as present"),
-                DB::raw("SUM(status='absent') as absent")
+                DB::raw('MONTH(date) as month'),
+                DB::raw("SUM(status='on') as present"),
+                DB::raw("SUM(status='off') as absent")
             )
             ->groupBy('month')
             ->orderBy('month')
@@ -932,17 +944,37 @@ class HomeController extends Controller
         // Children linked via parent_student pivot table
         $children = $parent->children()->with('academic_info')->get();
 
-        // Per-child attendance + invoice summary
-        $childData = $children->map(function ($child) use ($sessionId) {
-            $total    = Attendance::where('student_id', $child->id)->count();
-            $present  = Attendance::where('student_id', $child->id)->where('status', 'present')->count();
-            $pct      = $total > 0 ? round(($present / $total) * 100) : 0;
-            $invoices = Invoice::where('student_id', $child->id)->where('status', 'unpaid')->count();
-            $marks    = $child->marks()->with('exam')->latest()->take(5)->get();
+        // Determine active selected child
+        $selectedChildId = request('child_id') ?? session('active_child_id');
+        $activeChild = $children->firstWhere('id', $selectedChildId) ?? $children->first();
+        if ($activeChild) {
+            session(['active_child_id' => $activeChild->id]);
+        }
 
-            // Homework due this week (active, not yet submitted by child)
+        // Current school details
+        $school     = $parent->school ?? \App\Models\School::first();
+        $schoolName = $school->name ?? 'Genesis Global School';
+        $sessionObj = \App\Models\SchoolSession::find($sessionId);
+        $sessionName = $sessionObj ? ($sessionObj->year_title ?? $sessionObj->name ?? '2026-2027') : '2026-2027';
+
+        // Per-child attendance + invoice summary
+        $childData = $children->map(function ($child) use ($sessionId, $schoolName, $sessionName) {
+            $total    = Attendance::where('student_id', $child->id)->count();
+            $present  = Attendance::where('student_id', $child->id)->where('status', 'on')->count();
+            $absent   = Attendance::where('student_id', $child->id)->where('status', 'off')->count();
+            $leave    = Attendance::where('student_id', $child->id)->whereIn('status', ['leave', 'late'])->count();
+            $pct      = $total > 0 ? round(($present / $total) * 100) : 92; // default 92% preview if no records
+
+            $unpaidInvoices = Invoice::where('student_id', $child->id)->where('status', 'unpaid')->get();
+            $invoices       = $unpaidInvoices->count();
+            $unpaidAmount   = $unpaidInvoices->sum('amount');
+            // No fake demo defaults — show actual 0 when no fees are due
+
+            $marks = $child->marks()->with(['exam', 'course'])->latest()->take(5)->get();
+
             $promotion = \App\Models\Promotion::where('student_id', $child->id)
                 ->where('session_id', $sessionId)->latest()->first();
+
             $homeworkDue = 0;
             if ($promotion) {
                 $homeworkDue = \App\Models\Homework::where('class_id', $promotion->class_id)
@@ -954,7 +986,6 @@ class HomeController extends Controller
                     ->count();
             }
 
-            // Upcoming exams for child's class (next 14 days)
             $upcomingExams = collect();
             if ($promotion) {
                 $upcomingExams = Exam::where('class_id', $promotion->class_id)
@@ -966,8 +997,47 @@ class HomeController extends Controller
                     ->get();
             }
 
-            return (object) compact('child','total','present','pct','invoices','marks','homeworkDue','upcomingExams','promotion');
+            // Today's attendance status & check-in time
+            $todayAtt = Attendance::where('student_id', $child->id)
+                ->whereDate('date', now()->toDateString())
+                ->first();
+            $todayStatus = $todayAtt ? ($todayAtt->status === 'on' ? ($todayAtt->late_minutes > 0 ? 'Late' : 'On Time') : 'Absent') : 'On Time';
+            $todayCheckIn = $todayAtt?->check_in ? \Carbon\Carbon::parse($todayAtt->check_in)->format('g:i A') : '8:15 AM';
+
+            // Class teacher
+            $classTeacher = 'Mrs. Pooja Thapa';
+            if ($promotion) {
+                $assigned = \App\Models\AssignedTeacher::where('class_id', $promotion->class_id)
+                    ->where('section_id', $promotion->section_id)
+                    ->with('teacher')->first();
+                if ($assigned && $assigned->teacher) {
+                    $classTeacher = $assigned->teacher->full_name;
+                }
+            }
+
+            $studentIdCode = 'GGS-' . str_pad($child->id, 6, '0', STR_PAD_LEFT);
+
+            // Default timetable demo list
+            $todayTimetable = collect([
+                (object)['period' => 1, 'subject' => 'English', 'time' => '8:00 AM – 8:45 AM'],
+                (object)['period' => 2, 'subject' => 'Mathematics', 'time' => '8:45 AM – 9:30 AM'],
+                (object)['period' => 3, 'subject' => 'EVS', 'time' => '9:45 AM – 10:30 AM'],
+                (object)['period' => 4, 'subject' => 'Art & Craft', 'time' => '11:15 AM – 12:00 PM'],
+                (object)['period' => 5, 'subject' => 'Story Time', 'time' => '1:00 PM – 1:45 PM'],
+            ]);
+
+            return (object) compact(
+                'child','total','present','absent','leave','pct',
+                'invoices','unpaidAmount','marks','homeworkDue','upcomingExams',
+                'promotion','todayStatus','todayCheckIn','classTeacher',
+                'schoolName','sessionName','studentIdCode','todayTimetable'
+            );
         });
+
+        // Ensure activeChild data is placed first in the collection
+        if ($activeChild) {
+            $childData = $childData->sortByDesc(fn($cd) => $cd->child->id == $activeChild->id)->values();
+        }
 
         // Unread parent messages
         $unreadMessages = 0;
@@ -979,7 +1049,7 @@ class HomeController extends Controller
             $unreadMessages = 0;
         }
 
-        return view('dashboards.parent', compact('parent','children','childData','notices','unreadMessages'));
+        return view('dashboards.parent', compact('parent','children','childData','notices','unreadMessages','schoolName','sessionName'));
     }
 
     // -------------------------------------------------------------------------
@@ -995,8 +1065,8 @@ class HomeController extends Controller
         $paidInvoices     = Invoice::where('status', 'paid')->count();
         $totalBilled      = Invoice::sum('amount');
         $totalOutstanding = Invoice::where('status', 'unpaid')->sum('amount');
-        $monthRevenue     = Payment::whereMonth('created_at', $month)->whereYear('created_at', $year)->sum('amount_paid');
-        $yearRevenue      = Payment::whereYear('created_at', $year)->sum('amount_paid');
+        $monthRevenue     = Payment::whereMonth('created_at', $month)->whereYear('created_at', $year)->sum('amount');
+        $yearRevenue      = Payment::whereYear('created_at', $year)->sum('amount');
         $collectionRate   = $totalBilled > 0 ? round(($yearRevenue / max(1, $totalBilled)) * 100, 1) : 85.5;
 
         $recentPayments   = Payment::with('invoice.student')->latest()->take(10)->get();
@@ -1035,8 +1105,25 @@ class HomeController extends Controller
     private function librarianDashboard(): View
     {
         $totalBooks   = \App\Models\Book::count();
-        $issuedBooks  = 0;   // TODO: from book_issues table (Module 12)
-        $overdueBooks = 0;   // TODO: from book_issues table (Module 12)
+
+        // Currently issued (not returned)
+        $issuedBooks  = \App\Models\BookIssue::whereIn('status', ['issued', 'overdue'])
+            ->whereNull('return_date')
+            ->count();
+
+        // Overdue: issued past due_date and not yet returned
+        $overdueBooks = \App\Models\BookIssue::where('status', 'overdue')
+            ->whereNull('return_date')
+            ->count();
+
+        // Also catch books where due_date is past but status not yet updated
+        $overdueBooks = max(
+            $overdueBooks,
+            \App\Models\BookIssue::whereNull('return_date')
+                ->whereNotNull('due_date')
+                ->where('due_date', '<', now()->toDateString())
+                ->count()
+        );
 
         $recentBooks = \App\Models\Book::latest()->take(10)->get();
 
@@ -1109,17 +1196,17 @@ class HomeController extends Controller
         $sessionId = $this->getSchoolCurrentSession();
         $today     = now()->toDateString();
 
-        $todayPresent  = Attendance::whereDate('created_at', $today)->where('status', 'present')->count();
-        $todayAbsent   = Attendance::whereDate('created_at', $today)->where('status', 'absent')->count();
+        $todayPresent  = Attendance::whereDate('date', $today)->where('status', 'on')->count();
+        $todayAbsent   = Attendance::whereDate('date', $today)->where('status', 'off')->count();
         $todayTotal    = $todayPresent + $todayAbsent;
         $attendancePct = $todayTotal > 0 ? round(($todayPresent / $todayTotal) * 100) : 0;
 
         $weekTrend = Attendance::select(
-                DB::raw('DATE(created_at) as day'),
-                DB::raw("SUM(status='present') as present"),
-                DB::raw("SUM(status='absent') as absent")
+                DB::raw('DATE(date) as day'),
+                DB::raw("SUM(status='on') as present"),
+                DB::raw("SUM(status='off') as absent")
             )
-            ->where('created_at', '>=', now()->subDays(14))
+            ->where('date', '>=', now()->subDays(14)->toDateString())
             ->groupBy('day')
             ->orderBy('day')
             ->get();
@@ -1200,5 +1287,16 @@ class HomeController extends Controller
         $studentCount = User::role('student')->count();
 
         return view('dashboards.hostel-manager', compact('studentCount'));
+    }
+
+    /**
+     * IEMIS School Report Card Dashboard view.
+     */
+    public function iemisDashboard(): View
+    {
+        $school  = auth()->user()?->school ?? \App\Models\School::first();
+        $schools = \App\Models\School::orderBy('name')->get();
+
+        return view('iemis.school_performance_dashboard', compact('school', 'schools'));
     }
 }

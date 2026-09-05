@@ -98,7 +98,7 @@ class AcademicSettingController extends Controller
 
             return back()->with('status', 'Attendance type update was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
@@ -108,7 +108,7 @@ class AcademicSettingController extends Controller
 
             return back()->with('status', 'Final marks submission status update was successful!');
         } catch (\Exception $e) {
-            return back()->withError($e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 }

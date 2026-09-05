@@ -59,3 +59,34 @@ if (!function_exists('formatRs')) {
         return $withSymbol ? "Rs. {$formatted}" : $formatted;
     }
 }
+
+if (!function_exists('bsDate')) {
+    /**
+     * Convert an AD date string to a Bikram Sambat (BS) formatted string.
+     *
+     * @param  string|null $adDate   YYYY-MM-DD
+     * @param  bool        $nepali   true = Devanagari, false = English
+     * @param  string      $format   'long' | 'short'
+     * @return string
+     */
+    function bsDate(?string $adDate, bool $nepali = true, string $format = 'long'): string
+    {
+        if (!$adDate) return '';
+        return \App\Services\NepaliDateService::formatBS($adDate, $nepali, $format);
+    }
+}
+
+if (!function_exists('bsYear')) {
+    function bsYear(?string $adDate): string
+    {
+        if (!$adDate) return '';
+        return (string) (\App\Services\NepaliDateService::bsYear($adDate) ?? '');
+    }
+}
+
+if (!function_exists('nepaliDigits')) {
+    function nepaliDigits(int $n): string
+    {
+        return \App\Services\NepaliDateService::toNepaliDigits($n);
+    }
+}

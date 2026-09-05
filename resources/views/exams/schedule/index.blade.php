@@ -62,6 +62,7 @@
                             <td class="px-5 py-3">
                                 <p class="font-semibold text-slate-700 {{ $today ? 'text-indigo-600' : '' }}">{{ $s->exam_date->format('d M Y') }}</p>
                                 <p class="text-xs text-slate-400">{{ $s->exam_date->format('l') }}</p>
+                                <p class="text-xs text-indigo-400 font-medium mt-0.5">{{ \App\Services\NepaliDateService::adToBS($s->exam_date->format('Y-m-d')) ?? '' }} BS</p>
                             </td>
                             <td class="px-4 py-3 font-medium text-slate-700">{{ $s->exam?->exam_name }}</td>
                             <td class="px-4 py-3 text-slate-500">{{ $s->exam?->course?->course_name ?? '—' }}</td>
