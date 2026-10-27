@@ -461,5 +461,135 @@ class NepaliDateService
 
         return $monthFestivals[$bsMonth] ?? [];
     }
+
+    /**
+     * Get total days in a given BS month.
+     */
+    public static function getDaysInBSMonth(int $bsYear, int $bsMonth): int
+    {
+        $yearIdx = $bsYear - 2000;
+        if (!isset(self::$bsCalendarData[$yearIdx]) || $bsMonth < 1 || $bsMonth > 12) {
+            return 30;
+        }
+        return self::$bsCalendarData[$yearIdx][$bsMonth - 1];
+    }
+
+    /**
+     * Get complete start/end date, BS labels, and 12-month calendar breakdown for a Nepali Fiscal Year.
+     * Nepali FY runs from Shrawan 1 (Month 4) to Ashadh 31 (Month 3 of next BS year).
+     *
+     * @param string|int|null $fy E.g. '2081/82', '2081', or null for current
+     * @return array
+     */
+    public static function getFiscalYearDetails(?string $fy = null): array
+    {
+        if (empty($fy)) {
+            $fy = self::currentFiscalYear();
+        }
+
+        $parts = explode('/', trim((string)$fy));
+        $startYear = (int) $parts[0];
+        if ($startYear < 2000) $startYear += 2000;
+        if ($startYear < 2000 || $startYear > 2089) {
+            $startYear = 2081;
+        }
+        $endYear = $startYear + 1;
+
+        $startAd = self::bsToAD($startYear, 4, 1);
+        $daysInAshadh = self::getDaysInBSMonth($endYear, 3);
+        $endAd = self::bsToAD($endYear, 3, $daysInAshadh);
+
+        $monthsOrder = [
+            ['month' => 4,  'year' => $startYear, 'quarter' => 'Q1', 'q_np' => 'प्रथम त्रैमासिक (Q1)'],
+            ['month' => 5,  'year' => $startYear, 'quarter' => 'Q1', 'q_np' => 'प्रथम त्रैमासिक (Q1)'],
+            ['month' => 6,  'year' => $startYear, 'quarter' => 'Q1', 'q_np' => 'प्रथम त्रैमासिक (Q1)'],
+            ['month' => 7,  'year' => $startYear, 'quarter' => 'Q2', 'q_np' => 'दोस्रो त्रैमासिक (Q2)'],
+            ['month' => 8,  'year' => $startYear, 'quarter' => 'Q2', 'q_np' => 'दोस्रो त्रैमासिक (Q2)'],
+            ['month' => 9,  'year' => $startYear, 'quarter' => 'Q2', 'q_np' => 'दोस्रो त्रैमासिक (Q2)'],
+            ['month' => 10, 'year' => $startYear, 'quarter' => 'Q3', 'q_np' => 'तेस्रो त्रैमासिक (Q3)'],
+            ['month' => 11, 'year' => $startYear, 'quarter' => 'Q3', 'q_np' => 'तेस्रो त्रैमासिक (Q3)'],
+            ['month' => 12, 'year' => $startYear, 'quarter' => 'Q3', 'q_np' => 'तेस्रो त्रैमासिक (Q3)'],
+            ['month' => 1,  'year' => $endYear,   'quarter' => 'Q4', 'q_np' => 'चौथो त्रैमासिक (Q4)'],
+            ['month' => 2,  'year' => $endYear,   'quarter' => 'Q4', 'q_np' => 'चौथो त्रैमासिक (Q4)'],
+            ['month' => 3,  'year' => $endYear,   'quarter' => 'Q4', 'q_np' => 'चौथो त्रैमासिक (Q4)'],
+        ];
+
+        $months = [];
+        foreach ($monthsOrder as $mo) {
+            $mNum = $mo['month'];
+            $mYear = $mo['year'];
+            $daysInM = self::getDaysInBSMonth($mYear, $mNum);
+            $mStart = self::bsToAD($mYear, $mNum, 1);
+            $mEnd   = self::bsToAD($mYear, $mNum, $daysInM);
+            $months[] = [
+                'bs_month'   => $mNum,
+                'bs_year'    => $mYear,
+                'name_en'    => self::$monthsEn[$mNum - 1] ?? '',
+                'name_np'    => self::$monthsNp[$mNum - 1] ?? '',
+                'label'      => (self::$monthsNp[$mNum - 1] ?? '') . ' (' . (self::$monthsEn[$mNum - 1] ?? '') . ')',
+                'quarter'    => $mo['quarter'],
+                'quarter_np' => $mo['q_np'],
+                'start_ad'   => $mStart,
+                'end_ad'     => $mEnd,
+                'days'       => $daysInM,
+            ];
+        }
+
+        $fyKey = "{$startYear}/" . substr((string)$endYear, 2);
+        $fyNp = "आ.व. " . self::toNepaliDigits($startYear) . "/" . self::toNepaliDigits((int)substr((string)$endYear, 2), 2);
+
+        return [
+            'fy_key'        => $fyKey,
+            'fy_np'         => $fyNp,
+            'start_year_bs' => $startYear,
+            'end_year_bs'   => $endYear,
+            'start_ad'      => $startAd,
+            'end_ad'        => $endAd,
+            'as_of_ad'      => $endAd,
+            'as_of_bs'      => "{$endYear} असार {$daysInAshadh}",
+            'as_of_bs_np'   => self::toNepaliDigits($endYear) . " असार " . self::toNepaliDigits($daysInAshadh),
+            'months'        => $months,
+        ];
+    }
+
+    /**
+     * Get available recent fiscal years list.
+     */
+    public static function getFiscalYearList(int $count = 6): array
+    {
+        $curFy = self::currentFiscalYear();
+        $start = (int) explode('/', $curFy)[0];
+        $list = [];
+        for ($i = 0; $i < $count; $i++) {
+            $y = $start - $i;
+            $nextY = $y + 1;
+            $key = "{$y}/" . substr((string)$nextY, 2);
+            $list[] = [
+                'key'   => $key,
+                'start' => $y,
+                'end'   => $nextY,
+                'label' => "FY {$key} (" . self::toNepaliDigits($y) . "/" . self::toNepaliDigits((int)substr((string)$nextY, 2), 2) . ")",
+            ];
+        }
+        return $list;
+    }
+
+    /**
+     * Get day of the week in Nepali Devanagari.
+     */
+    public static function getDayOfWeekNepali(string $adDate): string
+    {
+        $days = [
+            0 => 'आइतबार (Sunday)',
+            1 => 'सोमबार (Monday)',
+            2 => 'मङ्गलबार (Tuesday)',
+            3 => 'बुधबार (Wednesday)',
+            4 => 'बिहीबार (Thursday)',
+            5 => 'शुक्रबार (Friday)',
+            6 => 'शनिबार (Saturday)',
+        ];
+        $w = (int) date('w', strtotime($adDate));
+        return $days[$w] ?? '';
+    }
 }
 

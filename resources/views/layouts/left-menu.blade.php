@@ -62,6 +62,10 @@
         <span class="sidebar-link-icon"><i class="bi bi-arrow-up-circle-fill"></i></span>
         <span class="sidebar-link-text">Expenses</span>
     </a>
+    <a href="{{ route('finance.bank-accounts.index') }}" class="sidebar-link {{ request()->is('finance/bank-accounts*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-bank2 text-teal-500"></i></span>
+        <span class="sidebar-link-text">Bank Master & QR</span>
+    </a>
 
     <p class="sidebar-section-label">Communication</p>
     <a href="{{ route('super.contact-messages.index') }}" class="sidebar-link {{ request()->is('super/contact-messages*') ? 'active' : '' }}">
@@ -813,6 +817,10 @@
         <span class="sidebar-link-icon"><i class="bi bi-terminal"></i></span>
         <span class="sidebar-link-text font-bold text-emerald-600 dark:text-emerald-400">⚡ Fee POS (Counter)</span>
     </a>
+    <a href="{{ route('finance.dues.index') }}" class="sidebar-link {{ request()->is('finance/dues*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-exclamation-octagon-fill text-amber-500"></i></span>
+        <span class="sidebar-link-text font-bold text-amber-600 dark:text-amber-400">Class Dues & Defaulters</span>
+    </a>
     <a href="{{ route('finance.fee-profiles') }}" class="sidebar-link {{ request()->is('finance/fee-profiles*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-person-vcard"></i></span>
         <span class="sidebar-link-text">Fee Profiles</span>
@@ -842,6 +850,10 @@
     <a href="{{ route('school.profile.payment-qr') }}" class="sidebar-link {{ request()->is('school/profile/payment-qr*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-qr-code-scan"></i></span>
         <span class="sidebar-link-text">Payment QR Codes</span>
+    </a>
+    <a href="{{ route('finance.bank-accounts.index') }}" class="sidebar-link {{ request()->is('finance/bank-accounts*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-bank2 text-teal-500"></i></span>
+        <span class="sidebar-link-text">Bank Master & QR</span>
     </a>
     @php try { $pendingProofCount = \App\Models\PaymentProof::where('status','pending')->when(auth()->user()->school_id, fn($q) => $q->where('school_id',auth()->user()->school_id))->count(); } catch(\Throwable $e){ $pendingProofCount=0; } @endphp
     <a href="{{ route('payment-proofs.index') }}" class="sidebar-link {{ request()->is('payment-proofs*') ? 'active' : '' }}">

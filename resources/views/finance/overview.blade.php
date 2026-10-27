@@ -23,6 +23,18 @@
                 <i class="bi bi-terminal-dash"></i> ⚡ Fee POS Counter
             </a>
 
+            <a href="{{ route('finance.dues.index') }}" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-black shadow-xs flex items-center gap-1.5 transition">
+                <i class="bi bi-exclamation-octagon-fill text-amber-200"></i> Dues & Defaulters
+            </a>
+
+            <a href="{{ route('finance.day-book') }}" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-black shadow-xs flex items-center gap-1.5 transition">
+                <i class="bi bi-journal-bookmark-fill text-indigo-200"></i> Day Book & Cash Counter
+            </a>
+
+            <a href="{{ route('finance.bank-accounts.index') }}" class="px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-black shadow-xs flex items-center gap-1.5 transition">
+                <i class="bi bi-bank2"></i> Bank Accounts & QR
+            </a>
+
             <a href="{{ route('finance.fee-profiles') }}" class="px-4 py-2.5 bg-[#D3F8EE] hover:bg-[#A7F3D0] text-[#0D7C66] rounded-xl text-xs font-bold shadow-xs flex items-center gap-1.5 transition">
                 <i class="bi bi-person-vcard"></i> Fee Profiles
             </a>

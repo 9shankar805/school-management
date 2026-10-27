@@ -17,8 +17,11 @@
         .footer { position: fixed; bottom: 0; left: 0; right: 0; font-size: 8px; color: #999; text-align: center; border-top: 1px solid #ddd; padding: 4px; }
     </style>
 </head>
+@php
+    $schoolName = optional(auth()->user())->school?->name ?? config('tenant.school')?->name ?? config('app.name');
+@endphp
 <body>
-    <h2>{{ config('app.name') }} — {{ $title }}</h2>
+    <h2>{{ $schoolName }} — {{ $title }}</h2>
     <div class="sub">
         Generated: {{ now()->format('d M Y H:i') }}
         @if($dateFrom || $dateTo)
@@ -111,6 +114,6 @@
     </table>
     @endif
 
-    <div class="footer">{{ config('app.name') }} — Library Management System &nbsp;|&nbsp; {{ now()->format('d M Y H:i') }}</div>
+    <div class="footer">{{ $schoolName }} — Library Management System &nbsp;|&nbsp; {{ now()->format('d M Y H:i') }}</div>
 </body>
 </html>

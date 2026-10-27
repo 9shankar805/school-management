@@ -8,9 +8,11 @@ use App\Models\LedgerEntry;
 use App\Models\Payment;
 use App\Models\SalarySlip;
 use App\Models\TeacherPayroll;
+use App\Models\DayBookClosing;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Services\NepaliDateService;
 
 /**
  * Accounting Ledger — view journal entries, generate P&L and Balance Sheet.
@@ -175,9 +177,99 @@ class LedgerController extends Controller
     /** Profit & Loss summary view */
     public function profitLoss(Request $request)
     {
-        $year      = (int) $request->input('year', now()->year);
-        $dateFrom  = Carbon::create($year)->startOfYear()->toDateString();
-        $dateTo    = Carbon::create($year)->endOfYear()->toDateString();
+        $periodType = $request->input('period_type', 'fy'); // 'fy' or 'ad'
+        $fyList     = NepaliDateService::getFiscalYearList(7);
+        $currentFy  = NepaliDateService::currentFiscalYear();
+        $selectedFy = $request->input('fy', $currentFy);
+        $year       = (int) $request->input('year', now()->year);
+
+        if ($periodType === 'fy') {
+            $fyDetails   = NepaliDateService::getFiscalYearDetails($selectedFy);
+            $dateFrom    = $fyDetails['start_ad'];
+            $dateTo      = $fyDetails['end_ad'];
+            $periodLabel = $fyDetails['fy_np'] . " ({$selectedFy})";
+            $periodSub   = "साउन १, " . NepaliDateService::toNepaliDigits($fyDetails['start_year_bs']) . " – असार मसान्त, " . NepaliDateService::toNepaliDigits($fyDetails['end_year_bs']) . " ({$dateFrom} to {$dateTo})";
+
+            // Monthly breakdown for 12 Nepali months (Shrawan -> Ashadh)
+            $monthlyData = [];
+            $quarterlyData = [
+                'Q1' => ['name' => 'प्रथम त्रैमासिक (Q1: श्रावण–आश्विन)', 'income' => 0, 'expenses' => 0, 'net' => 0],
+                'Q2' => ['name' => 'दोस्रो त्रैमासिक (Q2: कार्तिक–पौष)', 'income' => 0, 'expenses' => 0, 'net' => 0],
+                'Q3' => ['name' => 'तेस्रो त्रैमासिक (Q3: माघ–चैत्र)', 'income' => 0, 'expenses' => 0, 'net' => 0],
+                'Q4' => ['name' => 'चौथो त्रैमासिक (Q4: वैशाख–असार)', 'income' => 0, 'expenses' => 0, 'net' => 0],
+            ];
+
+            foreach ($fyDetails['months'] as $m) {
+                $mFrom = $m['start_ad'];
+                $mTo   = $m['end_ad'];
+
+                $mIncome = Payment::whereBetween('payment_date', [$mFrom, $mTo])->sum('amount')
+                         + IncomeRecord::whereBetween('income_date', [$mFrom, $mTo])->sum('amount');
+                $mExpense = Expense::whereBetween('expense_date', [$mFrom, $mTo])->sum('amount')
+                          + TeacherPayroll::where('status', 'paid')->whereBetween('payment_date', [$mFrom, $mTo])->sum('net_salary')
+                          + SalarySlip::where('status', 'paid')->whereBetween('payment_date', [$mFrom, $mTo])->sum('net_salary');
+
+                $monthlyData[] = [
+                    'month'       => $m['name_np'] . ' (' . $m['name_en'] . ')',
+                    'month_short' => $m['name_np'],
+                    'quarter'     => $m['quarter'],
+                    'quarter_np'  => $m['quarter_np'],
+                    'start_ad'    => $mFrom,
+                    'end_ad'      => $mTo,
+                    'income'      => (float) $mIncome,
+                    'expenses'    => (float) $mExpense,
+                    'net'         => (float) ($mIncome - $mExpense),
+                ];
+
+                if (isset($quarterlyData[$m['quarter']])) {
+                    $quarterlyData[$m['quarter']]['income']   += $mIncome;
+                    $quarterlyData[$m['quarter']]['expenses'] += $mExpense;
+                    $quarterlyData[$m['quarter']]['net']      += ($mIncome - $mExpense);
+                }
+            }
+        } else {
+            $fyDetails   = null;
+            $dateFrom    = Carbon::create($year)->startOfYear()->toDateString();
+            $dateTo      = Carbon::create($year)->endOfYear()->toDateString();
+            $periodLabel = "Calendar Year {$year}";
+            $periodSub   = "Jan 01, {$year} – Dec 31, {$year}";
+
+            $monthlyData = [];
+            $quarterlyData = [
+                'Q1' => ['name' => 'Q1 (Jan – Mar)', 'income' => 0, 'expenses' => 0, 'net' => 0],
+                'Q2' => ['name' => 'Q2 (Apr – Jun)', 'income' => 0, 'expenses' => 0, 'net' => 0],
+                'Q3' => ['name' => 'Q3 (Jul – Sep)', 'income' => 0, 'expenses' => 0, 'net' => 0],
+                'Q4' => ['name' => 'Q4 (Oct – Dec)', 'income' => 0, 'expenses' => 0, 'net' => 0],
+            ];
+
+            for ($m = 1; $m <= 12; $m++) {
+                $mFrom = Carbon::create($year, $m)->startOfMonth()->toDateString();
+                $mTo   = Carbon::create($year, $m)->endOfMonth()->toDateString();
+                $mIncome = Payment::whereBetween('payment_date', [$mFrom, $mTo])->sum('amount')
+                         + IncomeRecord::whereBetween('income_date', [$mFrom, $mTo])->sum('amount');
+                $mExpense = Expense::whereBetween('expense_date', [$mFrom, $mTo])->sum('amount')
+                          + TeacherPayroll::where('status', 'paid')->whereBetween('payment_date', [$mFrom, $mTo])->sum('net_salary')
+                          + SalarySlip::where('status', 'paid')->whereBetween('payment_date', [$mFrom, $mTo])->sum('net_salary');
+
+                $qKey = $m <= 3 ? 'Q1' : ($m <= 6 ? 'Q2' : ($m <= 9 ? 'Q3' : 'Q4'));
+
+                $monthlyData[] = [
+                    'month'       => Carbon::create($year, $m)->format('M'),
+                    'month_short' => Carbon::create($year, $m)->format('M'),
+                    'quarter'     => $qKey,
+                    'quarter_np'  => $qKey,
+                    'start_ad'    => $mFrom,
+                    'end_ad'      => $mTo,
+                    'income'      => (float) $mIncome,
+                    'expenses'    => (float) $mExpense,
+                    'net'         => (float) ($mIncome - $mExpense),
+                ];
+
+                $quarterlyData[$qKey]['income']   += $mIncome;
+                $quarterlyData[$qKey]['expenses'] += $mExpense;
+                $quarterlyData[$qKey]['net']      += ($mIncome - $mExpense);
+            }
+        }
 
         $income    = Payment::whereBetween('payment_date', [$dateFrom, $dateTo])->sum('amount');
         $otherInc  = IncomeRecord::whereBetween('income_date', [$dateFrom, $dateTo])->sum('amount');
@@ -185,53 +277,63 @@ class LedgerController extends Controller
         $payroll   = TeacherPayroll::where('status', 'paid')->whereBetween('payment_date', [$dateFrom, $dateTo])->sum('net_salary');
         $staffPay  = SalarySlip::where('status', 'paid')->whereBetween('payment_date', [$dateFrom, $dateTo])->sum('net_salary');
 
-        $totalIncome  = $income + $otherInc;
+        $totalIncome   = $income + $otherInc;
         $totalExpenses = $expenses + $payroll + $staffPay;
         $netProfit     = $totalIncome - $totalExpenses;
 
-        // Monthly breakdown for chart
-        $monthlyData = [];
-        for ($m = 1; $m <= 12; $m++) {
-            $mFrom = Carbon::create($year, $m)->startOfMonth()->toDateString();
-            $mTo   = Carbon::create($year, $m)->endOfMonth()->toDateString();
-            $monthlyData[] = [
-                'month'    => Carbon::create($year, $m)->format('M'),
-                'income'   => Payment::whereBetween('payment_date', [$mFrom, $mTo])->sum('amount')
-                            + IncomeRecord::whereBetween('income_date', [$mFrom, $mTo])->sum('amount'),
-                'expenses' => Expense::whereBetween('expense_date', [$mFrom, $mTo])->sum('amount')
-                            + TeacherPayroll::where('status', 'paid')->whereBetween('payment_date', [$mFrom, $mTo])->sum('net_salary')
-                            + SalarySlip::where('status', 'paid')->whereBetween('payment_date', [$mFrom, $mTo])->sum('net_salary'),
-            ];
-        }
+        [$school, $logoSrc] = $this->resolveSchoolAndLogo();
 
         return view('finance.profit-loss', compact(
-            'year', 'totalIncome', 'totalExpenses', 'netProfit',
-            'income', 'otherInc', 'expenses', 'payroll', 'staffPay', 'monthlyData'
+            'periodType', 'selectedFy', 'fyList', 'fyDetails', 'year', 'periodLabel', 'periodSub',
+            'dateFrom', 'dateTo', 'school', 'logoSrc',
+            'totalIncome', 'totalExpenses', 'netProfit',
+            'income', 'otherInc', 'expenses', 'payroll', 'staffPay',
+            'monthlyData', 'quarterlyData'
         ));
     }
 
     /** Generate P&L PDF */
     public function profitLossPdf(Request $request)
     {
-        $year     = (int) $request->input('year', now()->year);
-        $dateFrom = Carbon::create($year)->startOfYear()->toDateString();
-        $dateTo   = Carbon::create($year)->endOfYear()->toDateString();
+        $periodType = $request->input('period_type', 'fy');
+        $currentFy  = NepaliDateService::currentFiscalYear();
+        $selectedFy = $request->input('fy', $currentFy);
+        $year       = (int) $request->input('year', now()->year);
+
+        if ($periodType === 'fy') {
+            $fyDetails   = NepaliDateService::getFiscalYearDetails($selectedFy);
+            $dateFrom    = $fyDetails['start_ad'];
+            $dateTo      = $fyDetails['end_ad'];
+            $periodLabel = $fyDetails['fy_np'] . " ({$selectedFy})";
+            $periodSub   = "साउन १, " . NepaliDateService::toNepaliDigits($fyDetails['start_year_bs']) . " – असार मसान्त, " . NepaliDateService::toNepaliDigits($fyDetails['end_year_bs']) . " ({$dateFrom} to {$dateTo})";
+            $filename    = "profit-loss-FY-" . str_replace('/', '-', $selectedFy) . ".pdf";
+        } else {
+            $dateFrom    = Carbon::create($year)->startOfYear()->toDateString();
+            $dateTo      = Carbon::create($year)->endOfYear()->toDateString();
+            $periodLabel = "Calendar Year {$year}";
+            $periodSub   = "Jan 01, {$year} – Dec 31, {$year}";
+            $filename    = "profit-loss-{$year}.pdf";
+        }
 
         $income    = Payment::whereBetween('payment_date', [$dateFrom, $dateTo])->sum('amount');
         $otherInc  = IncomeRecord::whereBetween('income_date', [$dateFrom, $dateTo])->sum('amount');
         $expenses  = Expense::whereBetween('expense_date', [$dateFrom, $dateTo])->sum('amount');
         $payroll   = TeacherPayroll::where('status', 'paid')->whereBetween('payment_date', [$dateFrom, $dateTo])->sum('net_salary');
         $staffPay  = SalarySlip::where('status', 'paid')->whereBetween('payment_date', [$dateFrom, $dateTo])->sum('net_salary');
+
         $totalIncome   = $income + $otherInc;
         $totalExpenses = $expenses + $payroll + $staffPay;
         $netProfit     = $totalIncome - $totalExpenses;
 
+        [$school, $logoSrc] = $this->resolveSchoolAndLogo();
+
         $pdf = Pdf::loadView('finance.profit-loss-pdf', compact(
-            'year', 'totalIncome', 'totalExpenses', 'netProfit',
+            'periodType', 'selectedFy', 'year', 'periodLabel', 'periodSub', 'dateFrom', 'dateTo', 'school', 'logoSrc',
+            'totalIncome', 'totalExpenses', 'netProfit',
             'income', 'otherInc', 'expenses', 'payroll', 'staffPay'
         ))->setPaper('A4');
 
-        return $pdf->download("profit-loss-{$year}.pdf");
+        return $pdf->download($filename);
     }
 
     /**
@@ -251,9 +353,25 @@ class LedgerController extends Controller
      */
     public function balanceSheet(Request $request)
     {
-        $year    = (int) $request->input('year', now()->year);
-        $asOf    = Carbon::create($year)->endOfYear()->toDateString();
-        $dateFrom = Carbon::create($year)->startOfYear()->toDateString();
+        $periodType = $request->input('period_type', 'fy'); // 'fy' or 'ad'
+        $fyList     = NepaliDateService::getFiscalYearList(7);
+        $currentFy  = NepaliDateService::currentFiscalYear();
+        $selectedFy = $request->input('fy', $currentFy);
+        $year       = (int) $request->input('year', now()->year);
+
+        if ($periodType === 'fy') {
+            $fyDetails   = NepaliDateService::getFiscalYearDetails($selectedFy);
+            $asOf        = $fyDetails['as_of_ad'];
+            $asOfLabel   = $fyDetails['as_of_bs_np'] . " (" . $fyDetails['as_of_bs'] . " BS / " . Carbon::parse($asOf)->format('d M Y') . " AD)";
+            $periodLabel = $fyDetails['fy_np'] . " ({$selectedFy})";
+            $cutoffYear  = $fyDetails['end_year_bs'];
+        } else {
+            $fyDetails   = null;
+            $asOf        = Carbon::create($year)->endOfYear()->toDateString();
+            $asOfLabel   = "31 Dec {$year} (" . Carbon::parse($asOf)->format('d M Y') . " AD)";
+            $periodLabel = "Calendar Year {$year}";
+            $cutoffYear  = $year;
+        }
 
         // ── ASSETS ──────────────────────────────────────────────────────────
         // Cash/Bank: total fees collected up to year-end
@@ -276,7 +394,7 @@ class LedgerController extends Controller
 
         // Accounts Receivable (unpaid invoices outstanding as of year-end)
         $receivables = \App\Models\Invoice::where('status', '!=', 'paid')
-            ->where('created_at', '<=', $asOf)
+            ->where('created_at', '<=', $asOf . ' 23:59:59')
             ->sum('amount');
 
         $totalAssets = $cashAndBank + $fixedAssets + $receivables;
@@ -284,10 +402,10 @@ class LedgerController extends Controller
         // ── LIABILITIES ──────────────────────────────────────────────────────
         // Unpaid salary slips (draft / approved, not yet paid)
         $salariesPayable = SalarySlip::whereIn('status', ['draft', 'approved'])
-            ->where('year', '<=', $year)
+            ->where('created_at', '<=', $asOf . ' 23:59:59')
             ->sum('net_salary');
         $teacherSalariesPayable = TeacherPayroll::where('status', 'pending')
-            ->where('year', '<=', $year)
+            ->where('created_at', '<=', $asOf . ' 23:59:59')
             ->sum('net_salary');
 
         // TDS payable (estimated at 15% of payroll costs — Nepal flat rate)
@@ -297,18 +415,21 @@ class LedgerController extends Controller
         $totalLiabilities = $salariesPayable + $teacherSalariesPayable + $tdsPayable;
 
         // ── EQUITY ────────────────────────────────────────────────────────────
-        // Retained earnings = all-time P&L (income - expenses)
-        $allTimeIncome    = Payment::sum('amount') + IncomeRecord::sum('amount');
-        $allTimeExpenses  = Expense::sum('amount')
-                          + TeacherPayroll::where('status', 'paid')->sum('net_salary')
-                          + SalarySlip::where('status', 'paid')->sum('net_salary');
-        $retainedEarnings = $allTimeIncome - $allTimeExpenses;
+        // Retained earnings up to asOf
+        $cumulativeIncome   = Payment::where('payment_date', '<=', $asOf)->sum('amount')
+                            + IncomeRecord::where('income_date', '<=', $asOf)->sum('amount');
+        $cumulativeExpenses = Expense::where('expense_date', '<=', $asOf)->sum('amount')
+                            + TeacherPayroll::where('status', 'paid')->where('payment_date', '<=', $asOf)->sum('net_salary')
+                            + SalarySlip::where('status', 'paid')->where('payment_date', '<=', $asOf)->sum('net_salary');
+        $retainedEarnings   = $cumulativeIncome - $cumulativeExpenses;
 
         $totalEquity    = $retainedEarnings;
-        $balanceCheck   = $totalAssets - ($totalLiabilities + $totalEquity); // should be ~0
+        $balanceCheck   = $totalAssets - ($totalLiabilities + $totalEquity);
+
+        [$school, $logoSrc] = $this->resolveSchoolAndLogo();
 
         return view('finance.balance-sheet', compact(
-            'year', 'asOf',
+            'periodType', 'selectedFy', 'fyList', 'fyDetails', 'year', 'asOf', 'asOfLabel', 'periodLabel', 'school', 'logoSrc',
             'cashAndBank', 'fixedAssets', 'receivables', 'totalAssets',
             'salariesPayable', 'teacherSalariesPayable', 'tdsPayable', 'totalLiabilities',
             'retainedEarnings', 'totalEquity',
@@ -319,8 +440,24 @@ class LedgerController extends Controller
     /** PDF version of the balance sheet */
     public function balanceSheetPdf(Request $request)
     {
-        $year    = (int) $request->input('year', now()->year);
-        $asOf    = Carbon::create($year)->endOfYear()->toDateString();
+        $periodType = $request->input('period_type', 'fy');
+        $currentFy  = NepaliDateService::currentFiscalYear();
+        $selectedFy = $request->input('fy', $currentFy);
+        $year       = (int) $request->input('year', now()->year);
+
+        if ($periodType === 'fy') {
+            $fyDetails   = NepaliDateService::getFiscalYearDetails($selectedFy);
+            $asOf        = $fyDetails['as_of_ad'];
+            $asOfLabel   = $fyDetails['as_of_bs_np'] . " (" . $fyDetails['as_of_bs'] . " BS / " . Carbon::parse($asOf)->format('d M Y') . " AD)";
+            $periodLabel = $fyDetails['fy_np'] . " ({$selectedFy})";
+            $filename    = "balance-sheet-FY-" . str_replace('/', '-', $selectedFy) . ".pdf";
+        } else {
+            $fyDetails   = null;
+            $asOf        = Carbon::create($year)->endOfYear()->toDateString();
+            $asOfLabel   = "31 Dec {$year} (" . Carbon::parse($asOf)->format('d M Y') . " AD)";
+            $periodLabel = "Calendar Year {$year}";
+            $filename    = "balance-sheet-{$year}.pdf";
+        }
 
         $cashAndBank    = max(0,
             Payment::where('payment_date', '<=', $asOf)->sum('amount')
@@ -330,31 +467,36 @@ class LedgerController extends Controller
             - SalarySlip::where('status', 'paid')->where('payment_date', '<=', $asOf)->sum('net_salary')
         );
         $fixedAssets    = \App\Models\Asset::where('purchase_date', '<=', $asOf)->whereIn('status', ['active', 'in_use'])->sum('purchase_price');
-        $receivables    = \App\Models\Invoice::where('status', '!=', 'paid')->where('created_at', '<=', $asOf)->sum('amount');
+        $receivables    = \App\Models\Invoice::where('status', '!=', 'paid')->where('created_at', '<=', $asOf . ' 23:59:59')->sum('amount');
         $totalAssets    = $cashAndBank + $fixedAssets + $receivables;
 
-        $salariesPayable        = SalarySlip::whereIn('status', ['draft', 'approved'])->where('year', '<=', $year)->sum('net_salary');
-        $teacherSalariesPayable = TeacherPayroll::where('status', 'pending')->where('year', '<=', $year)->sum('net_salary');
+        $salariesPayable        = SalarySlip::whereIn('status', ['draft', 'approved'])->where('created_at', '<=', $asOf . ' 23:59:59')->sum('net_salary');
+        $teacherSalariesPayable = TeacherPayroll::where('status', 'pending')->where('created_at', '<=', $asOf . ' 23:59:59')->sum('net_salary');
         $payrollPaid            = TeacherPayroll::where('status', 'paid')->where('payment_date', '<=', $asOf)->sum('net_salary')
                                 + SalarySlip::where('status', 'paid')->where('payment_date', '<=', $asOf)->sum('net_salary');
         $tdsPayable             = round($payrollPaid * 0.15, 2);
         $totalLiabilities       = $salariesPayable + $teacherSalariesPayable + $tdsPayable;
 
-        $retainedEarnings = (Payment::sum('amount') + IncomeRecord::sum('amount'))
-                          - (Expense::sum('amount')
-                             + TeacherPayroll::where('status', 'paid')->sum('net_salary')
-                             + SalarySlip::where('status', 'paid')->sum('net_salary'));
+        $cumulativeIncome   = Payment::where('payment_date', '<=', $asOf)->sum('amount')
+                            + IncomeRecord::where('income_date', '<=', $asOf)->sum('amount');
+        $cumulativeExpenses = Expense::where('expense_date', '<=', $asOf)->sum('amount')
+                            + TeacherPayroll::where('status', 'paid')->where('payment_date', '<=', $asOf)->sum('net_salary')
+                            + SalarySlip::where('status', 'paid')->where('payment_date', '<=', $asOf)->sum('net_salary');
+        $retainedEarnings   = $cumulativeIncome - $cumulativeExpenses;
+
         $totalEquity  = $retainedEarnings;
         $balanceCheck = $totalAssets - ($totalLiabilities + $totalEquity);
 
+        [$school, $logoSrc] = $this->resolveSchoolAndLogo();
+
         $pdf = Pdf::loadView('finance.balance-sheet-pdf', compact(
-            'year', 'asOf',
+            'periodType', 'selectedFy', 'year', 'asOf', 'asOfLabel', 'periodLabel', 'school', 'logoSrc',
             'cashAndBank', 'fixedAssets', 'receivables', 'totalAssets',
             'salariesPayable', 'teacherSalariesPayable', 'tdsPayable', 'totalLiabilities',
             'retainedEarnings', 'totalEquity', 'balanceCheck'
         ))->setPaper('A4');
 
-        return $pdf->download("balance-sheet-{$year}.pdf");
+        return $pdf->download($filename);
     }
 
     /**
@@ -363,6 +505,14 @@ class LedgerController extends Controller
     public function dayBook(Request $request)
     {
         $date = $request->input('date', today()->toDateString());
+
+        // Nepali BS conversions
+        $bsDateEn    = NepaliDateService::adToBS($date);
+        $bsDateNp    = NepaliDateService::formatBS($date, true);
+        $dayOfWeekNp = NepaliDateService::getDayOfWeekNepali($date);
+        $currentFy   = NepaliDateService::currentFiscalYear();
+        $fyDetails   = NepaliDateService::getFiscalYearDetails($currentFy);
+        $currentFyNp = $fyDetails['fy_np'];
 
         // 1. Fee Payments received on $date
         $payments = Payment::with(['invoice.student', 'invoice.schoolClass'])
@@ -391,7 +541,7 @@ class LedgerController extends Controller
             ->whereDate('payment_date', $date)
             ->get();
 
-        // Totals
+        // Overall Totals
         $feeTotal     = $payments->sum('amount');
         $incomeTotal  = $incomes->sum('amount');
         $totalInflow  = $feeTotal + $incomeTotal;
@@ -402,7 +552,18 @@ class LedgerController extends Controller
 
         $netDailyChange = $totalInflow - $totalOutflow;
 
-        // Opening balance (all net receipts prior to $date)
+        // Cash vs Digital Inflows
+        $cashInflow   = $payments->where('payment_method', 'cash')->sum('amount') + $incomes->where('payment_method', 'cash')->sum('amount');
+        $onlineInflow = max(0, $totalInflow - $cashInflow);
+
+        // Cash vs Bank Outflows
+        $cashExpense    = $expenses->filter(fn($e) => ($e->payment_method ?? 'cash') === 'cash')->sum('amount');
+        $cashTeacherPay = $teacherPayrolls->filter(fn($p) => ($p->payment_method ?? 'cash') === 'cash')->sum('net_salary');
+        $cashStaffPay   = $staffPayrolls->filter(fn($s) => ($s->payment_method ?? 'cash') === 'cash')->sum('net_salary');
+        $cashOutflow    = $cashExpense + $cashTeacherPay + $cashStaffPay;
+        $onlineOutflow  = max(0, $totalOutflow - $cashOutflow);
+
+        // Opening total balance
         $priorInflow = Payment::whereDate('payment_date', '<', $date)->sum('amount')
                      + IncomeRecord::whereDate('income_date', '<', $date)->sum('amount');
         $priorOutflow = Expense::whereDate('expense_date', '<', $date)->sum('amount')
@@ -411,15 +572,189 @@ class LedgerController extends Controller
         $openingBalance = $priorInflow - $priorOutflow;
         $closingBalance = $openingBalance + $netDailyChange;
 
-        // Method breakdowns
-        $cashInflow  = $payments->where('payment_method', 'cash')->sum('amount') + $incomes->where('payment_method', 'cash')->sum('amount');
-        $onlineInflow = $totalInflow - $cashInflow;
+        // Opening cash-in-hand brought forward
+        $priorCashInflow = Payment::whereDate('payment_date', '<', $date)->where('payment_method', 'cash')->sum('amount')
+                         + IncomeRecord::whereDate('income_date', '<', $date)->where('payment_method', 'cash')->sum('amount');
+        $priorCashOutflow = Expense::whereDate('expense_date', '<', $date)->where('payment_method', 'cash')->sum('amount')
+                          + TeacherPayroll::where('status', 'paid')->whereDate('payment_date', '<', $date)->where('payment_method', 'cash')->sum('net_salary')
+                          + SalarySlip::where('status', 'paid')->whereDate('payment_date', '<', $date)->where('payment_method', 'cash')->sum('net_salary');
+        $openingCash  = max(0, $priorCashInflow - $priorCashOutflow);
+        $expectedCash = max(0, $openingCash + $cashInflow - $cashOutflow);
+
+        // Day End Closing record
+        $closing = DayBookClosing::with(['closedByUser', 'unlockedByUser'])->where('date', $date)->first();
+        $isLocked = $closing && $closing->status === 'locked';
+
+        $defaultDenominations = [
+            '1000'  => 0,
+            '500'   => 0,
+            '100'   => 0,
+            '50'    => 0,
+            '20'    => 0,
+            '10'    => 0,
+            '5'     => 0,
+            '2'     => 0,
+            '1'     => 0,
+            'coins' => 0,
+        ];
+        $denominations = ($closing && is_array($closing->denominations)) ? array_merge($defaultDenominations, $closing->denominations) : $defaultDenominations;
 
         return view('finance.day-book', compact(
-            'date', 'payments', 'incomes', 'expenses', 'teacherPayrolls', 'staffPayrolls',
+            'date', 'bsDateEn', 'bsDateNp', 'dayOfWeekNp', 'currentFy', 'currentFyNp',
+            'payments', 'incomes', 'expenses', 'teacherPayrolls', 'staffPayrolls',
             'feeTotal', 'incomeTotal', 'totalInflow', 'expenseTotal', 'payrollTotal', 'totalOutflow',
-            'netDailyChange', 'openingBalance', 'closingBalance', 'cashInflow', 'onlineInflow'
+            'netDailyChange', 'openingBalance', 'closingBalance',
+            'cashInflow', 'onlineInflow', 'cashOutflow', 'onlineOutflow',
+            'openingCash', 'expectedCash',
+            'closing', 'isLocked', 'denominations'
         ));
+    }
+
+    /**
+     * Submit Day-End Closing & Physical Cash Denomination Lock.
+     */
+    public function closeDayBook(Request $request)
+    {
+        $validated = $request->validate([
+            'date'                  => 'required|date',
+            'denominations'         => 'required|array',
+            'denominations.1000'    => 'nullable|integer|min:0',
+            'denominations.500'     => 'nullable|integer|min:0',
+            'denominations.100'     => 'nullable|integer|min:0',
+            'denominations.50'      => 'nullable|integer|min:0',
+            'denominations.20'      => 'nullable|integer|min:0',
+            'denominations.10'      => 'nullable|integer|min:0',
+            'denominations.5'       => 'nullable|integer|min:0',
+            'denominations.2'       => 'nullable|integer|min:0',
+            'denominations.1'       => 'nullable|integer|min:0',
+            'denominations.coins'   => 'nullable|numeric|min:0',
+            'notes'                 => 'nullable|string|max:1000',
+        ]);
+
+        $date = $validated['date'];
+        $denoms = $validated['denominations'];
+
+        // Compute physical cash counted
+        $actualCash = (1000 * (int)($denoms['1000'] ?? 0))
+                    + (500  * (int)($denoms['500']  ?? 0))
+                    + (100  * (int)($denoms['100']  ?? 0))
+                    + (50   * (int)($denoms['50']   ?? 0))
+                    + (20   * (int)($denoms['20']   ?? 0))
+                    + (10   * (int)($denoms['10']   ?? 0))
+                    + (5    * (int)($denoms['5']    ?? 0))
+                    + (2    * (int)($denoms['2']    ?? 0))
+                    + (1    * (int)($denoms['1']    ?? 0))
+                    + (float)($denoms['coins']      ?? 0);
+
+        // Recalculate official day book metrics
+        $payments = Payment::whereDate('payment_date', $date)->get();
+        $incomes  = IncomeRecord::whereDate('income_date', $date)->get();
+        $expenses = Expense::whereDate('expense_date', $date)->get();
+        $tPay     = TeacherPayroll::where('status', 'paid')->whereDate('payment_date', $date)->get();
+        $sPay     = SalarySlip::where('status', 'paid')->whereDate('payment_date', $date)->get();
+
+        $feeTotal     = $payments->sum('amount');
+        $incomeTotal  = $incomes->sum('amount');
+        $totalInflow  = $feeTotal + $incomeTotal;
+        $cashInflow   = $payments->where('payment_method', 'cash')->sum('amount') + $incomes->where('payment_method', 'cash')->sum('amount');
+        $onlineInflow = max(0, $totalInflow - $cashInflow);
+
+        $expenseTotal = $expenses->sum('amount');
+        $payrollTotal = $tPay->sum('net_salary') + $sPay->sum('net_salary');
+        $totalOutflow = $expenseTotal + $payrollTotal;
+
+        $cashExpense    = $expenses->filter(fn($e) => ($e->payment_method ?? 'cash') === 'cash')->sum('amount');
+        $cashTeacherPay = $tPay->filter(fn($p) => ($p->payment_method ?? 'cash') === 'cash')->sum('net_salary');
+        $cashStaffPay   = $sPay->filter(fn($s) => ($s->payment_method ?? 'cash') === 'cash')->sum('net_salary');
+        $cashOutflow    = $cashExpense + $cashTeacherPay + $cashStaffPay;
+        $onlineOutflow  = max(0, $totalOutflow - $cashOutflow);
+
+        $priorInflow = Payment::whereDate('payment_date', '<', $date)->sum('amount')
+                     + IncomeRecord::whereDate('income_date', '<', $date)->sum('amount');
+        $priorOutflow = Expense::whereDate('expense_date', '<', $date)->sum('amount')
+                      + TeacherPayroll::where('status', 'paid')->whereDate('payment_date', '<', $date)->sum('net_salary')
+                      + SalarySlip::where('status', 'paid')->whereDate('payment_date', '<', $date)->sum('net_salary');
+        $openingBalance = $priorInflow - $priorOutflow;
+        $closingBalance = $openingBalance + ($totalInflow - $totalOutflow);
+
+        $priorCashInflow = Payment::whereDate('payment_date', '<', $date)->where('payment_method', 'cash')->sum('amount')
+                         + IncomeRecord::whereDate('income_date', '<', $date)->where('payment_method', 'cash')->sum('amount');
+        $priorCashOutflow = Expense::whereDate('expense_date', '<', $date)->where('payment_method', 'cash')->sum('amount')
+                          + TeacherPayroll::where('status', 'paid')->whereDate('payment_date', '<', $date)->where('payment_method', 'cash')->sum('net_salary')
+                          + SalarySlip::where('status', 'paid')->whereDate('payment_date', '<', $date)->where('payment_method', 'cash')->sum('net_salary');
+        $openingCash  = max(0, $priorCashInflow - $priorCashOutflow);
+        $expectedCash = max(0, $openingCash + $cashInflow - $cashOutflow);
+
+        $difference = $actualCash - $expectedCash;
+
+        DayBookClosing::updateOrCreate(
+            ['date' => $date],
+            [
+                'opening_balance' => $openingBalance,
+                'cash_inflow'     => $cashInflow,
+                'online_inflow'   => $onlineInflow,
+                'total_inflow'    => $totalInflow,
+                'cash_outflow'    => $cashOutflow,
+                'online_outflow'  => $onlineOutflow,
+                'total_outflow'   => $totalOutflow,
+                'expected_cash'   => $expectedCash,
+                'actual_cash'     => $actualCash,
+                'difference'      => $difference,
+                'closing_balance' => $closingBalance,
+                'denominations'   => $denoms,
+                'notes'           => $validated['notes'] ?? null,
+                'status'          => 'locked',
+                'closed_by'       => auth()->id(),
+                'closed_at'       => now(),
+            ]
+        );
+
+        return back()->with('status', 'दिनको हिसाब र भौतिक नगद दरबन्दी सफलतापूर्वक बन्द र लक गरियो (Day Book & Cash Denominations locked successfully).');
+    }
+
+    /**
+     * Unlock Day-End Closing for administrative corrections.
+     */
+    public function unlockDayBook(Request $request)
+    {
+        $date = $request->validate(['date' => 'required|date'])['date'];
+
+        $closing = DayBookClosing::where('date', $date)->first();
+        if ($closing) {
+            $closing->update([
+                'status'      => 'unlocked',
+                'unlocked_by' => auth()->id(),
+                'unlocked_at' => now(),
+            ]);
+        }
+
+        return back()->with('status', 'दिनको हिसाब सफलतापूर्वक अनलक गरियो (Day Book unlocked for editing).');
+    }
+
+    /**
+     * Official Cash Handover & Denomination Reconciliation Slip (PDF / Print).
+     */
+    public function reconciliationSlip(Request $request)
+    {
+        $date = $request->input('date', today()->toDateString());
+
+        $closing = DayBookClosing::with(['closedByUser'])->where('date', $date)->firstOrFail();
+
+        $bsDateEn    = NepaliDateService::adToBS($date);
+        $bsDateNp    = NepaliDateService::formatBS($date, true);
+        $dayOfWeekNp = NepaliDateService::getDayOfWeekNepali($date);
+        $currentFy   = NepaliDateService::currentFiscalYear();
+        $fyDetails   = NepaliDateService::getFiscalYearDetails($currentFy);
+        $currentFyNp = $fyDetails['fy_np'];
+
+        $school = auth()->user()->school ?? \App\Models\School::first();
+
+        $pdf = Pdf::loadView('finance.reconciliation-slip-pdf', compact(
+            'date', 'bsDateEn', 'bsDateNp', 'dayOfWeekNp', 'currentFy', 'currentFyNp',
+            'closing', 'school'
+        ))->setPaper('A5', 'portrait');
+
+        return $pdf->stream("cash-reconciliation-{$date}.pdf");
     }
 
     /**
@@ -428,6 +763,14 @@ class LedgerController extends Controller
     public function dayBookPdf(Request $request)
     {
         $date = $request->input('date', today()->toDateString());
+
+        // Nepali BS conversions
+        $bsDateEn    = NepaliDateService::adToBS($date);
+        $bsDateNp    = NepaliDateService::formatBS($date, true);
+        $dayOfWeekNp = NepaliDateService::getDayOfWeekNepali($date);
+        $currentFy   = NepaliDateService::currentFiscalYear();
+        $fyDetails   = NepaliDateService::getFiscalYearDetails($currentFy);
+        $currentFyNp = $fyDetails['fy_np'];
 
         $payments = Payment::with(['invoice.student', 'invoice.schoolClass'])
             ->whereDate('payment_date', $date)->get();
@@ -452,14 +795,66 @@ class LedgerController extends Controller
         $openingBalance = $priorInflow - $priorOutflow;
         $closingBalance = $openingBalance + $netDailyChange;
 
-        $school = auth()->user()->school ?? \App\Models\School::first();
+        $closing = DayBookClosing::with(['closedByUser'])->where('date', $date)->first();
+
+        [$school, $logoSrc] = $this->resolveSchoolAndLogo();
 
         $pdf = Pdf::loadView('finance.day-book-pdf', compact(
-            'date', 'school', 'payments', 'incomes', 'expenses', 'teacherPayrolls', 'staffPayrolls',
+            'date', 'bsDateEn', 'bsDateNp', 'dayOfWeekNp', 'currentFy', 'currentFyNp',
+            'school', 'logoSrc', 'payments', 'incomes', 'expenses', 'teacherPayrolls', 'staffPayrolls',
             'feeTotal', 'incomeTotal', 'totalInflow', 'expenseTotal', 'payrollTotal', 'totalOutflow',
-            'netDailyChange', 'openingBalance', 'closingBalance'
+            'netDailyChange', 'openingBalance', 'closingBalance', 'closing'
         ))->setPaper('A4', 'portrait');
 
         return $pdf->stream("day-book-{$date}.pdf");
+    }
+
+    /**
+     * Resolve current tenant school and generate Base64 data URI for DomPDF logo rendering.
+     */
+    protected function resolveSchoolAndLogo(): array
+    {
+        $user = auth()->user();
+        $schoolId = $user ? $user->school_id : null;
+        $school = ($schoolId ? \App\Models\School::find($schoolId) : null)
+            ?? optional($user)->school
+            ?? config('tenant.school')
+            ?? \App\Models\School::first();
+
+        $logoSrc = '';
+        if ($school && $school->logo) {
+            $clean = ltrim(str_replace('storage/', '', $school->logo), '/');
+            $candidates = [
+                storage_path('app/public/' . $clean),
+                public_path('storage/' . $clean),
+                public_path($clean),
+            ];
+            foreach ($candidates as $filePath) {
+                if (file_exists($filePath)) {
+                    $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+                    if ($ext === 'webp' && function_exists('imagecreatefromwebp')) {
+                        $im = @imagecreatefromwebp($filePath);
+                        if ($im) {
+                            ob_start();
+                            imagepng($im);
+                            $pngData = ob_get_clean();
+                            imagedestroy($im);
+                            if ($pngData) {
+                                $logoSrc = 'data:image/png;base64,' . base64_encode($pngData);
+                                break;
+                            }
+                        }
+                    }
+                    $data = @file_get_contents($filePath);
+                    if ($data) {
+                        $mime = ($ext === 'png') ? 'image/png' : (($ext === 'svg') ? 'image/svg+xml' : 'image/jpeg');
+                        $logoSrc = 'data:' . $mime . ';base64,' . base64_encode($data);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return [$school, $logoSrc];
     }
 }

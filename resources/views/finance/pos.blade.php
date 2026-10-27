@@ -459,6 +459,109 @@ html.dark .student-search-item:hover, html.dark .student-search-item.selected {
                     </select>
                 </div>
 
+                {{-- Instant Counter Fonepay / Merchant QR & Multi-Bank Master Panel --}}
+                <div id="pos_bank_qr_container" class="hidden space-y-3 p-3.5 bg-gradient-to-br from-teal-50/70 via-slate-50 to-emerald-50/50 dark:from-slate-800 dark:via-slate-800/90 dark:to-teal-950/40 rounded-2xl border-2 border-[#0D7C66]/30 dark:border-teal-500/30 transition-all">
+                    
+                    {{-- Bank Selector Header --}}
+                    <div class="flex items-center justify-between">
+                        <label class="text-xs font-black text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                            <span class="w-6 h-6 rounded-lg bg-[#0D7C66] text-white flex items-center justify-center text-xs">
+                                <i class="bi bi-bank2"></i>
+                            </span>
+                            <span>Receiving Bank &amp; Merchant QR</span>
+                        </label>
+                        <a href="{{ route('finance.bank-accounts.index') }}" target="_blank" class="text-[10px] font-bold text-[#0D7C66] dark:text-teal-400 hover:underline flex items-center gap-0.5">
+                            <i class="bi bi-gear-fill text-[9px]"></i> Bank Master
+                        </a>
+                    </div>
+
+                    {{-- Multi-Bank Select Dropdown --}}
+                    <div class="space-y-1">
+                        <select id="pos_selected_bank_id" onchange="handleSelectedBankChange(this.value)"
+                                class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0D7C66]/20 focus:border-[#0D7C66]">
+                            @forelse($bankAccounts as $bank)
+                            <option value="{{ $bank->id }}" 
+                                    data-bank-name="{{ $bank->bank_name }}" 
+                                    data-bank-code="{{ $bank->bank_code }}"
+                                    data-acc-name="{{ $bank->account_name }}" 
+                                    data-acc-no="{{ $bank->account_number }}" 
+                                    data-branch="{{ $bank->branch_name }}"
+                                    data-merchant-id="{{ $bank->fonepay_merchant_id }}"
+                                    data-pan="{{ $bank->fonepay_pan }}"
+                                    data-qr-image="{{ $bank->qr_image_url ?? '' }}"
+                                    {{ ($defaultBank && $defaultBank->id === $bank->id) ? 'selected' : '' }}>
+                                {{ $bank->bank_name }} — {{ $bank->account_number }} {{ $bank->is_default ? '★ (Default)' : '' }}
+                            </option>
+                            @empty
+                            <option value="">No Active Bank Accounts Configured</option>
+                            @endforelse
+                        </select>
+                    </div>
+
+                    {{-- Dynamic Merchant Standee & QR Display Card --}}
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-3 border border-slate-200 dark:border-slate-700/80 shadow-xs space-y-3">
+                        <div class="flex items-center justify-between text-xs border-b border-slate-100 dark:border-slate-800 pb-2">
+                            <div>
+                                <span class="font-extrabold text-slate-800 dark:text-slate-100 block" id="pos_card_bank_name">{{ $defaultBank?->bank_name ?? 'Commercial Bank' }}</span>
+                                <span class="text-[10px] text-slate-400 font-mono" id="pos_card_branch">{{ $defaultBank?->branch_name ?? 'Main Branch' }}</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-[#0D7C66] dark:bg-teal-950 dark:text-teal-300">
+                                <i class="bi bi-qr-code-scan me-1"></i> Counter Fonepay / QR
+                            </span>
+                        </div>
+
+                        {{-- QR Preview Visual Container --}}
+                        <div class="flex flex-col sm:flex-row items-center gap-3">
+                            <div class="relative bg-white p-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 shadow-xs flex flex-col items-center justify-center shrink-0">
+                                {{-- QR canvas / image target --}}
+                                <div id="pos_qr_render_target" class="w-28 h-28 flex items-center justify-center overflow-hidden">
+                                    <img id="pos_qr_img_fallback" src="https://api.qrserver.com/v1/create-qr-code/?size=112x112&data=SchoolPOS" class="w-full h-full object-contain" alt="QR Code">
+                                </div>
+                                <span class="mt-1 text-[9px] font-black text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded" id="pos_qr_badge_amount">
+                                    Rs. 0.00
+                                </span>
+                            </div>
+
+                            <div class="flex-1 space-y-2 text-xs w-full">
+                                <div class="bg-slate-50 dark:bg-slate-800/80 p-2 rounded-lg border border-slate-100 dark:border-slate-700/60">
+                                    <div class="text-[10px] text-slate-400 font-medium">A/C Number:</div>
+                                    <div class="flex items-center justify-between font-mono font-black text-slate-800 dark:text-slate-100">
+                                        <span id="pos_card_acc_no">{{ $defaultBank?->account_number ?? '—' }}</span>
+                                        <button type="button" onclick="copyBankAccountNumber()" class="px-1.5 py-0.5 bg-slate-200 dark:bg-slate-700 hover:bg-[#0D7C66] hover:text-white rounded text-[10px] font-bold transition" title="Copy Account Number">
+                                            <i class="bi bi-clipboard"></i> Copy
+                                        </button>
+                                    </div>
+                                    <div class="text-[10px] text-slate-500 font-medium truncate mt-0.5" id="pos_card_acc_name">
+                                        {{ $defaultBank?->account_name ?? 'School General Account' }}
+                                    </div>
+                                </div>
+
+                                {{-- Customer Display Trigger Button --}}
+                                <button type="button" onclick="openCustomerFacingQrModal()" 
+                                        class="w-full py-1.5 px-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-lg text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer">
+                                    <i class="bi bi-display"></i> ग्राहकलाई देखाउनुहोस् (Customer Display)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Fonepay Trace ID / UTR / Reference ID Input --}}
+                    <div class="space-y-1">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                            Fonepay Trace ID / Bank UTR No.
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2 text-slate-400 text-xs">
+                                <i class="bi bi-hash"></i>
+                            </span>
+                            <input type="text" id="pos_transaction_reference" placeholder="e.g. FP-892104 or UTR-391823"
+                                   class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-[#0D7C66] dark:focus:border-teal-400 rounded-xl pl-8 pr-3 py-2 text-xs font-mono font-bold text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#0D7C66]/20 transition">
+                        </div>
+                        <p class="text-[10px] text-slate-400">Cashier enters 6-digit trace ID from customer screen for daily bank counter audit.</p>
+                    </div>
+
+                </div>
+
                 {{-- Cash Received / Tendered & Preset Grid (For Cash Counter) --}}
                 <div id="cash_tendered_container" class="space-y-2">
                     <div class="flex items-center justify-between">
@@ -624,6 +727,14 @@ html.dark .student-search-item:hover, html.dark .student-search-item.selected {
                 <span class="text-slate-400">Payment Mode:</span>
                 <span class="font-bold text-slate-800 dark:text-slate-100 uppercase" id="modal_payment_mode">CASH</span>
             </div>
+            <div id="modal_bank_row" class="flex justify-between pt-1 border-t border-slate-200 dark:border-slate-700 hidden">
+                <span class="text-slate-400">Receiving Bank:</span>
+                <span class="font-bold text-slate-800 dark:text-slate-100" id="modal_bank_name">—</span>
+            </div>
+            <div id="modal_ref_row" class="flex justify-between pt-1 border-t border-slate-200 dark:border-slate-700 hidden">
+                <span class="text-slate-400">Fonepay Trace / UTR:</span>
+                <span class="font-mono font-bold text-[#0D7C66] dark:text-teal-400" id="modal_ref_no">—</span>
+            </div>
             <div id="modal_change_row" class="flex justify-between pt-1 border-t border-slate-200 dark:border-slate-700 hidden">
                 <span class="text-slate-400">Change Returned:</span>
                 <span class="font-black text-emerald-600" id="modal_change_amount">Rs. 0.00</span>
@@ -664,9 +775,78 @@ html.dark .student-search-item:hover, html.dark .student-search-item.selected {
     </div>
 </div>
 
+{{-- CUSTOMER FACING DUAL-SCREEN / TABLET QR CODE MODAL --}}
+<div id="customerFacingQrModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border-2 border-[#0D7C66]/50 dark:border-teal-500/50 max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-5 text-center animate-scale-in relative">
+        
+        <button type="button" onclick="closeCustomerFacingQrModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center justify-center transition">
+            <i class="bi bi-x-lg text-sm"></i>
+        </button>
+
+        {{-- School & Header --}}
+        <div class="space-y-1">
+            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-50 text-[#0D7C66] dark:bg-teal-950 dark:text-teal-300 border border-teal-200 dark:border-teal-800 inline-flex items-center gap-1">
+                <i class="bi bi-shield-check"></i> Fonepay / Merchant Counter QR
+            </span>
+            <h2 class="text-xl font-black text-slate-900 dark:text-slate-100 pt-1">
+                Scan to Pay / शुल्क भुक्तानी
+            </h2>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+                Open Mobile Banking app, eSewa, Khalti, or Fonepay to scan.
+            </p>
+        </div>
+
+        {{-- Big Bold Net Amount Banner --}}
+        <div class="bg-gradient-to-r from-teal-600 via-emerald-600 to-[#0D7C66] text-white rounded-2xl p-3.5 shadow-md space-y-0.5">
+            <span class="text-[10px] font-bold text-teal-100 uppercase tracking-widest block">PAYABLE AMOUNT (रकम)</span>
+            <div class="text-3xl font-black tracking-tight" id="customer_modal_amount">
+                Rs. 0.00
+            </div>
+            <div class="text-xs font-bold text-teal-100 truncate" id="customer_modal_student">
+                Student: Not Selected
+            </div>
+        </div>
+
+        {{-- High-Resolution QR Display --}}
+        <div class="bg-white p-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700 shadow-inner inline-block mx-auto">
+            <div id="customer_qr_render_target" class="w-56 h-56 flex items-center justify-center overflow-hidden">
+                <img id="customer_qr_img_fallback" src="https://api.qrserver.com/v1/create-qr-code/?size=224x224&data=SchoolPOS" class="w-full h-full object-contain" alt="Customer QR">
+            </div>
+        </div>
+
+        {{-- Supported Payment Apps Badges --}}
+        <div class="space-y-1.5">
+            <div class="flex items-center justify-center flex-wrap gap-1.5 text-[11px] font-extrabold text-slate-700 dark:text-slate-300">
+                <span class="px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200">Fonepay</span>
+                <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">eSewa</span>
+                <span class="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200">Khalti</span>
+                <span class="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200">ConnectIPS</span>
+                <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">All Commercial Banks</span>
+            </div>
+        </div>
+
+        {{-- Bank Account Details Box --}}
+        <div class="bg-slate-50 dark:bg-slate-800/80 rounded-xl p-3 text-xs border border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <div class="text-left">
+                <span class="text-[10px] text-slate-400 font-bold block" id="customer_modal_bank_name">Commercial Bank</span>
+                <span class="font-mono font-black text-slate-800 dark:text-slate-100" id="customer_modal_acc_no">A/C: —</span>
+            </div>
+            <button type="button" onclick="copyBankAccountNumber()" class="px-3 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg font-bold text-[#0D7C66] dark:text-teal-400 text-xs shadow-xs hover:bg-teal-50 transition cursor-pointer">
+                <i class="bi bi-clipboard me-1"></i> Copy A/C
+            </button>
+        </div>
+
+        <button type="button" onclick="closeCustomerFacingQrModal()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-slate-200 text-white dark:text-slate-900 rounded-xl text-xs font-black transition cursor-pointer">
+            Close Customer Display (सम्पन्न भयो / बन्द गर्नुहोस्)
+        </button>
+
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 (function() {
     // State
@@ -804,6 +984,12 @@ html.dark .student-search-item:hover, html.dark .student-search-item.selected {
 
                     renderStudentProfile(data.student, data.wallet_credit, data.total_outstanding, data.invoices.length);
                     renderUnpaidInvoices(data.invoices);
+                    currentStudent.full_name = data.student.name;
+                    currentStudent.admission_number = data.student.admission_no;
+                    currentStudent.roll_number = data.student.roll_no;
+                    if (typeof renderPosQrCode === 'function') {
+                        renderPosQrCode();
+                    }
                 }
             })
             .catch(() => {
@@ -965,6 +1151,13 @@ html.dark .student-search-item:hover, html.dark .student-search-item.selected {
         document.getElementById('pos_items_summary_count').textContent = count + ' fee item' + (count > 1 ? 's' : '') + (fineWaiver > 0 ? ' (Rs. ' + fineWaiver.toLocaleString() + ' concession applied)' : '');
 
         calculatePOSChange();
+
+        if (typeof renderPosQrCode === 'function') {
+            const method = document.getElementById('pos_payment_method')?.value;
+            if (['fonepay', 'esewa', 'khalti', 'connectips', 'bank'].includes(method)) {
+                renderPosQrCode();
+            }
+        }
     };
 
     function getNetPayable() {
@@ -1059,11 +1252,147 @@ html.dark .student-search-item:hover, html.dark .student-search-item.selected {
         calculatePOSChange();
     };
 
+    // ── MULTI-BANK & DYNAMIC COUNTER QR CONTROLS ──
+
     window.handlePaymentMethodChange = function(method) {
         const isCash = method === 'cash';
+        const isDigital = ['fonepay', 'esewa', 'khalti', 'connectips', 'bank'].includes(method);
+
         document.getElementById('cash_tendered_container').classList.toggle('hidden', !isCash);
         posChangeCard.classList.toggle('hidden', !isCash);
+
+        const qrContainer = document.getElementById('pos_bank_qr_container');
+        if (qrContainer) {
+            qrContainer.classList.toggle('hidden', !isDigital);
+            if (isDigital) {
+                renderPosQrCode();
+            }
+        }
     };
+
+    window.renderPosQrCode = function() {
+        const bankSelect = document.getElementById('pos_selected_bank_id');
+        if (!bankSelect) return;
+
+        const opt = bankSelect.selectedOptions[0];
+        if (!opt) return;
+
+        const bankName = opt.getAttribute('data-bank-name') || 'Commercial Bank';
+        const accNo = opt.getAttribute('data-acc-no') || '';
+        const accName = opt.getAttribute('data-acc-name') || '';
+        const branch = opt.getAttribute('data-branch') || '';
+        const merchantId = opt.getAttribute('data-merchant-id') || '';
+        const qrImage = opt.getAttribute('data-qr-image') || '';
+
+        // Update Card UI
+        const cardBankName = document.getElementById('pos_card_bank_name');
+        if (cardBankName) cardBankName.textContent = bankName;
+        const cardBranch = document.getElementById('pos_card_branch');
+        if (cardBranch) cardBranch.textContent = branch ? (branch + ' Branch') : '';
+        const cardAccNo = document.getElementById('pos_card_acc_no');
+        if (cardAccNo) cardAccNo.textContent = accNo || '—';
+        const cardAccName = document.getElementById('pos_card_acc_name');
+        if (cardAccName) cardAccName.textContent = accName || 'School Fee Collection A/C';
+
+        // Update Customer Modal UI
+        const custBankName = document.getElementById('customer_modal_bank_name');
+        if (custBankName) custBankName.textContent = bankName;
+        const custAccNo = document.getElementById('customer_modal_acc_no');
+        if (custAccNo) custAccNo.textContent = 'A/C: ' + (accNo || '—');
+
+        const netPayable = getNetPayable();
+        const formattedAmt = 'Rs. ' + Number(netPayable).toLocaleString('en-US', { minimumFractionDigits: 2 });
+        const posQrBadge = document.getElementById('pos_qr_badge_amount');
+        if (posQrBadge) posQrBadge.textContent = formattedAmt;
+        const custModalAmt = document.getElementById('customer_modal_amount');
+        if (custModalAmt) custModalAmt.textContent = formattedAmt;
+
+        const custModalStd = document.getElementById('customer_modal_student');
+        if (custModalStd) {
+            custModalStd.textContent = currentStudent
+                ? ('Student: ' + (currentStudent.full_name || currentStudent.name) + ' (Adm: ' + (currentStudent.admission_number || currentStudent.admission_no || 'N/A') + ')')
+                : 'Student: Not Selected';
+        }
+
+        const studentLabel = currentStudent ? ((currentStudent.full_name || currentStudent.name) + ' (' + (currentStudent.admission_number || currentStudent.admission_no || '') + ')') : 'Student Fee';
+        const qrPayload = `fonepay://pay?merchant_id=${encodeURIComponent(merchantId || bankName)}&account=${encodeURIComponent(accNo)}&amount=${netPayable}&remarks=${encodeURIComponent(studentLabel)}`;
+
+        // Render targets
+        const renderTarget = document.getElementById('pos_qr_render_target');
+        const custRenderTarget = document.getElementById('customer_qr_render_target');
+
+        if (qrImage) {
+            if (renderTarget) renderTarget.innerHTML = `<img src="${qrImage}" class="w-full h-full object-contain rounded-lg" alt="Standee QR">`;
+            if (custRenderTarget) custRenderTarget.innerHTML = `<img src="${qrImage}" class="w-full h-full object-contain rounded-xl" alt="Standee QR">`;
+        } else {
+            const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(qrPayload);
+            if (typeof QRCode !== 'undefined') {
+                try {
+                    if (renderTarget) {
+                        renderTarget.innerHTML = '';
+                        new QRCode(renderTarget, {
+                            text: qrPayload,
+                            width: 112,
+                            height: 112,
+                            colorDark : "#064e3b",
+                            colorLight : "#ffffff",
+                            correctLevel : QRCode.CorrectLevel.M
+                        });
+                    }
+                    if (custRenderTarget) {
+                        custRenderTarget.innerHTML = '';
+                        new QRCode(custRenderTarget, {
+                            text: qrPayload,
+                            width: 224,
+                            height: 224,
+                            colorDark : "#064e3b",
+                            colorLight : "#ffffff",
+                            correctLevel : QRCode.CorrectLevel.M
+                        });
+                    }
+                    return;
+                } catch(e) {
+                    console.warn('QRCode JS error, using fallback image service', e);
+                }
+            }
+            if (renderTarget) renderTarget.innerHTML = `<img src="${qrUrl}" class="w-full h-full object-contain" alt="QR Code">`;
+            if (custRenderTarget) custRenderTarget.innerHTML = `<img src="${qrUrl}" class="w-full h-full object-contain" alt="Customer QR">`;
+        }
+    };
+
+    window.handleSelectedBankChange = function(bankId) {
+        renderPosQrCode();
+    };
+
+    window.copyBankAccountNumber = function() {
+        const bankSelect = document.getElementById('pos_selected_bank_id');
+        const opt = bankSelect ? bankSelect.selectedOptions[0] : null;
+        const accNo = opt ? opt.getAttribute('data-acc-no') : document.getElementById('pos_card_acc_no')?.textContent;
+        if (!accNo) return;
+
+        navigator.clipboard.writeText(accNo.trim()).then(() => {
+            alert('Bank A/C Number copied to clipboard: ' + accNo.trim());
+        });
+    };
+
+    window.openCustomerFacingQrModal = function() {
+        renderPosQrCode();
+        document.getElementById('customerFacingQrModal').classList.remove('hidden');
+    };
+
+    window.closeCustomerFacingQrModal = function() {
+        document.getElementById('customerFacingQrModal').classList.add('hidden');
+    };
+
+    // Close customer modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('customerFacingQrModal');
+            if (modal && !modal.classList.contains('hidden')) {
+                closeCustomerFacingQrModal();
+            }
+        }
+    });
 
     window.applyWalletBalanceToPayment = function() {
         if (!currentStudent || currentStudent.wallet_credit <= 0) return;
@@ -1105,11 +1434,16 @@ html.dark .student-search-item:hover, html.dark .student-search-item.selected {
 
         const method = document.getElementById('pos_payment_method').value;
         const isCash = method === 'cash';
+        const isDigital = ['fonepay', 'esewa', 'khalti', 'connectips', 'bank'].includes(method);
         const cashTendered = isCash ? (parseFloat(inputCash.value) || netPayable) : netPayable;
         const depositChangeToWallet = chkDepositChange.checked;
         const notes = document.getElementById('pos_cashier_notes').value;
         const fineWaiver = parseFloat(document.getElementById('input_fine_waiver')?.value) || 0;
         const waiverReason = document.getElementById('input_waiver_reason')?.value;
+
+        const bankSelect = document.getElementById('pos_selected_bank_id');
+        const bankAccountId = (isDigital && bankSelect && bankSelect.value) ? bankSelect.value : null;
+        const transRef = document.getElementById('pos_transaction_reference')?.value?.trim() || null;
 
         // Collect fee items
         const nameInputs = document.querySelectorAll('.fee-name-input');
@@ -1139,6 +1473,8 @@ html.dark .student-search-item:hover, html.dark .student-search-item.selected {
             invoice_title: items.length === 1 ? items[0].name : (items.slice(0, 2).map(i => i.name).join(' + ') + (items.length > 2 ? ' (+ ' + (items.length - 2) + ' more)' : '')),
             amount_paid: netPayable,
             payment_method: method,
+            bank_account_id: bankAccountId,
+            transaction_reference: transRef,
             cash_tendered: cashTendered,
             deposit_change_to_wallet: depositChangeToWallet,
             fine_waiver: fineWaiver,
@@ -1189,6 +1525,22 @@ html.dark .student-search-item:hover, html.dark .student-search-item.selected {
         document.getElementById('modal_payment_mode').textContent = data.payment_method;
         document.getElementById('modal_remaining_dues').textContent = 'Rs. ' + Number(data.total_outstanding).toLocaleString('en-US', { minimumFractionDigits: 2 });
 
+        const bankRow = document.getElementById('modal_bank_row');
+        if (data.bank_name) {
+            document.getElementById('modal_bank_name').textContent = data.bank_name;
+            bankRow.classList.remove('hidden');
+        } else {
+            bankRow.classList.add('hidden');
+        }
+
+        const refRow = document.getElementById('modal_ref_row');
+        if (data.transaction_reference) {
+            document.getElementById('modal_ref_no').textContent = data.transaction_reference;
+            refRow.classList.remove('hidden');
+        } else {
+            refRow.classList.add('hidden');
+        }
+
         const changeRow = document.getElementById('modal_change_row');
         if (data.change_returned > 0) {
             document.getElementById('modal_change_amount').textContent = 'Rs. ' + Number(data.change_returned).toLocaleString('en-US', { minimumFractionDigits: 2 });
@@ -1216,7 +1568,14 @@ html.dark .student-search-item:hover, html.dark .student-search-item.selected {
 
     window.copyWhatsAppReceiptLink = function() {
         if (!lastSettledReceiptData) return;
-        const text = `*FEE PAYMENT RECEIPT — ${lastSettledReceiptData.receipt_number}*\nStudent: ${lastSettledReceiptData.student_name}\nAmount Received: Rs. ${Number(lastSettledReceiptData.amount_paid).toLocaleString()}\nMode: ${lastSettledReceiptData.payment_method}\nRemaining Dues: Rs. ${Number(lastSettledReceiptData.total_outstanding).toLocaleString()}\nView Online Receipt: ${window.location.origin + lastSettledReceiptData.web_receipt_url}\nThank you!`;
+        let text = `*FEE PAYMENT RECEIPT — ${lastSettledReceiptData.receipt_number}*\nStudent: ${lastSettledReceiptData.student_name}\nAmount Received: Rs. ${Number(lastSettledReceiptData.amount_paid).toLocaleString()}\nMode: ${lastSettledReceiptData.payment_method}`;
+        if (lastSettledReceiptData.bank_name) {
+            text += `\nBank: ${lastSettledReceiptData.bank_name}`;
+        }
+        if (lastSettledReceiptData.transaction_reference) {
+            text += `\nTrace/Ref: ${lastSettledReceiptData.transaction_reference}`;
+        }
+        text += `\nRemaining Dues: Rs. ${Number(lastSettledReceiptData.total_outstanding).toLocaleString()}\nView Online Receipt: ${window.location.origin + lastSettledReceiptData.web_receipt_url}\nThank you!`;
         
         navigator.clipboard.writeText(text).then(() => {
             alert('Receipt message copied to clipboard! You can paste directly into WhatsApp to the parent.');

@@ -17,6 +17,7 @@ class Payment extends Model
         'amount',               // was amount_paid — renamed for consistency
         'payment_date',
         'payment_method',
+        'bank_account_id',
         'gateway',
         'gateway_transaction_id',
         'receipt_number',
@@ -132,6 +133,11 @@ class Payment extends Model
     public function invoice()
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    public function bankAccount()
+    {
+        return $this->belongsTo(SchoolBankAccount::class, 'bank_account_id');
     }
 
     public function recordedBy()

@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Payment;
 use App\Models\SchoolSession;
+use App\Models\SchoolBankAccount;
 use App\Models\StudentLedger;
 use App\Models\User;
 use App\Services\BillingService;
@@ -252,10 +253,14 @@ class PaymentController extends Controller
     public function receiptPage(int $paymentId)
     {
         $payment = Payment::with([
-            'invoice.student',
+            'invoice.student.parent_info',
+            'invoice.schoolClass',
+            'invoice.section',
+            'invoice.session',
             'invoice.items.feeType',
             'invoice.payments',
             'recordedBy',
+            'bankAccount',
         ])->findOrFail($paymentId);
 
         $user = auth()->user();
@@ -273,9 +278,11 @@ class PaymentController extends Controller
             $payment->invoice?->school_id
             ?? $user->school_id
             ?? optional($payment->invoice?->student)->school_id
-        );
+        ) ?? $user->school ?? config('tenant.school') ?? \App\Models\School::first();
 
-        return view('payments.receipt', compact('payment', 'school'));
+        $logoSrc = $this->getSchoolLogoBase64($school);
+
+        return view('payments.receipt', compact('payment', 'school', 'logoSrc'));
     }
 
     // ── Student ledger view ───────────────────────────────────────────────────
@@ -324,7 +331,15 @@ class PaymentController extends Controller
 
     public function receipt(Request $request, int $paymentId)
     {
-        $payment = Payment::with(['invoice.student', 'invoice.items.feeType', 'recordedBy'])->findOrFail($paymentId);
+        $payment = Payment::with([
+            'invoice.student.parent_info',
+            'invoice.schoolClass',
+            'invoice.section',
+            'invoice.session',
+            'invoice.items.feeType',
+            'recordedBy',
+            'bankAccount',
+        ])->findOrFail($paymentId);
 
         $user = auth()->user();
         if ($user->hasRole('student') && $payment->invoice?->student_id !== $user->id) {
@@ -350,21 +365,22 @@ class PaymentController extends Controller
             $payment->invoice?->school_id
             ?? $user->school_id
             ?? optional($payment->invoice?->student)->school_id
-        );
+        ) ?? $user->school ?? config('tenant.school') ?? \App\Models\School::first();
 
+        $logoSrc = $this->getSchoolLogoBase64($school);
         $format = $request->query('format', 'standard');
 
         if ($format === 'dual') {
-            $pdf = Pdf::loadView('finance.receipt-dual-copy', compact('payment', 'school'))
+            $pdf = Pdf::loadView('finance.receipt-dual-copy', compact('payment', 'school', 'logoSrc'))
                 ->setPaper('a4', 'portrait');
             return $pdf->stream('receipt-dual-' . $payment->receipt_number . '.pdf');
         }
 
         if ($format === 'thermal') {
-            return view('finance.receipt-thermal', compact('payment', 'school'));
+            return view('finance.receipt-thermal', compact('payment', 'school', 'logoSrc'));
         }
 
-        $pdf = Pdf::loadView('finance.receipt-pdf', compact('payment', 'school'))
+        $pdf = Pdf::loadView('finance.receipt-pdf', compact('payment', 'school', 'logoSrc'))
             ->setPaper('a5');
         return $pdf->stream('receipt-' . $payment->receipt_number . '.pdf');
     }
@@ -450,6 +466,11 @@ class PaymentController extends Controller
         // Active fee structures / presets
         $feePresets = FeeType::where('is_active', true)->orderBy('name')->take(8)->get();
 
+        // Multi-Bank Accounts for Fonepay QR & Bank Transfer
+        SchoolBankAccountController::ensureDefaultBanksExist();
+        $bankAccounts = SchoolBankAccount::active()->defaultFirst()->get();
+        $defaultBank = $bankAccounts->firstWhere('is_default', true) ?? $bankAccounts->first();
+
         $selectedStudentId = $request->input('student_id');
 
         return view('finance.pos', compact(
@@ -460,6 +481,8 @@ class PaymentController extends Controller
             'recentCollections',
             'initialStudents',
             'feePresets',
+            'bankAccounts',
+            'defaultBank',
             'selectedStudentId'
         ));
     }
@@ -644,6 +667,8 @@ class PaymentController extends Controller
             'invoice_title'             => 'nullable|string|max:255',
             'amount_paid'               => 'required|numeric|min:0.01',
             'payment_method'            => 'required|string|in:cash,esewa,khalti,fonepay,connectips,stripe,paypal,bank,cheque,wallet_credit',
+            'bank_account_id'           => 'nullable|integer|exists:school_bank_accounts,id',
+            'transaction_reference'     => 'nullable|string|max:100',
             'cash_tendered'             => 'nullable|numeric|min:0',
             'deposit_change_to_wallet'  => 'nullable|boolean',
             'fine_waiver'               => 'nullable|numeric|min:0',
@@ -670,6 +695,12 @@ class PaymentController extends Controller
             $method = $data['payment_method'];
             $cashTendered = isset($data['cash_tendered']) ? (float)$data['cash_tendered'] : $amountToPay;
             $depositChange = !empty($data['deposit_change_to_wallet']);
+            $bankAccountId = $data['bank_account_id'] ?? null;
+            $traceId = $data['transaction_reference'] ?? null;
+            $bankObj = $bankAccountId ? SchoolBankAccount::find($bankAccountId) : null;
+            $bankTag = '';
+            if ($traceId) $bankTag .= " [Ref/Trace: {$traceId}]";
+            if ($bankObj) $bankTag .= " [Bank: {$bankObj->bank_name}]";
 
             // 1. Advance wallet deposit
             if ($data['settlement_mode'] === 'advance_deposit') {
@@ -688,11 +719,13 @@ class PaymentController extends Controller
                 $paymentRecord = Payment::create([
                     'invoice_id'             => $primaryInvoice->id,
                     'school_id'              => $schoolId,
+                    'bank_account_id'        => $bankAccountId,
+                    'gateway_transaction_id' => $traceId,
                     'amount'                 => $amountToPay,
                     'payment_date'           => today()->toDateString(),
                     'payment_method'         => $method,
                     'gateway'                => $method,
-                    'notes'                  => 'Advance Wallet Deposit: ' . ($data['notes'] ?? ''),
+                    'notes'                  => 'Advance Wallet Deposit: ' . ($data['notes'] ?? '') . $bankTag,
                     'recorded_by'            => auth()->id(),
                 ]);
 
@@ -714,14 +747,16 @@ class PaymentController extends Controller
 
                     if ($payForThis > 0) {
                         $p = Payment::create([
-                            'invoice_id'     => $inv->id,
-                            'school_id'      => $schoolId,
-                            'amount'         => $payForThis,
-                            'payment_date'   => today()->toDateString(),
-                            'payment_method' => $method,
-                            'gateway'        => $method,
-                            'notes'          => $data['notes'] ?? 'Settled via POS Billing Terminal',
-                            'recorded_by'    => auth()->id(),
+                            'invoice_id'             => $inv->id,
+                            'school_id'              => $schoolId,
+                            'bank_account_id'        => $bankAccountId,
+                            'gateway_transaction_id' => $traceId,
+                            'amount'                 => $payForThis,
+                            'payment_date'           => today()->toDateString(),
+                            'payment_method'         => $method,
+                            'gateway'                => $method,
+                            'notes'                  => ($data['notes'] ?? 'Settled via POS Billing Terminal') . $bankTag,
+                            'recorded_by'            => auth()->id(),
                         ]);
 
                         if (!$paymentRecord) {
@@ -748,14 +783,16 @@ class PaymentController extends Controller
                     ]);
 
                     $advPayment = Payment::create([
-                        'invoice_id'     => $advanceInv->id,
-                        'school_id'      => $schoolId,
-                        'amount'         => $remainingPayment,
-                        'payment_date'   => today()->toDateString(),
-                        'payment_method' => $method,
-                        'gateway'        => $method,
-                        'notes'          => 'Excess fee payment credited to Student Wallet',
-                        'recorded_by'    => auth()->id(),
+                        'invoice_id'             => $advanceInv->id,
+                        'school_id'              => $schoolId,
+                        'bank_account_id'        => $bankAccountId,
+                        'gateway_transaction_id' => $traceId,
+                        'amount'                 => $remainingPayment,
+                        'payment_date'           => today()->toDateString(),
+                        'payment_method'         => $method,
+                        'gateway'                => $method,
+                        'notes'                  => 'Excess fee payment credited to Student Wallet' . $bankTag,
+                        'recorded_by'            => auth()->id(),
                     ]);
 
                     if (!$paymentRecord) {
@@ -794,7 +831,7 @@ class PaymentController extends Controller
                     'discount_amount'    => $fineWaiver,
                     'status'             => 'unpaid',
                     'due_date'           => $data['due_date'] ?? today()->toDateString(),
-                    'description'        => $data['notes'] ?? 'Instant POS Fee Settlement',
+                    'description'        => ($data['notes'] ?? 'Instant POS Fee Settlement') . $bankTag,
                     'is_auto_generated'  => false,
                 ]);
 
@@ -818,14 +855,16 @@ class PaymentController extends Controller
                 }
 
                 $paymentRecord = Payment::create([
-                    'invoice_id'     => $primaryInvoice->id,
-                    'school_id'      => $schoolId,
-                    'amount'         => min($amountToPay, $finalInvoiceAmount),
-                    'payment_date'   => today()->toDateString(),
-                    'payment_method' => $method,
-                    'gateway'        => $method,
-                    'notes'          => $data['notes'] ?? 'POS instant counter payment',
-                    'recorded_by'    => auth()->id(),
+                    'invoice_id'             => $primaryInvoice->id,
+                    'school_id'              => $schoolId,
+                    'bank_account_id'        => $bankAccountId,
+                    'gateway_transaction_id' => $traceId,
+                    'amount'                 => min($amountToPay, $finalInvoiceAmount),
+                    'payment_date'           => today()->toDateString(),
+                    'payment_method'         => $method,
+                    'gateway'                => $method,
+                    'notes'                  => ($data['notes'] ?? 'POS instant counter payment') . $bankTag,
+                    'recorded_by'            => auth()->id(),
                 ]);
             }
 
@@ -880,6 +919,8 @@ class PaymentController extends Controller
             'admission_no'          => $student->admission_no ?? $student->roll_no ?? 'N/A',
             'amount_paid'           => (float) $data['amount_paid'],
             'payment_method'        => strtoupper($data['payment_method']),
+            'bank_name'             => $bankObj?->bank_name,
+            'transaction_reference' => $traceId,
             'change_returned'       => (float) $changeReturned,
             'wallet_deposited'      => (float) $excessChangeDeposited,
             'new_wallet_balance'    => (float) $currentWalletBalance,
@@ -889,6 +930,45 @@ class PaymentController extends Controller
             'standard_receipt_url'  => route('payments.receipt-download', ['paymentId' => $paymentRecord->id]),
             'web_receipt_url'       => route('payments.receipt.page', ['paymentId' => $paymentRecord->id]),
         ]);
+    }
+
+    /**
+     * Get Base64 encoded logo for DomPDF rendering.
+     */
+    public function getSchoolLogoBase64($school = null): string
+    {
+        $school = $school ?? \App\Models\School::find(optional(auth()->user())->school_id) ?? optional(auth()->user())->school ?? config('tenant.school') ?? \App\Models\School::first();
+        if ($school && $school->logo) {
+            $clean = ltrim(str_replace('storage/', '', $school->logo), '/');
+            $candidates = [
+                storage_path('app/public/' . $clean),
+                public_path('storage/' . $clean),
+                public_path($clean),
+            ];
+            foreach ($candidates as $filePath) {
+                if (file_exists($filePath)) {
+                    $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+                    if ($ext === 'webp' && function_exists('imagecreatefromwebp')) {
+                        $im = @imagecreatefromwebp($filePath);
+                        if ($im) {
+                            ob_start();
+                            imagepng($im);
+                            $pngData = ob_get_clean();
+                            imagedestroy($im);
+                            if ($pngData) {
+                                return 'data:image/png;base64,' . base64_encode($pngData);
+                            }
+                        }
+                    }
+                    $data = @file_get_contents($filePath);
+                    if ($data) {
+                        $mime = ($ext === 'png') ? 'image/png' : (($ext === 'svg') ? 'image/svg+xml' : 'image/jpeg');
+                        return 'data:' . $mime . ';base64,' . base64_encode($data);
+                    }
+                }
+            }
+        }
+        return '';
     }
 }
 

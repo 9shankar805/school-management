@@ -56,13 +56,17 @@ class PromotionRepository
         }
     }
 
-    public function getAll($session_id, $class_id, $section_id)
+    public function getAll($session_id, $class_id, $section_id = 0)
     {
-        return Promotion::with(['student', 'section'])
+        $query = Promotion::with(['student', 'section'])
             ->where('session_id', $session_id)
-            ->where('class_id', $class_id)
-            ->where('section_id', $section_id)
-            ->get();
+            ->where('class_id', $class_id);
+
+        if (!empty($section_id) && (int)$section_id > 0) {
+            $query->where('section_id', (int)$section_id);
+        }
+
+        return $query->orderByRaw('CAST(roll_no AS UNSIGNED) ASC, roll_no ASC')->get();
     }
 
     public function getAllStudentsBySessionCount($session_id)

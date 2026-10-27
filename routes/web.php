@@ -554,6 +554,16 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/pos/collect',             [\App\Http\Controllers\PaymentController::class, 'posCollect'])->name('pos.collect');
         Route::get('/fee-profiles/{studentId?}', [FeeController::class, 'feeProfiles'])->name('fee-profiles');
 
+        // Multi-Bank Master & Fonepay QR Management
+        Route::prefix('bank-accounts')->name('bank-accounts.')->group(function () {
+            Route::get('/',                     [\App\Http\Controllers\SchoolBankAccountController::class, 'index'])->name('index');
+            Route::post('/',                    [\App\Http\Controllers\SchoolBankAccountController::class, 'store'])->name('store');
+            Route::put('/{id}',                 [\App\Http\Controllers\SchoolBankAccountController::class, 'update'])->name('update');
+            Route::delete('/{id}',              [\App\Http\Controllers\SchoolBankAccountController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/set-default',    [\App\Http\Controllers\SchoolBankAccountController::class, 'setDefault'])->name('set-default');
+            Route::post('/{id}/toggle-active',  [\App\Http\Controllers\SchoolBankAccountController::class, 'toggleActive'])->name('toggle-active');
+        });
+
         // Fee categories
         Route::prefix('categories')->name('categories.')->group(function () {
             Route::get('/',         [FeeController::class, 'categories'])->name('index');
@@ -587,6 +597,16 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/income',            [IncomeController::class, 'store'])->name('income.store');
         Route::put('/income/{id}',        [IncomeController::class, 'update'])->name('income.update');
         Route::delete('/income/{id}',     [IncomeController::class, 'destroy'])->name('income.destroy');
+
+        // Class-Wise Dues & Defaulters Recovery Engine
+        Route::prefix('dues')->name('dues.')->group(function () {
+            Route::get('/',                     [\App\Http\Controllers\DuesController::class, 'index'])->name('index');
+            Route::post('/bulk-remind',         [\App\Http\Controllers\DuesController::class, 'bulkRemind'])->name('bulk-remind');
+            Route::post('/bulk-lock',           [\App\Http\Controllers\DuesController::class, 'bulkLock'])->name('bulk-lock');
+            Route::post('/{studentId}/toggle',  [\App\Http\Controllers\DuesController::class, 'toggleLock'])->name('toggle-lock');
+            Route::get('/export/csv',           [\App\Http\Controllers\DuesController::class, 'exportCsv'])->name('export.csv');
+            Route::get('/export/pdf',           [\App\Http\Controllers\DuesController::class, 'exportPdf'])->name('export.pdf');
+        });
 
         // Reports + PDF receipt
         Route::get('/reports',            [FinanceReportController::class, 'form'])->name('reports');        // left-menu uses finance.reports
@@ -717,11 +737,15 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::prefix('teacher/payroll')->name('teacher.payroll.')->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr|teacher|class-teacher'])->group(function () {
-        Route::get('/',          [TeacherPayrollController::class, 'index'])->name('index');
-        Route::post('/',         [TeacherPayrollController::class, 'store'])->name('store');
-        Route::post('/{id}/paid',[TeacherPayrollController::class, 'markPaid'])->name('paid');
-        Route::get('/{id}/slip', [TeacherPayrollController::class, 'slip'])->name('slip');
-        Route::delete('/{id}',   [TeacherPayrollController::class, 'destroy'])->name('destroy');
+        Route::get('/',                   [TeacherPayrollController::class, 'index'])->name('index');
+        Route::post('/',                  [TeacherPayrollController::class, 'store'])->name('store');
+        Route::post('/bulk-generate',     [TeacherPayrollController::class, 'bulkGenerate'])->name('bulk-generate');
+        Route::post('/bulk-pay',          [TeacherPayrollController::class, 'bulkPay'])->name('bulk-pay');
+        Route::match(['POST', 'PATCH'], '/{id}/approve', [TeacherPayrollController::class, 'approve'])->name('approve');
+        Route::match(['POST', 'PATCH'], '/{id}/paid',    [TeacherPayrollController::class, 'markPaid'])->name('paid');
+        Route::get('/export/csv',         [TeacherPayrollController::class, 'exportCsv'])->name('export.csv');
+        Route::get('/{id}/slip',          [TeacherPayrollController::class, 'slip'])->name('slip');
+        Route::match(['POST', 'DELETE'], '/{id}',        [TeacherPayrollController::class, 'destroy'])->name('destroy');
     });
 
     Route::get('performance-reviews',      [PerformanceReviewController::class, 'index'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('reviews.index');
@@ -1317,8 +1341,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/balance-sheet/pdf',[\App\Http\Controllers\LedgerController::class, 'balanceSheetPdf'])->name('balance-sheet.pdf');
 
         // Day Book (रोजनाम्चा / दैनिक हिसाब)
-        Route::get('/day-book',        [\App\Http\Controllers\LedgerController::class, 'dayBook'])->name('day-book');
-        Route::get('/day-book/pdf',    [\App\Http\Controllers\LedgerController::class, 'dayBookPdf'])->name('day-book.pdf');
+        Route::get('/day-book',                    [\App\Http\Controllers\LedgerController::class, 'dayBook'])->name('day-book');
+        Route::get('/day-book/pdf',                [\App\Http\Controllers\LedgerController::class, 'dayBookPdf'])->name('day-book.pdf');
+        Route::post('/day-book/close',             [\App\Http\Controllers\LedgerController::class, 'closeDayBook'])->name('day-book.close');
+        Route::post('/day-book/unlock',            [\App\Http\Controllers\LedgerController::class, 'unlockDayBook'])->name('day-book.unlock');
+        Route::get('/day-book/reconciliation-slip',[\App\Http\Controllers\LedgerController::class, 'reconciliationSlip'])->name('day-book.slip');
 
         // Fee types master list
         Route::prefix('fee-types')->name('fee-types.')->group(function () {

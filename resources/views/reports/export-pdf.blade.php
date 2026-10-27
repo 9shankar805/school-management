@@ -45,11 +45,15 @@ tbody td {
 </head>
 <body>
 
+@php
+    $schoolName = optional(auth()->user())->school?->name ?? config('tenant.school')?->name ?? config('app.name');
+@endphp
+
 <div class="report-header">
     <div class="report-title">{{ $title }}</div>
     <div class="report-meta">
         Generated on {{ now()->format('d M Y, h:i A') }} &nbsp;|&nbsp;
-        {{ config('app.name') }} &nbsp;|&nbsp;
+        {{ $schoolName }} &nbsp;|&nbsp;
         Total records: {{ count($rows) }}
     </div>
 </div>
@@ -80,7 +84,7 @@ tbody td {
 @endif
 
 <div class="report-footer">
-    {{ config('app.name') }} &nbsp;·&nbsp; {{ $title }} &nbsp;·&nbsp; {{ now()->format('d M Y') }}
+    {{ $schoolName }} &nbsp;·&nbsp; {{ $title }} &nbsp;·&nbsp; {{ now()->format('d M Y') }}
 </div>
 
 </body>

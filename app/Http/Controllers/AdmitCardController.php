@@ -42,10 +42,15 @@ class AdmitCardController extends Controller
 
         $sessionId = $exam->session_id ?? $this->getSchoolCurrentSession();
 
-        // Fee clearance check for students / parents (Veda Model)
+        // Fee clearance and administrative lock check for students / parents (Veda Model)
         $dueBalance = round(max((float) StudentLedger::currentBalance($studentId, $sessionId), (float) StudentLedger::currentBalance($studentId)), 2);
-        if (($user->hasRole('student') || $user->hasRole('parent')) && $dueBalance > 0) {
-            return redirect()->back()->with('error', '⚠️ Admit Card Locked: Outstanding fee dues of NPR ' . number_format($dueBalance, 2) . ' must be cleared prior to examination.');
+        if (($user->hasRole('student') || $user->hasRole('parent')) && ($dueBalance > 0 || $student->is_admit_card_locked)) {
+            $lockMsg = $student->is_admit_card_locked && $student->admit_card_lock_reason
+                ? $student->admit_card_lock_reason
+                : ($dueBalance > 0
+                    ? 'Outstanding fee dues of NPR ' . number_format($dueBalance, 2) . ' must be cleared prior to examination.'
+                    : 'Admit card is held by the finance administration.');
+            return redirect()->back()->with('error', '⚠️ Admit Card Locked: ' . $lockMsg);
         }
 
         // Get student's class and section

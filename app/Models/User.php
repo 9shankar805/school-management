@@ -60,6 +60,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'admission_date',
         'guardian_id',
         'student_status',
+        'is_admit_card_locked',
+        'admit_card_lock_reason',
         // Staff payroll fields
         'pan_no',
         'bank_name',
@@ -76,6 +78,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'national_id'          => 'encrypted',   // AES-256 via Laravel's Crypt
         'must_change_password' => 'boolean',
         'basic_salary'         => 'decimal:2',
+        'is_admit_card_locked' => 'boolean',
     ];
 
     // -----------------------------------------------------------------------
