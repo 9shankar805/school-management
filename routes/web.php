@@ -339,6 +339,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/routine/create', [RoutineController::class, 'create'])->name('section.routine.create');
     Route::get('/routine/view', [RoutineController::class, 'show'])->name('section.routine.show');
     Route::post('/routine/store', [RoutineController::class, 'store'])->name('section.routine.store');
+    Route::get('/routine/matrix-data', [RoutineController::class, 'matrixData'])->name('routine.matrix.data');
+    Route::post('/routine/matrix-save', [RoutineController::class, 'matrixSave'])->name('routine.matrix.save');
+    Route::post('/routine/clone-section', [RoutineController::class, 'cloneSection'])->name('routine.clone.section');
 
     // Syllabus
     Route::get('/syllabus/create', [SyllabusController::class, 'create'])->name('class.syllabus.create');

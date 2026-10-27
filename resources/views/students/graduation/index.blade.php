@@ -108,42 +108,14 @@
                                 <span class="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-100 text-emerald-700">Active</span>
                                 @endif
                             </td>
-                            <td class="px-5 py-3 text-slate-500">{{ $cs?->effective_date?->format('d M Y') ?? '—' }}</td>
                             <td class="px-5 py-3 text-slate-500">{{ $cs?->alumni_batch ?? $cs?->reason ?? '—' }}</td>
                             @can('create students')
                             <td class="px-5 py-3">
-                                <button onclick="document.getElementById('status-modal-{{ $s->id }}').classList.remove('hidden')"
-                                    class="text-xs px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-600 rounded-lg transition">
+                                <button type="button"
+                                    onclick="openStatusModal({{ $s->id }}, '{{ addslashes($s->full_name) }}', '{{ $cs?->status ?? 'active' }}', '{{ addslashes($cs?->alumni_batch ?? '') }}', '{{ $cs?->effective_date?->format('Y-m-d') ?? now()->toDateString() }}', '{{ addslashes($cs?->reason ?? '') }}', '{{ addslashes($cs?->destination_school ?? '') }}', '{{ addslashes($cs?->graduation_certificate_no ?? '') }}')"
+                                    class="text-xs px-3 py-1.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 font-semibold rounded-lg border border-slate-200 transition">
                                     Change Status
                                 </button>
-                                {{-- Inline modal --}}
-                                <div id="status-modal-{{ $s->id }}" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
-                                    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-                                        <p class="font-semibold text-slate-800 mb-4">Update Status — {{ $s->full_name }}</p>
-                                        <form method="POST" action="{{ route('students.graduation.process', $s->id) }}" class="space-y-3">
-                                            @csrf
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 mb-1">New Status</label>
-                                                <select name="status" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                                                    @foreach(\App\Models\StudentStatus::STATUSES as $v => $l)
-                                                    <option value="{{ $v }}">{{ $l }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs font-medium text-slate-500 mb-1">Effective Date</label>
-                                                <input type="date" name="effective_date" value="{{ now()->toDateString() }}" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                                            </div>
-                                            <input type="text" name="alumni_batch" placeholder="Alumni batch (e.g. Class of 2025)" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                                            <textarea name="reason" rows="2" placeholder="Reason / notes (optional)" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-400"></textarea>
-                                            <input type="text" name="destination_school" placeholder="Destination school (for transfers/dropouts)" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                                            <div class="flex gap-2 pt-1">
-                                                <button type="submit" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition">Save</button>
-                                                <button type="button" onclick="document.getElementById('status-modal-{{ $s->id }}').classList.add('hidden')" class="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium transition">Cancel</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
                             </td>
                             @endcan
                         </tr>
@@ -158,4 +130,122 @@
         </div>
     </div>
 </div>
+
+{{-- Global Status Update Modal (Placed outside table container to prevent clipping) --}}
+@can('create students')
+<div id="statusModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[9999] items-center justify-center p-4 print-hide" onclick="if(event.target===this)closeStatusModal()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-150">
+        <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+            <h3 class="font-bold text-sm flex items-center gap-2">
+                <i class="bi bi-person-gear text-indigo-400"></i> Update Student Status
+            </h3>
+            <button type="button" onclick="closeStatusModal()" class="text-slate-400 hover:text-white text-base">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <form id="statusModalForm" method="POST" action="" class="p-6 space-y-4">
+            @csrf
+            <div>
+                <p class="text-xs text-slate-400 font-medium mb-0.5">Student</p>
+                <p id="modalStudentName" class="font-bold text-slate-800 text-base"></p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">New Status *</label>
+                <select name="status" id="modalStatusSelect" required onchange="toggleStatusFields(this.value)"
+                        class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-800 bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
+                    @foreach(\App\Models\StudentStatus::STATUSES as $v => $l)
+                    <option value="{{ $v }}">{{ $l }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Effective Date *</label>
+                <input type="date" name="effective_date" id="modalEffectiveDate" value="{{ now()->toDateString() }}" required
+                       class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
+            </div>
+
+            <div id="fieldAlumniBatch">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Alumni Batch (e.g. Class of 2026)</label>
+                <input type="text" name="alumni_batch" id="modalAlumniBatch" placeholder="e.g. Class of 2026"
+                       class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 bg-white focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <div id="fieldCertNo">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Graduation Certificate No. (optional)</label>
+                <input type="text" name="graduation_certificate_no" id="modalCertNo" placeholder="e.g. CERT-2026-001"
+                       class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 bg-white focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Reason / Remarks (optional)</label>
+                <textarea name="reason" id="modalReason" rows="2" placeholder="Administrative notes or reason for status change"
+                          class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 bg-white focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
+            </div>
+
+            <div id="fieldDestSchool">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Destination School (for transfers / dropouts)</label>
+                <input type="text" name="destination_school" id="modalDestSchool" placeholder="e.g. Kathmandu Model College"
+                       class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 bg-white focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <div class="flex gap-2 pt-2 border-t border-slate-100">
+                <button type="button" onclick="closeStatusModal()"
+                        class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition shadow-xs">
+                    Save Status
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openStatusModal(studentId, studentName, status, batch, effectiveDate, reason, destinationSchool, certNo) {
+    document.getElementById('modalStudentName').textContent = studentName;
+    document.getElementById('modalStatusSelect').value = status || 'active';
+    document.getElementById('modalEffectiveDate').value = effectiveDate || '{{ now()->toDateString() }}';
+    document.getElementById('modalAlumniBatch').value = batch || '';
+    document.getElementById('modalReason').value = reason || '';
+    document.getElementById('modalDestSchool').value = destinationSchool || '';
+    document.getElementById('modalCertNo').value = certNo || '';
+    document.getElementById('statusModalForm').action = `/graduation/${studentId}/process`;
+
+    toggleStatusFields(status || 'active');
+
+    const modal = document.getElementById('statusModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeStatusModal() {
+    const modal = document.getElementById('statusModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function toggleStatusFields(status) {
+    const isGraduated = (status === 'graduated' || status === 'alumni');
+    const isTransferOrDropout = (status === 'dropped_out' || status === 'withdrawn' || status === 'transferred');
+
+    const batchField = document.getElementById('fieldAlumniBatch');
+    const certField = document.getElementById('fieldCertNo');
+    const destField = document.getElementById('fieldDestSchool');
+
+    if (batchField) batchField.style.display = isGraduated ? 'block' : 'none';
+    if (certField) certField.style.display = isGraduated ? 'block' : 'none';
+    if (destField) destField.style.display = isTransferOrDropout ? 'block' : 'none';
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeStatusModal();
+    }
+});
+</script>
+@endcan
 @endsection

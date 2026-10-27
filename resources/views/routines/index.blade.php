@@ -15,12 +15,16 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <a href="{{ route('section.routine.show') }}"
-                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl transition shadow-xs">
-                        <i class="bi bi-table"></i> Open Full Grid
+                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-xs">
+                        <i class="bi bi-lightning-charge-fill text-amber-300"></i> Rapid Matrix Editor
+                    </a>
+                    <a href="{{ route('section.routine.show') }}?view=grid"
+                       class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold rounded-xl transition shadow-xs">
+                        <i class="bi bi-table"></i> Grid View
                     </a>
                     <a href="{{ route('section.routine.create') }}"
-                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition shadow-xs">
-                        <i class="bi bi-plus-lg"></i> Add Slot
+                       class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition">
+                        <i class="bi bi-plus-lg"></i> Single Slot
                     </a>
                 </div>
             </div>

@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RoutineStoreRequest;
 use App\Models\Routine;
+use App\Models\Course;
+use App\Models\AssignedTeacher;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Traits\SchoolSession;
 use App\Repositories\RoutineRepository;
 use App\Interfaces\SchoolClassInterface;
@@ -161,24 +165,58 @@ class RoutineController extends Controller
         }
         $teachers = $teachersQuery->orderBy('first_name')->get();
 
-        $courses = $class_id ? \App\Models\Course::where('class_id', $class_id)->get() : collect();
+        $courses = $class_id ? Course::where('class_id', $class_id)->get() : collect();
+
+        // Mappings from AssignedTeacher (course_id => teacher_id)
+        $teacherMappings = [];
+        if ($class_id && $section_id) {
+            $teacherMappings = AssignedTeacher::where('session_id', $current_school_session_id)
+                ->where('class_id', $class_id)
+                ->where('section_id', $section_id)
+                ->pluck('teacher_id', 'course_id')
+                ->toArray();
+            if (empty($teacherMappings)) {
+                $teacherMappings = AssignedTeacher::where('session_id', $current_school_session_id)
+                    ->where('class_id', $class_id)
+                    ->pluck('teacher_id', 'course_id')
+                    ->toArray();
+            }
+        }
+
+        // Available sections for cloning
+        $cloneableSections = [];
+        foreach ($classes as $cls) {
+            foreach ($cls->sections as $sec) {
+                if ($cls->id != $class_id || $sec->id != $section_id) {
+                    $cloneableSections[] = [
+                        'class_id'     => $cls->id,
+                        'class_name'   => $cls->class_name,
+                        'section_id'   => $sec->id,
+                        'section_name' => $sec->section_name,
+                        'label'        => "{$cls->class_name} - {$sec->section_name}",
+                    ];
+                }
+            }
+        }
 
         $currentSchool = $user?->school ?? \App\Models\School::first();
         $allSchools = ($user && $user->hasRole('super-admin')) ? \App\Models\School::all() : collect();
 
         $data = [
-            'routines'        => $routines,
-            'rawRoutines'     => $rawRoutines,
-            'classes'         => $classes,
-            'class_id'        => (int) $class_id,
-            'section_id'      => (int) $section_id,
-            'selectedClass'   => $selectedClass,
-            'selectedSection' => $selectedSection,
-            'teachers'        => $teachers,
-            'courses'         => $courses,
-            'currentSchool'   => $currentSchool,
-            'allSchools'      => $allSchools,
-            'session_id'      => $current_school_session_id,
+            'routines'          => $routines,
+            'rawRoutines'       => $rawRoutines,
+            'classes'           => $classes,
+            'class_id'          => (int) $class_id,
+            'section_id'        => (int) $section_id,
+            'selectedClass'     => $selectedClass,
+            'selectedSection'   => $selectedSection,
+            'teachers'          => $teachers,
+            'courses'           => $courses,
+            'teacherMappings'   => $teacherMappings,
+            'cloneableSections' => $cloneableSections,
+            'currentSchool'     => $currentSchool,
+            'allSchools'        => $allSchools,
+            'session_id'        => $current_school_session_id,
         ];
 
         return view('routines.show', $data);
@@ -381,9 +419,285 @@ class RoutineController extends Controller
     {
         $classId    = $request->query('class_id');
         $sessionId  = $this->getSchoolCurrentSession();
-        $courses    = \App\Models\Course::where('class_id', $classId)
+        $courses    = Course::where('class_id', $classId)
             ->where('session_id', $sessionId)
             ->get(['id', 'course_name']);
         return response()->json($courses);
     }
+
+    /**
+     * AJAX: Get complete data for the Rapid Matrix Editor
+     */
+    public function matrixData(Request $request)
+    {
+        $classId   = (int) $request->query('class_id');
+        $sectionId = (int) $request->query('section_id');
+        $sessionId = $this->getSchoolCurrentSession();
+
+        $user = auth()->user();
+        $schoolId = $user?->school_id;
+
+        // Fetch courses for this class
+        $courses = Course::where('class_id', $classId)
+            ->where(function ($q) use ($sessionId) {
+                $q->where('session_id', $sessionId)->orWhereNull('session_id');
+            })
+            ->get(['id', 'course_name', 'course_code', 'color_code']);
+
+        // Fetch teachers
+        $teachersQuery = User::where(function ($q) {
+            $q->whereIn('role', ['teacher', 'class-teacher', 'admin', 'principal'])
+              ->orWhereHas('roles', fn($r) => $r->whereIn('name', ['teacher', 'class-teacher']));
+        });
+        if ($schoolId && !$user->hasRole('super-admin')) {
+            $teachersQuery->where('school_id', $schoolId);
+        }
+        $teachers = $teachersQuery->orderBy('first_name')->get(['id', 'first_name', 'last_name', 'name', 'email']);
+
+        // Fetch AssignedTeacher mappings: course_id => teacher_id
+        $teacherMappings = AssignedTeacher::where('session_id', $sessionId)
+            ->where('class_id', $classId)
+            ->where('section_id', $sectionId)
+            ->pluck('teacher_id', 'course_id')
+            ->toArray();
+
+        // If no section-specific mapping, fallback to class-level mapping
+        if (empty($teacherMappings)) {
+            $teacherMappings = AssignedTeacher::where('session_id', $sessionId)
+                ->where('class_id', $classId)
+                ->pluck('teacher_id', 'course_id')
+                ->toArray();
+        }
+
+        // Fetch existing routine slots for this section
+        $existingSlots = Routine::where('session_id', $sessionId)
+            ->where('class_id', $classId)
+            ->where('section_id', $sectionId)
+            ->with(['course:id,course_name,course_code', 'teacher:id,first_name,last_name,name'])
+            ->get();
+
+        // Fetch busy teachers in other sections in the same session for live conflict prevention
+        $otherBookings = Routine::where('session_id', $sessionId)
+            ->where('section_id', '!=', $sectionId)
+            ->whereNotNull('teacher_id')
+            ->with(['schoolClass:id,class_name', 'section:id,section_name', 'teacher:id,first_name,last_name,name'])
+            ->get(['id', 'weekday', 'start', 'end', 'teacher_id', 'class_id', 'section_id'])
+            ->map(function ($r) {
+                return [
+                    'weekday'      => (int) $r->weekday,
+                    'start'        => substr($r->start, 0, 5),
+                    'end'          => substr($r->end, 0, 5),
+                    'teacher_id'   => (int) $r->teacher_id,
+                    'teacher_name' => $r->teacher?->full_name ?? $r->teacher?->name ?? 'Teacher',
+                    'class_name'   => $r->schoolClass?->class_name ?? '',
+                    'section_name' => $r->section?->section_name ?? '',
+                ];
+            });
+
+        // Other sections available for cloning
+        $classesWithSections = $this->schoolClassRepository->getAllBySession($sessionId);
+        $cloneableSections = [];
+        foreach ($classesWithSections as $cls) {
+            foreach ($cls->sections as $sec) {
+                if ($cls->id != $classId || $sec->id != $sectionId) {
+                    $slotCount = Routine::where('session_id', $sessionId)
+                        ->where('class_id', $cls->id)
+                        ->where('section_id', $sec->id)
+                        ->count();
+                    $cloneableSections[] = [
+                        'class_id'     => $cls->id,
+                        'class_name'   => $cls->class_name,
+                        'section_id'   => $sec->id,
+                        'section_name' => $sec->section_name,
+                        'label'        => "{$cls->class_name} - {$sec->section_name} ({$slotCount} slots)",
+                        'slot_count'   => $slotCount,
+                    ];
+                }
+            }
+        }
+
+        return response()->json([
+            'success'            => true,
+            'class_id'           => $classId,
+            'section_id'         => $sectionId,
+            'courses'            => $courses,
+            'teachers'           => $teachers,
+            'teacher_mappings'   => $teacherMappings,
+            'existing_slots'     => $existingSlots,
+            'other_bookings'     => $otherBookings,
+            'cloneable_sections' => $cloneableSections,
+        ]);
+    }
+
+    /**
+     * AJAX: Bulk save entire weekly timetable matrix in 1 fast transaction
+     */
+    public function matrixSave(Request $request)
+    {
+        $classId   = (int) $request->input('class_id');
+        $sectionId = (int) $request->input('section_id');
+        $slots     = $request->input('slots', []);
+        $sessionId = $this->getSchoolCurrentSession();
+        $schoolId  = auth()->user()?->school_id;
+
+        if (!$classId || !$sectionId) {
+            return response()->json(['success' => false, 'message' => 'Class and Section are required.'], 422);
+        }
+
+        // Conflict checking across other sections
+        $conflicts = [];
+        foreach ($slots as $slot) {
+            $teacherId = $slot['teacher_id'] ?? null;
+            if (!$teacherId || empty($slot['course_id'])) {
+                continue;
+            }
+
+            $w = (int) $slot['weekday'];
+            $s = substr($slot['start'], 0, 5);
+            $e = substr($slot['end'], 0, 5);
+
+            $clash = Routine::where('session_id', $sessionId)
+                ->where('section_id', '!=', $sectionId)
+                ->where('teacher_id', $teacherId)
+                ->where('weekday', $w)
+                ->where(function ($q) use ($s, $e) {
+                    $q->where('start', '<', $e)->where('end', '>', $s);
+                })
+                ->with(['schoolClass', 'section', 'teacher'])
+                ->first();
+
+            if ($clash) {
+                $tName = $clash->teacher?->full_name ?? $clash->teacher?->name ?? 'Teacher';
+                $cName = $clash->schoolClass?->class_name ?? 'Class';
+                $secName = $clash->section?->section_name ?? 'Section';
+                $conflicts[] = "Conflict: {$tName} is already scheduled in {$cName} ({$secName}) at {$s} - {$e} on Day {$w}.";
+            }
+        }
+
+        if (!empty($conflicts)) {
+            return response()->json([
+                'success'   => false,
+                'conflict'  => true,
+                'message'   => implode("<br>", array_unique($conflicts)),
+                'conflicts' => array_unique($conflicts),
+            ], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Delete current routines for this section in current session
+            Routine::where('session_id', $sessionId)
+                ->where('class_id', $classId)
+                ->where('section_id', $sectionId)
+                ->delete();
+
+            $insertCount = 0;
+            $palette = ['#4f46e5', '#059669', '#d97706', '#dc2626', '#7c3aed', '#0284c7', '#db2777', '#0d9488'];
+
+            foreach ($slots as $idx => $slot) {
+                if (empty($slot['course_id'])) {
+                    continue;
+                }
+
+                $cId = (int) $slot['course_id'];
+                $color = !empty($slot['color']) ? $slot['color'] : $palette[$cId % count($palette)];
+
+                Routine::create([
+                    'school_id'  => $schoolId,
+                    'session_id' => $sessionId,
+                    'class_id'   => $classId,
+                    'section_id' => $sectionId,
+                    'course_id'  => $cId,
+                    'teacher_id' => !empty($slot['teacher_id']) ? (int) $slot['teacher_id'] : null,
+                    'weekday'    => (int) $slot['weekday'],
+                    'start'      => substr($slot['start'], 0, 5),
+                    'end'        => substr($slot['end'], 0, 5),
+                    'room'       => $slot['room'] ?? null,
+                    'color'      => $color,
+                ]);
+                $insertCount++;
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Timetable saved successfully! {$insertCount} periods active.",
+                'count'   => $insertCount,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error saving timetable: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * AJAX: Clone timetable slots from one section to another
+     */
+    public function cloneSection(Request $request)
+    {
+        $sourceClassId   = (int) $request->input('source_class_id');
+        $sourceSectionId = (int) $request->input('source_section_id');
+        $targetClassId   = (int) $request->input('target_class_id');
+        $targetSectionId = (int) $request->input('target_section_id');
+        $sessionId       = $this->getSchoolCurrentSession();
+
+        if (!$sourceClassId || !$sourceSectionId || !$targetClassId || !$targetSectionId) {
+            return response()->json(['success' => false, 'message' => 'Source and target sections are required.'], 422);
+        }
+
+        $sourceRoutines = Routine::where('session_id', $sessionId)
+            ->where('class_id', $sourceClassId)
+            ->where('section_id', $sourceSectionId)
+            ->with(['course:id,course_name', 'teacher:id,first_name,last_name,name'])
+            ->get();
+
+        if ($sourceRoutines->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'Source section has no timetable slots to clone.'], 404);
+        }
+
+        $targetCourses = Course::where('class_id', $targetClassId)->get(['id', 'course_name']);
+        $targetTeacherMappings = AssignedTeacher::where('session_id', $sessionId)
+            ->where('class_id', $targetClassId)
+            ->where('section_id', $targetSectionId)
+            ->pluck('teacher_id', 'course_id')
+            ->toArray();
+
+        $clonedSlots = [];
+        foreach ($sourceRoutines as $sr) {
+            $targetCourseId = null;
+            if ($sourceClassId == $targetClassId) {
+                $targetCourseId = $sr->course_id;
+            } else {
+                $match = $targetCourses->first(function ($c) use ($sr) {
+                    return strcasecmp(trim($c->course_name), trim($sr->course?->course_name ?? '')) === 0;
+                });
+                $targetCourseId = $match ? $match->id : null;
+            }
+
+            $targetTeacherId = $targetCourseId && isset($targetTeacherMappings[$targetCourseId])
+                ? $targetTeacherMappings[$targetCourseId]
+                : $sr->teacher_id;
+
+            $clonedSlots[] = [
+                'weekday'    => (int) $sr->weekday,
+                'start'      => substr($sr->start, 0, 5),
+                'end'        => substr($sr->end, 0, 5),
+                'course_id'  => $targetCourseId,
+                'teacher_id' => $targetTeacherId,
+                'room'       => $sr->room,
+                'color'      => $sr->color,
+            ];
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cloned ' . count($clonedSlots) . ' slots successfully.',
+            'slots'   => $clonedSlots,
+        ]);
+    }
 }
+

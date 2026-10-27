@@ -40,9 +40,10 @@ class GraduationController extends Controller
             ->whereHas('statusHistory', fn($q) => $q->whereIn('status', ['dropped_out', 'withdrawn'])->where('is_current', true))
             ->with('currentStatus');
 
-        // Active students (eligible for status change)
+        // Active students (eligible for status change — excludes already graduated/dropped out)
         $activeQuery = User::role('student')
             ->whereHas('promotions', fn($q) => $q->where('session_id', $sessionId))
+            ->whereDoesntHave('statusHistory', fn($q) => $q->whereIn('status', ['graduated', 'alumni', 'dropped_out', 'withdrawn'])->where('is_current', true))
             ->with('currentStatus');
 
         if ($search) {
@@ -60,7 +61,7 @@ class GraduationController extends Controller
         $active    = $activeQuery->latest()->paginate(20, ['*'], 'apage')->withQueryString();
 
         $counts = [
-            'active'    => User::role('student')->whereHas('promotions', fn($q) => $q->where('session_id', $sessionId))->count(),
+            'active'    => User::role('student')->whereHas('promotions', fn($q) => $q->where('session_id', $sessionId))->whereDoesntHave('statusHistory', fn($q) => $q->whereIn('status', ['graduated', 'alumni', 'dropped_out', 'withdrawn'])->where('is_current', true))->count(),
             'graduated' => StudentStatus::whereIn('status', ['graduated', 'alumni'])->where('is_current', true)->count(),
             'dropouts'  => StudentStatus::whereIn('status', ['dropped_out', 'withdrawn'])->where('is_current', true)->count(),
         ];
@@ -87,16 +88,19 @@ class GraduationController extends Controller
         ]);
 
         $sessionId = $this->getSchoolCurrentSession();
+        $schoolId  = auth()->user()?->school_id ?? config('tenant.school_id');
 
-        DB::transaction(function () use ($data, $studentId, $sessionId) {
+        DB::transaction(function () use ($data, $studentId, $sessionId, $schoolId) {
             // Mark all previous as not current
             StudentStatus::where('student_id', $studentId)->update(['is_current' => false]);
 
             $promotion = Promotion::where('student_id', $studentId)
-                ->where('session_id', $sessionId)
+                ->when($sessionId, fn($q) => $q->where('session_id', $sessionId))
+                ->latest()
                 ->first();
 
             StudentStatus::create(array_merge($data, [
+                'school_id'    => $schoolId,
                 'student_id'   => $studentId,
                 'session_id'   => $sessionId,
                 'class_id'     => $promotion?->class_id,
@@ -106,7 +110,7 @@ class GraduationController extends Controller
         });
 
         $label = StudentStatus::STATUSES[$data['status']] ?? $data['status'];
-        return back()->with('status', "Student marked as {$label}.");
+        return back()->with('status', "Student status updated to {$label}.");
     }
 
     // ── Bulk graduation: mark all students in a class as graduated ────────
@@ -121,16 +125,26 @@ class GraduationController extends Controller
         ]);
 
         $sessionId = $this->getSchoolCurrentSession();
+        $schoolId  = auth()->user()?->school_id ?? config('tenant.school_id');
 
-        $studentIds = Promotion::where('session_id', $sessionId)
-            ->where('class_id', $request->class_id)
+        $studentIds = Promotion::where('class_id', $request->class_id)
+            ->when($sessionId, fn($q) => $q->where('session_id', $sessionId))
             ->pluck('student_id');
 
+        if ($studentIds->isEmpty()) {
+            $studentIds = Promotion::where('class_id', $request->class_id)->pluck('student_id');
+        }
+
+        if ($studentIds->isEmpty()) {
+            return back()->withErrors(['class_id' => 'No students enrolled in the selected class.']);
+        }
+
         $count = 0;
-        DB::transaction(function () use ($studentIds, $request, $sessionId, &$count) {
+        DB::transaction(function () use ($studentIds, $request, $sessionId, $schoolId, &$count) {
             foreach ($studentIds as $studentId) {
                 StudentStatus::where('student_id', $studentId)->update(['is_current' => false]);
                 StudentStatus::create([
+                    'school_id'      => $schoolId,
                     'student_id'     => $studentId,
                     'status'         => 'graduated',
                     'session_id'     => $sessionId,
