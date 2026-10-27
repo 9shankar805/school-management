@@ -14,7 +14,8 @@ class FinanceReportExport implements FromCollection, WithHeadings, WithTitle, Sh
 {
     public function __construct(
         protected $records,
-        protected string $type
+        protected string $type,
+        protected $school = null
     ) {}
 
     public function collection(): Collection
@@ -23,7 +24,7 @@ class FinanceReportExport implements FromCollection, WithHeadings, WithTitle, Sh
             'fee_collection' => collect($this->records)->map(fn($p) => [
                 $p->invoice->student->first_name . ' ' . $p->invoice->student->last_name,
                 $p->invoice->title ?? '—',
-                '$' . number_format($p->amount, 2),
+                'Rs. ' . number_format($p->amount, 2),
                 \Carbon\Carbon::parse($p->payment_date)->format('d M Y'),
                 ucfirst($p->payment_method ?? 'cash'),
             ]),
@@ -32,7 +33,7 @@ class FinanceReportExport implements FromCollection, WithHeadings, WithTitle, Sh
                 $e->expense_date->format('d M Y'),
                 $e->title,
                 $e->category,
-                '$' . number_format($e->amount, 2),
+                'Rs. ' . number_format($e->amount, 2),
                 ucfirst($e->payment_method),
                 $e->reference ?? '—',
                 $e->recordedBy->first_name ?? '—',
@@ -42,7 +43,7 @@ class FinanceReportExport implements FromCollection, WithHeadings, WithTitle, Sh
                 $r->income_date->format('d M Y'),
                 $r->title,
                 $r->category,
-                '$' . number_format($r->amount, 2),
+                'Rs. ' . number_format($r->amount, 2),
                 ucfirst($r->payment_method),
                 $r->reference ?? '—',
             ]),
@@ -50,17 +51,17 @@ class FinanceReportExport implements FromCollection, WithHeadings, WithTitle, Sh
             'outstanding' => collect($this->records)->map(fn($inv) => [
                 $inv->student->first_name . ' ' . $inv->student->last_name,
                 $inv->title,
-                '$' . number_format($inv->amount, 2),
+                'Rs. ' . number_format($inv->amount, 2),
                 $inv->due_date ? \Carbon\Carbon::parse($inv->due_date)->format('d M Y') : '—',
                 ucfirst($inv->status),
             ]),
 
             'ledger' => collect([
-                ['Category', 'Amount'],
-                ['Fee Collections', '$' . number_format($this->records['fees'] ?? 0, 2)],
-                ['Other Income',    '$' . number_format($this->records['income'] ?? 0, 2)],
-                ['Expenses',        '-$' . number_format($this->records['expenses'] ?? 0, 2)],
-                ['Net Balance',     '$' . number_format(($this->records['fees'] ?? 0) + ($this->records['income'] ?? 0) - ($this->records['expenses'] ?? 0), 2)],
+                ['Category', 'Amount (NPR)'],
+                ['Fee Collections', 'Rs. ' . number_format($this->records['fees'] ?? 0, 2)],
+                ['Other Income',    'Rs. ' . number_format($this->records['income'] ?? 0, 2)],
+                ['Expenses',        '-Rs. ' . number_format($this->records['expenses'] ?? 0, 2)],
+                ['Net Balance',     'Rs. ' . number_format(($this->records['fees'] ?? 0) + ($this->records['income'] ?? 0) - ($this->records['expenses'] ?? 0), 2)],
             ]),
 
             default => collect(),

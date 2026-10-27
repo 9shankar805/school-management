@@ -32,13 +32,59 @@
 </head>
 <body>
 
-<div class="header">
-    <div class="school-name">{{ $school->name ?? config('app.name', 'SCHOOL MANAGEMENT SYSTEM') }}</div>
-    <div class="school-sub">{{ $school->address ?? '' }} | Phone: {{ $school->phone ?? '' }}</div>
-    <div class="doc-title">PROFIT & LOSS STATEMENT (नाफा नोक्सान हिसाब)</div>
-    <div class="period-badge">{{ $periodLabel }}</div>
-    <div class="date-span">{{ $periodSub }}</div>
-</div>
+@php
+    $schoolName = $school->name ?? config('app.name', 'SCHOOL MANAGEMENT SYSTEM');
+    $schoolAddress = $school->address ?? 'Kathmandu, Nepal';
+    $schoolPhone = $school->phone ?? '';
+    $schoolEmail = $school->email ?? '';
+    $schoolPan = $school->pan_number ?? $school->vat_number ?? '';
+    $schoolIemis = $school->iemis_code ?? '';
+@endphp
+
+<table style="width: 100%; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 14px; border-collapse: collapse;">
+    <tr>
+        <td style="width: 16%; vertical-align: middle; text-align: left;">
+            @if(!empty($logoSrc))
+                <img src="{{ $logoSrc }}" style="max-height: 58px; max-width: 95px; object-fit: contain;" alt="Logo">
+            @else
+                <div style="font-size: 13px; font-weight: bold; color: #059669; border: 2px solid #059669; border-radius: 4px; padding: 8px 10px; text-align: center; display: inline-block; background: #ecfdf5;">
+                    {{ strtoupper(substr($schoolName, 0, 6)) }}
+                </div>
+            @endif
+        </td>
+        <td style="width: 68%; text-align: center; vertical-align: middle;">
+            <div style="font-size: 17px; font-weight: bold; text-transform: uppercase; color: #0f172a; letter-spacing: 0.5px; margin-bottom: 2px;">
+                {{ $schoolName }}
+            </div>
+            <div style="font-size: 9px; color: #475569; margin-bottom: 2px;">
+                {{ $schoolAddress }}
+                @if($schoolPhone) &bull; Tel: {{ $schoolPhone }} @endif
+                @if($schoolEmail) &bull; Email: {{ $schoolEmail }} @endif
+            </div>
+            <div style="font-size: 8.5px; color: #64748b; font-weight: bold; margin-bottom: 3px;">
+                @if($schoolPan) PAN/VAT: {{ $schoolPan }} &bull; @endif
+                @if($schoolIemis) CEHRD EMIS: {{ $schoolIemis }} &bull; @endif
+                Income & Expenditure Statement
+            </div>
+            <div style="font-size: 12.5px; font-weight: bold; color: #059669; text-transform: uppercase; margin-top: 3px;">
+                PROFIT & LOSS STATEMENT (नाफा नोक्सान हिसाब)
+            </div>
+            <div style="font-size: 10px; margin-top: 2px; color: #1e293b; font-weight: bold;">
+                {{ $periodLabel }} &bull; {{ $periodSub }}
+            </div>
+            <div style="font-size: 8.5px; color: #64748b; margin-top: 2px;">
+                Generated on: {{ now()->format('d M Y, h:i A') }}
+            </div>
+        </td>
+        <td style="width: 16%; text-align: right; vertical-align: middle;">
+            <div style="border: 1.5px solid #cbd5e1; border-radius: 4px; padding: 5px 8px; background: #f8fafc; display: inline-block; text-align: center;">
+                <div style="font-size: 7.5px; color: #64748b; font-weight: bold; text-transform: uppercase;">Financial Period</div>
+                <div style="font-size: 10.5px; font-weight: bold; color: #059669;">{{ $periodType === 'fy' ? $selectedFy : $year }}</div>
+                <div style="font-size: 7px; color: #059669; font-weight: bold; margin-top: 2px;">AUDITED P&amp;L</div>
+            </div>
+        </td>
+    </tr>
+</table>
 
 {{-- Revenue Table --}}
 <table>
@@ -118,7 +164,7 @@
 </div>
 
 <div class="footer">
-    Report generated on {{ now()->format('Y-m-d H:i') }} | School Management ERP Financial Reporting Engine
+    Report generated on {{ now()->format('d M Y, h:i A') }} &bull; {{ $schoolName }} Financial Accounting Engine &bull; Confidential
 </div>
 
 </body>

@@ -39,16 +39,59 @@
 </head>
 <body>
 
-    <div class="header">
-        <div class="school-name">{{ $school->name ?? 'SCHOOL MANAGEMENT' }}</div>
-        <div class="school-sub">{{ $school->address ?? '' }} | Phone: {{ $school->phone ?? '' }}</div>
-        <div class="doc-title">DAILY DAY BOOK / रोजनाम्चा (CASH & BANK REGISTER)</div>
-        <div class="date-badge">
-            नेपाली मिति: {{ $bsDateNp }} ({{ $bsDateEn }} BS) &nbsp;·&nbsp; {{ $dayOfWeekNp }} &nbsp;·&nbsp; {{ $currentFyNp }}
-            <br>
-            <span style="font-size: 8.5px; color: #64748b; font-weight: normal;">English Date: {{ \Carbon\Carbon::parse($date)->format('F j, Y (l)') }}</span>
-        </div>
-    </div>
+@php
+    $schoolName = $school->name ?? config('app.name', 'SCHOOL MANAGEMENT SYSTEM');
+    $schoolAddress = $school->address ?? 'Kathmandu, Nepal';
+    $schoolPhone = $school->phone ?? '';
+    $schoolEmail = $school->email ?? '';
+    $schoolPan = $school->pan_number ?? $school->vat_number ?? '';
+    $schoolIemis = $school->iemis_code ?? '';
+@endphp
+
+<table style="width: 100%; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 14px; border-collapse: collapse;">
+    <tr>
+        <td style="width: 16%; vertical-align: middle; text-align: left;">
+            @if(!empty($logoSrc))
+                <img src="{{ $logoSrc }}" style="max-height: 58px; max-width: 95px; object-fit: contain;" alt="Logo">
+            @else
+                <div style="font-size: 13px; font-weight: bold; color: #4338ca; border: 2px solid #4338ca; border-radius: 4px; padding: 8px 10px; text-align: center; display: inline-block; background: #eef2ff;">
+                    {{ strtoupper(substr($schoolName, 0, 6)) }}
+                </div>
+            @endif
+        </td>
+        <td style="width: 68%; text-align: center; vertical-align: middle;">
+            <div style="font-size: 17px; font-weight: bold; text-transform: uppercase; color: #0f172a; letter-spacing: 0.5px; margin-bottom: 2px;">
+                {{ $schoolName }}
+            </div>
+            <div style="font-size: 9px; color: #475569; margin-bottom: 2px;">
+                {{ $schoolAddress }}
+                @if($schoolPhone) &bull; Tel: {{ $schoolPhone }} @endif
+                @if($schoolEmail) &bull; Email: {{ $schoolEmail }} @endif
+            </div>
+            <div style="font-size: 8.5px; color: #64748b; font-weight: bold; margin-bottom: 3px;">
+                @if($schoolPan) PAN/VAT: {{ $schoolPan }} &bull; @endif
+                @if($schoolIemis) CEHRD EMIS: {{ $schoolIemis }} &bull; @endif
+                Daily Transaction Register
+            </div>
+            <div style="font-size: 12.5px; font-weight: bold; color: #4338ca; text-transform: uppercase; margin-top: 3px;">
+                DAILY DAY BOOK / रोजनाम्चा (CASH &amp; BANK REGISTER)
+            </div>
+            <div style="font-size: 10px; margin-top: 2px; color: #1e293b; font-weight: bold;">
+                नेपाली मिति: {{ $bsDateNp }} ({{ $bsDateEn }} BS) &bull; {{ $dayOfWeekNp }} &bull; {{ $currentFyNp }}
+            </div>
+            <div style="font-size: 8.5px; color: #64748b; margin-top: 2px;">
+                English Date: {{ \Carbon\Carbon::parse($date)->format('F j, Y (l)') }}
+            </div>
+        </td>
+        <td style="width: 16%; text-align: right; vertical-align: middle;">
+            <div style="border: 1.5px solid #cbd5e1; border-radius: 4px; padding: 5px 8px; background: #f8fafc; display: inline-block; text-align: center;">
+                <div style="font-size: 7.5px; color: #64748b; font-weight: bold; text-transform: uppercase;">Register Date</div>
+                <div style="font-size: 10px; font-weight: bold; color: #4338ca;">{{ $bsDateNp }}</div>
+                <div style="font-size: 7px; color: #059669; font-weight: bold; margin-top: 2px;">DAY BOOK</div>
+            </div>
+        </td>
+    </tr>
+</table>
 
     {{-- Summary Balance Table --}}
     <table class="summary-box">

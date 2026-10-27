@@ -4,7 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Mark;
+use App\Models\Exam;
 use App\Models\ExamRule;
+use App\Models\Course;
+use App\Models\SchoolClass;
+use App\Models\Section;
+use App\Models\Semester;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Traits\SchoolSession;
@@ -126,42 +131,18 @@ class MarkController extends Controller
     {
         try {
             $class_id = $request->query('class_id');
-            $section_id = $request->query('section_id', 0);
+            $section_id = (int) $request->query('section_id', 0);
             $course_id = $request->query('course_id', 0);
-            $semester_id = $request->query('semester_id', 0);
+            $semester_id = (int) $request->query('semester_id', 0);
+            $entry_mode = $request->query('entry_mode');
 
             $current_school_session_id = $this->getSchoolCurrentSession();
             
             if (!$current_school_session_id) {
                 return view('marks.create', [
-                    'academic_setting' => null,
-                    'semesters' => collect(),
-                    'school_classes' => collect(),
-                    'exams' => collect(),
-                    'students_with_marks' => collect(),
-                    'class_id' => null,
-                    'section_id' => 0,
-                    'course_id' => 0,
-                    'semester_id' => 0,
-                    'final_marks_submitted' => false,
-                    'sectionStudents' => collect(),
-                    'exam_rules_by_exam_id' => collect(),
-                    'current_school_session_id' => 0,
-                    'error' => 'Unable to determine current school session. Please configure a session first.'
-                ]);
-            }
-
-            $academic_setting = $this->academicSettingRepository ? $this->academicSettingRepository->getAcademicSetting() : null;
-            $semesters = $this->semesterRepository ? $this->semesterRepository->getAll($current_school_session_id) : collect();
-            $school_classes = $this->schoolClassRepository ? $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id) : collect();
-
-            if ($class_id && $course_id) {
-                $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
-            } else {
-                return view('marks.create', [
-                    'academic_setting'          => $academic_setting,
-                    'semesters'                 => $semesters,
-                    'school_classes'            => $school_classes,
+                    'academic_setting'          => null,
+                    'semesters'                 => collect(),
+                    'school_classes'            => collect(),
                     'exams'                     => collect(),
                     'students_with_marks'       => collect(),
                     'class_id'                  => null,
@@ -171,46 +152,216 @@ class MarkController extends Controller
                     'final_marks_submitted'     => false,
                     'sectionStudents'           => collect(),
                     'exam_rules_by_exam_id'     => collect(),
-                    'current_school_session_id' => $current_school_session_id,
+                    'current_school_session_id' => 0,
+                    'isAllSubjectsMode'         => true,
+                    'classCourses'              => collect(),
+                    'marksMatrix'               => [],
+                    'courseMaxMarks'            => [],
+                    'selectedClass'             => null,
+                    'selectedSection'           => null,
+                    'selectedSemester'          => null,
+                    'selectedCourse'            => null,
+                    'error'                     => 'Unable to determine current school session. Please configure a session first.'
                 ]);
             }
 
-            $examRepository = new ExamRepository();
-            $exams = $examRepository->getAll($current_school_session_id, $semester_id, $class_id, $course_id);
-            $examRulesByExamId = ExamRule::where('session_id', $current_school_session_id)
-                                            ->whereIn('exam_id', $exams->pluck('id')->toArray())
-                                            ->pluck('total_marks', 'exam_id');
+            $academic_setting = $this->academicSettingRepository ? $this->academicSettingRepository->getAcademicSetting() : null;
+            $semesters = $this->semesterRepository ? $this->semesterRepository->getAll($current_school_session_id) : collect();
+            $school_classes = $this->schoolClassRepository ? $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id) : collect();
 
-            $markRepository = new MarkRepository();
-            $studentsWithMarks = $markRepository->getAll($current_school_session_id, $semester_id, $class_id, $section_id, $course_id);
-            $studentsWithMarks = $studentsWithMarks ? $studentsWithMarks->groupBy('student_id') : collect();
+            // Resolve human-readable models
+            $selectedClass = $class_id ? SchoolClass::find($class_id) : null;
+            $selectedSection = $section_id > 0 ? Section::find($section_id) : null;
+            $selectedSemester = $semester_id > 0 ? Semester::find($semester_id) : ($semesters->first() ?? null);
+            if ($selectedSemester && $semester_id == 0) {
+                $semester_id = $selectedSemester->id;
+            }
+            $selectedCourse = ($course_id && $course_id !== 'all' && (int)$course_id > 0) ? Course::find($course_id) : null;
 
-            $sectionStudents = $this->userRepository ? $this->userRepository->getAllStudents($current_school_session_id, $class_id, $section_id) : collect();
+            // Determine entry mode: if course_id is empty, 0, 'all', or entry_mode is 'all_subjects'
+            $isAllSubjectsMode = empty($course_id) || $course_id === 'all' || (int)$course_id === 0 || $entry_mode === 'all_subjects';
 
-            $final_marks_submitted = false;
-            $final_marks_submit_count = $markRepository->getFinalMarksCount($current_school_session_id, $semester_id, $class_id, $section_id, $course_id);
-
-            if($final_marks_submit_count > 0) {
-                $final_marks_submitted = true;
+            if (!$class_id) {
+                return view('marks.create', [
+                    'academic_setting'          => $academic_setting,
+                    'semesters'                 => $semesters,
+                    'school_classes'            => $school_classes,
+                    'exams'                     => collect(),
+                    'students_with_marks'       => collect(),
+                    'class_id'                  => null,
+                    'section_id'                => 0,
+                    'course_id'                 => 0,
+                    'semester_id'               => $semester_id,
+                    'final_marks_submitted'     => false,
+                    'sectionStudents'           => collect(),
+                    'exam_rules_by_exam_id'     => collect(),
+                    'current_school_session_id' => $current_school_session_id,
+                    'isAllSubjectsMode'         => true,
+                    'classCourses'              => collect(),
+                    'marksMatrix'               => [],
+                    'courseMaxMarks'            => [],
+                    'selectedClass'             => null,
+                    'selectedSection'           => null,
+                    'selectedSemester'          => $selectedSemester,
+                    'selectedCourse'            => null,
+                ]);
             }
 
-            $data = [
-                'academic_setting'          => $academic_setting,
-                'semesters'                 => $semesters,
-                'school_classes'            => $school_classes,
-                'exams'                     => $exams,
-                'students_with_marks'       => $studentsWithMarks,
-                'class_id'                  => $class_id,
-                'section_id'                => $section_id,
-                'course_id'                 => $course_id,
-                'semester_id'               => $semester_id,
-                'final_marks_submitted'     => $final_marks_submitted,
-                'sectionStudents'           => $sectionStudents,
-                'exam_rules_by_exam_id'     => $examRulesByExamId,
-                'current_school_session_id' => $current_school_session_id,
-            ];
+            // Fetch students for this class and section
+            $sectionStudents = $this->userRepository ? $this->userRepository->getAllStudents($current_school_session_id, (int)$class_id, (int)$section_id) : collect();
 
-            return view('marks.create', $data);
+            // Check if current user is admin/management
+            $user = auth()->user();
+            $isAdmin = $user && ($user->hasAnyRole(['Super Admin', 'Admin', 'Exam Controller', 'Principal', 'Vice Principal', 'super-admin', 'admin', 'principal']) || $user->can('create marks'));
+
+            // Fetch all courses assigned to this class
+            $classCourses = Course::where('class_id', $class_id)
+                ->where(function($q) use ($current_school_session_id) {
+                    $q->where('session_id', $current_school_session_id)->orWhereNull('session_id');
+                })
+                ->orderBy('id')
+                ->get();
+
+            if ($classCourses->isEmpty()) {
+                $classCourses = Course::where('class_id', $class_id)->orderBy('id')->get();
+            }
+
+            if ($isAllSubjectsMode) {
+                // Check authorization
+                if (!$isAdmin) {
+                    $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
+                }
+
+                // Fetch exams for this session, semester, class
+                $exams = Exam::where('session_id', $current_school_session_id)
+                    ->when($semester_id > 0, fn($q) => $q->where('semester_id', $semester_id))
+                    ->where('class_id', $class_id)
+                    ->get();
+
+                $examRulesByExamId = ExamRule::where('session_id', $current_school_session_id)
+                    ->whereIn('exam_id', $exams->pluck('id'))
+                    ->pluck('total_marks', 'exam_id');
+
+                $courseMaxMarks = [];
+                $examsByCourse = $exams->keyBy('course_id');
+                foreach ($classCourses as $crs) {
+                    $ex = $examsByCourse->get($crs->id);
+                    if ($ex && isset($examRulesByExamId[$ex->id])) {
+                        $courseMaxMarks[$crs->id] = (float)$examRulesByExamId[$ex->id];
+                    } else {
+                        $courseMaxMarks[$crs->id] = 100;
+                    }
+                }
+
+                // Fetch all recorded marks for these students and courses
+                $studentIds = $sectionStudents->map(fn($item) => $item->student_id ?? optional($item->student)->id)->filter()->unique()->toArray();
+                $existingMarks = Mark::where('session_id', $current_school_session_id)
+                    ->where('class_id', $class_id)
+                    ->whereIn('student_id', $studentIds)
+                    ->whereIn('course_id', $classCourses->pluck('id'))
+                    ->get();
+
+                $marksMatrix = [];
+                foreach ($existingMarks as $m) {
+                    $marksMatrix[$m->student_id][$m->course_id] = $m->marks;
+                }
+
+                return view('marks.create', [
+                    'academic_setting'          => $academic_setting,
+                    'semesters'                 => $semesters,
+                    'school_classes'            => $school_classes,
+                    'exams'                     => $exams,
+                    'students_with_marks'       => collect(),
+                    'class_id'                  => $class_id,
+                    'section_id'                => $section_id,
+                    'course_id'                 => 'all',
+                    'semester_id'               => $semester_id,
+                    'final_marks_submitted'     => false,
+                    'sectionStudents'           => $sectionStudents,
+                    'exam_rules_by_exam_id'     => $examRulesByExamId,
+                    'current_school_session_id' => $current_school_session_id,
+                    'isAllSubjectsMode'         => true,
+                    'classCourses'              => $classCourses,
+                    'marksMatrix'               => $marksMatrix,
+                    'courseMaxMarks'            => $courseMaxMarks,
+                    'selectedClass'             => $selectedClass,
+                    'selectedSection'           => $selectedSection,
+                    'selectedSemester'          => $selectedSemester,
+                    'selectedCourse'            => null,
+                    'isAdmin'                   => $isAdmin,
+                ]);
+            } else {
+                // Single Subject Entry Mode
+                if (!$isAdmin) {
+                    $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
+                }
+
+                $examRepository = new ExamRepository();
+                $exams = $examRepository->getAll($current_school_session_id, $semester_id, $class_id, (int)$course_id);
+
+                // Auto-create exam if missing
+                if ($exams->isEmpty()) {
+                    $semName = $selectedSemester ? $selectedSemester->semester_name : 'Terminal Examination';
+                    $newExam = Exam::create([
+                        'school_id'   => auth()->user()->school_id ?? null,
+                        'exam_name'   => $semName,
+                        'start_date'  => now(),
+                        'end_date'    => now()->addDays(7),
+                        'semester_id' => $semester_id,
+                        'class_id'    => $class_id,
+                        'course_id'   => (int)$course_id,
+                        'session_id'  => $current_school_session_id,
+                    ]);
+                    ExamRule::create([
+                        'school_id'   => auth()->user()->school_id ?? null,
+                        'exam_id'     => $newExam->id,
+                        'session_id'  => $current_school_session_id,
+                        'total_marks' => 100,
+                        'pass_marks'  => 40,
+                        'marks_distribution_note' => 'Standard 100 marks',
+                    ]);
+                    $exams = collect([$newExam]);
+                }
+
+                $examRulesByExamId = ExamRule::where('session_id', $current_school_session_id)
+                    ->whereIn('exam_id', $exams->pluck('id')->toArray())
+                    ->pluck('total_marks', 'exam_id');
+
+                $markRepository = new MarkRepository();
+                $studentsWithMarks = $markRepository->getAll($current_school_session_id, $semester_id, $class_id, $section_id, (int)$course_id);
+                $studentsWithMarks = $studentsWithMarks ? $studentsWithMarks->groupBy('student_id') : collect();
+
+                $final_marks_submitted = false;
+                $final_marks_submit_count = $markRepository->getFinalMarksCount($current_school_session_id, $semester_id, $class_id, $section_id, (int)$course_id);
+                if ($final_marks_submit_count > 0) {
+                    $final_marks_submitted = true;
+                }
+
+                return view('marks.create', [
+                    'academic_setting'          => $academic_setting,
+                    'semesters'                 => $semesters,
+                    'school_classes'            => $school_classes,
+                    'exams'                     => $exams,
+                    'students_with_marks'       => $studentsWithMarks,
+                    'class_id'                  => $class_id,
+                    'section_id'                => $section_id,
+                    'course_id'                 => (int)$course_id,
+                    'semester_id'               => $semester_id,
+                    'final_marks_submitted'     => $final_marks_submitted,
+                    'sectionStudents'           => $sectionStudents,
+                    'exam_rules_by_exam_id'     => $examRulesByExamId,
+                    'current_school_session_id' => $current_school_session_id,
+                    'isAllSubjectsMode'         => false,
+                    'classCourses'              => $classCourses,
+                    'marksMatrix'               => [],
+                    'courseMaxMarks'            => [],
+                    'selectedClass'             => $selectedClass,
+                    'selectedSection'           => $selectedSection,
+                    'selectedSemester'          => $selectedSemester,
+                    'selectedCourse'            => $selectedCourse,
+                    'isAdmin'                   => $isAdmin,
+                ]);
+            }
         } catch (\Exception $e) {
             return view('marks.create', [
                 'academic_setting'          => null,
@@ -226,7 +377,15 @@ class MarkController extends Controller
                 'sectionStudents'           => collect(),
                 'exam_rules_by_exam_id'     => collect(),
                 'current_school_session_id' => 0,
-                'error' => 'Unable to load marks entry form: ' . $e->getMessage()
+                'isAllSubjectsMode'         => true,
+                'classCourses'              => collect(),
+                'marksMatrix'               => [],
+                'courseMaxMarks'            => [],
+                'selectedClass'             => null,
+                'selectedSection'           => null,
+                'selectedSemester'          => null,
+                'selectedCourse'            => null,
+                'error'                     => 'Unable to load marks entry form: ' . $e->getMessage()
             ]);
         }
     }
@@ -291,6 +450,88 @@ class MarkController extends Controller
         $current_school_session_id = $this->getSchoolCurrentSession();
         $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
 
+        $class_id = (int)$request->input('class_id');
+        $section_id = (int)$request->input('section_id', 0);
+        $semester_id = (int)$request->input('semester_id', 0);
+
+        // Case 1: Master Grade Ledger (All Subjects Submitted at once)
+        if ($request->has('student_course_mark')) {
+            $studentCourseMarks = $request->input('student_course_mark', []);
+            $semester = Semester::find($semester_id);
+            $semesterName = $semester ? $semester->semester_name : 'Terminal Examination';
+
+            $courses = Course::where('class_id', $class_id)->get()->keyBy('id');
+
+            // Find or create exams for all courses
+            $examCache = [];
+            foreach ($courses as $cId => $course) {
+                $exam = Exam::where('session_id', $current_school_session_id)
+                    ->where('semester_id', $semester_id)
+                    ->where('class_id', $class_id)
+                    ->where('course_id', $cId)
+                    ->first();
+
+                if (!$exam) {
+                    $exam = Exam::create([
+                        'school_id'   => auth()->user()->school_id ?? null,
+                        'exam_name'   => $semesterName,
+                        'start_date'  => now(),
+                        'end_date'    => now()->addDays(7),
+                        'semester_id' => $semester_id,
+                        'class_id'    => $class_id,
+                        'course_id'   => $cId,
+                        'session_id'  => $current_school_session_id,
+                    ]);
+                }
+
+                // Ensure ExamRule exists (default 100 max, 40 pass)
+                $rule = ExamRule::where('session_id', $current_school_session_id)
+                    ->where('exam_id', $exam->id)
+                    ->first();
+                if (!$rule) {
+                    ExamRule::create([
+                        'school_id'   => auth()->user()->school_id ?? null,
+                        'exam_id'     => $exam->id,
+                        'session_id'  => $current_school_session_id,
+                        'total_marks' => 100,
+                        'pass_marks'  => 40,
+                        'marks_distribution_note' => 'Standard 100 marks',
+                    ]);
+                }
+
+                $examCache[$cId] = $exam;
+            }
+
+            $rows = [];
+            foreach ($studentCourseMarks as $studentId => $coursesMarks) {
+                foreach ($coursesMarks as $cId => $mark) {
+                    if ($mark === null || $mark === '') {
+                        continue;
+                    }
+                    if (isset($examCache[$cId])) {
+                        $rows[] = [
+                            'class_id'   => $class_id,
+                            'student_id' => (int)$studentId,
+                            'marks'      => (float)$mark,
+                            'section_id' => $section_id,
+                            'course_id'  => (int)$cId,
+                            'session_id' => $current_school_session_id,
+                            'exam_id'    => $examCache[$cId]->id,
+                        ];
+                    }
+                }
+            }
+
+            try {
+                $markRepository = new MarkRepository();
+                $markRepository->create($rows);
+                return back()->with('status', 'Successfully recorded marks across all subjects for ' . count($rows) . ' entries!');
+            } catch (\Exception $e) {
+                return back()->with('error', 'Error saving marks: ' . $e->getMessage());
+            }
+        }
+
+        // Case 2: Single Subject Entry (student_mark array)
         $validator = Validator::make($request->all(), [
             'student_mark' => 'required|array',
             'student_mark.*' => 'required|array',
@@ -302,44 +543,56 @@ class MarkController extends Controller
         }
 
         $submittedExamIds = collect($request->student_mark)
-                                ->flatMap(function ($studentMarks) {
-                                    return array_keys($studentMarks);
-                                })
-                                ->unique()
-                                ->values()
-                                ->toArray();
+            ->flatMap(function ($studentMarks) {
+                return array_keys($studentMarks);
+            })
+            ->unique()
+            ->values()
+            ->toArray();
 
         $maxMarksByExamId = ExamRule::where('session_id', $current_school_session_id)
-                                    ->whereIn('exam_id', $submittedExamIds)
-                                    ->pluck('total_marks', 'exam_id');
+            ->whereIn('exam_id', $submittedExamIds)
+            ->pluck('total_marks', 'exam_id');
+
+        // Auto-create missing ExamRules so users are never blocked
+        foreach ($submittedExamIds as $eId) {
+            if (!$maxMarksByExamId->has($eId)) {
+                ExamRule::create([
+                    'school_id'   => auth()->user()->school_id ?? null,
+                    'exam_id'     => $eId,
+                    'session_id'  => $current_school_session_id,
+                    'total_marks' => 100,
+                    'pass_marks'  => 40,
+                    'marks_distribution_note' => 'Standard 100 marks',
+                ]);
+                $maxMarksByExamId[$eId] = 100;
+            }
+        }
 
         $rows = [];
-        foreach($request->student_mark as $id => $stm) {
-            foreach($stm as $exam => $mark){
-                if($mark === null || $mark === '') {
+        foreach ($request->student_mark as $id => $stm) {
+            foreach ($stm as $exam => $mark) {
+                if ($mark === null || $mark === '') {
                     continue;
                 }
 
-                if(!$maxMarksByExamId->has($exam)) {
-                    return back()->withInput()->with('error', 'Please create exam rules with total marks before submitting marks.');
+                $max = $maxMarksByExamId[$exam] ?? 100;
+                if ((float)$mark > (float)$max) {
+                    return back()->withInput()->with('error', "Marks must be between 0 and {$max} for each exam.");
                 }
 
-                if((float) $mark > (float) $maxMarksByExamId[$exam]) {
-                    return back()->withInput()->with('error', "Marks must be between 0 and {$maxMarksByExamId[$exam]} for each exam.");
-                }
-
-                $row = [];
-                $row['class_id'] = $request->class_id;
-                $row['student_id'] = $id;
-                $row['marks'] = $mark;
-                $row['section_id'] = $request->section_id;
-                $row['course_id'] = $request->course_id;
-                $row['session_id'] = $request->session_id;
-                $row['exam_id'] = $exam;
-
-                $rows[] = $row;
+                $rows[] = [
+                    'class_id'   => (int)$request->class_id,
+                    'student_id' => (int)$id,
+                    'marks'      => (float)$mark,
+                    'section_id' => (int)$request->section_id,
+                    'course_id'  => (int)$request->course_id,
+                    'session_id' => (int)$request->session_id,
+                    'exam_id'    => (int)$exam,
+                ];
             }
         }
+
         try {
             $markRepository = new MarkRepository();
             $markRepository->create($rows);

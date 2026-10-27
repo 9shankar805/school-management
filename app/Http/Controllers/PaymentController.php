@@ -253,7 +253,10 @@ class PaymentController extends Controller
     public function receiptPage(int $paymentId)
     {
         $payment = Payment::with([
-            'invoice.student',
+            'invoice.student.parent_info',
+            'invoice.schoolClass',
+            'invoice.section',
+            'invoice.session',
             'invoice.items.feeType',
             'invoice.payments',
             'recordedBy',
@@ -275,9 +278,11 @@ class PaymentController extends Controller
             $payment->invoice?->school_id
             ?? $user->school_id
             ?? optional($payment->invoice?->student)->school_id
-        );
+        ) ?? $user->school ?? config('tenant.school') ?? \App\Models\School::first();
 
-        return view('payments.receipt', compact('payment', 'school'));
+        $logoSrc = $this->getSchoolLogoBase64($school);
+
+        return view('payments.receipt', compact('payment', 'school', 'logoSrc'));
     }
 
     // ── Student ledger view ───────────────────────────────────────────────────
@@ -326,7 +331,15 @@ class PaymentController extends Controller
 
     public function receipt(Request $request, int $paymentId)
     {
-        $payment = Payment::with(['invoice.student', 'invoice.items.feeType', 'recordedBy', 'bankAccount'])->findOrFail($paymentId);
+        $payment = Payment::with([
+            'invoice.student.parent_info',
+            'invoice.schoolClass',
+            'invoice.section',
+            'invoice.session',
+            'invoice.items.feeType',
+            'recordedBy',
+            'bankAccount',
+        ])->findOrFail($paymentId);
 
         $user = auth()->user();
         if ($user->hasRole('student') && $payment->invoice?->student_id !== $user->id) {
@@ -352,21 +365,22 @@ class PaymentController extends Controller
             $payment->invoice?->school_id
             ?? $user->school_id
             ?? optional($payment->invoice?->student)->school_id
-        );
+        ) ?? $user->school ?? config('tenant.school') ?? \App\Models\School::first();
 
+        $logoSrc = $this->getSchoolLogoBase64($school);
         $format = $request->query('format', 'standard');
 
         if ($format === 'dual') {
-            $pdf = Pdf::loadView('finance.receipt-dual-copy', compact('payment', 'school'))
+            $pdf = Pdf::loadView('finance.receipt-dual-copy', compact('payment', 'school', 'logoSrc'))
                 ->setPaper('a4', 'portrait');
             return $pdf->stream('receipt-dual-' . $payment->receipt_number . '.pdf');
         }
 
         if ($format === 'thermal') {
-            return view('finance.receipt-thermal', compact('payment', 'school'));
+            return view('finance.receipt-thermal', compact('payment', 'school', 'logoSrc'));
         }
 
-        $pdf = Pdf::loadView('finance.receipt-pdf', compact('payment', 'school'))
+        $pdf = Pdf::loadView('finance.receipt-pdf', compact('payment', 'school', 'logoSrc'))
             ->setPaper('a5');
         return $pdf->stream('receipt-' . $payment->receipt_number . '.pdf');
     }
@@ -916,6 +930,45 @@ class PaymentController extends Controller
             'standard_receipt_url'  => route('payments.receipt-download', ['paymentId' => $paymentRecord->id]),
             'web_receipt_url'       => route('payments.receipt.page', ['paymentId' => $paymentRecord->id]),
         ]);
+    }
+
+    /**
+     * Get Base64 encoded logo for DomPDF rendering.
+     */
+    public function getSchoolLogoBase64($school = null): string
+    {
+        $school = $school ?? \App\Models\School::find(optional(auth()->user())->school_id) ?? optional(auth()->user())->school ?? config('tenant.school') ?? \App\Models\School::first();
+        if ($school && $school->logo) {
+            $clean = ltrim(str_replace('storage/', '', $school->logo), '/');
+            $candidates = [
+                storage_path('app/public/' . $clean),
+                public_path('storage/' . $clean),
+                public_path($clean),
+            ];
+            foreach ($candidates as $filePath) {
+                if (file_exists($filePath)) {
+                    $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+                    if ($ext === 'webp' && function_exists('imagecreatefromwebp')) {
+                        $im = @imagecreatefromwebp($filePath);
+                        if ($im) {
+                            ob_start();
+                            imagepng($im);
+                            $pngData = ob_get_clean();
+                            imagedestroy($im);
+                            if ($pngData) {
+                                return 'data:image/png;base64,' . base64_encode($pngData);
+                            }
+                        }
+                    }
+                    $data = @file_get_contents($filePath);
+                    if ($data) {
+                        $mime = ($ext === 'png') ? 'image/png' : (($ext === 'svg') ? 'image/svg+xml' : 'image/jpeg');
+                        return 'data:' . $mime . ';base64,' . base64_encode($data);
+                    }
+                }
+            }
+        }
+        return '';
     }
 }
 

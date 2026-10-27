@@ -15,12 +15,14 @@
                     <h1 class="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
                         Profit & Loss Statement (नाफा नोक्सान हिसाब)
                     </h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-2">
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-2 flex-wrap">
                         <span class="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
                             <i class="bi bi-calendar3"></i> {{ $periodLabel }}
                         </span>
                         <span>•</span>
                         <span>{{ $periodSub }}</span>
+                        <span>•</span>
+                        <span class="text-slate-400 dark:text-slate-500"><i class="bi bi-clock-history"></i> Generated: <strong>{{ now()->format('d M Y, h:i A') }}</strong></span>
                     </p>
                 </div>
             </div>
@@ -32,6 +34,36 @@
                class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-md shadow-rose-600/20 transition-all">
                 <i class="bi bi-file-earmark-pdf-fill text-sm"></i> Download Official PDF
             </a>
+        </div>
+    </div>
+
+    {{-- Institutional School Identity Banner --}}
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs flex items-center justify-between gap-4 flex-wrap">
+        <div class="flex items-center gap-3.5">
+            @if(!empty($logoSrc))
+                <img src="{{ $logoSrc }}" class="w-12 h-12 rounded-xl object-contain border border-slate-200 dark:border-slate-700 p-1 bg-white" alt="School Logo">
+            @elseif(!empty($school?->logo_url))
+                <img src="{{ $school->logo_url }}" class="w-12 h-12 rounded-xl object-contain border border-slate-200 dark:border-slate-700 p-1 bg-white" alt="School Logo">
+            @else
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 font-black text-sm flex items-center justify-center border border-emerald-200 dark:border-emerald-800">
+                    {{ strtoupper(substr($school?->name ?? config('app.name'), 0, 2)) }}
+                </div>
+            @endif
+            <div>
+                <h2 class="text-base font-black text-slate-900 dark:text-slate-100 uppercase tracking-tight">
+                    {{ $school?->name ?? config('app.name') }}
+                </h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap">
+                    <span>{{ $school?->address ?? 'Kathmandu, Nepal' }}</span>
+                    @if($school?->phone) <span>&bull; Tel: {{ $school->phone }}</span> @endif
+                    @if($school?->pan_number) <span class="font-semibold text-slate-600 dark:text-slate-300">&bull; PAN: {{ $school->pan_number }}</span> @endif
+                </p>
+            </div>
+        </div>
+        <div class="text-right">
+            <span class="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-teal-300 border border-emerald-200 dark:border-emerald-800 inline-flex items-center gap-1">
+                <i class="bi bi-shield-check"></i> Certified Institutional Ledger
+            </span>
         </div>
     </div>
 

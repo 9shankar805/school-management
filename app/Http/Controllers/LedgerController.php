@@ -281,9 +281,11 @@ class LedgerController extends Controller
         $totalExpenses = $expenses + $payroll + $staffPay;
         $netProfit     = $totalIncome - $totalExpenses;
 
+        [$school, $logoSrc] = $this->resolveSchoolAndLogo();
+
         return view('finance.profit-loss', compact(
             'periodType', 'selectedFy', 'fyList', 'fyDetails', 'year', 'periodLabel', 'periodSub',
-            'dateFrom', 'dateTo',
+            'dateFrom', 'dateTo', 'school', 'logoSrc',
             'totalIncome', 'totalExpenses', 'netProfit',
             'income', 'otherInc', 'expenses', 'payroll', 'staffPay',
             'monthlyData', 'quarterlyData'
@@ -323,10 +325,10 @@ class LedgerController extends Controller
         $totalExpenses = $expenses + $payroll + $staffPay;
         $netProfit     = $totalIncome - $totalExpenses;
 
-        $school = auth()->user()->school ?? \App\Models\School::first();
+        [$school, $logoSrc] = $this->resolveSchoolAndLogo();
 
         $pdf = Pdf::loadView('finance.profit-loss-pdf', compact(
-            'periodType', 'selectedFy', 'year', 'periodLabel', 'periodSub', 'dateFrom', 'dateTo', 'school',
+            'periodType', 'selectedFy', 'year', 'periodLabel', 'periodSub', 'dateFrom', 'dateTo', 'school', 'logoSrc',
             'totalIncome', 'totalExpenses', 'netProfit',
             'income', 'otherInc', 'expenses', 'payroll', 'staffPay'
         ))->setPaper('A4');
@@ -424,8 +426,10 @@ class LedgerController extends Controller
         $totalEquity    = $retainedEarnings;
         $balanceCheck   = $totalAssets - ($totalLiabilities + $totalEquity);
 
+        [$school, $logoSrc] = $this->resolveSchoolAndLogo();
+
         return view('finance.balance-sheet', compact(
-            'periodType', 'selectedFy', 'fyList', 'fyDetails', 'year', 'asOf', 'asOfLabel', 'periodLabel',
+            'periodType', 'selectedFy', 'fyList', 'fyDetails', 'year', 'asOf', 'asOfLabel', 'periodLabel', 'school', 'logoSrc',
             'cashAndBank', 'fixedAssets', 'receivables', 'totalAssets',
             'salariesPayable', 'teacherSalariesPayable', 'tdsPayable', 'totalLiabilities',
             'retainedEarnings', 'totalEquity',
@@ -483,10 +487,10 @@ class LedgerController extends Controller
         $totalEquity  = $retainedEarnings;
         $balanceCheck = $totalAssets - ($totalLiabilities + $totalEquity);
 
-        $school = auth()->user()->school ?? \App\Models\School::first();
+        [$school, $logoSrc] = $this->resolveSchoolAndLogo();
 
         $pdf = Pdf::loadView('finance.balance-sheet-pdf', compact(
-            'periodType', 'selectedFy', 'year', 'asOf', 'asOfLabel', 'periodLabel', 'school',
+            'periodType', 'selectedFy', 'year', 'asOf', 'asOfLabel', 'periodLabel', 'school', 'logoSrc',
             'cashAndBank', 'fixedAssets', 'receivables', 'totalAssets',
             'salariesPayable', 'teacherSalariesPayable', 'tdsPayable', 'totalLiabilities',
             'retainedEarnings', 'totalEquity', 'balanceCheck'
@@ -793,15 +797,64 @@ class LedgerController extends Controller
 
         $closing = DayBookClosing::with(['closedByUser'])->where('date', $date)->first();
 
-        $school = auth()->user()->school ?? \App\Models\School::first();
+        [$school, $logoSrc] = $this->resolveSchoolAndLogo();
 
         $pdf = Pdf::loadView('finance.day-book-pdf', compact(
             'date', 'bsDateEn', 'bsDateNp', 'dayOfWeekNp', 'currentFy', 'currentFyNp',
-            'school', 'payments', 'incomes', 'expenses', 'teacherPayrolls', 'staffPayrolls',
+            'school', 'logoSrc', 'payments', 'incomes', 'expenses', 'teacherPayrolls', 'staffPayrolls',
             'feeTotal', 'incomeTotal', 'totalInflow', 'expenseTotal', 'payrollTotal', 'totalOutflow',
             'netDailyChange', 'openingBalance', 'closingBalance', 'closing'
         ))->setPaper('A4', 'portrait');
 
         return $pdf->stream("day-book-{$date}.pdf");
+    }
+
+    /**
+     * Resolve current tenant school and generate Base64 data URI for DomPDF logo rendering.
+     */
+    protected function resolveSchoolAndLogo(): array
+    {
+        $user = auth()->user();
+        $schoolId = $user ? $user->school_id : null;
+        $school = ($schoolId ? \App\Models\School::find($schoolId) : null)
+            ?? optional($user)->school
+            ?? config('tenant.school')
+            ?? \App\Models\School::first();
+
+        $logoSrc = '';
+        if ($school && $school->logo) {
+            $clean = ltrim(str_replace('storage/', '', $school->logo), '/');
+            $candidates = [
+                storage_path('app/public/' . $clean),
+                public_path('storage/' . $clean),
+                public_path($clean),
+            ];
+            foreach ($candidates as $filePath) {
+                if (file_exists($filePath)) {
+                    $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+                    if ($ext === 'webp' && function_exists('imagecreatefromwebp')) {
+                        $im = @imagecreatefromwebp($filePath);
+                        if ($im) {
+                            ob_start();
+                            imagepng($im);
+                            $pngData = ob_get_clean();
+                            imagedestroy($im);
+                            if ($pngData) {
+                                $logoSrc = 'data:image/png;base64,' . base64_encode($pngData);
+                                break;
+                            }
+                        }
+                    }
+                    $data = @file_get_contents($filePath);
+                    if ($data) {
+                        $mime = ($ext === 'png') ? 'image/png' : (($ext === 'svg') ? 'image/svg+xml' : 'image/jpeg');
+                        $logoSrc = 'data:' . $mime . ';base64,' . base64_encode($data);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return [$school, $logoSrc];
     }
 }

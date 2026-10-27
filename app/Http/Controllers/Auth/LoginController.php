@@ -109,4 +109,16 @@ class LoginController extends Controller
 
         return null;
     }
+
+    /**
+     * The user has logged out of the application.
+     * Redirect directly to the login screen instead of the landing page.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return mixed
+     */
+    protected function loggedOut(Request $request)
+    {
+        return redirect()->route('login');
+    }
 }
