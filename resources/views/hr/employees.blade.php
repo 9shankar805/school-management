@@ -8,7 +8,7 @@
             <h2 class="font-bold text-gray-800 mb-1"><i class="bi bi-person-lines-fill text-indigo-500"></i> Employee Records</h2>
             <p class="text-muted mb-0">Manage staff contracts, performance reviews, and exits.</p>
         </div>
-        <button class="btn btn-primary shadow-sm"><i class="bi bi-file-earmark-text"></i> Add Contract</button>
+        <a href="{{ route('staff.contracts.index') }}" class="btn btn-primary shadow-sm"><i class="bi bi-file-earmark-text"></i> Manage Contracts</a>
     </div>
 
     <!-- Data Table -->
@@ -30,8 +30,8 @@
                         @forelse($contracts as $contract)
                         <tr>
                             <td class="px-4 py-3">
-                                <div class="font-bold text-gray-800">{{ $contract->user->name ?? 'Unknown Employee' }}</div>
-                                <div class="text-xs text-muted">Role: {{ ucfirst($contract->user->roles->first()->name ?? 'Staff') }}</div>
+                                <div class="font-bold text-gray-800">{{ $contract->user->full_name ?? $contract->user->name ?? 'Unknown Employee' }}</div>
+                                <div class="text-xs text-muted">Role: {{ ucfirst($contract->user->roles->first()->name ?? $contract->user->role ?? 'Staff') }}</div>
                             </td>
                             <td class="py-3 font-semibold text-sm">
                                 {{ ucfirst(str_replace('_', ' ', $contract->contract_type)) }}
@@ -55,8 +55,11 @@
                                 @endif
                             </td>
                             <td class="py-3 text-center">
-                                <span class="badge {{ $contract->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }} rounded-pill px-3">
-                                    {{ $contract->is_active ? 'Active' : 'Terminated' }}
+                                @php
+                                    $cStatus = $contract->status ?? ($contract->is_active ? 'active' : 'expired');
+                                @endphp
+                                <span class="badge {{ $cStatus === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }} rounded-pill px-3">
+                                    {{ ucfirst($cStatus) }}
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-end">
@@ -68,8 +71,10 @@
                                     </a>
                                     @endisset
                                 @endcan
-                                <button class="btn btn-sm btn-light text-primary" title="View Profile"><i class="bi bi-person-badge"></i></button>
-                                <button class="btn btn-sm btn-light text-orange-500" title="Performance Review"><i class="bi bi-star-half"></i></button>
+                                @if($contract->user_id)
+                                <a href="{{ route('staff.edit', $contract->user_id) }}" class="btn btn-sm btn-light text-primary" title="Edit Staff Profile"><i class="bi bi-pencil-square"></i></a>
+                                @endif
+                                <a href="{{ route('staff.contracts.index') }}" class="btn btn-sm btn-light text-indigo-600" title="Contracts Vault"><i class="bi bi-file-earmark-text"></i></a>
                             </td>
                         </tr>
                         @empty

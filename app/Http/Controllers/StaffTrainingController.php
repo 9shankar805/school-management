@@ -30,7 +30,12 @@ class StaffTrainingController extends Controller
         }
 
         $trainings = $query->latest('start_date')->paginate(25)->withQueryString();
-        $staff     = User::whereHas('roles', fn($q) => $q->whereIn('name', ['teacher', 'staff', 'class-teacher']))->orderBy('first_name')->get();
+        $staff     = User::where(function($q) {
+            $q->whereDoesntHave('roles', fn($r) => $r->whereIn('name', ['student', 'parent']))
+              ->where(function($sub) {
+                  $sub->whereNull('role')->orWhereNotIn('role', ['student', 'parent']);
+              });
+        })->orderBy('first_name')->get();
 
         return view('staff.training.index', compact('trainings', 'staff'));
     }

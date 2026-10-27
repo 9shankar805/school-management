@@ -3,7 +3,7 @@
 namespace App\Interfaces;
 
 interface StaffInterface {
-    public function getAllStaff();
+    public function getAllStaff($search = null, $role = null);
     public function findById($id);
     public function create($request);
     public function update($request, $id);

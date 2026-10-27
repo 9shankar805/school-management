@@ -8,7 +8,7 @@
             <h2 class="font-bold text-gray-800 mb-1"><i class="bi bi-cash-stack text-green-500"></i> Payroll Processing</h2>
             <p class="text-muted mb-0">Generate and manage staff salary slips.</p>
         </div>
-        <button class="btn btn-primary shadow-sm"><i class="bi bi-magic"></i> Generate Payroll</button>
+        <a href="{{ route('teacher.payroll.index') }}" class="btn btn-primary shadow-sm"><i class="bi bi-magic"></i> Generate Payroll</a>
     </div>
 
     <!-- Data Table -->
@@ -30,11 +30,11 @@
                         @forelse($payrolls as $payroll)
                         <tr>
                             <td class="px-4 py-3">
-                                <div class="font-bold text-gray-800">{{ $payroll->teacher->name ?? 'Unknown Employee' }}</div>
+                                <div class="font-bold text-gray-800">{{ $payroll->teacher->full_name ?? $payroll->teacher->first_name ?? $payroll->teacher->name ?? 'Unknown Employee' }}</div>
                                 <div class="text-xs text-muted">Role: {{ ucfirst($payroll->teacher->roles->first()->name ?? 'Staff') }}</div>
                             </td>
                             <td class="py-3 font-semibold text-sm">
-                                {{ \Carbon\Carbon::parse($payroll->salary_month)->format('F Y') }}
+                                {{ ($payroll->year && $payroll->month) ? \Carbon\Carbon::createFromDate($payroll->year, $payroll->month, 1)->format('F Y') : (\Carbon\Carbon::parse($payroll->salary_month ?? now())->format('F Y')) }}
                             </td>
                             <td class="py-3 text-end text-muted">
                                 Rs. {{ number_format($payroll->basic_salary, 2) }}
@@ -48,8 +48,7 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-end">
-                                <button class="btn btn-sm btn-light text-primary" title="View Slip"><i class="bi bi-eye"></i></button>
-                                <button class="btn btn-sm btn-light text-danger" title="Download PDF"><i class="bi bi-file-earmark-pdf"></i></button>
+                                <a href="{{ route('teacher.payroll.index') }}?month={{ $payroll->month }}&year={{ $payroll->year }}" class="btn btn-sm btn-light text-primary" title="View In Payroll"><i class="bi bi-eye"></i></a>
                             </td>
                         </tr>
                         @empty

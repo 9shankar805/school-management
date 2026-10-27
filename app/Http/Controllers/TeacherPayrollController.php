@@ -38,7 +38,7 @@ class TeacherPayrollController extends Controller
 
         $payrolls  = $query->get();
         $teachers  = $user->hasAnyRole(['super-admin', 'admin', 'principal', 'hr-manager', 'hr'])
-            ? User::role(['teacher', 'class-teacher'])->orderBy('first_name')->get()
+            ? User::where(function($q) { $q->role(['teacher', 'class-teacher'])->orWhereIn('role', ['teacher', 'class-teacher']); })->orderBy('first_name')->get()
             : collect([$user]);
         $totalPaid = $payrolls->where('status', 'paid')->sum('net_salary');
         $components = SalaryComponent::active()->orderBy('sort_order')->get();

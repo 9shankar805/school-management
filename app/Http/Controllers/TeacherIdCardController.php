@@ -163,12 +163,14 @@ class TeacherIdCardController extends Controller
 
         $teacherIds = $request->input('ids', []);
         
-        $query = User::where('role', 'teacher');
+        $query = User::where(function($q) {
+            $q->role(['teacher', 'class-teacher'])->orWhereIn('role', ['teacher', 'class-teacher']);
+        });
         if (!empty($teacherIds)) {
             $query->whereIn('id', (array)$teacherIds);
         }
         if ($request->filled('department_id')) {
-            $query->where('department_id', $request->department_id);
+            $query->whereHas('departments', fn($q) => $q->where('departments.id', $request->department_id));
         }
 
         $limit = (int) $request->input('limit', 100);

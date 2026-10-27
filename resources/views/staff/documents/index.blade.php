@@ -22,7 +22,7 @@
                                     <div class="mb-3"><label class="form-label fw-semibold">Staff Member</label>
                                         <select name="user_id" class="form-select" required>
                                             <option value="">— Select —</option>
-                                            @foreach(\App\Models\User::whereHas('roles', fn($q)=>$q->whereIn('name',['teacher','staff','class-teacher']))->orderBy('first_name')->get() as $u)
+                                            @foreach(\App\Models\User::where(function($q) { $q->whereDoesntHave('roles', fn($r) => $r->whereIn('name', ['student', 'parent']))->where(function($sub) { $sub->whereNull('role')->orWhereNotIn('role', ['student', 'parent']); }); })->orderBy('first_name')->get() as $u)
                                                 <option value="{{ $u->id }}">{{ $u->first_name }} {{ $u->last_name }}</option>
                                             @endforeach
                                         </select>

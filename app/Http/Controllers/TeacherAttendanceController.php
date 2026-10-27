@@ -28,9 +28,11 @@ class TeacherAttendanceController extends Controller
         }
 
         $date     = $request->query('date', now()->toDateString());
-        $teachers = User::role(['teacher', 'class-teacher'])
-            ->with(['teacherAttendance' => fn($q) => $q->whereDate('date', $date)])
-            ->get();
+        $teachers = User::where(function($q) {
+            $q->role(['teacher', 'class-teacher'])->orWhereIn('role', ['teacher', 'class-teacher']);
+        })->with(['teacherAttendance' => fn($q) => $q->whereDate('date', $date)])
+          ->orderBy('first_name')
+          ->get();
 
         $summary = TeacherAttendance::whereDate('date', $date)
             ->selectRaw('status, COUNT(*) as total')

@@ -8,7 +8,7 @@
             <h2 class="font-bold text-gray-800 mb-1"><i class="bi bi-briefcase text-purple-500"></i> Recruitment</h2>
             <p class="text-muted mb-0">Manage job postings and applicant pipelines.</p>
         </div>
-        <button class="btn btn-primary shadow-sm"><i class="bi bi-plus-lg"></i> Post New Job</button>
+        <a href="{{ route('staff.recruitment.postings') }}" class="btn btn-primary shadow-sm"><i class="bi bi-megaphone"></i> Manage Postings</a>
     </div>
 
     <div class="row g-4">
@@ -21,17 +21,17 @@
                 <div class="card-body p-4">
                     @forelse($jobs as $job)
                         <div class="border rounded-4 p-4 mb-3 position-relative">
-                            @if($job->status == 'open')
-                                <span class="position-absolute top-0 end-0 mt-3 me-3 badge bg-green-100 text-green-700 rounded-pill">Open</span>
+                            @if($job->status == 'open' || $job->status == 'published')
+                                <span class="position-absolute top-0 end-0 mt-3 me-3 badge bg-green-100 text-green-700 rounded-pill">Active</span>
                             @else
                                 <span class="position-absolute top-0 end-0 mt-3 me-3 badge bg-gray-200 text-gray-700 rounded-pill">Closed</span>
                             @endif
                             <h5 class="font-bold text-indigo-700 mb-1">{{ $job->title }}</h5>
-                            <p class="text-sm text-muted mb-3"><i class="bi bi-geo-alt"></i> {{ ucfirst($job->employment_type) }} • Posted: {{ $job->created_at->format('M d') }}</p>
+                            <p class="text-sm text-muted mb-3"><i class="bi bi-building"></i> {{ $job->department ?: 'General' }} • Posted: {{ $job->created_at ? $job->created_at->format('M d') : '—' }}</p>
                             
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="text-xs text-muted"><i class="bi bi-people"></i> {{ $job->applications_count ?? 0 }} Applicants</div>
-                                <button class="btn btn-sm btn-outline-primary rounded-pill px-3">View Details</button>
+                                <a href="{{ route('staff.recruitment.applications', $job->id) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View Applications</a>
                             </div>
                         </div>
                     @empty
@@ -83,7 +83,7 @@
                                         <span class="badge {{ $stageBadge }} rounded-pill px-3 text-capitalize">{{ $app->status }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-end">
-                                        <button class="btn btn-sm btn-light text-primary" title="Review Application"><i class="bi bi-file-earmark-person"></i> Review</button>
+                                        <a href="{{ route('staff.recruitment.applications', $app->job_posting_id) }}" class="btn btn-sm btn-light text-primary" title="Review Application"><i class="bi bi-file-earmark-person"></i> Review</a>
                                     </td>
                                 </tr>
                                 @empty

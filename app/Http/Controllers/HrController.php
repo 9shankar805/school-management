@@ -15,7 +15,7 @@ class HrController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('role:admin|principal');
+        $this->middleware('role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr');
     }
 
     /**
@@ -24,13 +24,16 @@ class HrController extends Controller
     public function index()
     {
         try {
-            // Example logic for metrics
-            $totalStaff = User::whereHas('roles', function($q) {
-                $q->whereIn('name', ['teacher', 'admin', 'principal']);
+            $totalStaff = User::where(function($q) {
+                $q->whereDoesntHave('roles', fn($r) => $r->whereIn('name', ['student', 'parent']))
+                  ->where(function($sub) {
+                      $sub->whereNull('role')
+                          ->orWhereNotIn('role', ['student', 'parent']);
+                  });
             })->count();
 
             $pendingLeaves = LeaveApplication::where('status', 'pending')->count();
-            $activeJobs = JobPosting::where('status', 'open')->count();
+            $activeJobs = JobPosting::where('status', 'open')->orWhere('status', 'published')->count();
             $recentApplications = JobApplication::with('jobPosting')->orderBy('created_at', 'desc')->take(5)->get();
 
             return view('hr.dashboard', compact('totalStaff', 'pendingLeaves', 'activeJobs', 'recentApplications'));
@@ -77,7 +80,7 @@ class HrController extends Controller
     public function recruitment()
     {
         try {
-            $jobs = JobPosting::orderBy('created_at', 'desc')->paginate(10);
+            $jobs = JobPosting::withCount('applications')->orderBy('created_at', 'desc')->paginate(10);
             $applications = JobApplication::with(['jobPosting', 'user'])->orderBy('created_at', 'desc')->take(10)->get();
             return view('hr.recruitment', compact('jobs', 'applications'));
         } catch (\Exception $e) {
@@ -95,7 +98,10 @@ class HrController extends Controller
     public function payroll()
     {
         try {
-            $payrolls = TeacherPayroll::with('teacher')->orderBy('salary_month', 'desc')->paginate(15);
+            $payrolls = TeacherPayroll::with('teacher')
+                ->orderBy('year', 'desc')
+                ->orderBy('month', 'desc')
+                ->paginate(15);
             return view('hr.payroll', compact('payrolls'));
         } catch (\Exception $e) {
             return view('hr.payroll', ['payrolls' => null, 'error' => 'Unable to load payroll data: ' . $e->getMessage()]);

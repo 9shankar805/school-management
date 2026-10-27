@@ -31,21 +31,21 @@
                             <td class="px-4 py-3">
                                 <div class="d-flex align-items-center">
                                     <div class="bg-blue-50 text-blue-600 rounded-circle d-flex justify-content-center align-items-center me-3 font-bold" style="width: 40px; height: 40px;">
-                                        {{ substr($leave->user->name ?? 'U', 0, 1) }}
+                                        {{ substr($leave->user->first_name ?? $leave->user->name ?? 'U', 0, 1) }}
                                     </div>
                                     <div>
-                                        <div class="font-bold text-gray-800">{{ $leave->user->name ?? 'Unknown' }}</div>
-                                        <div class="text-xs text-muted">Applied: {{ $leave->created_at->format('M d') }}</div>
+                                        <div class="font-bold text-gray-800">{{ $leave->user->full_name ?? $leave->user->name ?? 'Unknown' }}</div>
+                                        <div class="text-xs text-muted">Applied: {{ $leave->created_at ? $leave->created_at->format('M d') : '—' }}</div>
                                     </div>
                                 </div>
                             </td>
                             <td class="py-3 font-semibold text-sm">{{ $leave->leaveType->name ?? 'General Leave' }}</td>
                             <td class="py-3">
-                                <div class="text-sm">{{ \Carbon\Carbon::parse($leave->start_date)->format('M d, Y') }}</div>
-                                <div class="text-xs text-muted">to {{ \Carbon\Carbon::parse($leave->end_date)->format('M d, Y') }}</div>
+                                <div class="text-sm">{{ \Carbon\Carbon::parse($leave->from_date ?? $leave->start_date)->format('M d, Y') }}</div>
+                                <div class="text-xs text-muted">to {{ \Carbon\Carbon::parse($leave->to_date ?? $leave->end_date)->format('M d, Y') }}</div>
                             </td>
                             <td class="py-3 font-bold text-gray-800">
-                                {{ \Carbon\Carbon::parse($leave->start_date)->diffInDays(\Carbon\Carbon::parse($leave->end_date)) + 1 }} Days
+                                {{ $leave->total_days ?? (\Carbon\Carbon::parse($leave->from_date ?? $leave->start_date)->diffInDays(\Carbon\Carbon::parse($leave->to_date ?? $leave->end_date)) + 1) }} Days
                             </td>
                             <td class="py-3 text-center">
                                 @php

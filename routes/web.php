@@ -602,8 +602,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/staff/create', [StaffController::class, 'create'])->name('staff.create');
     Route::post('/staff/store', [StaffController::class, 'store'])->name('staff.store');
     Route::get('/staff/edit/{id}', [StaffController::class, 'edit'])->name('staff.edit');
-    Route::post('/staff/update/{id}', [StaffController::class, 'update'])->name('staff.update');
-    Route::post('/staff/delete/{id}', [StaffController::class, 'destroy'])->name('staff.destroy');
+    Route::match(['POST', 'PUT', 'PATCH'], '/staff/update/{id}', [StaffController::class, 'update'])->name('staff.update');
+    Route::match(['POST', 'DELETE'], '/staff/delete/{id}', [StaffController::class, 'destroy'])->name('staff.destroy');
+    Route::delete('/staff/{id}', [StaffController::class, 'destroy']);
 
     // Contracts
     Route::prefix('staff/contracts')->name('staff.contracts.')->group(function () {
@@ -1261,7 +1262,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ── HR MANAGEMENT (Module 11) ─────────────────────────────────────────────
-    Route::prefix('hr')->name('hr.')->middleware('role:admin|principal')->group(function () {
+    Route::prefix('hr')->name('hr.')->middleware('role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr')->group(function () {
         Route::get('/',            [HrController::class, 'index'])->name('dashboard');
         Route::get('/leaves',      [HrController::class, 'leaves'])->name('leaves');
         Route::post('/leaves/{id}/status', [HrController::class, 'updateLeaveStatus'])->name('leaves.status');
