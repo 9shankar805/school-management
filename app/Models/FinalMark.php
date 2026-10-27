@@ -57,14 +57,19 @@ class FinalMark extends Model
     {
         foreach ($gradeRules as $rule) {
             if ($this->final_marks >= $rule->start_at && $this->final_marks <= $rule->end_at) {
+                $isPassingGrade = !in_array(strtoupper(trim($rule->grade)), ['NG', 'F', 'FAIL']) && (float)$rule->point > 0;
+                $passed = isset($this->examRule) && $this->examRule && $this->examRule->pass_marks > 0
+                    ? $this->final_marks >= $this->examRule->pass_marks
+                    : $isPassingGrade;
+
                 return [
                     'point'  => (float) $rule->point,
                     'grade'  => (string) $rule->grade,
-                    'passed' => $this->final_marks >= ($this->examRule?->pass_marks ?? 0),
+                    'passed' => (bool) $passed,
                 ];
             }
         }
-        return ['point' => 0.0, 'grade' => 'F', 'passed' => false];
+        return ['point' => 0.0, 'grade' => 'NG', 'passed' => false];
     }
 
     // ── Static GPA/CGPA utilities ─────────────────────────────────────────────

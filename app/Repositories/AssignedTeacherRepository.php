@@ -10,7 +10,19 @@ class AssignedTeacherRepository implements AssignedTeacherInterface {
 
     public function assign($request) {
         try {
-            AssignedTeacher::create($request);
+            AssignedTeacher::updateOrCreate(
+                [
+                    'session_id'  => $request['session_id'],
+                    'semester_id' => $request['semester_id'],
+                    'class_id'    => $request['class_id'],
+                    'section_id'  => $request['section_id'],
+                    'course_id'   => $request['course_id'],
+                ],
+                [
+                    'teacher_id'       => $request['teacher_id'],
+                    'is_class_teacher' => !empty($request['is_class_teacher']),
+                ]
+            );
         } catch (\Exception $e) {
             throw new \Exception('Failed to assign teacher. '.$e->getMessage());
         }

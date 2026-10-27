@@ -9,12 +9,19 @@
                     {{ $class?->class_name }} · {{ $section?->section_name ?? 'All Sections' }} · {{ $semester?->semester_name }}
                 </p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('results.class.report-cards', request()->query()) }}"
+                   data-no-loader
+                   target="_blank"
+                   class="btn px-4 py-2 text-white rounded-xl text-sm font-semibold transition flex items-center gap-1.5 shadow-sm"
+                   style="background-color: #4f46e5 !important; color: #ffffff !important;">
+                    <i class="bi bi-file-earmark-person-fill"></i> All Report Cards (PDF)
+                </a>
                 <a href="{{ route('results.class.pdf', request()->query()) }}"
                    data-no-loader
                    class="btn px-4 py-2 text-white rounded-xl text-sm font-semibold transition flex items-center gap-1.5 shadow-sm"
                    style="background-color: #e11d48 !important; color: #ffffff !important;">
-                    <i class="bi bi-download"></i> Download PDF
+                    <i class="bi bi-download"></i> Sheet PDF
                 </a>
                 <a href="{{ route('results.class.excel', request()->query()) }}"
                    data-no-loader
@@ -75,9 +82,11 @@
                                     {{ $row['failed'] === 0 ? 'PASS' : 'FAIL' }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3">
-                                <a href="{{ route('results.report-card', $row['student']->id) . '?' . http_build_query(request()->query()) }}"
-                                   target="_blank" class="text-xs text-rose-500 hover:underline">Report Card</a>
+                            <td class="px-4 py-3 text-center">
+                                <a href="{{ route('results.report-card', $row['student']->id) . '?' . http_build_query(array_merge(request()->query(), ['stream' => '1'])) }}"
+                                   target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 transition" title="View / Print Marksheet">
+                                    <i class="bi bi-file-earmark-person"></i> Report Card
+                                </a>
                             </td>
                         </tr>
                         @endforeach

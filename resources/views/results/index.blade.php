@@ -105,6 +105,11 @@
                         <i class="bi bi-file-earmark-excel-fill text-sm"></i> Excel Export
                     </button>
 
+                    {{-- 5. All Individual Report Cards PDF --}}
+                    <button type="button" onclick="go('reportcards')" class="btn py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm cursor-pointer sm:col-span-2 lg:col-span-4" style="background-color: #4f46e5 !important; color: #ffffff !important; border: 1px solid #4338ca !important;">
+                        <i class="bi bi-file-earmark-person-fill text-base"></i> Generate Class-Wise Individual Report Cards (PDF)
+                    </button>
+
                 </div>
             </div>
 
@@ -118,7 +123,7 @@
 function loadSections(classId) {
     var sel = document.getElementById('rSectionId');
     if (!classId) {
-        sel.innerHTML = '<option value="0">— Select section —</option>';
+        sel.innerHTML = '<option value="0">— All sections —</option>';
         return;
     }
     sel.innerHTML = '<option>Loading sections…</option>';
@@ -145,10 +150,11 @@ function go(type) {
     }
     const p = `?class_id=${c}&section_id=${s}&semester_id=${sem}`;
     const urls = {
-        class:  '{{ route("results.class") }}' + p,
-        merit:  '{{ route("results.merit") }}' + p,
-        pdf:    '{{ route("results.class.pdf") }}' + p,
-        excel:  '{{ route("results.class.excel") }}' + p,
+        class:       '{{ route("results.class") }}' + p,
+        merit:       '{{ route("results.merit") }}' + p,
+        pdf:         '{{ route("results.class.pdf") }}' + p,
+        excel:       '{{ route("results.class.excel") }}' + p,
+        reportcards: '{{ route("results.class.report-cards") }}' + p + '&stream=1',
     };
 
     if (type === 'pdf' || type === 'excel') {

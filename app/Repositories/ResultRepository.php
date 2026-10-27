@@ -7,6 +7,11 @@ use App\Models\GradingSystem;
 use App\Models\GradeRule;
 use App\Models\Semester;
 use App\Models\User;
+use App\Models\SchoolClass;
+use App\Models\Section;
+use App\Models\Promotion;
+use App\Models\Mark;
+use App\Models\Exam;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -27,21 +32,58 @@ class ResultRepository
 
     /**
      * Load grade rules for a grading system bound to a class+semester+session.
-     * Returns empty collection if no grading system configured.
+     * Falls back to class-level, session-level, or Nepal CDC 8-point grading scale.
      */
     public function getGradeRules(int $sessionId, int $semesterId, int $classId): Collection
     {
+        // 1. Exact match: session + semester + class
         $system = GradingSystem::where('session_id',  $sessionId)
             ->where('semester_id', $semesterId)
             ->where('class_id',    $classId)
             ->first();
 
-        if (! $system) return collect();
+        // 2. Fallback: session + class (any semester)
+        if (! $system) {
+            $system = GradingSystem::where('session_id', $sessionId)
+                ->where('class_id', $classId)
+                ->first();
+        }
 
-        return GradeRule::where('grading_system_id', $system->id)
-            ->where('session_id', $sessionId)
-            ->orderByDesc('start_at')
-            ->get();
+        // 3. Fallback: session (any grading system in this session)
+        if (! $system) {
+            $system = GradingSystem::where('session_id', $sessionId)->first();
+        }
+
+        if ($system) {
+            $rules = GradeRule::where('grading_system_id', $system->id)
+                ->where('session_id', $sessionId)
+                ->orderByDesc('start_at')
+                ->get();
+
+            if ($rules->isNotEmpty()) {
+                return $rules;
+            }
+        }
+
+        // 4. Fallback: Official Nepal Government CDC 8-Point Grading System
+        return $this->getDefaultCdcGradeRules();
+    }
+
+    /**
+     * Standard Government of Nepal CDC 8-Point Grading System scale.
+     */
+    public function getDefaultCdcGradeRules(): Collection
+    {
+        return collect([
+            (object)['start_at' => 90.0, 'end_at' => 100.0, 'grade' => 'A+', 'point' => 4.0],
+            (object)['start_at' => 80.0, 'end_at' => 89.99, 'grade' => 'A',  'point' => 3.6],
+            (object)['start_at' => 70.0, 'end_at' => 79.99, 'grade' => 'B+', 'point' => 3.2],
+            (object)['start_at' => 60.0, 'end_at' => 69.99, 'grade' => 'B',  'point' => 2.8],
+            (object)['start_at' => 50.0, 'end_at' => 59.99, 'grade' => 'C+', 'point' => 2.4],
+            (object)['start_at' => 40.0, 'end_at' => 49.99, 'grade' => 'C',  'point' => 2.0],
+            (object)['start_at' => 35.0, 'end_at' => 39.99, 'grade' => 'D',  'point' => 1.6],
+            (object)['start_at' => 0.0,  'end_at' => 34.99, 'grade' => 'NG', 'point' => 0.0],
+        ]);
     }
 
     // ── Student result sheet ──────────────────────────────────────────────────
@@ -53,6 +95,9 @@ class ResultRepository
      * [
      *   'student'     => User,
      *   'semester'    => Semester,
+     *   'class'       => SchoolClass,
+     *   'section'     => Section,
+     *   'promotion'   => Promotion,
      *   'courses'     => [['course', 'final_marks', 'calculated_marks', 'note', 'grade', 'point', 'passed'], ...],
      *   'gpa'         => float,
      *   'total_marks' => float,
@@ -68,17 +113,72 @@ class ResultRepository
         int $sectionId,
         int $sessionId
     ): array {
-        $student  = User::findOrFail($studentId);
-        $semester = Semester::find($semesterId);
-        $rules    = $this->getGradeRules($sessionId, $semesterId, $classId);
+        $student   = User::findOrFail($studentId);
+        $semester  = Semester::find($semesterId);
+        $class     = SchoolClass::find($classId);
+        $section   = $sectionId > 0 ? Section::find($sectionId) : null;
+        $rules     = $this->getGradeRules($sessionId, $semesterId, $classId);
 
-        $marks = FinalMark::with('course')
+        $marksQuery = FinalMark::with('course')
             ->where('student_id',  $studentId)
             ->where('semester_id', $semesterId)
             ->where('class_id',    $classId)
-            ->where('section_id',  $sectionId)
-            ->where('session_id',  $sessionId)
-            ->get();
+            ->where('session_id',  $sessionId);
+
+        if ($sectionId > 0) {
+            $marksQuery->where('section_id', $sectionId);
+        }
+
+        $marks = $marksQuery->get();
+
+        // Fallback: If FinalMark is not finalized yet for this term, aggregate from Mark table
+        if ($marks->isEmpty()) {
+            $examIds = Exam::where('semester_id', $semesterId)
+                ->where('session_id', $sessionId)
+                ->pluck('id');
+
+            if ($examIds->isNotEmpty()) {
+                $rawMarks = Mark::with('course')
+                    ->where('student_id', $studentId)
+                    ->where('class_id',    $classId)
+                    ->where('session_id',  $sessionId)
+                    ->whereIn('exam_id',   $examIds)
+                    ->get();
+
+                if ($rawMarks->isNotEmpty()) {
+                    $byCourse = $rawMarks->groupBy('course_id');
+                    $marks = $byCourse->map(function ($cMarks) use ($studentId, $classId, $sectionId, $semesterId, $sessionId) {
+                        $fm = new FinalMark();
+                        $fm->student_id       = $studentId;
+                        $fm->class_id         = $classId;
+                        $fm->section_id       = $sectionId > 0 ? $sectionId : ($cMarks->first()->section_id ?? 0);
+                        $fm->course_id        = $cMarks->first()->course_id;
+                        $fm->course           = $cMarks->first()->course;
+                        $fm->semester_id      = $semesterId;
+                        $fm->session_id       = $sessionId;
+                        $fm->final_marks      = (float) $cMarks->sum('marks');
+                        $fm->calculated_marks = $fm->final_marks;
+                        $fm->note             = 'Recorded Exam Marks';
+                        return $fm;
+                    })->values();
+                }
+            }
+        }
+
+        // Auto-resolve Section if sectionId was 0
+        if (! $section && $marks->isNotEmpty()) {
+            $detectedSecId = $marks->first()->section_id;
+            if ($detectedSecId > 0) {
+                $section = Section::find($detectedSecId);
+            }
+        }
+        if (! $section && $student->academic_info?->section_id) {
+            $section = Section::find($student->academic_info->section_id);
+        }
+
+        $promotion = Promotion::where('student_id', $studentId)
+            ->where('session_id', $sessionId)
+            ->first();
 
         $courses     = [];
         $totalPoints = 0.0;
@@ -106,10 +206,13 @@ class ResultRepository
         $count = count($courses);
         $gpa   = $count > 0 ? round($totalPoints / $count, 2) : 0.0;
 
-        // Rank within class+section for this semester
+        // Rank within class (+section if specified) for this semester
         $rank = $this->getStudentRank($studentId, $semesterId, $classId, $sectionId, $sessionId);
 
-        return compact('student', 'semester', 'courses', 'gpa', 'totalMarks', 'passed', 'failed', 'rank');
+        return compact(
+            'student', 'semester', 'class', 'section', 'promotion',
+            'courses', 'gpa', 'totalMarks', 'passed', 'failed', 'rank'
+        );
     }
 
     // ── Class result sheet & merit list ───────────────────────────────────────
@@ -128,14 +231,53 @@ class ResultRepository
     ): Collection {
         $rules = $this->getGradeRules($sessionId, $semesterId, $classId);
 
-        // Get all final marks for the class+section+semester
-        $allMarks = FinalMark::with(['student', 'course'])
+        // Get all final marks for the class (+ section if specified) + semester
+        $marksQuery = FinalMark::with(['student', 'course'])
             ->where('semester_id', $semesterId)
             ->where('class_id',    $classId)
-            ->where('section_id',  $sectionId)
-            ->where('session_id',  $sessionId)
-            ->get()
-            ->groupBy('student_id');
+            ->where('session_id',  $sessionId);
+
+        if ($sectionId > 0) {
+            $marksQuery->where('section_id', $sectionId);
+        }
+
+        $allMarks = $marksQuery->get()->groupBy('student_id');
+
+        // Fallback: If FinalMark is empty, compute from Mark table
+        if ($allMarks->isEmpty()) {
+            $examIds = Exam::where('semester_id', $semesterId)
+                ->where('session_id', $sessionId)
+                ->pluck('id');
+
+            if ($examIds->isNotEmpty()) {
+                $rawQuery = Mark::with(['student', 'course', 'exam'])
+                    ->where('session_id', $sessionId)
+                    ->where('class_id',    $classId)
+                    ->whereIn('exam_id',   $examIds);
+
+                if ($sectionId > 0) {
+                    $rawQuery->where('section_id', $sectionId);
+                }
+
+                $rawMarks = $rawQuery->get();
+                if ($rawMarks->isNotEmpty()) {
+                    $allMarks = $rawMarks->groupBy('student_id')->map(function ($stuMarks) {
+                        return $stuMarks->groupBy('course_id')->map(function ($cMarks) {
+                            $fm = new FinalMark();
+                            $fm->student_id       = $cMarks->first()->student_id;
+                            $fm->student          = $cMarks->first()->student;
+                            $fm->class_id         = $cMarks->first()->class_id;
+                            $fm->section_id       = $cMarks->first()->section_id;
+                            $fm->course_id        = $cMarks->first()->course_id;
+                            $fm->course           = $cMarks->first()->course;
+                            $fm->final_marks      = (float) $cMarks->sum('marks');
+                            $fm->calculated_marks = $fm->final_marks;
+                            return $fm;
+                        });
+                    });
+                }
+            }
+        }
 
         $results = $allMarks->map(function (Collection $marks) use ($rules) {
             $student     = $marks->first()->student;

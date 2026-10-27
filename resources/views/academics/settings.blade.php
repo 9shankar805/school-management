@@ -970,33 +970,158 @@
          STEP 6: TEACHER ASSIGNMENT
          ═══════════════════════════════════════════════════════════════ --}}
     <div class="step-panel hidden" id="step-6">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            {{-- Left: Assign Teacher Form --}}
-            <div class="lg:col-span-5">
-                <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-6">
-                    <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-                        <span class="w-2 h-5 bg-indigo-600 rounded-full"></span>
-                        <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                            <i class="bi bi-person-badge text-indigo-500"></i> Assign Subject Teacher
-                        </h2>
+        
+        {{-- Header & Mode Switcher Bar --}}
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-5 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                        <span class="w-2.5 h-6 bg-indigo-600 rounded-full inline-block"></span>
+                        <i class="bi bi-person-badge text-indigo-500"></i> Subject Teacher Mapping
+                    </h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Map teachers to classes, sections, and subjects in seconds with rapid matrix and bulk tools.
+                    </p>
+                </div>
+
+                <div class="flex items-center flex-wrap gap-2">
+                    {{-- Mode Switcher Tabs --}}
+                    <div class="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl text-xs font-semibold">
+                        <button type="button" onclick="switchAssignMode('matrix')" id="btn-mode-matrix" class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs transition flex items-center gap-1.5">
+                            <i class="bi bi-grid-3x3-gap"></i> Quick Matrix
+                        </button>
+                        <button type="button" onclick="switchAssignMode('bulk')" id="btn-mode-bulk" class="px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-slate-300 hover:text-indigo-600 transition flex items-center gap-1.5">
+                            <i class="bi bi-check2-all"></i> Bulk Assign
+                        </button>
+                        <button type="button" onclick="switchAssignMode('single')" id="btn-mode-single" class="px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-slate-300 hover:text-indigo-600 transition flex items-center gap-1.5">
+                            <i class="bi bi-plus-circle"></i> Single
+                        </button>
                     </div>
 
-                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
-                        Map teachers to classes, sections, and subjects for the current term.
-                    </p>
+                    {{-- Clone / Copy from Previous Term Button --}}
+                    <button type="button" onclick="openCloneModal()" class="px-3.5 py-2 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300 text-xs font-bold border border-indigo-200/60 dark:border-indigo-800/60 transition flex items-center gap-1.5">
+                        <i class="bi bi-copy"></i> Copy from Another Term
+                    </button>
+                </div>
+            </div>
+        </div>
 
-                    <form action="{{ route('school.teacher.assign') }}" method="POST" class="space-y-4">
-                        @csrf
-                        <input type="hidden" name="session_id" value="{{ $current_school_session_id }}">
+        {{-- MODE 1: CLASS-WISE SUBJECT MATRIX (10x FASTER) --}}
+        <div id="panel-assign-matrix" class="space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-6">
+                {{-- Matrix Controls Bar --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                            1. Select Class <span class="text-rose-500">*</span>
+                        </label>
+                        <select id="matrix_class_id" onchange="loadClassMatrix();" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                            <option value="">— Choose Class —</option>
+                            @isset($school_classes)
+                                @foreach ($school_classes as $cls)
+                                    <option value="{{ $cls->id }}">{{ $cls->class_name }}</option>
+                                @endforeach
+                            @endisset
+                        </select>
+                    </div>
 
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                            2. Semester / Term <span class="text-rose-500">*</span>
+                        </label>
+                        <select id="matrix_semester_id" onchange="loadClassMatrix();" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                            @isset($semesters)
+                                @foreach ($semesters as $sem)
+                                    <option value="{{ $sem->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $sem->semester_name }}</option>
+                                @endforeach
+                            @endisset
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                            3. Section Filter
+                        </label>
+                        <select id="matrix_section_filter" onchange="filterMatrixSections();" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                            <option value="all">All Sections (Side-by-Side)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-end">
+                        <button type="button" id="btn-save-matrix" onclick="saveClassMatrix();" disabled class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-2">
+                            <i class="bi bi-check2-all text-base"></i> <span id="matrix-save-text">Save All Changes</span>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Action Helper Bar (Copy section A to others) --}}
+                <div id="matrix-helpers-bar" class="hidden mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                        <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 text-[11px] font-bold">✓</span>
+                        <span>Assign teachers directly in the grid. Click <strong>Save All Changes</strong> or save individual rows.</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="copyFirstSectionToAll();" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-semibold transition flex items-center gap-1.5">
+                            <i class="bi bi-arrows-angle-expand text-indigo-500"></i> Copy 1st Section to All Sections
+                        </button>
+                        <button type="button" onclick="clearAllMatrixSelections();" class="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-600 font-semibold transition flex items-center gap-1">
+                            <i class="bi bi-x-circle"></i> Clear Grid
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Matrix Table Container --}}
+                <div class="mt-4">
+                    <div id="matrix-loading" class="hidden py-12 text-center">
+                        <div class="inline-block animate-spin w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full mb-2"></div>
+                        <p class="text-xs text-slate-500">Loading subjects and section grid...</p>
+                    </div>
+
+                    <div id="matrix-empty" class="py-12 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                        <i class="bi bi-grid-3x3-gap text-3xl text-slate-300 dark:text-slate-600 mb-2 block"></i>
+                        <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">Select a Class above</h3>
+                        <p class="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">
+                            The subject matrix will immediately display all subjects and sections, allowing you to assign teachers in under 30 seconds.
+                        </p>
+                    </div>
+
+                    <div id="matrix-table-wrapper" class="hidden overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <table class="w-full text-xs text-left" id="matrix-table">
+                            <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300">
+                                <tr id="matrix-thead-row">
+                                    <th class="p-3 w-10 text-center">#</th>
+                                    <th class="p-3 min-w-[200px]">Subject / Course</th>
+                                    {{-- Section columns dynamically injected --}}
+                                </tr>
+                            </thead>
+                            <tbody id="matrix-tbody" class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                                {{-- Rows dynamically injected --}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- MODE 2: BULK ASSIGN BY TEACHER --}}
+        <div id="panel-assign-bulk" class="hidden">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-6">
+                <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <span class="w-2 h-5 bg-indigo-600 rounded-full"></span>
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Assign Teacher to Multiple Sections / Subjects</h3>
+                </div>
+
+                <form id="bulk-assign-form" onsubmit="submitBulkAssign(event);" class="space-y-5">
+                    @csrf
+                    <input type="hidden" name="session_id" value="{{ $current_school_session_id }}">
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                                 Select Teacher <span class="text-rose-500">*</span>
                             </label>
-                            <select name="teacher_id" required
-                                    class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
-                                <option value="" disabled selected>— Select Teacher —</option>
+                            <select name="teacher_id" id="bulk_teacher_id" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                                <option value="" disabled selected>— Choose Teacher —</option>
                                 @isset($teachers)
                                     @foreach ($teachers as $teacher)
                                         <option value="{{ $teacher->id }}">{{ $teacher->first_name }} {{ $teacher->last_name }} ({{ $teacher->email }})</option>
@@ -1006,27 +1131,24 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                                 Semester / Term <span class="text-rose-500">*</span>
                             </label>
-                            <select name="semester_id" required
-                                    class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
-                                <option value="" disabled selected>— Select Semester —</option>
+                            <select name="semester_id" id="bulk_semester_id" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20">
                                 @isset($semesters)
                                     @foreach ($semesters as $sem)
-                                        <option value="{{ $sem->id }}">{{ $sem->semester_name }}</option>
+                                        <option value="{{ $sem->id }}" {{ $loop->first ? 'selected' : '' }}>{{ $sem->semester_name }}</option>
                                     @endforeach
                                 @endisset
                             </select>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                Class <span class="text-rose-500">*</span>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                                Target Class <span class="text-rose-500">*</span>
                             </label>
-                            <select onchange="getSectionsAndCourses(this);" name="class_id" required
-                                    class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
-                                <option value="" disabled selected>— Select Class —</option>
+                            <select name="class_id" id="bulk_class_id" onchange="loadBulkOptions(this.value);" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                                <option value="" disabled selected>— Choose Class —</option>
                                 @isset($school_classes)
                                     @foreach ($school_classes as $cls)
                                         <option value="{{ $cls->id }}">{{ $cls->class_name }}</option>
@@ -1034,85 +1156,263 @@
                                 @endisset
                             </select>
                         </div>
+                    </div>
 
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                Section <span class="text-rose-500">*</span>
-                            </label>
-                            <select id="section-select" name="section_id" required
-                                    class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
-                                <option value="" disabled selected>Select class first</option>
-                            </select>
+                    {{-- Multi-Select Sections & Subjects --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 pt-3 border-t border-slate-100 dark:border-slate-800">
+                        {{-- Sections Checkboxes --}}
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                    Apply to Section(s) <span class="text-rose-500">*</span>
+                                </span>
+                                <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-indigo-600 cursor-pointer">
+                                    <input type="checkbox" id="bulk-select-all-sections" onchange="toggleSelectAll('bulk_section', this.checked)"> Select All
+                                </label>
+                            </div>
+                            <div id="bulk-sections-list" class="space-y-2 max-h-48 overflow-y-auto">
+                                <p class="text-[11px] text-slate-400">Select a class first to load sections.</p>
+                            </div>
                         </div>
 
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                Subject / Course <span class="text-rose-500">*</span>
-                            </label>
-                            <select id="course-select" name="course_id" required
-                                    class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
-                                <option value="" disabled selected>Select class first</option>
-                            </select>
+                        {{-- Subjects Checkboxes --}}
+                        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                    Assign Subject(s) <span class="text-rose-500">*</span>
+                                </span>
+                                <label class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-indigo-600 cursor-pointer">
+                                    <input type="checkbox" id="bulk-select-all-courses" onchange="toggleSelectAll('bulk_course', this.checked)"> Select All
+                                </label>
+                            </div>
+                            <div id="bulk-courses-list" class="space-y-2 max-h-48 overflow-y-auto">
+                                <p class="text-[11px] text-slate-400">Select a class first to load subjects.</p>
+                            </div>
                         </div>
+                    </div>
 
-                        <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-md shadow-indigo-600/25 transition flex items-center justify-center gap-2 cursor-pointer">
-                            <i class="bi bi-check2"></i> Assign Teacher
+                    <div class="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <label class="inline-flex items-center gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
+                            <input type="checkbox" name="is_class_teacher" value="1" class="rounded text-indigo-600">
+                            Also designate this teacher as Class Teacher for selected section(s)
+                        </label>
+                        <button type="submit" id="btn-submit-bulk" class="py-2.5 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-2">
+                            <i class="bi bi-check2-all text-base"></i> Assign Selected Combinations
                         </button>
-                    </form>
-                </div>
-            </div>
-
-            {{-- Right: Assigned Teachers List Table --}}
-            <div class="lg:col-span-7">
-                <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-6 h-full flex flex-col">
-                    <div class="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-                        <div class="flex items-center gap-2">
-                            <span class="w-2 h-5 bg-pink-600 rounded-full"></span>
-                            <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Current Teacher Assignments</h2>
-                        </div>
-                        <span class="text-xs font-semibold text-slate-400">{{ count($assigned_teachers ?? []) }} Assignment(s)</span>
                     </div>
-
-                    <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800 flex-1">
-                        <table class="w-full text-xs text-left">
-                            <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300">
-                                <tr>
-                                    <th class="p-3 font-semibold w-12 text-center">#</th>
-                                    <th class="p-3 font-semibold">Teacher</th>
-                                    <th class="p-3 font-semibold">Subject</th>
-                                    <th class="p-3 font-semibold">Class / Section</th>
-                                    <th class="p-3 font-semibold">Term</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
-                                @forelse($assigned_teachers ?? [] as $i => $at)
-                                <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
-                                    <td class="p-3 text-center text-slate-400 font-mono">{{ $i + 1 }}</td>
-                                    <td class="p-3 font-bold text-slate-800 dark:text-slate-200">
-                                        <i class="bi bi-person-circle text-indigo-500 me-1"></i> {{ $at->teacher->first_name ?? '' }} {{ $at->teacher->last_name ?? '' }}
-                                    </td>
-                                    <td class="p-3 font-semibold text-indigo-600 dark:text-indigo-400">
-                                        {{ $at->course->course_name ?? 'N/A' }}
-                                    </td>
-                                    <td class="p-3 text-slate-700 dark:text-slate-300">
-                                        {{ $at->schoolClass->class_name ?? '' }} &bull; {{ $at->section->section_name ?? '' }}
-                                    </td>
-                                    <td class="p-3 text-slate-500 text-[11px]">
-                                        {{ $at->semester->semester_name ?? 'All' }}
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="5" class="p-6 text-center text-slate-400">No teachers assigned yet.</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                </form>
             </div>
-
         </div>
+
+        {{-- MODE 3: CLASSIC SINGLE FORM --}}
+        <div id="panel-assign-single" class="hidden">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-6 max-w-xl">
+                <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <span class="w-2 h-5 bg-indigo-600 rounded-full"></span>
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Single Teacher Assignment</h3>
+                </div>
+
+                <form action="{{ route('school.teacher.assign') }}" method="POST" class="space-y-4">
+                    @csrf
+                    <input type="hidden" name="session_id" value="{{ $current_school_session_id }}">
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Select Teacher <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="teacher_id" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                            <option value="" disabled selected>— Select Teacher —</option>
+                            @isset($teachers)
+                                @foreach ($teachers as $teacher)
+                                    <option value="{{ $teacher->id }}">{{ $teacher->first_name }} {{ $teacher->last_name }} ({{ $teacher->email }})</option>
+                                @endforeach
+                            @endisset
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Semester / Term <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="semester_id" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                            <option value="" disabled selected>— Select Semester —</option>
+                            @isset($semesters)
+                                @foreach ($semesters as $sem)
+                                    <option value="{{ $sem->id }}">{{ $sem->semester_name }}</option>
+                                @endforeach
+                            @endisset
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Class <span class="text-rose-500">*</span>
+                        </label>
+                        <select onchange="getSectionsAndCourses(this);" name="class_id" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                            <option value="" disabled selected>— Select Class —</option>
+                            @isset($school_classes)
+                                @foreach ($school_classes as $cls)
+                                    <option value="{{ $cls->id }}">{{ $cls->class_name }}</option>
+                                @endforeach
+                            @endisset
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Section <span class="text-rose-500">*</span>
+                        </label>
+                        <select id="section-select" name="section_id" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                            <option value="" disabled selected>Select class first</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Subject / Course <span class="text-rose-500">*</span>
+                        </label>
+                        <select id="course-select" name="course_id" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                            <option value="" disabled selected>Select class first</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-md shadow-indigo-600/25 transition flex items-center justify-center gap-2">
+                        <i class="bi bi-check2"></i> Assign Teacher
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {{-- Current Teacher Assignments Table (Below all modes) --}}
+        <div class="mt-8">
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-5 bg-pink-600 rounded-full"></span>
+                        <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">All Current Teacher Assignments</h3>
+                        <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">{{ count($assigned_teachers ?? []) }} total</span>
+                    </div>
+
+                    <div class="w-full sm:w-64">
+                        <input type="text" id="assignment-search" onkeyup="filterAssignmentsTable()" placeholder="Search teacher, class, subject..." class="w-full text-xs px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <table class="w-full text-xs text-left" id="assigned-teachers-table">
+                        <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300">
+                            <tr>
+                                <th class="p-3 font-semibold w-12 text-center">#</th>
+                                <th class="p-3 font-semibold">Teacher</th>
+                                <th class="p-3 font-semibold">Subject</th>
+                                <th class="p-3 font-semibold">Class / Section</th>
+                                <th class="p-3 font-semibold">Term</th>
+                                <th class="p-3 font-semibold text-center w-20">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300" id="assigned-teachers-tbody">
+                            @forelse($assigned_teachers ?? [] as $i => $at)
+                            <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition assignment-row">
+                                <td class="p-3 text-center text-slate-400 font-mono">{{ $i + 1 }}</td>
+                                <td class="p-3 font-bold text-slate-800 dark:text-slate-200 search-teacher">
+                                    <div class="flex items-center gap-1.5">
+                                        <i class="bi bi-person-circle text-indigo-500"></i>
+                                        <span>{{ $at->teacher->first_name ?? '' }} {{ $at->teacher->last_name ?? '' }}</span>
+                                        @if($at->is_class_teacher)
+                                            <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300" title="Class Teacher">CT</span>
+                                        @endif
+                                    </div>
+                                </td>
+                                <td class="p-3 font-semibold text-indigo-600 dark:text-indigo-400 search-subject">
+                                    {{ $at->course->course_name ?? 'N/A' }}
+                                </td>
+                                <td class="p-3 text-slate-700 dark:text-slate-300 search-class">
+                                    {{ $at->schoolClass->class_name ?? '' }} &bull; {{ $at->section->section_name ?? '' }}
+                                </td>
+                                <td class="p-3 text-slate-500 text-[11px] search-term">
+                                    {{ $at->semester->semester_name ?? 'All' }}
+                                </td>
+                                <td class="p-3 text-center">
+                                    <form action="{{ route('school.teacher.assign.destroy', $at->id) }}" method="POST" onsubmit="return confirm('Remove assignment of {{ $at->teacher->first_name ?? 'Teacher' }} for {{ $at->course->course_name ?? 'this subject' }}?');" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition" title="Delete Assignment">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="p-6 text-center text-slate-400">No teachers assigned yet.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- Clone Term Modal --}}
+    <div id="clone-term-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800 shadow-2xl">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div class="flex items-center gap-2">
+                    <span class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
+                        <i class="bi bi-copy"></i>
+                    </span>
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Copy Term Assignments</h3>
+                </div>
+                <button type="button" onclick="closeCloneModal()" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            </div>
+
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                Instantly copy all subject-teacher mappings from an existing term to a new term. Saves hours of re-entry!
+            </p>
+
+            <form action="{{ route('school.teacher.clone.assignments') }}" method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Copy From (Source Term) <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="from_semester_id" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                        <option value="" disabled selected>— Select Source Term —</option>
+                        @isset($semesters)
+                            @foreach ($semesters as $sem)
+                                <option value="{{ $sem->id }}">{{ $sem->semester_name }}</option>
+                            @endforeach
+                        @endisset
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                        Copy To (Target Term) <span class="text-rose-500">*</span>
+                    </label>
+                    <select name="to_semester_id" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20">
+                        <option value="" disabled selected>— Select Target Term —</option>
+                        @isset($semesters)
+                            @foreach ($semesters as $sem)
+                                <option value="{{ $sem->id }}">{{ $sem->semester_name }}</option>
+                            @endforeach
+                        @endisset
+                    </select>
+                </div>
+
+                <div class="pt-2 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeCloneModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20">
+                        <i class="bi bi-copy me-1"></i> Copy All Mappings
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
     </div>
 
     {{-- ═══════════════════════════════════════════════════════════════
@@ -1665,8 +1965,525 @@ function getSectionsAndCourses(obj) {
         });
 }
 
+// ═══════════════════════════════════════════════════════════════
+// Step 6: Rapid Subject-Teacher Mapping JavaScript
+// ═══════════════════════════════════════════════════════════════
+const ALL_TEACHERS = @json(($teachers ?? collect())->map(function($t) {
+    return [
+        'id' => $t->id,
+        'name' => trim(($t->first_name ?? '') . ' ' . ($t->last_name ?? '')),
+        'email' => $t->email ?? ''
+    ];
+}));
+
+const MATRIX_DATA_URL     = "{{ route('school.teacher.matrix.data') }}";
+const MATRIX_SAVE_URL     = "{{ route('school.teacher.assign.matrix') }}";
+const BULK_ASSIGN_URL     = "{{ route('school.teacher.assign.bulk') }}";
+const SECTIONS_COURSES_URL = "{{ route('get.sections.courses.by.classId') }}";
+const CURRENT_SESSION_ID  = "{{ $current_school_session_id }}";
+const CSRF_TOKEN          = "{{ csrf_token() }}";
+
+let currentMatrixData = null;
+
+function switchAssignMode(mode) {
+    const modes = ['matrix', 'bulk', 'single'];
+    modes.forEach(m => {
+        const panel = document.getElementById('panel-assign-' + m);
+        const btn = document.getElementById('btn-mode-' + m);
+        if (panel) {
+            if (m === mode) {
+                panel.classList.remove('hidden');
+            } else {
+                panel.classList.add('hidden');
+            }
+        }
+        if (btn) {
+            if (m === mode) {
+                btn.className = 'px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs transition flex items-center gap-1.5 font-bold';
+            } else {
+                btn.className = 'px-3.5 py-1.5 rounded-xl text-slate-600 dark:text-slate-300 hover:text-indigo-600 transition flex items-center gap-1.5 font-normal';
+            }
+        }
+    });
+}
+
+function openCloneModal() {
+    const modal = document.getElementById('clone-term-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeCloneModal() {
+    const modal = document.getElementById('clone-term-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function loadClassMatrix() {
+    const classId = document.getElementById('matrix_class_id')?.value;
+    const semesterId = document.getElementById('matrix_semester_id')?.value;
+    const emptyState = document.getElementById('matrix-empty');
+    const loadingState = document.getElementById('matrix-loading');
+    const tableWrapper = document.getElementById('matrix-table-wrapper');
+    const helpersBar = document.getElementById('matrix-helpers-bar');
+    const saveBtn = document.getElementById('btn-save-matrix');
+
+    if (!classId) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        if (loadingState) loadingState.classList.add('hidden');
+        if (tableWrapper) tableWrapper.classList.add('hidden');
+        if (helpersBar) helpersBar.classList.add('hidden');
+        if (saveBtn) saveBtn.disabled = true;
+        currentMatrixData = null;
+        return;
+    }
+
+    if (emptyState) emptyState.classList.add('hidden');
+    if (loadingState) loadingState.classList.remove('hidden');
+    if (tableWrapper) tableWrapper.classList.add('hidden');
+    if (helpersBar) helpersBar.classList.add('hidden');
+    if (saveBtn) saveBtn.disabled = true;
+
+    const url = `${MATRIX_DATA_URL}?class_id=${encodeURIComponent(classId)}&semester_id=${encodeURIComponent(semesterId || '')}`;
+
+    fetch(url, {
+        headers: { 'Accept': 'application/json' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        currentMatrixData = data;
+        renderMatrix(data);
+    })
+    .catch(err => {
+        console.error('Error fetching matrix data:', err);
+        if (loadingState) loadingState.classList.add('hidden');
+        if (emptyState) {
+            emptyState.classList.remove('hidden');
+            emptyState.innerHTML = '<i class="bi bi-exclamation-triangle text-amber-500 text-3xl mb-2 block"></i><h3 class="text-xs font-bold text-rose-600">Failed to load subjects and sections</h3>';
+        }
+    });
+}
+
+function renderMatrix(data) {
+    const loadingState = document.getElementById('matrix-loading');
+    const tableWrapper = document.getElementById('matrix-table-wrapper');
+    const helpersBar = document.getElementById('matrix-helpers-bar');
+    const saveBtn = document.getElementById('btn-save-matrix');
+    const theadRow = document.getElementById('matrix-thead-row');
+    const tbody = document.getElementById('matrix-tbody');
+    const sectionFilter = document.getElementById('matrix_section_filter');
+
+    if (loadingState) loadingState.classList.add('hidden');
+
+    if (!data.sections || data.sections.length === 0 || !data.courses || data.courses.length === 0) {
+        if (tableWrapper) tableWrapper.classList.add('hidden');
+        if (helpersBar) helpersBar.classList.add('hidden');
+        const emptyState = document.getElementById('matrix-empty');
+        if (emptyState) {
+            emptyState.classList.remove('hidden');
+            emptyState.innerHTML = `
+                <i class="bi bi-info-circle text-indigo-400 text-3xl mb-2 block"></i>
+                <h3 class="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    ${!data.sections || data.sections.length === 0 ? 'No sections found for this class' : 'No subjects found for this class'}
+                </h3>
+                <p class="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">
+                    Please ensure you have configured sections and subjects for this class in previous steps.
+                </p>`;
+        }
+        return;
+    }
+
+    // Populate Section Filter Dropdown
+    if (sectionFilter) {
+        sectionFilter.innerHTML = '<option value="all">All Sections (Side-by-Side)</option>';
+        data.sections.forEach(sec => {
+            const opt = document.createElement('option');
+            opt.value = sec.id;
+            opt.textContent = `Section: ${sec.section_name}`;
+            sectionFilter.appendChild(opt);
+        });
+    }
+
+    // Construct thead
+    theadRow.innerHTML = `
+        <th class="p-3 w-10 text-center font-bold">#</th>
+        <th class="p-3 min-w-[200px] font-bold">Subject / Course</th>
+    `;
+    data.sections.forEach(sec => {
+        const th = document.createElement('th');
+        th.className = `p-3 min-w-[210px] text-left font-bold border-l border-slate-100 dark:border-slate-800 matrix-sec-col matrix-sec-${sec.id}`;
+        th.dataset.secId = sec.id;
+        th.innerHTML = `
+            <div class="flex items-center justify-between">
+                <span>Section ${escapeHtml(sec.section_name)}</span>
+                <span class="text-[10px] text-slate-400 font-normal">Col</span>
+            </div>
+        `;
+        theadRow.appendChild(th);
+    });
+
+    // Teachers list: use data.teachers or fallback to ALL_TEACHERS
+    const teachersList = (data.teachers && data.teachers.length > 0) ? data.teachers : ALL_TEACHERS;
+
+    // Fast lookup for current assignments: key = `${course_id}_${section_id}`
+    const assignmentMap = {};
+    if (data.assignments && Array.isArray(data.assignments)) {
+        data.assignments.forEach(a => {
+            assignmentMap[`${a.course_id}_${a.section_id}`] = a.teacher_id;
+        });
+    }
+
+    // Construct tbody
+    tbody.innerHTML = '';
+    data.courses.forEach((course, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition course-row';
+        tr.dataset.courseId = course.id;
+
+        let rowHtml = `
+            <td class="p-3 text-center text-slate-400 font-mono text-[11px]">${idx + 1}</td>
+            <td class="p-3 font-semibold text-slate-800 dark:text-slate-100">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                    <span>${escapeHtml(course.course_name)}</span>
+                    ${course.course_code ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 dark:bg-slate-800 text-slate-500">${escapeHtml(course.course_code)}</span>` : ''}
+                </div>
+            </td>
+        `;
+
+        data.sections.forEach(sec => {
+            const assignedTeacherId = assignmentMap[`${course.id}_${sec.id}`] || '';
+            let optionsHtml = '<option value="">— Unassigned —</option>';
+            teachersList.forEach(t => {
+                const isSelected = String(t.id) === String(assignedTeacherId);
+                const tName = t.name || `${t.first_name || ''} ${t.last_name || ''}`.trim();
+                optionsHtml += `<option value="${t.id}" ${isSelected ? 'selected' : ''}>${escapeHtml(tName)}</option>`;
+            });
+
+            rowHtml += `
+                <td class="p-2 border-l border-slate-100 dark:border-slate-800 matrix-sec-col matrix-sec-${sec.id}" data-sec-id="${sec.id}">
+                    <select class="matrix-teacher-select w-full text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                            data-course-id="${course.id}"
+                            data-section-id="${sec.id}"
+                            onchange="markMatrixCellChanged(this);">
+                        ${optionsHtml}
+                    </select>
+                </td>
+            `;
+        });
+
+        tr.innerHTML = rowHtml;
+        tbody.appendChild(tr);
+    });
+
+    if (tableWrapper) tableWrapper.classList.remove('hidden');
+    if (helpersBar) helpersBar.classList.remove('hidden');
+    if (saveBtn) saveBtn.disabled = false;
+}
+
+function markMatrixCellChanged(selectEl) {
+    if (selectEl.value) {
+        selectEl.classList.add('border-indigo-500', 'bg-indigo-50/30', 'dark:bg-indigo-950/20');
+    } else {
+        selectEl.classList.remove('border-indigo-500', 'bg-indigo-50/30', 'dark:bg-indigo-950/20');
+    }
+}
+
+function filterMatrixSections() {
+    const filter = document.getElementById('matrix_section_filter')?.value;
+    const allCols = document.querySelectorAll('.matrix-sec-col');
+
+    if (!filter || filter === 'all') {
+        allCols.forEach(col => col.classList.remove('hidden'));
+    } else {
+        allCols.forEach(col => {
+            if (col.dataset.secId === filter) {
+                col.classList.remove('hidden');
+            } else {
+                col.classList.add('hidden');
+            }
+        });
+    }
+}
+
+function copyFirstSectionToAll() {
+    const rows = document.querySelectorAll('#matrix-tbody tr.course-row');
+    let copyCount = 0;
+    rows.forEach(tr => {
+        const selects = tr.querySelectorAll('.matrix-teacher-select');
+        if (selects.length > 1) {
+            const firstVal = selects[0].value;
+            for (let i = 1; i < selects.length; i++) {
+                if (selects[i].value !== firstVal) {
+                    selects[i].value = firstVal;
+                    markMatrixCellChanged(selects[i]);
+                    copyCount++;
+                }
+            }
+        }
+    });
+
+    if (copyCount > 0) {
+        showToast(`Copied Section 1 teacher to other sections across ${copyCount} assignments! Click Save All Changes.`, 'info');
+    } else {
+        showToast('All sections already match Section 1.', 'info');
+    }
+}
+
+function clearAllMatrixSelections() {
+    if (!confirm('Clear all teacher selections in this matrix grid?')) return;
+    document.querySelectorAll('.matrix-teacher-select').forEach(sel => {
+        sel.value = '';
+        markMatrixCellChanged(sel);
+    });
+}
+
+function saveClassMatrix() {
+    const classId = document.getElementById('matrix_class_id')?.value;
+    const semesterId = document.getElementById('matrix_semester_id')?.value;
+    const saveBtn = document.getElementById('btn-save-matrix');
+    const saveText = document.getElementById('matrix-save-text');
+
+    if (!classId) return;
+
+    const selects = document.querySelectorAll('.matrix-teacher-select');
+    const assignments = [];
+    selects.forEach(s => {
+        assignments.push({
+            course_id: s.dataset.courseId,
+            section_id: s.dataset.sectionId,
+            teacher_id: s.value ? s.value : null
+        });
+    });
+
+    if (saveBtn) {
+        saveBtn.disabled = true;
+        if (saveText) saveText.innerHTML = '<span class="inline-block animate-spin mr-1">⏳</span> Saving...';
+    }
+
+    fetch(MATRIX_SAVE_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': CSRF_TOKEN
+        },
+        body: JSON.stringify({
+            class_id: classId,
+            semester_id: semesterId,
+            session_id: CURRENT_SESSION_ID,
+            assignments: assignments
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (saveBtn) saveBtn.disabled = false;
+        if (saveText) saveText.textContent = 'Save All Changes';
+
+        if (data.status) {
+            showToast('✓ Successfully updated subject teacher assignments!', 'success');
+            setTimeout(() => {
+                const url = new URL(window.location);
+                url.searchParams.set('step', '6');
+                window.location.href = url.toString();
+            }, 800);
+        } else {
+            showToast(data.message || 'Failed to save assignments', 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Save matrix error:', err);
+        if (saveBtn) saveBtn.disabled = false;
+        if (saveText) saveText.textContent = 'Save All Changes';
+        showToast('Network error while saving matrix', 'error');
+    });
+}
+
+function loadBulkOptions(classId) {
+    const secList = document.getElementById('bulk-sections-list');
+    const crsList = document.getElementById('bulk-courses-list');
+    if (!classId || !secList || !crsList) return;
+
+    secList.innerHTML = '<p class="text-[11px] text-slate-400">Loading sections...</p>';
+    crsList.innerHTML = '<p class="text-[11px] text-slate-400">Loading subjects...</p>';
+
+    fetch(`${SECTIONS_COURSES_URL}?class_id=${encodeURIComponent(classId)}`)
+        .then(res => res.json())
+        .then(data => {
+            // Sections
+            if (data.sections && data.sections.length > 0) {
+                secList.innerHTML = '';
+                data.sections.forEach(sec => {
+                    const label = document.createElement('label');
+                    label.className = 'flex items-center gap-2 p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700/60 cursor-pointer text-xs text-slate-700 dark:text-slate-300 transition';
+                    label.innerHTML = `
+                        <input type="checkbox" name="bulk_section[]" value="${sec.id}" class="rounded text-indigo-600 focus:ring-indigo-500">
+                        <span class="font-semibold">${escapeHtml(sec.section_name)}</span>
+                    `;
+                    secList.appendChild(label);
+                });
+            } else {
+                secList.innerHTML = '<p class="text-[11px] text-slate-400">No sections found for this class.</p>';
+            }
+
+            // Courses
+            if (data.courses && data.courses.length > 0) {
+                crsList.innerHTML = '';
+                data.courses.forEach(crs => {
+                    const label = document.createElement('label');
+                    label.className = 'flex items-center gap-2 p-2 rounded-xl hover:bg-white dark:hover:bg-slate-700/60 cursor-pointer text-xs text-slate-700 dark:text-slate-300 transition';
+                    label.innerHTML = `
+                        <input type="checkbox" name="bulk_course[]" value="${crs.id}" class="rounded text-indigo-600 focus:ring-indigo-500">
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-semibold">${escapeHtml(crs.course_name)}</span>
+                            ${crs.course_code ? `<span class="text-[10px] text-slate-400 font-mono">(${escapeHtml(crs.course_code)})</span>` : ''}
+                        </div>
+                    `;
+                    crsList.appendChild(label);
+                });
+            } else {
+                crsList.innerHTML = '<p class="text-[11px] text-slate-400">No subjects found for this class.</p>';
+            }
+        })
+        .catch(err => {
+            console.error('Error loading bulk options:', err);
+            secList.innerHTML = '<p class="text-[11px] text-rose-500">Error loading sections.</p>';
+            crsList.innerHTML = '<p class="text-[11px] text-rose-500">Error loading subjects.</p>';
+        });
+}
+
+function toggleSelectAll(prefix, checked) {
+    document.querySelectorAll(`input[name="${prefix}[]"]`).forEach(cb => {
+        cb.checked = checked;
+    });
+}
+
+function submitBulkAssign(event) {
+    event.preventDefault();
+    const form = event.target;
+    const teacherId = document.getElementById('bulk_teacher_id')?.value;
+    const classId = document.getElementById('bulk_class_id')?.value;
+    const checkedSecs = form.querySelectorAll('input[name="bulk_section[]"]:checked');
+    const checkedCourses = form.querySelectorAll('input[name="bulk_course[]"]:checked');
+
+    if (!teacherId) {
+        showToast('Please select a teacher', 'error');
+        return;
+    }
+    if (!classId) {
+        showToast('Please select a class', 'error');
+        return;
+    }
+    if (checkedSecs.length === 0) {
+        showToast('Please check at least one section', 'error');
+        return;
+    }
+    if (checkedCourses.length === 0) {
+        showToast('Please check at least one subject', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('btn-submit-bulk');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="inline-block animate-spin mr-1">⏳</span> Assigning...';
+    }
+
+    const formData = new FormData(form);
+
+    fetch(BULK_ASSIGN_URL, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': CSRF_TOKEN
+        },
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check2-all text-base"></i> Assign Selected Combinations';
+        }
+        if (data.status) {
+            showToast(`✓ Assigned ${data.assigned_count || ''} combinations successfully!`, 'success');
+            setTimeout(() => {
+                const url = new URL(window.location);
+                url.searchParams.set('step', '6');
+                window.location.href = url.toString();
+            }, 800);
+        } else {
+            showToast(data.message || 'Bulk assignment failed', 'error');
+        }
+    })
+    .catch(err => {
+        console.error('Bulk assign error:', err);
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check2-all text-base"></i> Assign Selected Combinations';
+        }
+        showToast('Network error while assigning in bulk', 'error');
+    });
+}
+
+function filterAssignmentsTable() {
+    const q = (document.getElementById('assignment-search')?.value || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('#assigned-teachers-tbody .assignment-row');
+
+    rows.forEach(r => {
+        if (!q) {
+            r.style.display = '';
+            return;
+        }
+        const teacher = r.querySelector('.search-teacher')?.textContent.toLowerCase() || '';
+        const subject = r.querySelector('.search-subject')?.textContent.toLowerCase() || '';
+        const cls = r.querySelector('.search-class')?.textContent.toLowerCase() || '';
+        const term = r.querySelector('.search-term')?.textContent.toLowerCase() || '';
+
+        if (teacher.includes(q) || subject.includes(q) || cls.includes(q) || term.includes(q)) {
+            r.style.display = '';
+        } else {
+            r.style.display = 'none';
+        }
+    });
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function showToast(message, type = 'info') {
+    let toast = document.getElementById('ag-global-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'ag-global-toast';
+        toast.className = 'fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white transition-all transform duration-300 translate-y-12 opacity-0 pointer-events-none flex items-center gap-2';
+        document.body.appendChild(toast);
+    }
+
+    if (type === 'success') {
+        toast.className = 'fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white transition-all transform duration-300 bg-emerald-600 flex items-center gap-2 translate-y-0 opacity-100 pointer-events-auto';
+    } else if (type === 'error') {
+        toast.className = 'fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white transition-all transform duration-300 bg-rose-600 flex items-center gap-2 translate-y-0 opacity-100 pointer-events-auto';
+    } else {
+        toast.className = 'fixed bottom-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-xl text-xs font-bold text-white transition-all transform duration-300 bg-indigo-600 flex items-center gap-2 translate-y-0 opacity-100 pointer-events-auto';
+    }
+
+    toast.textContent = message;
+
+    setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+        toast.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
+    }, 3500);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     goStep({{ $activeStep }});
 });
 </script>
 @endsection
+

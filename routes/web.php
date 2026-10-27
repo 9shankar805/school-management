@@ -165,6 +165,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('teacher/create', [UserController::class, 'storeTeacher'])->name('teacher.create');
         Route::post('teacher/update', [UserController::class, 'updateTeacher'])->name('teacher.update');
         Route::post('teacher/assign', [AssignedTeacherController::class, 'store'])->name('teacher.assign');
+        Route::get('teacher/matrix-data', [AssignedTeacherController::class, 'getMatrixData'])->name('teacher.matrix.data');
+        Route::post('teacher/assign-matrix', [AssignedTeacherController::class, 'saveMatrix'])->name('teacher.assign.matrix');
+        Route::post('teacher/assign-bulk', [AssignedTeacherController::class, 'storeBulk'])->name('teacher.assign.bulk');
+        Route::post('teacher/clone-assignments', [AssignedTeacherController::class, 'cloneSemesterAssignments'])->name('teacher.clone.assignments');
+        Route::delete('teacher/assigned/{id}', [AssignedTeacherController::class, 'destroy'])->name('teacher.assign.destroy');
         Route::post('teacher/toggle-class-teacher/{id}', [AssignedTeacherController::class, 'toggleClassTeacher'])->name('teacher.toggle-class-teacher');
         Route::post('classes/{classId}/sections/{sectionId}/class-teacher', [AssignedTeacherController::class, 'assignSectionClassTeacher'])->name('class.section.class-teacher.assign');
 
@@ -1057,6 +1062,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/merit',                              [ResultSheetController::class, 'meritList'])->name('merit');
         Route::get('/analytics',                          [ResultSheetController::class, 'analytics'])->name('analytics');
         Route::get('/class/pdf',                          [ResultSheetController::class, 'classResultPdf'])->name('class.pdf');
+        Route::get('/class/report-cards',                 [ResultSheetController::class, 'classReportCardsPdf'])->name('class.report-cards');
         Route::get('/class/excel',                        [ResultSheetController::class, 'classResultExcel'])->name('class.excel');
         Route::get('/student/{studentId}',                [ResultSheetController::class, 'studentResult'])->name('student');
         Route::get('/student/{studentId}/report-card',    [ResultSheetController::class, 'reportCard'])->name('report-card');

@@ -106,23 +106,25 @@ class ResultSheetController extends Controller
     {
         $request->validate([
             'class_id'    => 'required|integer',
-            'section_id'  => 'required|integer',
+            'section_id'  => 'nullable|integer',
             'semester_id' => 'required|integer',
         ]);
 
         $sessionId  = $this->getSchoolCurrentSession();
         $classId    = (int) $request->class_id;
-        $sectionId  = (int) $request->section_id;
+        $sectionId  = (int) $request->query('section_id', 0);
         $semesterId = (int) $request->semester_id;
 
         $repo      = new ResultRepository();
         $results   = $repo->getClassResults($semesterId, $classId, $sectionId, $sessionId);
         $class     = SchoolClass::find($classId);
-        $section   = Section::find($sectionId);
+        $section   = $sectionId > 0 ? Section::find($sectionId) : null;
         $semester  = Semester::find($semesterId);
 
-        // Course names for the table header (from first student's courses)
-        $courses   = collect($results->first()['courses'] ?? [])->pluck('course');
+        // Course names for the table header (from all students' courses)
+        $courses   = $results->flatMap(function($r) {
+            return collect($r['courses'] ?? [])->pluck('course');
+        })->unique('id')->filter()->values();
 
         return view('results.class', compact(
             'results', 'class', 'section', 'semester',
@@ -138,9 +140,9 @@ class ResultSheetController extends Controller
     public function studentResult(Request $request, int $studentId)
     {
         $request->validate([
-            'class_id'    => 'required|integer',
-            'section_id'  => 'required|integer',
-            'semester_id' => 'required|integer',
+            'class_id'    => 'nullable|integer',
+            'section_id'  => 'nullable|integer',
+            'semester_id' => 'nullable|integer',
         ]);
 
         // Students can only view their own results
@@ -148,10 +150,24 @@ class ResultSheetController extends Controller
             abort(403);
         }
 
-        $sessionId  = $this->getSchoolCurrentSession();
-        $classId    = (int) $request->class_id;
-        $sectionId  = (int) $request->section_id;
-        $semesterId = (int) $request->semester_id;
+        $sessionId   = $this->getSchoolCurrentSession();
+        $studentUser = \App\Models\User::findOrFail($studentId);
+
+        $classId     = (int) $request->query('class_id', 0);
+        $sectionId   = (int) $request->query('section_id', 0);
+        $semesterId  = (int) $request->query('semester_id', 0);
+
+        if (!$semesterId) {
+            $semesters  = $this->semesterRepository->getAll($sessionId);
+            $semesterId = $semesters->first()?->id ?? 0;
+        }
+
+        if (!$classId) {
+            $promotionRepo = new \App\Repositories\PromotionRepository();
+            $classInfo     = $promotionRepo->getStudentCurrentClass($studentId, $sessionId);
+            $classId       = $classInfo?->class_id ?? $studentUser->academic_info?->class_id ?? 0;
+            $sectionId     = $sectionId ?: ($classInfo?->section_id ?? $studentUser->academic_info?->section_id ?? 0);
+        }
 
         $repo   = new ResultRepository();
         $result = $repo->getStudentResult($studentId, $semesterId, $classId, $sectionId, $sessionId);
@@ -159,7 +175,7 @@ class ResultSheetController extends Controller
         return view('results.student', compact('result', 'sessionId'));
     }
 
-    // ── Merit list ────────────────────────────────────────────────────────────
+    // ── Merit list ────────────────────────────────────────────────────
 
     /**
      * GET /results/merit
@@ -168,19 +184,19 @@ class ResultSheetController extends Controller
     {
         $request->validate([
             'class_id'    => 'required|integer',
-            'section_id'  => 'required|integer',
+            'section_id'  => 'nullable|integer',
             'semester_id' => 'required|integer',
         ]);
 
         $sessionId  = $this->getSchoolCurrentSession();
         $classId    = (int) $request->class_id;
-        $sectionId  = (int) $request->section_id;
+        $sectionId  = (int) $request->query('section_id', 0);
         $semesterId = (int) $request->semester_id;
 
         $repo     = new ResultRepository();
         $results  = $repo->getClassResults($semesterId, $classId, $sectionId, $sessionId);
         $class    = SchoolClass::find($classId);
-        $section  = Section::find($sectionId);
+        $section  = $sectionId > 0 ? Section::find($sectionId) : null;
         $semester = Semester::find($semesterId);
 
         return view('results.merit-list', compact(
@@ -198,13 +214,13 @@ class ResultSheetController extends Controller
     {
         $request->validate([
             'class_id'    => 'required|integer',
-            'section_id'  => 'required|integer',
+            'section_id'  => 'nullable|integer',
             'semester_id' => 'required|integer',
         ]);
 
         $sessionId  = $this->getSchoolCurrentSession();
         $classId    = (int) $request->class_id;
-        $sectionId  = (int) $request->section_id;
+        $sectionId  = (int) $request->query('section_id', 0);
         $semesterId = (int) $request->semester_id;
 
         $school     = config('tenant.school') ?? \App\Models\School::first();
@@ -213,9 +229,11 @@ class ResultSheetController extends Controller
         $repo     = new ResultRepository();
         $results  = $repo->getClassResults($semesterId, $classId, $sectionId, $sessionId);
         $class    = SchoolClass::find($classId);
-        $section  = Section::find($sectionId);
+        $section  = $sectionId > 0 ? Section::find($sectionId) : null;
         $semester = Semester::find($semesterId);
-        $courses  = collect($results->first()['courses'] ?? [])->pluck('course');
+        $courses  = $results->flatMap(function($r) {
+            return collect($r['courses'] ?? [])->pluck('course');
+        })->unique('id')->filter()->values();
 
         $pdf = Pdf::loadView('results.pdf.class-sheet', compact(
             'results', 'class', 'section', 'semester', 'courses', 'school', 'logoSrc'
@@ -223,10 +241,11 @@ class ResultSheetController extends Controller
         ->setPaper('A4', 'landscape')
         ->setOptions(['defaultFont' => 'sans-serif', 'dpi' => 96, 'isRemoteEnabled' => true]);
 
+        $secName = $section ? '-' . $section->section_name : '';
         if ($request->query('stream') == '1') {
-            return $pdf->stream("result-sheet-{$class->class_name}-{$semester->semester_name}.pdf");
+            return $pdf->stream("result-sheet-{$class->class_name}{$secName}-{$semester->semester_name}.pdf");
         }
-        return $pdf->download("result-sheet-{$class->class_name}-{$semester->semester_name}.pdf");
+        return $pdf->download("result-sheet-{$class->class_name}{$secName}-{$semester->semester_name}.pdf");
     }
 
     /**
@@ -236,8 +255,8 @@ class ResultSheetController extends Controller
     public function reportCard(Request $request, int $studentId)
     {
         $request->validate([
-            'class_id'    => 'required|integer',
-            'section_id'  => 'required|integer',
+            'class_id'    => 'nullable|integer',
+            'section_id'  => 'nullable|integer',
             'semester_id' => 'required|integer',
         ]);
 
@@ -252,12 +271,20 @@ class ResultSheetController extends Controller
             }
         }
 
-        $sessionId  = $this->getSchoolCurrentSession();
-        $classId    = (int) $request->class_id;
-        $sectionId  = (int) $request->section_id;
-        $semesterId = (int) $request->semester_id;
+        $sessionId   = $this->getSchoolCurrentSession();
+        $studentUser = \App\Models\User::findOrFail($studentId);
 
-        $studentUser = \App\Models\User::find($studentId);
+        $classId     = (int) $request->query('class_id', 0);
+        $sectionId   = (int) $request->query('section_id', 0);
+        $semesterId  = (int) $request->query('semester_id', 0);
+
+        if (!$classId) {
+            $promotionRepo = new \App\Repositories\PromotionRepository();
+            $classInfo     = $promotionRepo->getStudentCurrentClass($studentId, $sessionId);
+            $classId       = $classInfo?->class_id ?? $studentUser->academic_info?->class_id ?? 0;
+            $sectionId     = $sectionId ?: ($classInfo?->section_id ?? $studentUser->academic_info?->section_id ?? 0);
+        }
+
         $school      = config('tenant.school') ?? ($studentUser ? \App\Models\School::find($studentUser->school_id) : null) ?? \App\Models\School::first();
         $logoSrc     = $this->getSchoolLogoBase64($school);
 
@@ -278,10 +305,69 @@ class ResultSheetController extends Controller
             ->setPaper('A4', 'portrait')
             ->setOptions(['defaultFont' => 'sans-serif', 'dpi' => 120, 'isRemoteEnabled' => true, 'chroot' => public_path()]);
 
+        $stuName = $result['student']?->full_name ?? 'Student';
         if ($request->query('stream') == '1') {
-            return $pdf->stream("report-card-{$result['student']->full_name}.pdf");
+            return $pdf->stream("report-card-{$stuName}.pdf");
         }
-        return $pdf->download("report-card-{$result['student']->full_name}.pdf");
+        return $pdf->download("report-card-{$stuName}.pdf");
+    }
+
+    /**
+     * GET /results/class/report-cards
+     * Bulk generate all individual report cards for all students in the class.
+     */
+    public function classReportCardsPdf(Request $request)
+    {
+        $request->validate([
+            'class_id'    => 'required|integer',
+            'semester_id' => 'required|integer',
+            'section_id'  => 'nullable|integer',
+        ]);
+
+        $sessionId  = $this->getSchoolCurrentSession();
+        $classId    = (int) $request->class_id;
+        $sectionId  = (int) $request->query('section_id', 0);
+        $semesterId = (int) $request->semester_id;
+
+        $repo      = new ResultRepository();
+        $results   = $repo->getClassResults($semesterId, $classId, $sectionId, $sessionId);
+        $class     = SchoolClass::find($classId);
+        $section   = $sectionId > 0 ? Section::find($sectionId) : null;
+        $semester  = Semester::find($semesterId);
+        $school    = config('tenant.school') ?? \App\Models\School::first();
+        $logoSrc   = $this->getSchoolLogoBase64($school);
+
+        if ($results->isEmpty()) {
+            return back()->with('error', "No student results found for {$class->class_name} in {$semester->semester_name}.");
+        }
+
+        $cards = [];
+        foreach ($results as $row) {
+            $stuId = $row['student']->id;
+            $res   = $repo->getStudentResult($stuId, $semesterId, $classId, $sectionId, $sessionId);
+            $token = $this->generateMarksheetToken($stuId, $semesterId, $classId, $sessionId);
+            $vUrl  = route('results.verify', ['token' => $token]);
+            $qr    = $this->getQrCodeSrc('https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($vUrl));
+
+            $cards[] = [
+                'result'      => $res,
+                'verifyToken' => $token,
+                'verifyUrl'   => $vUrl,
+                'qrSrc'       => $qr,
+            ];
+        }
+
+        $pdf = Pdf::loadView('results.pdf.class-report-cards', compact('cards', 'class', 'section', 'semester', 'school', 'logoSrc'))
+            ->setPaper('A4', 'portrait')
+            ->setOptions(['defaultFont' => 'sans-serif', 'dpi' => 120, 'isRemoteEnabled' => true, 'chroot' => public_path()]);
+
+        $secName = $section ? '-' . $section->section_name : '';
+        $filename = "all-report-cards-{$class->class_name}{$secName}-{$semester->semester_name}.pdf";
+
+        if ($request->query('stream') == '1') {
+            return $pdf->stream($filename);
+        }
+        return $pdf->download($filename);
     }
 
     public function getSchoolLogoBase64($school = null): string
