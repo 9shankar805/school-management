@@ -145,6 +145,7 @@ class SectionController extends Controller
 
     public function getByClassId(Request $request) {
         $classId = (int) $request->query('class_id', 0);
+        $semesterId = (int) $request->query('semester_id', 0);
         $user = auth()->user();
         $sessionId = $this->getSchoolCurrentSession();
         $isRestrictedTeacher = $user && ($user->hasRole('teacher') || $user->hasRole('class-teacher'))
@@ -161,31 +162,37 @@ class SectionController extends Controller
             }
 
             $assignedSectionIds = $query->pluck('section_id')
-                ->unique()
-                ->filter()
-                ->all();
+                ->unique()->filter()->all();
 
             $sections = \App\Models\Section::where('class_id', $classId)
-                ->whereIn('id', $assignedSectionIds)
-                ->get();
+                ->whereIn('id', $assignedSectionIds)->get();
 
             $assignedCourseIds = \App\Models\AssignedTeacher::where('session_id', $sessionId)
                 ->where('teacher_id', $user->id)
                 ->where('class_id', $classId)
-                ->pluck('course_id')
-                ->unique()
-                ->filter()
-                ->all();
+                ->pluck('course_id')->unique()->filter()->all();
 
-            $courses = \App\Models\Course::where('class_id', $classId)
+            $courses = \App\Models\Course::uniqueByName()
+                ->where('class_id', $classId)
                 ->whereIn('id', $assignedCourseIds)
-                ->get();
+                ->orderBy('course_name')->get();
         } else {
             $sections = $this->schoolSectionRepository->getAllByClassId($classId);
-            $courses = $this->courseRepository->getByClassId($classId);
+            // Use uniqueByName to prevent showing same subject multiple times
+            // Optionally filter by semester if provided
+            $coursesQuery = \App\Models\Course::uniqueByName()
+                ->where('class_id', $classId)
+                ->orderBy('course_name');
+            if ($semesterId > 0) {
+                $coursesQuery->forSemester($semesterId);
+            }
+            $courses = $coursesQuery->get();
         }
 
-        return response()->json(['sections' => $sections, 'courses' => $courses]);
+        return response()->json([
+            'sections' => $sections,
+            'courses'  => $courses,
+        ])->header('Cache-Control', 'no-store, no-cache');
     }
 
     /**

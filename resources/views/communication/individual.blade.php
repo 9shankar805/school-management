@@ -63,7 +63,7 @@
 <div class="xl:col-span-2 space-y-5">
 
   {{-- Step 1 — Recipient ── --}}
-  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 relative" style="z-index:20">
     <div class="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
       <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-bold text-sm
                   flex items-center justify-center shadow shadow-indigo-500/25">1</div>
@@ -97,8 +97,9 @@
       </div>
       {{-- Dropdown results --}}
       <div id="search-results"
-           class="hidden absolute z-30 mt-1 w-full bg-white border border-slate-200
-                  rounded-xl shadow-xl overflow-hidden text-sm">
+           class="hidden absolute mt-1 w-full bg-white border border-slate-200
+                  rounded-xl shadow-xl text-sm"
+           style="z-index:9999; max-height:260px; overflow-y:auto; top:100%; left:0;">
       </div>
     </div>
 

@@ -1487,9 +1487,15 @@
                                 </strong>
                             </span>
                         </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" name="marks_submission_status" value="on" {{ ($academic_setting->marks_submission_status ?? 'off') == 'on' ? 'checked' : '' }} class="sr-only peer">
-                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                        <label class="relative inline-flex items-center cursor-pointer" onclick="toggleMarkSwitch(this)">
+                            <input type="checkbox" name="marks_submission_status" value="on" {{ ($academic_setting->marks_submission_status ?? 'off') == 'on' ? 'checked' : '' }} class="sr-only" id="marksToggle">
+                            <div id="marksToggleTrack"
+                                 class="w-11 h-6 rounded-full transition-colors duration-200 relative"
+                                 style="background-color: {{ ($academic_setting->marks_submission_status ?? 'off') == 'on' ? '#10b981' : '#cbd5e1' }}">
+                                <span id="marksToggleThumb"
+                                      class="absolute top-[2px] h-5 w-5 bg-white border border-slate-300 rounded-full shadow transition-all duration-200"
+                                      style="left: {{ ($academic_setting->marks_submission_status ?? 'off') == 'on' ? '22px' : '2px' }}"></span>
+                            </div>
                         </label>
                     </div>
 
@@ -2042,7 +2048,7 @@ function loadClassMatrix() {
     if (helpersBar) helpersBar.classList.add('hidden');
     if (saveBtn) saveBtn.disabled = true;
 
-    const url = `${MATRIX_DATA_URL}?class_id=${encodeURIComponent(classId)}&semester_id=${encodeURIComponent(semesterId || '')}`;
+    const url = `${MATRIX_DATA_URL}?class_id=${encodeURIComponent(classId)}&semester_id=${encodeURIComponent(semesterId || '')}&_t=${Date.now()}`;
 
     fetch(url, {
         headers: { 'Accept': 'application/json' }
@@ -2484,6 +2490,25 @@ function showToast(message, type = 'info') {
 document.addEventListener('DOMContentLoaded', () => {
     goStep({{ $activeStep }});
 });
+
+function toggleMarkSwitch(label) {
+    const checkbox = document.getElementById('marksToggle');
+    const track    = document.getElementById('marksToggleTrack');
+    const thumb    = document.getElementById('marksToggleThumb');
+    const status   = label.closest('div').querySelector('strong');
+
+    checkbox.checked = !checkbox.checked;
+
+    if (checkbox.checked) {
+        track.style.backgroundColor = '#10b981';
+        thumb.style.left = '22px';
+        if (status) { status.textContent = 'OPEN / ALLOWED'; status.className = 'text-emerald-600'; }
+    } else {
+        track.style.backgroundColor = '#cbd5e1';
+        thumb.style.left = '2px';
+        if (status) { status.textContent = 'LOCKED / DISALLOWED'; status.className = 'text-slate-400'; }
+    }
+}
 </script>
 @endsection
 

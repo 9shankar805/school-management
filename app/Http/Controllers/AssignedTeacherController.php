@@ -257,9 +257,24 @@ class AssignedTeacherController extends Controller
             ->orderBy('section_name')
             ->get(['id', 'section_name', 'room_no']);
 
-        $courses = \App\Models\Course::where('class_id', $classId)
-            ->orderBy('course_name')
-            ->get(['id', 'course_name', 'course_type']);
+        $coursesQuery = \App\Models\Course::where('class_id', $classId)
+            ->orderBy('course_name');
+
+        // If a semester is selected, filter to only courses for that semester.
+        // This prevents the same subject appearing once per semester in the grid.
+        if ($semesterId > 0) {
+            $coursesQuery->where(function($q) use ($semesterId) {
+                $q->where('semester_id', $semesterId)
+                  ->orWhereNull('semester_id')
+                  ->orWhere('semester_id', 0);
+            });
+        }
+
+        // Deduplicate by course_name — if somehow duplicates still exist,
+        // only show each unique subject name once per class.
+        $courses = $coursesQuery->get(['id', 'course_name', 'course_type', 'semester_id'])
+            ->unique('course_name')
+            ->values();
 
         $assignments = \App\Models\AssignedTeacher::where('session_id', $sessionId)
             ->where('class_id', $classId)
@@ -277,9 +292,10 @@ class AssignedTeacherController extends Controller
 
         return response()->json([
             'sections' => $sections,
-            'courses' => $courses,
+            'courses'  => $courses,
             'assignments' => $assignmentMap,
-        ]);
+        ])->header('Cache-Control', 'no-store, no-cache, must-revalidate')
+          ->header('Pragma', 'no-cache');
     }
 
     /**

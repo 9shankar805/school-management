@@ -14,8 +14,12 @@
             <i class="bi bi-plus-circle"></i> Apply for Leave
         </button>
     </div>
-
     @include('session-messages')
+
+    {{-- Auto-open modal if coming from dashboard apply link --}}
+    @if(request()->query('open') === 'apply')
+    <script>document.addEventListener('DOMContentLoaded', () => document.getElementById('modalApplyLeave').classList.remove('hidden'));</script>
+    @endif
 
     {{-- Leave Summary Cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -129,7 +133,7 @@
             </button>
         </div>
 
-        <form method="POST" action="{{ route('leave.apply') }}" enctype="multipart/form-data" class="space-y-4">
+        <form method="POST" action="{{ route('leave.apply.store') }}" enctype="multipart/form-data" class="space-y-4">
             @csrf
             <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Leave Type <span class="text-rose-500">*</span></label>

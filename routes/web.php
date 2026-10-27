@@ -294,6 +294,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/exams/view', [ExamController::class, 'index'])->name('exam.list.show');
     Route::post('/exams/create', [ExamController::class, 'store'])->name('exam.create');
     Route::get('/exams/create', [ExamController::class, 'create'])->name('exam.create.show');
+    Route::post('/exams/bulk-create', [ExamController::class, 'bulkStore'])->name('exam.bulk.create');
     Route::post('/exams/delete', [ExamController::class, 'destroy'])->name('exam.delete');
     Route::get('/exams/add-rule', [ExamRuleController::class, 'create'])->name('exam.rule.create');
     Route::post('/exams/add-rule', [ExamRuleController::class, 'store'])->name('exam.rule.store');
@@ -705,11 +706,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('leave')->name('leave.')->group(function () {
         Route::get('/',              [LeaveController::class, 'index'])->name('index');
+        Route::get('/apply',         [LeaveController::class, 'applyForm'])->name('apply');
         Route::get('/types',         [LeaveController::class, 'types'])->name('types');
         Route::post('/types',        [LeaveController::class, 'storeType'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('types.store');
         Route::put('/types/{id}',    [LeaveController::class, 'updateType'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('types.update');
         Route::delete('/types/{id}', [LeaveController::class, 'destroyType'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('types.destroy');
-        Route::post('/apply',        [LeaveController::class, 'apply'])->name('apply');
+        Route::post('/apply',        [LeaveController::class, 'apply'])->name('apply.store');
         Route::post('/{id}/review',  [LeaveController::class, 'review'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('review');
         Route::post('/{id}/cancel',  [LeaveController::class, 'cancel'])->name('cancel');
     });
@@ -1251,9 +1253,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/assets',         [App\Http\Controllers\InventoryController::class, 'storeAsset'])->name('assets.store');
         
         // Suppliers
-        Route::get('/suppliers',       [App\Http\Controllers\InventoryController::class, 'suppliers'])->name('suppliers');
-        Route::get('/suppliers/create',[App\Http\Controllers\InventoryController::class, 'createSupplier'])->name('suppliers.create');
-        Route::post('/suppliers',      [App\Http\Controllers\InventoryController::class, 'storeSupplier'])->name('suppliers.store');
+        Route::get('/suppliers',            [App\Http\Controllers\InventoryController::class, 'suppliers'])->name('suppliers');
+        Route::get('/suppliers/create',     [App\Http\Controllers\InventoryController::class, 'createSupplier'])->name('suppliers.create');
+        Route::post('/suppliers',           [App\Http\Controllers\InventoryController::class, 'storeSupplier'])->name('suppliers.store');
+        Route::put('/suppliers/{id}',       [App\Http\Controllers\InventoryController::class, 'updateSupplier'])->name('suppliers.update');
+        Route::delete('/suppliers/{id}',    [App\Http\Controllers\InventoryController::class, 'destroySupplier'])->name('suppliers.destroy');
         
         // Purchase Orders
         Route::get('/purchase-orders', [App\Http\Controllers\InventoryController::class, 'purchaseOrders'])->name('purchase-orders');

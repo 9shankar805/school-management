@@ -1516,7 +1516,7 @@
                 Back online — syncing pending data…
             </div>
 
-            <div class="relative" style="z-index:1">
+            <div>
             {{-- Flash messages (session) --}}
             @if(session('success') || session('status'))
             <div class="toast-auto-show" data-type="success" data-msg="{{ session('success') ?? session('status') }}"></div>
@@ -2653,6 +2653,7 @@ document.addEventListener('click', function(e) {
 </script>
 @endauth
 
+@stack('modals')
 @stack('scripts')
 
 <script>

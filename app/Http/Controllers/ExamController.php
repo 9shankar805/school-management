@@ -147,6 +147,79 @@ class ExamController extends Controller
     }
 
     /**
+     * Bulk create exams — one exam per subject for a whole class in one click.
+     */
+    public function bulkStore(Request $request)
+    {
+        $this->authorize('create exams');
+
+        $data = $request->validate([
+            'exam_name'                => 'required|string|max:255',
+            'class_id'                 => 'required|exists:school_classes,id',
+            'semester_id'              => 'required|exists:semesters,id',
+            'start_date'               => 'required|date',
+            'end_date'                 => 'required|date|after_or_equal:start_date',
+            'course_ids'               => 'required|array|min:1',
+            'course_ids.*'             => 'exists:courses,id',
+            'total_marks'              => 'nullable|numeric|min:1|max:1000',
+            'pass_marks'               => 'nullable|numeric|min:0',
+            'marks_distribution_note'  => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $sessionId = $this->getSchoolCurrentSession();
+            $schoolId  = auth()->user()->school_id;
+            $created   = 0;
+            $skipped   = 0;
+
+            $totalMarks   = $data['total_marks'] ?? null;
+            $passMarks    = $data['pass_marks']  ?? null;
+            $distribution = $data['marks_distribution_note'] ?? null;
+
+            foreach ($data['course_ids'] as $courseId) {
+                $exists = \App\Models\Exam::where('exam_name',   $data['exam_name'])
+                    ->where('class_id',    $data['class_id'])
+                    ->where('course_id',   $courseId)
+                    ->where('semester_id', $data['semester_id'])
+                    ->exists();
+
+                if ($exists) { $skipped++; continue; }
+
+                $exam = \App\Models\Exam::create([
+                    'exam_name'   => $data['exam_name'],
+                    'class_id'    => $data['class_id'],
+                    'course_id'   => $courseId,
+                    'semester_id' => $data['semester_id'],
+                    'session_id'  => $sessionId,
+                    'school_id'   => $schoolId,
+                    'start_date'  => $data['start_date'],
+                    'end_date'    => $data['end_date'],
+                ]);
+
+                // Auto-create exam rule if marks provided
+                if ($totalMarks && $passMarks !== null) {
+                    \App\Models\ExamRule::create([
+                        'exam_id'                  => $exam->id,
+                        'session_id'               => $sessionId,
+                        'school_id'                => $schoolId,
+                        'total_marks'              => $totalMarks,
+                        'pass_marks'               => $passMarks,
+                        'marks_distribution_note'  => $distribution,
+                    ]);
+                }
+
+                $created++;
+            }
+
+            $msg = "✅ {$created} exam(s) created successfully!";
+            if ($skipped > 0) $msg .= " ({$skipped} already existed, skipped.)";
+            return redirect()->route('exam.list.show')->with('status', $msg);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Bulk create failed: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    /**
      * Display the specified resource.
      */
     public function show(Exam $exam)

@@ -50,11 +50,14 @@
         @endcan
 
         {{-- Status tabs --}}
-        <div class="flex gap-1 bg-white rounded-xl border border-slate-100 shadow-sm p-1 mb-6 overflow-x-auto">
+        <div class="flex gap-1 bg-white rounded-xl border border-slate-200 shadow-sm p-1 mb-6 overflow-x-auto">
             @foreach(['eligible' => 'Active Students', 'graduated' => 'Graduated / Alumni', 'dropouts' => 'Dropouts / Withdrawn'] as $t => $l)
             <a href="{{ route('students.graduation.index', ['tab' => $t, 'search' => $search]) }}"
-               class="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition whitespace-nowrap {{ $tab === $t ? 'bg-indigo-50 text-indigo-700' : 'text-slate-500 hover:bg-slate-50' }}">
-                {{ $l }} <span class="ml-1 text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-full">
+               class="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition whitespace-nowrap
+               {{ $tab === $t ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700' }}">
+                {{ $l }}
+                <span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-bold
+                    {{ $tab === $t ? 'bg-white/30 text-white' : 'bg-slate-200 text-slate-600' }}">
                     {{ $t === 'eligible' ? $counts['active'] : ($t === 'graduated' ? $counts['graduated'] : $counts['dropouts']) }}
                 </span>
             </a>
@@ -131,6 +134,9 @@
     </div>
 </div>
 
+@endsection
+
+@push('modals')
 {{-- Global Status Update Modal (Placed outside table container to prevent clipping) --}}
 @can('create students')
 <div id="statusModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[9999] items-center justify-center p-4 print-hide" onclick="if(event.target===this)closeStatusModal()">
@@ -248,4 +254,4 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 @endcan
-@endsection
+@endpush

@@ -111,7 +111,7 @@ html.dark .iemis-value {
                 <i class="bi bi-pencil-square text-xs text-indigo-500"></i> Enter Marks
             </a>
             @endcan
-            <a href="{{ route('leave.apply') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition text-slate-700 dark:text-slate-200 active:scale-95">
+            <a href="{{ route('leave.apply') }}?open=apply" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition text-slate-700 dark:text-slate-200 active:scale-95">
                 <i class="bi bi-calendar-plus text-xs text-amber-500"></i> Apply Leave
             </a>
         </div>
@@ -335,7 +335,7 @@ html.dark .iemis-value {
             <div class="px-5 py-3 border-b border-slate-100 flex justify-between items-center">
                 <p class="text-sm font-semibold text-slate-700"><i class="bi bi-calendar-x-fill me-1 text-amber-500"></i>Leave</p>
                 <div class="flex gap-2">
-                    <a href="{{ route('leave.apply') }}" class="text-xs text-indigo-600 hover:underline">Apply</a>
+                    <a href="{{ route('leave.apply') }}?open=apply" class="text-xs text-indigo-600 hover:underline">Apply</a>
                     <span class="text-slate-300">|</span>
                     <a href="{{ route('leave.index') }}" class="text-xs text-indigo-600 hover:underline">History</a>
                 </div>

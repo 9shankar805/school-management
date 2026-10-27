@@ -66,7 +66,7 @@
                         <!-- Term / Semester -->
                         <div class="col-md-6">
                             <label class="form-label font-semibold text-slate-700 text-sm">Select Term / Semester <span class="text-rose-500">*</span></label>
-                            <select class="form-select rounded-xl border-slate-200 py-2.5 text-sm text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500/20" name="semester_id" required>
+                            <select class="form-select rounded-xl border-slate-200 py-2.5 text-sm text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500/20" name="semester_id" required onchange="reloadCoursesOnSemesterChange()">
                                 @isset($semesters)
                                     @foreach ($semesters as $semester)
                                     <option value="{{ $semester->id }}">{{ $semester->semester_name }}</option>
@@ -134,7 +134,8 @@
 <script>
 function getCourses(obj) {
     var class_id = obj.options[obj.selectedIndex].value;
-    var url = "{{ route('get.sections.courses.by.classId') }}?class_id=" + class_id;
+    var semester_id = document.querySelector('select[name="semester_id"]')?.value || '';
+    var url = "{{ route('get.sections.courses.by.classId') }}?class_id=" + class_id + "&semester_id=" + semester_id;
 
     fetch(url)
     .then((resp) => resp.json())
@@ -154,6 +155,12 @@ function getCourses(obj) {
     .catch(function(error) {
         console.log(error);
     });
+}
+function reloadCoursesOnSemesterChange() {
+    var classSelect = document.querySelector('select[name="class_id"]');
+    if (classSelect && classSelect.value) {
+        getCourses(classSelect);
+    }
 }
 </script>
 @endsection

@@ -165,7 +165,7 @@ class RoutineController extends Controller
         }
         $teachers = $teachersQuery->orderBy('first_name')->get();
 
-        $courses = $class_id ? Course::where('class_id', $class_id)->get() : collect();
+        $courses = $class_id ? Course::uniqueByName()->where('class_id', $class_id)->orderBy('course_name')->get() : collect();
 
         // Mappings from AssignedTeacher (course_id => teacher_id)
         $teacherMappings = [];
@@ -237,7 +237,7 @@ class RoutineController extends Controller
             $teachersQuery->where('school_id', $user->school_id);
         }
         $teachers = $teachersQuery->orderBy('first_name')->get();
-        $courses  = \App\Models\Course::where('class_id', $routine->class_id)->get();
+        $courses  = \App\Models\Course::uniqueByName()->where('class_id', $routine->class_id)->orderBy('course_name')->get();
 
         return view('routines.edit', compact('routine', 'classes', 'session_id', 'teachers', 'courses'));
     }
@@ -419,7 +419,7 @@ class RoutineController extends Controller
     {
         $classId    = $request->query('class_id');
         $sessionId  = $this->getSchoolCurrentSession();
-        $courses    = Course::where('class_id', $classId)
+        $courses    = Course::uniqueByName()->where('class_id', $classId)
             ->where('session_id', $sessionId)
             ->get(['id', 'course_name']);
         return response()->json($courses);
@@ -438,7 +438,7 @@ class RoutineController extends Controller
         $schoolId = $user?->school_id;
 
         // Fetch courses for this class
-        $courses = Course::where('class_id', $classId)
+        $courses = Course::uniqueByName()->where('class_id', $classId)
             ->where(function ($q) use ($sessionId) {
                 $q->where('session_id', $sessionId)->orWhereNull('session_id');
             })
@@ -659,7 +659,7 @@ class RoutineController extends Controller
             return response()->json(['success' => false, 'message' => 'Source section has no timetable slots to clone.'], 404);
         }
 
-        $targetCourses = Course::where('class_id', $targetClassId)->get(['id', 'course_name']);
+        $targetCourses = Course::uniqueByName()->where('class_id', $targetClassId)->orderBy('course_name')->get(['id', 'course_name']);
         $targetTeacherMappings = AssignedTeacher::where('session_id', $sessionId)
             ->where('class_id', $targetClassId)
             ->where('section_id', $targetSectionId)

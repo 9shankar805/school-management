@@ -265,26 +265,55 @@ class InventoryController extends Controller
     {
         try {
             $data = $request->validate([
-                'name' => 'required|string|max:255',
-                'contact_person' => 'required|string|max:255',
-                'email' => 'nullable|email',
-                'phone' => 'nullable|string|max:50',
-                'address' => 'nullable|string'
+                'name'           => 'required|string|max:255',
+                'contact_person' => 'nullable|string|max:255',
+                'email'          => 'nullable|email',
+                'phone'          => 'nullable|string|max:50',
+                'address'        => 'nullable|string'
             ]);
-            Supplier::create($data);
+            Supplier::create(array_merge($data, ['status' => 'active']));
             return redirect()->route('inventory.suppliers')->with('success', 'Supplier created successfully.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Unable to create supplier: ' . $e->getMessage())->withInput();
         }
     }
 
+    public function updateSupplier(Request $request, int $id)
+    {
+        try {
+            $supplier = Supplier::findOrFail($id);
+            $data = $request->validate([
+                'name'           => 'required|string|max:255',
+                'contact_person' => 'nullable|string|max:255',
+                'email'          => 'nullable|email',
+                'phone'          => 'nullable|string|max:50',
+                'address'        => 'nullable|string'
+            ]);
+            $supplier->update($data);
+            return redirect()->route('inventory.suppliers')->with('success', 'Supplier updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Unable to update supplier: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    public function destroySupplier(int $id)
+    {
+        try {
+            Supplier::findOrFail($id)->delete();
+            return redirect()->route('inventory.suppliers')->with('success', 'Supplier deleted.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Unable to delete supplier: ' . $e->getMessage());
+        }
+    }
+
     public function purchaseOrders()
     {
         try {
-            $orders = PurchaseOrder::with('supplier')->orderBy('created_at', 'desc')->paginate(15);
-            return view('inventory.purchase-orders', compact('orders'));
+            $orders    = PurchaseOrder::with('supplier')->orderBy('created_at', 'desc')->paginate(15);
+            $suppliers = Supplier::orderBy('name')->get();
+            return view('inventory.purchase-orders', compact('orders', 'suppliers'));
         } catch (\Exception $e) {
-            return view('inventory.purchase-orders', ['orders' => null, 'error' => 'Unable to load purchase orders: ' . $e->getMessage()]);
+            return view('inventory.purchase-orders', ['orders' => collect(), 'suppliers' => collect(), 'error' => 'Unable to load purchase orders: ' . $e->getMessage()]);
         }
     }
 
@@ -302,13 +331,15 @@ class InventoryController extends Controller
     {
         try {
             $data = $request->validate([
-                'supplier_id' => 'required|exists:suppliers,id',
-                'po_number' => 'required|string|max:100|unique:purchase_orders,po_number',
-                'order_date' => 'required|date',
-                'total_amount' => 'required|numeric|min:0'
+                'supplier_id'             => 'required|exists:suppliers,id',
+                'po_number'               => 'required|string|max:100|unique:purchase_orders,po_number',
+                'order_date'              => 'required|date',
+                'total_amount'            => 'required|numeric|min:0',
+                'expected_delivery_date'  => 'nullable|date|after_or_equal:order_date',
+                'notes'                   => 'nullable|string|max:1000',
             ]);
-            $data['status'] = 'draft';
-            $data['raised_by'] = auth()->id();
+            $data['status']     = 'draft';
+            $data['raised_by']  = auth()->id();
             PurchaseOrder::create($data);
             return redirect()->route('inventory.purchase-orders')->with('success', 'Purchase order created successfully.');
         } catch (\Exception $e) {

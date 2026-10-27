@@ -72,7 +72,7 @@ class AdmitCardController extends Controller
             ->get()
             ->keyBy('schedule_id');
 
-        $courses = Course::where('class_id', $classId)->get();
+        $courses = Course::uniqueByName()->where('class_id', $classId)->orderBy('course_name')->get();
         $school  = School::find($student->school_id) ?? config('tenant.school') ?? School::first();
 
         $data = [
@@ -130,7 +130,7 @@ class AdmitCardController extends Controller
             ->orderBy('start_time')
             ->get();
 
-        $courses = Course::where('class_id', $classId)->get();
+        $courses = Course::uniqueByName()->where('class_id', $classId)->orderBy('course_name')->get();
         $class   = SchoolClass::find($classId);
         $section = Section::find($sectionId);
         $school  = config('tenant.school') ?? School::find($exam->school_id) ?? School::first();

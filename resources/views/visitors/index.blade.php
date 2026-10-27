@@ -194,56 +194,57 @@
 </div>
 
 {{-- Check-In Visitor Modal --}}
-<div id="checkInModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div class="px-6 py-4 bg-indigo-600 text-white flex justify-between items-center">
-            <h3 class="font-bold text-base flex items-center gap-2">
+<div id="checkInModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-200 overflow-hidden">
+        {{-- Header --}}
+        <div class="px-6 py-4 bg-indigo-600 flex justify-between items-center">
+            <h3 class="font-bold text-base text-white flex items-center gap-2">
                 <i class="bi bi-person-plus"></i> Check-In New Visitor (नयाँ भ्रमणकर्ता)
             </h3>
-            <button onclick="document.getElementById('checkInModal').classList.add('hidden')" class="text-white/80 hover:text-white text-xl">
+            <button onclick="document.getElementById('checkInModal').classList.add('hidden')"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white font-bold text-lg transition">
                 &times;
             </button>
         </div>
-
-        <form action="{{ route('visitors.store') }}" method="POST" class="p-6 space-y-4">
+        {{-- Form body --}}
+        <form action="{{ route('visitors.store') }}" method="POST" class="p-6 space-y-4 bg-white">
             @csrf
             <div class="grid grid-cols-2 gap-4">
                 <div class="col-span-2 sm:col-span-1">
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Full Name *</label>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Full Name *</label>
                     <input type="text" name="name" required placeholder="e.g. Ram Bahadur Thapa"
-                           class="w-full text-xs rounded-lg border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                           class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none">
                 </div>
                 <div class="col-span-2 sm:col-span-1">
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Phone Number *</label>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Phone Number *</label>
                     <input type="text" name="phone" required placeholder="98XXXXXXXX"
-                           class="w-full text-xs rounded-lg border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                           class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none">
                 </div>
             </div>
-
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">ID Type & Number</label>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">ID Type & Number</label>
                     <div class="flex gap-2">
-                        <select name="id_type" class="w-1/2 text-xs rounded-lg border-slate-200">
+                        <select name="id_type" class="w-1/2 text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 outline-none">
                             <option value="citizenship">Citizenship</option>
                             <option value="national_id">National ID</option>
                             <option value="license">Driving License</option>
                             <option value="other">Other</option>
                         </select>
-                        <input type="text" name="id_number" placeholder="ID #" class="w-1/2 text-xs rounded-lg border-slate-200">
+                        <input type="text" name="id_number" placeholder="ID #"
+                               class="w-1/2 text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 placeholder-slate-400 outline-none">
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Organization / Company</label>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Organization / Company</label>
                     <input type="text" name="organization" placeholder="e.g. Apex Suppliers / Parent"
-                           class="w-full text-xs rounded-lg border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                           class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none">
                 </div>
             </div>
-
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Purpose of Visit *</label>
-                    <select name="purpose" required class="w-full text-xs rounded-lg border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Purpose of Visit *</label>
+                    <select name="purpose" required class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 outline-none">
                         <option value="admission_inquiry">Admission Inquiry</option>
                         <option value="fee_payment">Fee Payment / Accounts</option>
                         <option value="meeting_principal">Meeting with Principal</option>
@@ -254,24 +255,23 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">Person to Meet *</label>
-                    <input type="text" name="person_to_meet" required placeholder="e.g. Principal / Mr. Sharma / Aayush (Roll 5)"
-                           class="w-full text-xs rounded-lg border-slate-200 focus:border-indigo-500 focus:ring-indigo-500">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Person to Meet *</label>
+                    <input type="text" name="person_to_meet" required placeholder="e.g. Principal / Mr. Sharma"
+                           class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none">
                 </div>
             </div>
-
             <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Remarks / Items Carried</label>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Remarks / Items Carried</label>
                 <textarea name="notes" rows="2" placeholder="e.g. Carried laptop / document folder"
-                          class="w-full text-xs rounded-lg border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                          class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none"></textarea>
             </div>
-
             <div class="pt-3 border-t border-slate-100 flex justify-end gap-3">
                 <button type="button" onclick="document.getElementById('checkInModal').classList.add('hidden')"
-                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg transition">
+                        class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200 transition">
                     Cancel
                 </button>
-                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition shadow-sm">
+                <button type="submit"
+                        class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">
                     Complete Check-In & Issue Pass
                 </button>
             </div>

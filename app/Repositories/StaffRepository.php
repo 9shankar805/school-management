@@ -44,6 +44,12 @@ class StaffRepository implements StaffInterface {
         $data = $request->except(['password_confirmation', 'photo']);
         $data['password'] = Hash::make($request->password);
 
+        // Ensure nullable address fields don't violate NOT NULL constraints
+        $data['address']  = $data['address']  ?? '';
+        $data['address2'] = $data['address2'] ?? null;
+        $data['city']     = $data['city']     ?? '';
+        $data['zip']      = $data['zip']      ?? '';
+
         if (auth()->check() && !isset($data['school_id'])) {
             $data['school_id'] = auth()->user()->school_id;
         }

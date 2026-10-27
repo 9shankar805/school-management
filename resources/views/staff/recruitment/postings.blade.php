@@ -1,96 +1,221 @@
 @extends('layouts.app')
 @section('content')
-<div class="container">
-    <div class="row justify-content-start">
-        <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
-            <div class="row pt-2"><div class="col ps-4">
-                <h1 class="display-6 mb-1"><i class="bi bi-megaphone"></i> Job Postings</h1>
-                <nav aria-label="breadcrumb" class="mb-3"><ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('staff.index') }}">HR & Staff</a></li>
-                    <li class="breadcrumb-item active">Recruitment</li>
-                </ol></nav>
-                @if(session('status'))<div class="alert alert-success alert-dismissible fade show">{{ session('status') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>@endif
+<div class="px-4 lg:px-8 py-6 max-w-7xl mx-auto">
 
-                <div class="d-flex gap-2 mb-3">
-                    <button class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#newPostForm"><i class="bi bi-plus-circle"></i> New Posting</button>
-                </div>
-
-                <div class="collapse mb-4" id="newPostForm">
-                    <div class="card shadow-sm">
-                        <div class="card-header fw-semibold">Create Job Posting</div>
-                        <div class="card-body">
-                            <form method="POST" action="{{ route('staff.recruitment.postings.store') }}">
-                                @csrf
-                                <div class="row g-3">
-                                    <div class="col-md-6"><label class="form-label fw-semibold">Job Title <span class="text-danger">*</span></label><input type="text" name="title" class="form-control" required></div>
-                                    <div class="col-md-3"><label class="form-label fw-semibold">Department</label><input type="text" name="department" class="form-control"></div>
-                                    <div class="col-md-1"><label class="form-label fw-semibold">Vacancies</label><input type="number" name="vacancies" class="form-control" value="1" min="1"></div>
-                                    <div class="col-md-2"><label class="form-label fw-semibold">Status</label><select name="status" class="form-select"><option value="draft">Draft</option><option value="published">Published</option></select></div>
-                                    <div class="col-md-3"><label class="form-label fw-semibold">Salary Min ($)</label><input type="number" name="salary_min" class="form-control" step="0.01"></div>
-                                    <div class="col-md-3"><label class="form-label fw-semibold">Salary Max ($)</label><input type="number" name="salary_max" class="form-control" step="0.01"></div>
-                                    <div class="col-md-3"><label class="form-label fw-semibold">Application Deadline</label><input type="date" name="application_deadline" class="form-control"></div>
-                                    <div class="col-12"><label class="form-label fw-semibold">Description <span class="text-danger">*</span></label><textarea name="description" class="form-control" rows="3" required></textarea></div>
-                                    <div class="col-12"><label class="form-label fw-semibold">Requirements</label><textarea name="requirements" class="form-control" rows="3"></textarea></div>
-                                    <div class="col-12"><button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-circle"></i> Create</button></div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <form method="GET" action="{{ route('staff.recruitment.postings') }}" class="row g-2 mb-3">
-                    <div class="col-md-3"><select name="status" class="form-select form-select-sm" onchange="this.form.submit()"><option value="">All Status</option><option value="draft" @selected(request('status')==='draft')>Draft</option><option value="published" @selected(request('status')==='published')>Published</option><option value="closed" @selected(request('status')==='closed')>Closed</option></select></div>
-                </form>
-
-                <div class="row g-3">
-                    @forelse($postings as $p)
-                    <div class="col-md-6">
-                        <div class="card shadow-sm h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h5 class="fw-bold mb-0">{{ $p->title }}</h5>
-                                    {!! $p->status_badge !!}
-                                </div>
-                                @if($p->department)<span class="badge bg-secondary mb-2">{{ $p->department }}</span>@endif
-                                <p class="small text-muted mb-1"><i class="bi bi-people me-1"></i> {{ $p->vacancies }} vacancies | <i class="bi bi-file-earmark-text me-1"></i> {{ $p->applications_count }} applications</p>
-                                @if($p->salary_min || $p->salary_max)<p class="small text-muted mb-1"><i class="bi bi-cash me-1"></i> Rs. {{ number_format($p->salary_min ?? 0,0) }} – Rs. {{ number_format($p->salary_max ?? 0,0) }}</p>@endif
-                                @if($p->application_deadline)<p class="small {{ $p->application_deadline->isPast() ? 'text-danger' : 'text-muted' }} mb-0"><i class="bi bi-calendar me-1"></i> Deadline: {{ $p->application_deadline->format('d M Y') }}</p>@endif
-                            </div>
-                            <div class="card-footer d-flex gap-2">
-                                <a href="{{ route('staff.recruitment.applications', $p->id) }}" class="btn btn-outline-info btn-sm"><i class="bi bi-people"></i> Applications</a>
-                                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editPosting{{ $p->id }}"><i class="bi bi-pencil"></i></button>
-                                <form method="POST" action="{{ route('staff.recruitment.postings.destroy', $p->id) }}" onsubmit="return confirm('Delete posting?')">@csrf @method('DELETE')<button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button></form>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Edit modal --}}
-                    <div class="modal fade" id="editPosting{{ $p->id }}" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
-                        <form method="POST" action="{{ route('staff.recruitment.postings.update', $p->id) }}">@csrf @method('PUT')
-                            <div class="modal-header"><h5 class="modal-title">Edit: {{ $p->title }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                            <div class="modal-body row g-2">
-                                <div class="col-7"><label class="form-label">Title</label><input type="text" name="title" class="form-control" value="{{ $p->title }}" required></div>
-                                <div class="col-3"><label class="form-label">Status</label><select name="status" class="form-select"><option value="draft" @selected($p->status==='draft')>Draft</option><option value="published" @selected($p->status==='published')>Published</option><option value="closed" @selected($p->status==='closed')>Closed</option></select></div>
-                                <div class="col-2"><label class="form-label">Vacancies</label><input type="number" name="vacancies" class="form-control" value="{{ $p->vacancies }}" min="1"></div>
-                                <div class="col-4"><label class="form-label">Department</label><input type="text" name="department" class="form-control" value="{{ $p->department }}"></div>
-                                <div class="col-4"><label class="form-label">Salary Range</label><input type="number" name="salary_min" class="form-control" placeholder="Min" value="{{ $p->salary_min }}" step="0.01"></div>
-                                <div class="col-4"><label class="form-label">&nbsp;</label><input type="number" name="salary_max" class="form-control" placeholder="Max" value="{{ $p->salary_max }}" step="0.01"></div>
-                                <div class="col-4"><label class="form-label">Deadline</label><input type="date" name="application_deadline" class="form-control" value="{{ $p->application_deadline?->format('Y-m-d') }}"></div>
-                                <div class="col-12"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="3" required>{{ $p->description }}</textarea></div>
-                                <div class="col-12"><label class="form-label">Requirements</label><textarea name="requirements" class="form-control" rows="3">{{ $p->requirements }}</textarea></div>
-                            </div>
-                            <div class="modal-footer"><button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-primary btn-sm">Save</button></div>
-                        </form>
-                    </div></div></div>
-                    @empty
-                    <div class="col-12"><div class="alert alert-info text-center py-4">No job postings yet. Create one above.</div></div>
-                    @endforelse
-                </div>
-                <div class="mt-3">{{ $postings->links() }}</div>
-            </div></div>
-            @include('layouts.footer')
+    {{-- Header --}}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
+                <i class="bi bi-megaphone text-indigo-500"></i> Job Postings
+            </h1>
+            <nav class="flex items-center gap-1.5 text-xs text-slate-400 mt-1">
+                <a href="{{ route('home') }}" class="hover:text-indigo-600 transition">Home</a>
+                <i class="bi bi-chevron-right text-[10px]"></i>
+                <a href="{{ route('staff.index') }}" class="hover:text-indigo-600 transition">HR & Staff</a>
+                <i class="bi bi-chevron-right text-[10px]"></i>
+                <span class="text-slate-600 dark:text-slate-300 font-medium">Recruitment</span>
+            </nav>
         </div>
+        <button onclick="openPostingModal()"
+                class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 self-start">
+            <i class="bi bi-plus-circle"></i> New Posting
+        </button>
+    </div>
+
+    @include('session-messages')
+
+    {{-- Filter --}}
+    <form method="GET" action="{{ route('staff.recruitment.postings') }}" class="mb-5 flex gap-2">
+        <select name="status" onchange="this.form.submit()"
+                class="text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 outline-none focus:border-indigo-500">
+            <option value="">All Status</option>
+            <option value="draft"     @selected(request('status')==='draft')>Draft</option>
+            <option value="published" @selected(request('status')==='published')>Published</option>
+            <option value="closed"    @selected(request('status')==='closed')>Closed</option>
+        </select>
+    </form>
+
+    {{-- Job Posting Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        @forelse($postings as $p)
+        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5 flex flex-col gap-3">
+            <div class="flex items-start justify-between gap-2">
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight">{{ $p->title }}</h3>
+                {!! $p->status_badge !!}
+            </div>
+            @if($p->department)
+            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 self-start">{{ $p->department }}</span>
+            @endif
+            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+                <span><i class="bi bi-people me-1"></i>{{ $p->vacancies }} vacancies</span>
+                <span><i class="bi bi-file-earmark-text me-1"></i>{{ $p->applications_count ?? 0 }} applications</span>
+                @if($p->salary_min || $p->salary_max)
+                <span><i class="bi bi-cash me-1"></i>Rs. {{ number_format($p->salary_min ?? 0, 0) }} – Rs. {{ number_format($p->salary_max ?? 0, 0) }}</span>
+                @endif
+                @if($p->application_deadline)
+                <span class="{{ $p->application_deadline->isPast() ? 'text-rose-500' : '' }}">
+                    <i class="bi bi-calendar me-1"></i>Deadline: {{ $p->application_deadline->format('d M Y') }}
+                </span>
+                @endif
+            </div>
+            <div class="flex gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 mt-auto">
+                <a href="{{ route('staff.recruitment.applications', $p->id) }}"
+                   class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100 transition flex items-center gap-1">
+                    <i class="bi bi-people"></i> Applications
+                </a>
+                <button onclick='openEditModal(@json($p))'
+                        class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition flex items-center gap-1">
+                    <i class="bi bi-pencil"></i> Edit
+                </button>
+                <form method="POST" action="{{ route('staff.recruitment.postings.destroy', $p->id) }}"
+                      onsubmit="return confirm('Delete this posting?')" class="inline">
+                    @csrf @method('DELETE')
+                    <button type="submit"
+                            class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 transition flex items-center gap-1">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+        @empty
+        <div class="col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-12 text-center">
+            <i class="bi bi-megaphone text-5xl text-slate-200 dark:text-slate-700 block mb-3"></i>
+            <p class="font-semibold text-slate-500 dark:text-slate-400">No job postings yet.</p>
+            <p class="text-xs text-slate-400 mt-1">Create a new posting to start receiving applications.</p>
+            <button onclick="openPostingModal()"
+                    class="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition inline-flex items-center gap-1.5">
+                <i class="bi bi-plus-circle"></i> Create First Posting
+            </button>
+        </div>
+        @endforelse
+    </div>
+
+    <div>{{ $postings->links() }}</div>
+
+    @include('layouts.footer')
+</div>
+
+{{-- Create / Edit Posting Modal --}}
+<div id="postingModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] items-center justify-center p-4 overflow-y-auto"
+     onclick="if(event.target===this)closePostingModal()">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl border border-slate-200 dark:border-slate-800 my-8">
+        {{-- Header --}}
+        <div class="px-6 py-4 bg-indigo-600 flex items-center justify-between rounded-t-2xl">
+            <h3 id="postingModalTitle" class="text-white font-bold text-sm flex items-center gap-2">
+                <i class="bi bi-plus-circle"></i> Create Job Posting
+            </h3>
+            <button onclick="closePostingModal()"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white font-bold transition">
+                &times;
+            </button>
+        </div>
+        {{-- Form --}}
+        <form id="postingForm" method="POST" action="{{ route('staff.recruitment.postings.store') }}" class="p-6 bg-white dark:bg-slate-900 rounded-b-2xl">
+            @csrf
+            <div id="postingMethodField"></div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="col-span-2">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Job Title <span class="text-rose-500">*</span></label>
+                    <input type="text" name="title" id="pTitle" required placeholder="e.g., Mathematics Teacher"
+                           class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Department</label>
+                    <input type="text" name="department" id="pDept" placeholder="e.g., Science"
+                           class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Vacancies</label>
+                    <input type="number" name="vacancies" id="pVacancies" value="1" min="1"
+                           class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Status</label>
+                    <select name="status" id="pStatus"
+                            class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none">
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Application Deadline</label>
+                    <input type="date" name="application_deadline" id="pDeadline"
+                           class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Salary Min (Rs.)</label>
+                    <input type="number" name="salary_min" id="pSalaryMin" step="100" placeholder="0"
+                           class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Salary Max (Rs.)</label>
+                    <input type="number" name="salary_max" id="pSalaryMax" step="100" placeholder="0"
+                           class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none">
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Description <span class="text-rose-500">*</span></label>
+                    <textarea name="description" id="pDesc" rows="3" required placeholder="Describe the role and responsibilities…"
+                              class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none"></textarea>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Requirements</label>
+                    <textarea name="requirements" id="pReqs" rows="3" placeholder="List qualifications, experience, skills…"
+                              class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none resize-none"></textarea>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800 mt-4">
+                <button type="button" onclick="closePostingModal()"
+                        class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-lg border border-slate-200 dark:border-slate-700 transition">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">
+                    <i class="bi bi-check-circle me-1"></i> Save Posting
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function openPostingModal() {
+    document.getElementById('postingModalTitle').innerHTML = '<i class="bi bi-plus-circle"></i> Create Job Posting';
+    document.getElementById('postingForm').action = '{{ route("staff.recruitment.postings.store") }}';
+    document.getElementById('postingMethodField').innerHTML = '';
+    document.getElementById('postingForm').reset();
+    const m = document.getElementById('postingModal');
+    m.classList.remove('hidden');
+    m.classList.add('flex');
+}
+function closePostingModal() {
+    const m = document.getElementById('postingModal');
+    m.classList.add('hidden');
+    m.classList.remove('flex');
+}
+function openEditModal(p) {
+    document.getElementById('postingModalTitle').innerHTML = '<i class="bi bi-pencil"></i> Edit Job Posting';
+    document.getElementById('postingForm').action = '/staff/recruitment/postings/' + p.id;
+    document.getElementById('postingMethodField').innerHTML = '<input type="hidden" name="_method" value="PUT">';
+    document.getElementById('pTitle').value      = p.title || '';
+    document.getElementById('pDept').value       = p.department || '';
+    document.getElementById('pVacancies').value  = p.vacancies || 1;
+    document.getElementById('pStatus').value     = p.status || 'draft';
+    document.getElementById('pDeadline').value   = p.application_deadline ? p.application_deadline.substring(0,10) : '';
+    document.getElementById('pSalaryMin').value  = p.salary_min || '';
+    document.getElementById('pSalaryMax').value  = p.salary_max || '';
+    document.getElementById('pDesc').value       = p.description || '';
+    document.getElementById('pReqs').value       = p.requirements || '';
+    const m = document.getElementById('postingModal');
+    m.classList.remove('hidden');
+    m.classList.add('flex');
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closePostingModal(); });
+
+@if($errors->any())
+document.addEventListener('DOMContentLoaded', () => openPostingModal());
+@endif
+</script>
+@endpush

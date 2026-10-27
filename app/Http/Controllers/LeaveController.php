@@ -74,14 +74,13 @@ class LeaveController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        if ($user && ($user->hasRole('student') || ($user->hasRole(['teacher', 'class-teacher']) && !$user->can('view teachers')))) {
-            $applications = LeaveApplication::with('leaveType', 'reviewer')
-                ->where('user_id', $user->id)
-                ->latest()
-                ->paginate(15);
-            $types = LeaveType::where('is_active', true)->get();
 
-            return view('leave.student', compact('applications', 'types'));
+        // Teachers and students always see their own self-service form
+        $isSelfService = $user->hasAnyRole(['student', 'teacher', 'class-teacher'])
+            && !$user->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'vice-principal', 'hr-manager', 'hr']);
+
+        if ($isSelfService) {
+            return $this->applyForm($request);
         }
 
         $this->authorize('view teachers');
@@ -103,6 +102,19 @@ class LeaveController extends Controller
             ->groupBy('status')->pluck('total', 'status');
 
         return view('teachers.leave.index', compact('applications', 'counts', 'status', 'search'));
+    }
+
+    /** Self-service leave form for teachers & students */
+    public function applyForm(Request $request)
+    {
+        $user = auth()->user();
+        $applications = LeaveApplication::with('leaveType', 'reviewer')
+            ->where('user_id', $user->id)
+            ->latest()
+            ->paginate(15);
+        $types = LeaveType::where('is_active', true)->get();
+
+        return view('leave.student', compact('applications', 'types'));
     }
 
     /** Teacher applies for leave */

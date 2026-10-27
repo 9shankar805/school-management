@@ -20,7 +20,7 @@ class CourseRepository implements CourseInterface {
     }
 
     public function getByClassId($class_id) {
-        return Course::where('class_id', $class_id)->get();
+        return Course::uniqueByName()->where('class_id', $class_id)->orderBy('course_name')->get();
     }
 
     public function findById($course_id) {

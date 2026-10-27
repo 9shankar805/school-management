@@ -173,8 +173,14 @@
                         $selectedRole = old('role', 'accountant');
                     @endphp
                     @foreach($assignableRoles as $slug => $info)
-                    <label class="staff-role-card relative flex items-start gap-3 p-3.5 rounded-2xl border-2 transition cursor-pointer {{ $selectedRole === $slug ? 'border-indigo-600 bg-indigo-50/40 dark:bg-indigo-950/30 dark:border-indigo-500' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-slate-900' }}">
-                        <input type="radio" name="role" value="{{ $slug }}" @checked($selectedRole === $slug) required class="sr-only" onchange="highlightRoleCard(this)">
+                    <label class="staff-role-card relative flex items-start gap-3 p-3.5 rounded-2xl border-2 transition cursor-pointer bg-white dark:bg-slate-900"
+                           style="{{ $selectedRole === $slug ? 'border-color:#4f46e5;background-color:#eef2ff;' : 'border-color:#e2e8f0;' }}"
+                           onclick="selectRoleCard(this)">
+                        <input type="radio" name="role" value="{{ $slug }}" @checked($selectedRole === $slug) required class="sr-only">
+                        {{-- Selected checkmark --}}
+                        <span class="role-check absolute top-2 right-2 w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] {{ $selectedRole === $slug ? '' : 'hidden' }}">
+                            <i class="bi bi-check-lg"></i>
+                        </span>
                         <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0 text-lg">
                             <i class="bi {{ $info['icon'] ?? 'bi-person-badge' }}"></i>
                         </div>
@@ -337,14 +343,30 @@ function previewStaffPhoto(input) {
 
 function highlightRoleCard(radio) {
     document.querySelectorAll('.staff-role-card').forEach(card => {
-        card.classList.remove('border-indigo-600', 'bg-indigo-50/40', 'dark:bg-indigo-950/30', 'dark:border-indigo-500');
-        card.classList.add('border-slate-200', 'dark:border-slate-800');
+        card.style.borderColor = '#e2e8f0';
+        card.style.backgroundColor = '';
+        const check = card.querySelector('.role-check');
+        if (check) check.classList.add('hidden');
+        const radio = card.querySelector('input[type="radio"]');
+        if (radio) radio.checked = false;
     });
-    const parent = radio.closest('.staff-role-card');
-    if (parent) {
-        parent.classList.remove('border-slate-200', 'dark:border-slate-800');
-        parent.classList.add('border-indigo-600', 'bg-indigo-50/40', 'dark:bg-indigo-950/30', 'dark:border-indigo-500');
-    }
+    // This is now called via selectRoleCard, kept for back-compat
+}
+function selectRoleCard(label) {
+    // Deselect all
+    document.querySelectorAll('.staff-role-card').forEach(card => {
+        card.style.borderColor = '#e2e8f0';
+        card.style.backgroundColor = '';
+        const check = card.querySelector('.role-check');
+        if (check) check.classList.add('hidden');
+    });
+    // Select clicked
+    label.style.borderColor = '#4f46e5';
+    label.style.backgroundColor = '#eef2ff';
+    const check = label.querySelector('.role-check');
+    if (check) check.classList.remove('hidden');
+    const radio = label.querySelector('input[type="radio"]');
+    if (radio) radio.checked = true;
 }
 </script>
 @endsection
