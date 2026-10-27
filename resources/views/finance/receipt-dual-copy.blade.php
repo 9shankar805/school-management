@@ -180,7 +180,11 @@
             <td class="info-label">Roll / ID:</td>
             <td class="info-val">{{ $student?->roll_no ?? $student?->id_card_number ?? '—' }}</td>
             <td class="info-label">Method:</td>
-            <td class="info-val">{{ strtoupper($payment->payment_method ?? 'CASH') }}</td>
+            <td class="info-val">
+                {{ strtoupper($payment->payment_method ?? 'CASH') }}
+                @if($payment->bankAccount) ({{ $payment->bankAccount->bank_name }}) @endif
+                @if($payment->gateway_transaction_id) | Ref: {{ $payment->gateway_transaction_id }} @endif
+            </td>
         </tr>
         <tr>
             <td class="info-label">Invoice:</td>
@@ -273,7 +277,11 @@
             <td class="info-label">Roll / ID:</td>
             <td class="info-val">{{ $student?->roll_no ?? $student?->id_card_number ?? '—' }}</td>
             <td class="info-label">Method:</td>
-            <td class="info-val">{{ strtoupper($payment->payment_method ?? 'CASH') }}</td>
+            <td class="info-val">
+                {{ strtoupper($payment->payment_method ?? 'CASH') }}
+                @if($payment->bankAccount) ({{ $payment->bankAccount->bank_name }}) @endif
+                @if($payment->gateway_transaction_id) | Ref: {{ $payment->gateway_transaction_id }} @endif
+            </td>
         </tr>
         <tr>
             <td class="info-label">Invoice:</td>

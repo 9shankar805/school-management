@@ -74,6 +74,18 @@
         <td>Pay Method:</td>
         <td class="text-right bold">{{ strtoupper($payment->payment_method ?? 'CASH') }}</td>
     </tr>
+    @if($payment->bankAccount)
+    <tr>
+        <td>Bank:</td>
+        <td class="text-right">{{ $payment->bankAccount->bank_name }}</td>
+    </tr>
+    @endif
+    @if($payment->gateway_transaction_id)
+    <tr>
+        <td>Trace / Ref:</td>
+        <td class="text-right font-mono">{{ $payment->gateway_transaction_id }}</td>
+    </tr>
+    @endif
 </table>
 
 <div class="dashed-line"></div>
