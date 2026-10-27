@@ -24,8 +24,13 @@ class NoticeStoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'notice'    => 'required',
-            'session_id'=> 'required',
+            'title'       => 'required|string|max:255',
+            'priority'    => 'nullable|string|in:normal,urgent,holiday,exam',
+            'audience'    => 'nullable|string|in:all,parents,students,teachers',
+            'expiry_date' => 'nullable|date',
+            'notice'      => 'required|string',
+            'session_id'  => 'required',
+            'attachment'  => 'nullable|file|mimes:pdf,jpg,jpeg,png,docx|max:10240',
         ];
     }
 }

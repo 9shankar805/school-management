@@ -18,6 +18,15 @@ class TeacherAttendanceController extends Controller
     /** Daily attendance marking page */
     public function index(Request $request)
     {
+        $user = auth()->user();
+        if (!$user || $user->isStudent() || $user->isParent() || !$user->isStaff()) {
+            abort(403, 'Unauthorized to view teacher attendance.');
+        }
+
+        if ($user->isTeacher() && !$user->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'vice-principal', 'hr-manager', 'hr', 'academic-coordinator'])) {
+            return redirect()->route('teacher.attendance.show', $user->id);
+        }
+
         $date     = $request->query('date', now()->toDateString());
         $teachers = User::role(['teacher', 'class-teacher'])
             ->with(['teacherAttendance' => fn($q) => $q->whereDate('date', $date)])
@@ -34,7 +43,11 @@ class TeacherAttendanceController extends Controller
     /** Bulk mark attendance for a date */
     public function store(Request $request)
     {
-        $this->authorize('create teachers');
+        $user = auth()->user();
+        if (!$user || !$user->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'vice-principal', 'hr-manager', 'hr', 'academic-coordinator'])) {
+            abort(403, 'Unauthorized to mark teacher attendance.');
+        }
+
         $request->validate([
             'date'         => 'required|date',
             'attendance'   => 'required|array',
@@ -55,6 +68,17 @@ class TeacherAttendanceController extends Controller
     /** Monthly attendance report for a single teacher */
     public function show(Request $request, int $teacherId)
     {
+        $user = auth()->user();
+        if (!$user || $user->isStudent() || $user->isParent() || !$user->isStaff()) {
+            abort(403, 'Unauthorized.');
+        }
+
+        if ($user->isTeacher() && !$user->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'vice-principal', 'hr-manager', 'hr', 'academic-coordinator'])) {
+            if ((int)$user->id !== (int)$teacherId) {
+                abort(403, 'Unauthorized to view other staff attendance.');
+            }
+        }
+
         $teacher = User::findOrFail($teacherId);
         $month   = (int) $request->query('month', now()->month);
         $year    = (int) $request->query('year',  now()->year);

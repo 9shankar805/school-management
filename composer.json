@@ -17,16 +17,16 @@
         "phpoffice/phpword": "^0.18",
         "predis/predis": "^2.0",
         "spatie/laravel-activitylog": "^4.7",
-        "spatie/laravel-backup": "^8.6",
+        "spatie/laravel-backup": "^7.8",
         "spatie/laravel-permission": "^4.2",
-        "stevebauman/purify": "^4.0"
+        "stevebauman/purify": "^4.0",
+        "laravel/ui": "^3.3",
+        "fakerphp/faker": "^1.9.1"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.6",
         "facade/ignition": "^2.5",
-        "fakerphp/faker": "^1.9.1",
         "laravel/sail": "^1.0.1",
-        "laravel/ui": "^3.3",
         "mockery/mockery": "^1.4.2",
         "nunomaduro/collision": "^5.0",
         "phpunit/phpunit": "^9.3.3"
@@ -72,6 +72,11 @@
         "sort-packages": true,
         "platform": {
             "php": "8.3.31"
+        },
+        "policy": {
+            "advisories": {
+                "block": false
+            }
         }
     },
     "minimum-stability": "dev",

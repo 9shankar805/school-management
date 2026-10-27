@@ -66,7 +66,23 @@ class HomeworkController extends Controller
         $this->authorize('create homework');
 
         $session_id = $this->getSchoolCurrentSession();
-        $classes    = $this->schoolClassRepository->getAllBySession($session_id);
+        $user       = auth()->user();
+        $isRestrictedTeacher = $user && ($user->hasRole('teacher') || $user->hasRole('class-teacher'))
+                             && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator']);
+
+        if ($isRestrictedTeacher) {
+            $assignedClassIds = \App\Models\AssignedTeacher::where('session_id', $session_id)
+                ->where('teacher_id', $user->id)
+                ->pluck('class_id')
+                ->unique()
+                ->filter()
+                ->all();
+            $classes = \App\Models\SchoolClass::where('session_id', $session_id)
+                ->whereIn('id', $assignedClassIds)
+                ->get();
+        } else {
+            $classes = $this->schoolClassRepository->getAllBySession($session_id);
+        }
 
         return view('homework.create', compact('classes', 'session_id'));
     }
@@ -199,5 +215,66 @@ class HomeworkController extends Controller
         $homework->update(['status' => $homework->status === 'active' ? 'closed' : 'active']);
 
         return back()->with('status', 'Homework status updated.');
+    }
+
+    // ── Teacher: Open In-Browser Annotation Workbench ─────────────────────
+    public function annotateView(int $submissionId)
+    {
+        $this->authorize('create homework');
+        $submission = HomeworkSubmission::with(['homework', 'student'])->findOrFail($submissionId);
+        abort_if(
+            $submission->homework->teacher_id !== auth()->id() && !auth()->user()->hasRole(['admin', 'principal']),
+            403, 'Unauthorized'
+        );
+
+        return view('homework.annotate', compact('submission'));
+    }
+
+    // ── Teacher: Save Annotated Canvas & Graded Score ─────────────────────
+    public function saveAnnotation(Request $request, int $submissionId)
+    {
+        $this->authorize('create homework');
+        $submission = HomeworkSubmission::with('homework')->findOrFail($submissionId);
+        abort_if(
+            $submission->homework->teacher_id !== auth()->id() && !auth()->user()->hasRole(['admin', 'principal']),
+            403, 'Unauthorized'
+        );
+
+        $request->validate([
+            'marks_obtained'   => 'nullable|integer|min:0|max:' . $submission->homework->total_marks,
+            'teacher_feedback' => 'nullable|string|max:1000',
+            'image_data'       => 'nullable|string', // base64
+            'annotations_json' => 'nullable|string',
+        ]);
+
+        $annotatedPath = $submission->annotated_file_path;
+
+        if ($request->filled('image_data')) {
+            $base64 = $request->input('image_data');
+            if (preg_match('/^data:image\/(\w+);base64,/', $base64, $type)) {
+                $base64 = substr($base64, strpos($base64, ',') + 1);
+                $type = strtolower($type[1]);
+                $imageBinary = base64_decode($base64);
+                if ($imageBinary !== false) {
+                    $filename = 'homework-annotated/' . uniqid('annotated_') . '.' . $type;
+                    Storage::disk('public')->put($filename, $imageBinary);
+                    $annotatedPath = $filename;
+                }
+            }
+        }
+
+        $submission->update([
+            'marks_obtained'      => $request->input('marks_obtained', $submission->marks_obtained),
+            'teacher_feedback'    => $request->input('teacher_feedback', $submission->teacher_feedback),
+            'annotated_file_path' => $annotatedPath,
+            'annotations_json'    => $request->input('annotations_json', $submission->annotations_json),
+            'status'              => 'graded',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Annotation and grading saved successfully!',
+            'annotated_url' => $annotatedPath ? asset('storage/' . $annotatedPath) : null,
+        ]);
     }
 }

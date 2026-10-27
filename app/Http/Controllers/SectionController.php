@@ -60,17 +60,130 @@ class SectionController extends Controller
     public function store(SectionStoreRequest $request)
     {
         try {
-            $this->schoolSectionRepository->create($request->validated());
+            $sessionId = (int) $request->session_id;
+            $defaultRoomNo = $request->input('room_no', '101') ?: '101';
 
-            return back()->with('status', 'Section creation was successful!');
+            // 1. Determine target classes
+            $targetClassIds = [];
+            if ($request->boolean('all_classes') || $request->input('class_id') === 'all') {
+                $targetClassIds = \App\Models\SchoolClass::where('session_id', $sessionId)->pluck('id')->all();
+            } elseif ($request->has('class_ids') && is_array($request->class_ids) && count($request->class_ids) > 0) {
+                $targetClassIds = array_filter(array_map('intval', $request->class_ids));
+            } elseif ($request->filled('class_id')) {
+                $targetClassIds = [(int) $request->class_id];
+            }
+
+            if (empty($targetClassIds)) {
+                return back()->with('error', 'No valid classes were selected for section creation.');
+            }
+
+            // 2. Parse section names (e.g. "A, B" or "Red, Blue")
+            $rawSections = preg_split('/[\r\n,]+/', $request->section_name);
+            $sectionNames = array_unique(array_filter(array_map('trim', $rawSections)));
+
+            if (empty($sectionNames)) {
+                return back()->with('error', 'Please provide at least one section name.');
+            }
+
+            // 3. Create sections for each class with auto-incrementing room numbers
+            $createdCount = 0;
+            $classCount = count($targetClassIds);
+            $currentRoomCounter = $defaultRoomNo;
+
+            foreach ($targetClassIds as $classId) {
+                foreach ($sectionNames as $secName) {
+                    $assignedRoom = $this->incrementRoomNumber($currentRoomCounter);
+                    $sec = Section::firstOrCreate([
+                        'class_id'     => $classId,
+                        'section_name' => $secName,
+                        'session_id'   => $sessionId,
+                    ], [
+                        'room_no'      => $assignedRoom,
+                    ]);
+                    if ($sec->wasRecentlyCreated) {
+                        $createdCount++;
+                    }
+                }
+            }
+
+            $secListStr = implode(', ', $sectionNames);
+            $selectedClassNames = \App\Models\SchoolClass::whereIn('id', $targetClassIds)->pluck('class_name')->all();
+            $classNamesStr = implode(', ', array_slice($selectedClassNames, 0, 5)) . (count($selectedClassNames) > 5 ? " and " . (count($selectedClassNames) - 5) . " more" : "");
+
+            if ($classCount === 1) {
+                return back()->with('status', "Section(s) [{$secListStr}] created successfully for {$classNamesStr} with sequential rooms starting from {$defaultRoomNo}!");
+            }
+
+            return back()->with('status', "Successfully created section(s) [{$secListStr}] for {$classCount} classes ({$classNamesStr}) — {$createdCount} new section(s) added with sequential rooms starting from {$defaultRoomNo}!");
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            return back()->with('error', 'Failed to create sections. ' . $e->getMessage());
         }
     }
 
+    /**
+     * Increment room number string (e.g. "103" -> "104", "Room-103" -> "Room-104")
+     */
+    private function incrementRoomNumber(string &$currentRoom): string
+    {
+        $trimmed = trim($currentRoom);
+        if (preg_match('/^(.*?)(\d+)(\D*)$/', $trimmed, $matches)) {
+            $prefix = $matches[1];
+            $numStr = $matches[2];
+            $suffix = $matches[3];
+            $padLen = strlen($numStr);
+            $num = (int)$numStr;
+
+            $assigned = $trimmed;
+            $nextNum = $num + 1;
+            $nextNumStr = str_pad((string)$nextNum, $padLen, '0', STR_PAD_LEFT);
+            $currentRoom = $prefix . $nextNumStr . $suffix;
+            return $assigned;
+        }
+
+        return $trimmed;
+    }
+
     public function getByClassId(Request $request) {
-        $sections = $this->schoolSectionRepository->getAllByClassId($request->query('class_id', 0));
-        $courses = $this->courseRepository->getByClassId($request->query('class_id', 0));
+        $classId = (int) $request->query('class_id', 0);
+        $user = auth()->user();
+        $sessionId = $this->getSchoolCurrentSession();
+        $isRestrictedTeacher = $user && ($user->hasRole('teacher') || $user->hasRole('class-teacher'))
+                             && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'attendance-officer']);
+        $forAttendance = $request->query('for_attendance') || $request->query('is_attendance');
+
+        if ($isRestrictedTeacher) {
+            $query = \App\Models\AssignedTeacher::where('session_id', $sessionId)
+                ->where('teacher_id', $user->id)
+                ->where('class_id', $classId);
+
+            if ($forAttendance) {
+                $query->where('is_class_teacher', true);
+            }
+
+            $assignedSectionIds = $query->pluck('section_id')
+                ->unique()
+                ->filter()
+                ->all();
+
+            $sections = \App\Models\Section::where('class_id', $classId)
+                ->whereIn('id', $assignedSectionIds)
+                ->get();
+
+            $assignedCourseIds = \App\Models\AssignedTeacher::where('session_id', $sessionId)
+                ->where('teacher_id', $user->id)
+                ->where('class_id', $classId)
+                ->pluck('course_id')
+                ->unique()
+                ->filter()
+                ->all();
+
+            $courses = \App\Models\Course::where('class_id', $classId)
+                ->whereIn('id', $assignedCourseIds)
+                ->get();
+        } else {
+            $sections = $this->schoolSectionRepository->getAllByClassId($classId);
+            $courses = $this->courseRepository->getByClassId($classId);
+        }
 
         return response()->json(['sections' => $sections, 'courses' => $courses]);
     }
@@ -139,6 +252,28 @@ class SectionController extends Controller
             return back()->with('status', 'Section "' . $secName . '" deleted successfully!');
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to delete section. ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Remove multiple sections from storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkDestroy(Request $request)
+    {
+        try {
+            $sectionIds = $request->input('section_ids', []);
+            if (empty($sectionIds) || !is_array($sectionIds)) {
+                return back()->with('error', 'No sections were selected for deletion.');
+            }
+
+            $count = Section::whereIn('id', $sectionIds)->delete();
+
+            return back()->with('status', "Successfully deleted {$count} selected section(s)!");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to delete selected sections: ' . $e->getMessage());
         }
     }
 }

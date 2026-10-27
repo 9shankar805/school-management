@@ -83,12 +83,19 @@
 
                 {{-- Images --}}
                 @if($question->images->count())
-                <div class="mt-4 flex flex-wrap gap-3">
-                    @foreach($question->images as $img)
-                    <a href="{{ asset('storage/' . $img->file_path) }}" target="_blank">
-                        <img src="{{ asset('storage/' . $img->file_path) }}" class="w-32 h-32 object-cover rounded-xl border border-slate-200 hover:opacity-80 transition">
-                    </a>
-                    @endforeach
+                <div class="mt-5 pt-4 border-t border-slate-100">
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+                        <i class="bi bi-image me-1 text-indigo-500"></i>Question Image(s) (Full Size)
+                    </label>
+                    <div class="space-y-4">
+                        @foreach($question->images as $img)
+                        <div class="rounded-2xl border border-slate-200 bg-slate-50/80 p-3 overflow-hidden">
+                            <a href="{{ asset('storage/' . $img->file_path) }}" target="_blank" class="block group text-center" title="Click to view full original image">
+                                <img src="{{ asset('storage/' . $img->file_path) }}" class="max-w-full w-auto h-auto max-h-[600px] mx-auto object-contain rounded-xl shadow-sm group-hover:shadow-md transition duration-200" alt="Question Image">
+                            </a>
+                        </div>
+                        @endforeach
+                    </div>
                 </div>
                 @endif
             </div>

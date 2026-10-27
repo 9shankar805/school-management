@@ -34,8 +34,6 @@ class AcademicSettingController extends Controller
         CourseInterface $courseRepository,
         SemesterInterface $semesterRepository
     ) {
-        $this->middleware(['can:view academic settings']);
-
         $this->academicSettingRepository = $academicSettingRepository;
         $this->schoolSessionRepository = $schoolSessionRepository;
         $this->schoolClassRepository = $schoolClassRepository;
@@ -52,6 +50,11 @@ class AcademicSettingController extends Controller
      */
     public function index()
     {
+        $authUser = auth()->user();
+        if (!$authUser || $authUser->isStudent() || $authUser->isParent()) {
+            abort(403, 'Unauthorized to view school setup.');
+        }
+
         $current_school_session_id = $this->getSchoolCurrentSession();
 
         $latest_school_session = $this->schoolSessionRepository->getLatestSession();
@@ -70,9 +73,16 @@ class AcademicSettingController extends Controller
 
         $semesters = $this->semesterRepository->getAll($current_school_session_id);
 
+        $latest_school_session_id = $latest_school_session ? $latest_school_session->id : $current_school_session_id;
+
+        $assigned_teachers = \App\Models\AssignedTeacher::with(['teacher', 'schoolClass', 'section', 'course', 'semester'])
+            ->where('session_id', $current_school_session_id)
+            ->latest()
+            ->get();
+
         $data = [
             'current_school_session_id' => $current_school_session_id,
-            'latest_school_session_id'  => $latest_school_session->id,
+            'latest_school_session_id'  => $latest_school_session_id,
             'academic_setting'          => $academic_setting,
             'school_sessions'           => $school_sessions,
             'school_classes'            => $school_classes,
@@ -80,6 +90,7 @@ class AcademicSettingController extends Controller
             'teachers'                  => $teachers,
             'courses'                   => $courses,
             'semesters'                 => $semesters,
+            'assigned_teachers'         => $assigned_teachers,
         ];
 
         return view('academics.settings', $data);

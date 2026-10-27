@@ -64,24 +64,25 @@
     <div class="flex-1 flex items-center justify-center p-6 sm:p-12 relative overflow-hidden"
          style="background: url('{{ asset('imgs/loginbg.webp') }}') center center / cover no-repeat;">
 
+        <div class="absolute inset-0 bg-slate-900/5 dark:bg-slate-950/60 pointer-events-none transition-colors"></div>
+
         {{-- Frosted glass card keeps the form readable --}}
-        <div class="w-full max-w-md relative rounded-2xl p-8 sm:p-10"
-             style="background:rgba(255,255,255,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 8px 40px rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.6)">
+        <div class="w-full max-w-md relative rounded-2xl p-8 sm:p-10 auth-glass-card shadow-2xl">
 
             {{-- Mobile brand --}}
             <div class="flex items-center gap-2.5 mb-8 lg:hidden">
                 <img src="{{ asset('imgs/logo_icon.webp') }}" alt="{{ config('app.name') }} logo"
                      class="w-9 h-9 rounded-lg object-contain bg-indigo-600"
                      style="padding:4px">
-                <span class="font-bold text-base" style="color:var(--text-heading)">
+                <span class="font-bold text-base text-slate-900 dark:text-slate-100">
                     {{ config('app.name', 'School ERP') }}
                 </span>
             </div>
 
             {{-- Heading --}}
             <div class="mb-8">
-                <h2 class="font-bold text-2xl mb-1" style="color:var(--text-heading)">Create an account</h2>
-                <p class="text-sm" style="color:var(--text-muted)">Fill in the details below to get started</p>
+                <h2 class="font-bold text-2xl mb-1 text-slate-900 dark:text-white">Create an account</h2>
+                <p class="text-sm text-slate-500 dark:text-slate-400">Fill in the details below to get started</p>
             </div>
 
             {{-- Error messages --}}
@@ -101,7 +102,7 @@
 
                 {{-- Name --}}
                 <div class="form-group-modern">
-                    <label for="name" class="label-modern">Full name</label>
+                    <label for="name" class="label-modern text-slate-700 dark:text-slate-300">Full name</label>
                     <div class="relative flex items-center">
                         <i class="bi bi-person absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none z-10"></i>
                         <input id="name"
@@ -119,7 +120,7 @@
 
                 {{-- Email --}}
                 <div class="form-group-modern">
-                    <label for="email" class="label-modern">Email address</label>
+                    <label for="email" class="label-modern text-slate-700 dark:text-slate-300">Email address</label>
                     <div class="relative flex items-center">
                         <i class="bi bi-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none z-10"></i>
                         <input id="email"
@@ -136,7 +137,7 @@
 
                 {{-- Password --}}
                 <div class="form-group-modern">
-                    <label for="password" class="label-modern">Password</label>
+                    <label for="password" class="label-modern text-slate-700 dark:text-slate-300">Password</label>
                     <div class="relative flex items-center">
                         <i class="bi bi-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none z-10"></i>
                         <input id="password"
@@ -148,7 +149,8 @@
                                style="padding-left: 2.75rem !important; padding-right: 2.75rem !important;"
                                class="input-modern {{ $errors->has('password') ? 'border-red-400' : '' }}">
                         <button type="button"
-                                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition p-1 z-10"
+                                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1.5 z-10 bg-transparent border-0 outline-none shadow-none cursor-pointer flex items-center justify-center"
+                                style="background:transparent !important; border:none !important; min-height:auto !important; outline:none !important; box-shadow:none !important;"
                                 onclick="togglePassword('password','pw-eye')"
                                 aria-label="Show/hide password">
                             <i class="bi bi-eye text-sm" id="pw-eye"></i>
@@ -158,7 +160,7 @@
 
                 {{-- Confirm Password --}}
                 <div class="form-group-modern">
-                    <label for="password-confirm" class="label-modern">Confirm password</label>
+                    <label for="password-confirm" class="label-modern text-slate-700 dark:text-slate-300">Confirm password</label>
                     <div class="relative flex items-center">
                         <i class="bi bi-lock-fill absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none z-10"></i>
                         <input id="password-confirm"
@@ -170,7 +172,8 @@
                                style="padding-left: 2.75rem !important; padding-right: 2.75rem !important;"
                                class="input-modern">
                         <button type="button"
-                                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition p-1 z-10"
+                                class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition p-1.5 z-10 bg-transparent border-0 outline-none shadow-none cursor-pointer flex items-center justify-center"
+                                style="background:transparent !important; border:none !important; min-height:auto !important; outline:none !important; box-shadow:none !important;"
                                 onclick="togglePassword('password-confirm','pw-confirm-eye')"
                                 aria-label="Show/hide confirm password">
                             <i class="bi bi-eye text-sm" id="pw-confirm-eye"></i>
@@ -180,20 +183,20 @@
 
                 {{-- Submit --}}
                 <button type="submit"
-                        class="w-full btn-primary justify-center py-2.5 text-sm font-semibold mt-2">
+                        class="w-full btn-primary justify-center py-2.5 text-sm font-semibold mt-2 shadow-md">
                     <i class="bi bi-person-plus"></i>
                     Create Account
                 </button>
 
                 {{-- Login link --}}
-                <p class="text-center text-sm" style="color:var(--text-muted)">
+                <p class="text-center text-sm text-slate-500 dark:text-slate-400">
                     Already have an account?
-                    <a href="{{ route('login') }}" class="font-medium hover:underline" style="color:var(--color-primary)">Sign in</a>
+                    <a href="{{ route('login') }}" class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">Sign in</a>
                 </p>
             </form>
 
             {{-- Footer note --}}
-            <p class="text-center text-xs mt-8" style="color:var(--text-muted)">
+            <p class="text-center text-xs mt-8 text-slate-400 dark:text-slate-500">
                 &copy; {{ date('Y') }} {{ config('app.name') }} &middot; Tech Procod Pvt Ltd
             </p>
 

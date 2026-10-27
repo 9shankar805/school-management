@@ -43,10 +43,15 @@
             </div>
             <div class="flex-1 min-w-[160px]">
                 <label class="block text-xs text-slate-500 mb-1">Search</label>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search question text…"
-                       class="w-full border border-slate-200 rounded-xl px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                <div class="relative">
+                    <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search question text…"
+                           class="w-full border border-slate-200 rounded-xl pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                </div>
             </div>
-            <button type="submit" class="px-4 py-1.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition">Filter</button>
+            <button type="submit" class="px-4 py-1.5 bg-slate-700 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition flex items-center gap-1.5">
+                <i class="bi bi-search"></i> Filter
+            </button>
             <a href="{{ route('question-bank.index') }}" class="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition">Clear</a>
         </form>
 

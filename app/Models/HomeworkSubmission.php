@@ -14,6 +14,7 @@ class HomeworkSubmission extends Model
     protected $fillable = [
         'school_id',
         'homework_id', 'student_id', 'file_path',
+        'annotated_file_path', 'annotations_json',
         'remarks', 'status', 'marks_obtained',
         'teacher_feedback', 'submitted_at',
     ];

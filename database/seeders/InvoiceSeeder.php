@@ -25,7 +25,7 @@ class InvoiceSeeder extends Seeder
 
             \App\Models\Payment::create([
                 'invoice_id' => $invoice->id,
-                'amount_paid' => 500.00,
+                'amount' => 500.00,
                 'payment_date' => now(),
                 'payment_method' => 'Credit Card',
             ]);

@@ -78,11 +78,29 @@ class FinanceReportController extends Controller
         return Excel::download(new FinanceReportExport($records, $type), "finance-{$type}-report.xlsx");
     }
 
-    // PDF receipt for a single payment
-    public function receipt(int $paymentId)
+    // PDF & Print receipt for a single payment (Standard A5, Dual-Copy A4, 80mm POS Thermal)
+    public function receipt(Request $request, int $paymentId)
     {
-        $payment = Payment::with(['invoice.student'])->findOrFail($paymentId);
-        $pdf = Pdf::loadView('finance.receipt-pdf', compact('payment'))
+        $payment = Payment::with(['invoice.student', 'invoice.items.feeType', 'recordedBy'])->findOrFail($paymentId);
+        $school = \App\Models\School::find(
+            $payment->invoice?->school_id
+            ?? optional(auth()->user())->school_id
+            ?? optional($payment->invoice?->student)->school_id
+        );
+
+        $format = $request->query('format', 'standard');
+
+        if ($format === 'dual') {
+            $pdf = Pdf::loadView('finance.receipt-dual-copy', compact('payment', 'school'))
+                      ->setPaper('a4', 'portrait');
+            return $pdf->stream("receipt-dual-{$payment->id}.pdf");
+        }
+
+        if ($format === 'thermal') {
+            return view('finance.receipt-thermal', compact('payment', 'school'));
+        }
+
+        $pdf = Pdf::loadView('finance.receipt-pdf', compact('payment', 'school'))
                   ->setPaper('a5');
         return $pdf->stream("receipt-{$payment->id}.pdf");
     }

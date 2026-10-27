@@ -14,6 +14,7 @@ class Driver extends Model
 
     protected $fillable = [
         'school_id',
+        'user_id',   // linked User account for Sanctum auth (driver-app login)
         'name', 'employee_id', 'phone', 'email', 'address', 'date_of_birth',
         'joining_date', 'license_number', 'license_type', 'license_expiry',
         'national_id', 'photo', 'current_vehicle_id', 'status', 'salary', 'notes',
@@ -27,6 +28,11 @@ class Driver extends Model
     ];
 
     // ── Relationships ─────────────────────────────────────────────────────────
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
+    }
 
     public function currentVehicle()
     {

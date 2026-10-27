@@ -22,10 +22,20 @@
             @endif
             @endcan
             @if($invoice->payments->isNotEmpty())
-            <a href="{{ route('finance.receipt', $invoice->payments->last()->id) }}"
-               class="btn-secondary text-sm px-4 py-2 rounded-xl" target="_blank">
-                <i class="bi bi-receipt mr-1"></i> Receipt PDF
-            </a>
+            <div class="inline-flex rounded-xl shadow-sm" role="group">
+                <a href="{{ route('payments.receipt-download', $invoice->payments->last()->id) }}"
+                   class="btn-secondary text-sm px-3.5 py-2 rounded-l-xl border-r-0" target="_blank" title="Standard A5 PDF Receipt">
+                    <i class="bi bi-file-pdf mr-1 text-rose-500"></i> Receipt
+                </a>
+                <a href="{{ route('payments.receipt-download', ['paymentId' => $invoice->payments->last()->id, 'format' => 'dual']) }}"
+                   class="btn-secondary text-sm px-3 py-2 border-r-0" target="_blank" title="Dual Copy (A4) Student + Office">
+                    <i class="bi bi-files text-indigo-500"></i> Dual
+                </a>
+                <a href="{{ route('payments.receipt-download', ['paymentId' => $invoice->payments->last()->id, 'format' => 'thermal']) }}"
+                   class="btn-secondary text-sm px-3 py-2 rounded-r-xl" target="_blank" title="POS Thermal (80mm) Receipt">
+                    <i class="bi bi-receipt text-amber-500"></i> POS
+                </a>
+            </div>
             @endif
             <a href="{{ route('payments.student-ledger', $invoice->student_id) }}"
                class="btn-secondary text-sm px-4 py-2 rounded-xl">
@@ -99,12 +109,12 @@
                         </tbody>
                         <tfoot class="bg-slate-50 dark:bg-slate-800/40 text-sm font-semibold">
                             <tr class="border-t border-slate-200 dark:border-slate-700">
-                                <td colspan="4" class="px-4 py-3 text-right text-slate-600 dark:text-slate-300">Subtotal</td>
+                                <td colspan="4" class="px-4 py-3 text-right text-slate-600 dark:text-slate-300">Current Month Charges Subtotal</td>
                                 <td class="px-4 py-3 text-right">Rs. {{ number_format($invoice->total_amount, 2) }}</td>
                             </tr>
                             @if($invoice->discount_amount > 0)
                             <tr>
-                                <td colspan="4" class="px-4 py-2 text-right text-emerald-600">Discount</td>
+                                <td colspan="4" class="px-4 py-2 text-right text-emerald-600">Discounts Applied</td>
                                 <td class="px-4 py-2 text-right text-emerald-600">-Rs. {{ number_format($invoice->discount_amount, 2) }}</td>
                             </tr>
                             @endif
@@ -114,9 +124,39 @@
                                 <td class="px-4 py-2 text-right">+Rs. {{ number_format($invoice->tax_amount, 2) }}</td>
                             </tr>
                             @endif
-                            <tr class="border-t-2 border-slate-300 dark:border-slate-600">
-                                <td colspan="4" class="px-4 py-3 text-right text-slate-800 dark:text-slate-100 font-bold">Net Amount</td>
-                                <td class="px-4 py-3 text-right text-slate-800 dark:text-slate-100 font-bold text-base">Rs. {{ number_format($invoice->amount, 2) }}</td>
+                            <tr class="border-t border-slate-200 dark:border-slate-700">
+                                <td colspan="4" class="px-4 py-2 text-right text-slate-700 dark:text-slate-200 font-semibold">Current Month Net Fee</td>
+                                <td class="px-4 py-2 text-right text-slate-700 dark:text-slate-200 font-semibold">Rs. {{ number_format($invoice->amount, 2) }}</td>
+                            </tr>
+                            @if($invoice->previous_due > 0)
+                            <tr class="bg-amber-50/60 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400">
+                                <td colspan="4" class="px-4 py-2.5 text-right font-semibold">
+                                    <span class="inline-flex items-center gap-1">
+                                        <i class="bi bi-clock-history text-xs"></i>
+                                        Previous Unpaid Dues (बक्यौता Arrears Carryover)
+                                    </span>
+                                </td>
+                                <td class="px-4 py-2.5 text-right font-bold">+Rs. {{ number_format($invoice->previous_due, 2) }}</td>
+                            </tr>
+                            @endif
+                            @if($invoice->fine_amount > 0)
+                            <tr class="bg-rose-50/60 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400">
+                                <td colspan="4" class="px-4 py-2.5 text-right font-semibold">
+                                    <span class="inline-flex items-center gap-1">
+                                        <i class="bi bi-exclamation-triangle text-xs"></i>
+                                        Late Payment Surcharge / Fine (विलम्ब शुल्क)
+                                    </span>
+                                </td>
+                                <td class="px-4 py-2.5 text-right font-bold">+Rs. {{ number_format($invoice->fine_amount, 2) }}</td>
+                            </tr>
+                            @endif
+                            <tr class="border-t-2 border-slate-300 dark:border-slate-600 bg-slate-100/70 dark:bg-slate-800/80">
+                                <td colspan="4" class="px-4 py-3.5 text-right text-slate-900 dark:text-white font-extrabold text-base">
+                                    Total Statement Payable (कुल तिर्नुपर्ने)
+                                </td>
+                                <td class="px-4 py-3.5 text-right text-emerald-700 dark:text-emerald-400 font-extrabold text-lg">
+                                    Rs. {{ number_format($invoice->total_payable, 2) }}
+                                </td>
                             </tr>
                         </tfoot>
                     </table>
@@ -153,19 +193,35 @@
         {{-- Summary sidebar --}}
         <div class="space-y-4">
             <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
-                <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">Summary</h3>
+                <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-4">Billing Summary</h3>
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between">
-                        <span class="text-slate-500">Invoice Total</span>
-                        <span class="font-semibold">Rs. {{ number_format($invoice->amount, 2) }}</span>
+                        <span class="text-slate-500">Current Month Net</span>
+                        <span class="font-semibold text-slate-700 dark:text-slate-200">Rs. {{ number_format($invoice->amount, 2) }}</span>
+                    </div>
+                    @if($invoice->previous_due > 0)
+                    <div class="flex justify-between text-amber-600 dark:text-amber-400">
+                        <span class="flex items-center gap-1"><i class="bi bi-clock-history text-xs"></i> Previous Arrears</span>
+                        <span class="font-semibold">+Rs. {{ number_format($invoice->previous_due, 2) }}</span>
+                    </div>
+                    @endif
+                    @if($invoice->fine_amount > 0)
+                    <div class="flex justify-between text-rose-600 dark:text-rose-400">
+                        <span class="flex items-center gap-1"><i class="bi bi-exclamation-circle text-xs"></i> Late Fine</span>
+                        <span class="font-semibold">+Rs. {{ number_format($invoice->fine_amount, 2) }}</span>
+                    </div>
+                    @endif
+                    <div class="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-2 font-bold text-slate-800 dark:text-slate-100">
+                        <span>Total Payable</span>
+                        <span>Rs. {{ number_format($invoice->total_payable, 2) }}</span>
                     </div>
                     <div class="flex justify-between text-emerald-600">
-                        <span>Paid</span>
-                        <span class="font-semibold">Rs. {{ number_format($invoice->amount_paid, 2) }}</span>
+                        <span>Paid to Date</span>
+                        <span class="font-semibold">-Rs. {{ number_format($invoice->amount_paid, 2) }}</span>
                     </div>
-                    <div class="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-3 {{ $invoice->amount_due > 0 ? 'text-rose-600' : 'text-emerald-600' }}">
-                        <span class="font-bold">{{ $invoice->status === 'paid' ? 'Settled' : 'Due' }}</span>
-                        <span class="font-bold">Rs. {{ number_format($invoice->amount_due, 2) }}</span>
+                    <div class="flex justify-between border-t-2 border-slate-200 dark:border-slate-700 pt-3 {{ $invoice->amount_due > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600' }}">
+                        <span class="font-extrabold text-base">{{ $invoice->status === 'paid' ? 'Settled' : 'Total Due' }}</span>
+                        <span class="font-extrabold text-lg">Rs. {{ number_format($invoice->amount_due, 2) }}</span>
                     </div>
                 </div>
             </div>
@@ -185,7 +241,7 @@
                     $paySchool->payment_qr_fonepay
                 );
             @endphp
-            @if($invoice->status !== 'paid' && $hasQR)
+            @if($hasQR)
             <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4">
                 <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wide flex items-center gap-1.5">
                     <i class="bi bi-qr-code text-emerald-600"></i> Scan to Pay
@@ -244,6 +300,7 @@
                 </div>
                 @endif
             </div>
+            @endif
             @endif
 
             <a href="{{ route('payments.student-ledger', $invoice->student_id) }}"

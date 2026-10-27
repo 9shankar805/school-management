@@ -1,53 +1,84 @@
 @extends('layouts.app')
-@section('content')
-    <div class="flex-1 p-6 lg:p-10 overflow-auto">
 
-        <div class="mb-8">
-            <a href="{{ route('roles.index') }}" class="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1 mb-3"><i class="bi bi-arrow-left"></i> Back to Roles</a>
-            <h1 class="text-2xl font-bold text-slate-800 capitalize">Edit: {{ str_replace('-', ' ', $role->name) }}</h1>
-            <p class="text-slate-500 text-sm mt-1">Select which permissions this role should have</p>
+@section('title', 'Edit Role Permissions - NepalSchoolHub')
+
+@section('content')
+<div class="flex-1 p-4 sm:p-6 lg:p-10 overflow-y-auto space-y-6 bg-slate-50/60 dark:bg-slate-950 min-h-screen">
+
+    {{-- Header --}}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <a href="{{ route('roles.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline mb-2">
+                <i class="bi bi-arrow-left"></i> Back to Roles & Permissions
+            </a>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 flex-shrink-0">
+                    <i class="bi bi-sliders text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight capitalize">
+                        Configure Permissions: {{ str_replace('-', ' ', $role->name) }}
+                    </h1>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Toggle operational scopes and capability flags for this user role</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if(session('success'))
+    <div class="px-4 py-3.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-sm rounded-2xl border border-emerald-200 dark:border-emerald-900/50 flex items-center justify-between shadow-xs">
+        <div class="flex items-center gap-2">
+            <i class="bi bi-check-circle-fill text-emerald-500"></i>
+            <span class="font-medium text-xs sm:text-sm">{{ session('success') }}</span>
+        </div>
+        <button type="button" onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800 text-xs">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    @endif
+
+    <form method="POST" action="{{ route('roles.update', $role) }}">
+        @csrf @method('PUT')
+
+        <div class="space-y-5 mb-8">
+            @foreach($permissions as $group => $groupPerms)
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+                <div class="px-6 py-3.5 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800 flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                        <p class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">{{ $group }} Module</p>
+                    </div>
+                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 cursor-pointer hover:text-indigo-600 select-none">
+                        <input type="checkbox" class="group-toggle rounded text-indigo-600 cursor-pointer" data-group="{{ $loop->index }}"> Select All
+                    </label>
+                </div>
+                <div class="p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    @foreach($groupPerms as $perm)
+                    <label class="flex items-center gap-2.5 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition select-none">
+                        <input type="checkbox" name="permissions[]" value="{{ $perm->id }}"
+                            class="rounded-lg border-slate-300 dark:border-slate-700 text-indigo-600 focus:ring-indigo-500 w-4 h-4 perm-check-{{ $loop->parent->index }} cursor-pointer"
+                            {{ in_array($perm->id, $rolePermissions) ? 'checked' : '' }}>
+                        <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">{{ $perm->name }}</span>
+                    </label>
+                    @endforeach
+                </div>
+            </div>
+            @endforeach
         </div>
 
-        @if(session('success'))
-        <div class="mb-4 px-4 py-3 bg-emerald-50 text-emerald-700 text-sm rounded-lg border border-emerald-200">{{ session('success') }}</div>
-        @endif
+        <div class="sticky bottom-6 flex justify-center gap-3 z-20">
+            <button type="submit" class="px-8 py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs sm:text-sm font-bold rounded-2xl shadow-xl shadow-indigo-600/30 transition transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2">
+                <i class="bi bi-check2-circle text-base"></i>
+                <span>Save Permissions</span>
+            </button>
+            <a href="{{ route('roles.index') }}" class="px-6 py-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-semibold rounded-2xl shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition active:scale-95 flex items-center">
+                Cancel
+            </a>
+        </div>
+    </form>
 
-        <form method="POST" action="{{ route('roles.update', $role) }}">
-            @csrf @method('PUT')
-
-            <div class="space-y-4 mb-8">
-                @foreach($permissions as $group => $groupPerms)
-                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                    <div class="px-5 py-3 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
-                        <p class="text-sm font-semibold text-slate-600">{{ $group }}</p>
-                        <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-all-group" data-group="{{ $loop->index }}">
-                            <input type="checkbox" class="group-toggle rounded" data-group="{{ $loop->index }}"> Select all
-                        </label>
-                    </div>
-                    <div class="p-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                        @foreach($groupPerms as $perm)
-                        <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer hover:text-slate-800">
-                            <input type="checkbox" name="permissions[]" value="{{ $perm->id }}"
-                                class="rounded border-slate-300 text-indigo-600 perm-check-{{ $loop->parent->index }}"
-                                {{ in_array($perm->id, $rolePermissions) ? 'checked' : '' }}>
-                            {{ $perm->name }}
-                        </label>
-                        @endforeach
-                    </div>
-                </div>
-                @endforeach
-            </div>
-
-            <div class="flex gap-3">
-                <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition">
-                    <i class="bi bi-check2 me-1"></i> Save Permissions
-                </button>
-                <a href="{{ route('roles.index') }}" class="px-6 py-2.5 bg-white border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 text-slate-700 transition">Cancel</a>
-            </div>
-        </form>
-
-    </div>
 </div>
+
 <script>
 document.querySelectorAll('.group-toggle').forEach(toggle => {
     toggle.addEventListener('change', function() {

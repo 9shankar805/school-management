@@ -20,5 +20,13 @@ class Course extends Model
     {
         return $this->course_name ?? '';
     }
+
+    public function schoolClass() {
+        return $this->belongsTo(\App\Models\SchoolClass::class, 'class_id');
+    }
+
+    public function semester() {
+        return $this->belongsTo(\App\Models\Semester::class, 'semester_id');
+    }
 }
 

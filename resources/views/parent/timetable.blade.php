@@ -81,11 +81,14 @@
                         <p class="text-xs font-bold text-slate-700">{{ \Carbon\Carbon::parse($slot->start)->format('H:i') }}</p>
                         <p class="text-[10px] text-slate-400">{{ \Carbon\Carbon::parse($slot->end)->format('H:i') }}</p>
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm font-medium text-slate-700">{{ $slot->course->course_name ?? '—' }}</p>
-                        @if($slot->teacher)
-                        <p class="text-xs text-slate-400"><i class="bi bi-person me-0.5"></i>{{ $slot->teacher->full_name }}</p>
-                        @endif
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <x-timetable-badge :subject="$slot->course->course_name ?? '—'" />
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-tight">{{ $slot->course->course_name ?? '—' }}</p>
+                            @if($slot->teacher)
+                            <p class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400"><i class="bi bi-person-fill text-[10px] me-0.5 text-emerald-600"></i>{{ $slot->teacher->full_name }}</p>
+                            @endif
+                        </div>
                     </div>
                     @if($slot->room)
                     <span class="flex-shrink-0 text-xs text-slate-400 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-lg">

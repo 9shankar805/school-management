@@ -13,13 +13,19 @@ class TeacherQualificationController extends Controller
     public function store(Request $request, int $teacherId)
     {
         $this->authorize('create teachers');
+
+        $user = auth()->user();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            \App\Models\User::where('school_id', $user->school_id)->findOrFail($teacherId);
+        }
+
         $data = $request->validate([
             'type'          => 'required|in:' . implode(',', array_keys(TeacherQualification::TYPES)),
             'title'         => 'required|string|max:255',
             'institution'   => 'required|string|max:255',
             'field_of_study'=> 'nullable|string|max:255',
             'start_year'    => 'nullable|integer|min:1950|max:' . now()->year,
-            'end_year'      => 'nullable|integer|min:1950|max:' . now()->year + 5,
+            'end_year'      => 'nullable|integer|min:1950|max:' . (now()->year + 5),
             'grade'         => 'nullable|string|max:50',
             'attachment'    => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png',
         ]);
@@ -34,7 +40,14 @@ class TeacherQualificationController extends Controller
     public function destroy(int $id)
     {
         $this->authorize('create teachers');
-        $q = TeacherQualification::findOrFail($id);
+
+        $user = auth()->user();
+        $query = TeacherQualification::query();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $query->whereHas('teacher', fn($t) => $t->where('school_id', $user->school_id));
+        }
+
+        $q = $query->findOrFail($id);
         if ($q->attachment_path) Storage::disk('public')->delete($q->attachment_path);
         $q->delete();
         return back()->with('status', 'Qualification removed.');

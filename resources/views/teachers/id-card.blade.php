@@ -261,21 +261,30 @@ html, body { width: 153pt; height: 243pt; margin: 0; padding: 0; font-family: De
   </div>
 </div><div class="back-card">
   <div class="back-hd">
-    <div class="back-title">FACULTY TERMS & GUIDELINES</div>
+    <div class="back-title">INSTANT QR LOGIN &amp; TERMS</div>
     <div class="back-sub">{{ $schoolName }}</div>
   </div>
 
+  @if(isset($qrSrc) && $qrSrc)
+  <div style="margin-top: 6pt; text-align: center; padding: 0 6pt;">
+    <div style="display: inline-block; background: #ffffff; padding: 3pt; border-radius: 4pt; border: 1.2pt solid #0f172a; box-shadow: 0 2pt 4pt rgba(0,0,0,0.06);">
+      <img src="{{ $qrSrc }}" style="width: 54pt; height: 54pt; display: block;" alt="Instant QR Login">
+    </div>
+    <div style="font-size: 5.8pt; font-weight: bold; color: #0f172a; margin-top: 3pt;">INSTANT QR LOGIN &amp; VERIFICATION</div>
+    <div style="font-size: 4pt; color: #2563eb; font-weight: bold; margin-top: 1pt;">📷 Scan with Camera to Login to Portal</div>
+  </div>
+  @else
   <div class="crest-box">
     <div class="crest-icon">★</div>
     <div class="crest-label">OFFICIAL FACULTY CREDENTIAL</div>
     <div class="crest-sub">Academic Staff Identification</div>
   </div>
+  @endif
 
-  <div class="instructions-box">
-    <div class="inst-item"><strong>1. Display:</strong> Must be worn visibly on school premises at all times.</div>
-    <div class="inst-item"><strong>2. Ownership:</strong> Official property of {{ Str::limit($schoolName, 20) }}.</div>
-    <div class="inst-item"><strong>3. Non-Transferable:</strong> Card is strictly non-transferable.</div>
-    <div class="inst-item"><strong>4. Return:</strong> Card must be returned to HR upon completion of service.</div>
+  <div class="instructions-box" style="margin-top: 4pt;">
+    <div class="inst-item"><strong>1. Portal Login:</strong> Scan QR code with any smartphone to login directly.</div>
+    <div class="inst-item"><strong>2. Display:</strong> Must be worn visibly on school premises at all times.</div>
+    <div class="inst-item"><strong>3. Ownership:</strong> Property of {{ Str::limit($schoolName, 20) }}. Non-transferable.</div>
   </div>
 
   <div class="back-ft">

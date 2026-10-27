@@ -73,8 +73,14 @@
                 @endif
                 @if($mySubmission->file_path)
                 <a href="{{ asset('storage/' . $mySubmission->file_path) }}" target="_blank"
-                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-medium transition">
+                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-medium transition me-2">
                     <i class="bi bi-file-earmark"></i> View Submitted File
+                </a>
+                @endif
+                @if($mySubmission->annotated_file_path)
+                <a href="{{ asset('storage/' . $mySubmission->annotated_file_path) }}" target="_blank"
+                   class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold transition">
+                    <i class="bi bi-patch-check-fill text-emerald-600"></i> शिक्षकद्वारा जाँचिएको कपी (View Evaluated Copy)
                 </a>
                 @endif
             </div>

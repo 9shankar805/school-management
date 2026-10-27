@@ -815,13 +815,21 @@ class HomeController extends Controller
             ->orderByDesc('month')
             ->first();
 
+        // Class In-Charge (Class Teacher) Assignment
+        $inChargeAssignment = \App\Models\AssignedTeacher::with(['schoolClass', 'section'])
+            ->where('teacher_id', $teacher->id)
+            ->where('session_id', $sessionId)
+            ->where('is_class_teacher', true)
+            ->first();
+
         return view('dashboards.teacher', compact(
             'teacher', 'myCourses', 'notices',
             'recentAttendance', 'todaySummary', 'upcomingExams',
             'todaySchedule',
             'leaveBalances', 'pendingLeaves', 'myLeaveApplications',
             'unreadMessageCount',
-            'latestPayslip'
+            'latestPayslip',
+            'inChargeAssignment'
         ));
     }
 
@@ -832,6 +840,8 @@ class HomeController extends Controller
     {
         $student   = auth()->user();
         $sessionId = $this->getSchoolCurrentSession();
+        $school    = $student->school ?? config('tenant.school') ?? \App\Models\School::first();
+        $schoolSession = \App\Models\SchoolSession::find($sessionId);
 
         $noticeRepo = new NoticeRepository();
         $notices    = $noticeRepo->getAll($sessionId);
@@ -840,9 +850,17 @@ class HomeController extends Controller
 
         $totalAttendance = Attendance::where('student_id', $student->id)->count();
         $presentCount    = Attendance::where('student_id', $student->id)->where('status', 'on')->count();
-        $attendancePct   = $totalAttendance > 0 ? round(($presentCount / $totalAttendance) * 100) : 0;
+        $attendancePct   = $totalAttendance > 0 ? (int) round(($presentCount / $totalAttendance) * 100) : 0;
 
         $invoices = Invoice::where('student_id', $student->id)->latest()->take(5)->get();
+        
+        $dueBalance = 0;
+        if (class_exists(\App\Models\StudentLedger::class)) {
+            $dueBalance = round(max((float) \App\Models\StudentLedger::currentBalance($student->id, $sessionId), (float) \App\Models\StudentLedger::currentBalance($student->id)), 2);
+        }
+        if ($dueBalance <= 0) {
+            $dueBalance = (float) $invoices->where('status', 'unpaid')->sum('amount');
+        }
 
         $promotionRepo = new PromotionRepository();
         $classInfo     = $promotionRepo->getStudentCurrentClass($student->id, $sessionId);
@@ -857,17 +875,41 @@ class HomeController extends Controller
                 ->get()
             : collect();
 
-        // Monthly attendance trend (last 6 months) — use 'on'/'off' canonical values
-        $attendanceTrend = Attendance::where('student_id', $student->id)
-            ->where('date', '>=', now()->subMonths(6)->toDateString())
-            ->select(
-                DB::raw('MONTH(date) as month'),
-                DB::raw("SUM(status='on') as present"),
-                DB::raw("SUM(status='off') as absent")
-            )
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
+        // Monthly attendance trend (guaranteed 6 consecutive calendar months)
+        $trendMonths = collect();
+        for ($i = 5; $i >= 0; $i--) {
+            $dt = now()->subMonths($i);
+            $trendMonths->put($dt->format('Y-m'), [
+                'month_num' => (int) $dt->format('n'),
+                'label'     => $dt->format('M'),
+                'present'   => 0,
+                'absent'    => 0,
+            ]);
+        }
+
+        try {
+            $rawTrend = Attendance::where('student_id', $student->id)
+                ->where('date', '>=', now()->subMonths(6)->startOfMonth()->toDateString())
+                ->select(
+                    DB::raw("DATE_FORMAT(date, '%Y-%m') as ym"),
+                    DB::raw("SUM(status='on') as present"),
+                    DB::raw("SUM(status='off') as absent")
+                )
+                ->groupBy('ym')
+                ->get();
+
+            foreach ($rawTrend as $r) {
+                if ($trendMonths->has($r->ym)) {
+                    $m = $trendMonths->get($r->ym);
+                    $m['present'] = (int) $r->present;
+                    $m['absent']  = (int) $r->absent;
+                    $trendMonths->put($r->ym, $m);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Ignore if date format fails on sqlite/fallback
+        }
+        $attendanceTrend = $trendMonths->values();
 
         // Today's timetable
         $todayWeekday  = now()->isoWeekday();
@@ -926,7 +968,7 @@ class HomeController extends Controller
             'student','marks','attendancePct','presentCount','totalAttendance',
             'invoices','notices','classInfo','upcomingExams','attendanceTrend',
             'todaySchedule','pendingHomework','homeworkDueCount','pendingLeaveCount',
-            'practiceQuizzes','formalExams'
+            'practiceQuizzes','formalExams','dueBalance','school','schoolSession'
         ));
     }
 
@@ -1261,9 +1303,31 @@ class HomeController extends Controller
 
         $studentCount = $this->userRepository->getAllStudentsBySessionCount($sessionId);
         $teacherCount = $this->userRepository->getAllTeachers()->count();
+        $staffCount   = User::role([
+            'teacher','class-teacher','accountant','librarian','receptionist',
+            'hr-manager','transport-manager','hostel-manager','exam-controller',
+            'attendance-officer','admission-officer',
+        ])->count();
+
+        // Visitor Management
+        $todayVisitorsCount  = 0;
+        $activeVisitorsCount = 0;
+        $recentVisitors      = collect();
+        try {
+            $todayVisitorsCount  = \App\Models\Visitor::whereDate('check_in_at', today())->count();
+            $activeVisitorsCount = \App\Models\Visitor::whereDate('check_in_at', today())->whereNull('check_out_at')->count();
+            $recentVisitors      = \App\Models\Visitor::whereDate('check_in_at', today())->latest('check_in_at')->take(6)->get();
+        } catch (\Throwable $e) {}
+
+        // Admission inquiries / applications
+        $pendingAdmissions = 0;
+        try {
+            $pendingAdmissions = \App\Models\AdmissionApplication::where('status', 'pending')->count();
+        } catch (\Throwable $e) {}
 
         return view('dashboards.receptionist', compact(
-            'notices','upcomingEvents','studentCount','teacherCount'
+            'notices','upcomingEvents','studentCount','teacherCount','staffCount',
+            'todayVisitorsCount','activeVisitorsCount','recentVisitors','pendingAdmissions'
         ));
     }
 

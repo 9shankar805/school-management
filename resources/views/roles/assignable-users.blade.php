@@ -1,113 +1,130 @@
 @extends('layouts.app')
-@section('content')
-<div class="flex-1 p-6 lg:p-10 overflow-auto">
 
-    <div class="flex flex-wrap justify-between items-start mb-7 gap-4">
+@section('title', 'Assign Roles to Users - NepalSchoolHub')
+
+@section('content')
+<div class="flex-1 p-4 sm:p-6 lg:p-10 overflow-y-auto space-y-6 bg-slate-50/60 dark:bg-slate-950 min-h-screen">
+
+    {{-- Header --}}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <a href="{{ route('roles.index') }}" class="text-xs text-slate-400 hover:text-slate-600 flex items-center gap-1 mb-2">
-                <i class="bi bi-arrow-left"></i> Back to Roles
+            <a href="{{ route('roles.index') }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline mb-2">
+                <i class="bi bi-arrow-left"></i> Back to Roles & Permissions
             </a>
-            <h1 class="text-2xl font-bold text-slate-800">Assign Roles to Users</h1>
-            <p class="text-slate-500 text-sm mt-1">Pick a user below to manage their assigned roles & permissions</p>
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25 flex-shrink-0">
+                    <i class="bi bi-person-check-fill text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Assign Roles to Users</h1>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">Pick any user account to grant, revoke, or synchronize their institutional authorization roles</p>
+                </div>
+            </div>
         </div>
     </div>
 
+    {{-- Flash Alert --}}
     @if(session('success'))
-    <div class="mb-5 px-4 py-3 bg-emerald-50 text-emerald-700 text-sm rounded-lg border border-emerald-200">
-        <i class="bi bi-check-circle me-1"></i>{{ session('success') }}
+    <div class="px-4 py-3.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 text-sm rounded-2xl border border-emerald-200 dark:border-emerald-900/50 flex items-center justify-between shadow-xs">
+        <div class="flex items-center gap-2">
+            <i class="bi bi-check-circle-fill text-emerald-500"></i>
+            <span class="font-medium text-xs sm:text-sm">{{ session('success') }}</span>
+        </div>
+        <button type="button" onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800 text-xs">
+            <i class="bi bi-x-lg"></i>
+        </button>
     </div>
     @endif
 
-    {{-- Filters --}}
-    <form method="GET" class="flex flex-wrap gap-2 mb-6" action="{{ route('roles.assignable-users') }}">
-        <input type="text" name="search" value="{{ request('search') }}"
-               placeholder="Search by name, email, phone…"
-               class="flex-1 min-w-56 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-        <select name="role" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+    {{-- Search & Filter Controls --}}
+    <form method="GET" action="{{ route('roles.assignable-users') }}" class="bg-white dark:bg-slate-900 rounded-3xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+            <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" name="search" value="{{ request('search') }}"
+                   placeholder="Search by name, email, or phone…"
+                   class="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition">
+        </div>
+        <select name="role" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
             <option value="">All Roles</option>
             @foreach($assignableRoles as $slug => $label)
                 <option value="{{ $slug }}" {{ request('role') == $slug ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
         </select>
-        <button type="submit" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition">
-            <i class="bi bi-funnel me-1"></i>Filter
-        </button>
-        @if(request('search') || request('role'))
-            <a href="{{ route('roles.assignable-users') }}" class="px-4 py-2 bg-white border border-slate-200 text-slate-500 rounded-lg text-sm hover:bg-slate-50 transition">
-                Clear
-            </a>
-        @endif
+        <div class="flex items-center gap-2">
+            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs sm:text-sm font-bold shadow-sm shadow-emerald-600/20 transition active:scale-95">
+                <i class="bi bi-funnel me-1"></i> Filter
+            </button>
+            @if(request('search') || request('role'))
+                <a href="{{ route('roles.assignable-users') }}" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs sm:text-sm font-semibold transition">
+                    Clear
+                </a>
+            @endif
+        </div>
     </form>
 
-    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+    {{-- Users List --}}
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="text-left text-xs text-slate-400 bg-slate-50 border-b border-slate-100">
-                        <th class="px-5 py-3 font-semibold">User</th>
-                        <th class="px-5 py-3 font-semibold">Email</th>
-                        <th class="px-5 py-3 font-semibold">Phone</th>
-                        <th class="px-5 py-3 font-semibold">Current Roles</th>
-                        <th class="px-5 py-3 font-semibold text-right">Action</th>
+                    <tr class="text-left text-xs font-semibold text-slate-400 dark:text-slate-500 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800">
+                        <th class="px-6 py-3.5">User</th>
+                        <th class="px-6 py-3.5">Email</th>
+                        <th class="px-6 py-3.5">Phone</th>
+                        <th class="px-6 py-3.5">Current Roles</th>
+                        <th class="px-6 py-3.5 text-right">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/80">
                     @forelse($users as $u)
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-5 py-3.5">
+                    <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                        <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 <img src="{{ $u->avatar ?? 'https://ui-avatars.com/api/?name='.urlencode($u->full_name).'&background=6366f1&color=fff&size=48' }}"
-                                     class="w-9 h-9 rounded-lg object-cover border border-slate-100" alt="">
-                                <div class="min-w-0">
-                                    <div class="font-medium text-slate-700">{{ $u->full_name }}</div>
-                                    <div class="text-[11px] text-slate-400">{{ $u->gender ?? '—' }} · {{ $u->city ?? '—' }}</div>
+                                     class="w-10 h-10 rounded-2xl object-cover border border-slate-200 dark:border-slate-700 flex-shrink-0" alt="">
+                                <div>
+                                    <span class="font-bold text-slate-900 dark:text-white text-xs sm:text-sm block">{{ $u->full_name }}</span>
+                                    <span class="text-[11px] text-slate-400 dark:text-slate-500">ID: {{ $u->id }}</span>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-5 py-3.5 text-slate-600">{{ $u->email }}</td>
-                        <td class="px-5 py-3.5 text-slate-500 text-xs">{{ $u->phone ?? '—' }}</td>
-                        <td class="px-5 py-3.5">
-                            @php $rnames = $u->getRoleNames(); @endphp
-                            @if($rnames->count())
-                                <div class="flex flex-wrap gap-1">
-                                    @foreach($rnames as $rn)
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium
-                                                     {{ in_array($rn,['super-admin','admin']) ? 'bg-rose-50 text-rose-700'
-                                                        : (in_array($rn,['teacher','class-teacher']) ? 'bg-blue-50 text-blue-700'
-                                                        : (in_array($rn,['student','parent']) ? 'bg-emerald-50 text-emerald-700'
-                                                        : 'bg-indigo-50 text-indigo-700')) }}">
-                                            {{ ucwords(str_replace('-',' ',$rn)) }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                            @else
-                                <span class="text-[11px] text-slate-400 italic">— no roles —</span>
-                            @endif
+                        <td class="px-6 py-4 text-xs text-slate-500 dark:text-slate-400">{{ $u->email }}</td>
+                        <td class="px-6 py-4 text-xs text-slate-500 dark:text-slate-400">{{ $u->phone ?? '—' }}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap gap-1">
+                                @forelse($u->roles as $r)
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900/60 capitalize">
+                                        <i class="bi bi-shield-check text-[10px]"></i>
+                                        {{ str_replace('-', ' ', $r->name) }}
+                                    </span>
+                                @empty
+                                    <span class="text-xs text-slate-400 italic">No roles assigned</span>
+                                @endforelse
+                            </div>
                         </td>
-                        <td class="px-5 py-3.5 text-right">
+                        <td class="px-6 py-4 text-right">
                             <a href="{{ route('roles.user-roles', $u) }}"
-                               class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg
-                                          bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition">
-                                <i class="bi bi-person-check"></i> Assign Roles
+                               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-xs rounded-xl shadow-xs transition active:scale-95">
+                                <i class="bi bi-gear-fill text-[11px]"></i>
+                                <span>Manage Roles</span>
                             </a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="px-5 py-16 text-center">
-                            <i class="bi bi-people text-4xl text-slate-200"></i>
-                            <p class="mt-3 text-slate-400">No users match your filter.</p>
+                        <td colspan="5" class="py-12 text-center">
+                            <i class="bi bi-people text-4xl text-slate-300 dark:text-slate-600 block mb-2"></i>
+                            <p class="text-sm font-semibold text-slate-600 dark:text-slate-400">No users found matching your search</p>
                         </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
-
         @if($users->hasPages())
-            <div class="px-5 py-3 border-t border-slate-100 bg-slate-50">
-                {{ $users->links() }}
-            </div>
+        <div class="p-4 border-t border-slate-100 dark:border-slate-800">
+            {{ $users->links() }}
+        </div>
         @endif
     </div>
 

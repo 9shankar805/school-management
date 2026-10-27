@@ -356,4 +356,110 @@ class LedgerController extends Controller
 
         return $pdf->download("balance-sheet-{$year}.pdf");
     }
+
+    /**
+     * Day Book (रोजनाम्चा / दैनिक हिसाब) — Daily Cash & Bank Reconciliation.
+     */
+    public function dayBook(Request $request)
+    {
+        $date = $request->input('date', today()->toDateString());
+
+        // 1. Fee Payments received on $date
+        $payments = Payment::with(['invoice.student', 'invoice.schoolClass'])
+            ->whereDate('payment_date', $date)
+            ->latest('id')
+            ->get();
+
+        // 2. Miscellaneous Incomes on $date
+        $incomes = IncomeRecord::whereDate('income_date', $date)
+            ->latest('id')
+            ->get();
+
+        // 3. Expenses on $date
+        $expenses = Expense::whereDate('expense_date', $date)
+            ->latest('id')
+            ->get();
+
+        // 4. Payrolls paid on $date
+        $teacherPayrolls = TeacherPayroll::with('teacher')
+            ->where('status', 'paid')
+            ->whereDate('payment_date', $date)
+            ->get();
+
+        $staffPayrolls = SalarySlip::with('user')
+            ->where('status', 'paid')
+            ->whereDate('payment_date', $date)
+            ->get();
+
+        // Totals
+        $feeTotal     = $payments->sum('amount');
+        $incomeTotal  = $incomes->sum('amount');
+        $totalInflow  = $feeTotal + $incomeTotal;
+
+        $expenseTotal = $expenses->sum('amount');
+        $payrollTotal = $teacherPayrolls->sum('net_salary') + $staffPayrolls->sum('net_salary');
+        $totalOutflow = $expenseTotal + $payrollTotal;
+
+        $netDailyChange = $totalInflow - $totalOutflow;
+
+        // Opening balance (all net receipts prior to $date)
+        $priorInflow = Payment::whereDate('payment_date', '<', $date)->sum('amount')
+                     + IncomeRecord::whereDate('income_date', '<', $date)->sum('amount');
+        $priorOutflow = Expense::whereDate('expense_date', '<', $date)->sum('amount')
+                      + TeacherPayroll::where('status', 'paid')->whereDate('payment_date', '<', $date)->sum('net_salary')
+                      + SalarySlip::where('status', 'paid')->whereDate('payment_date', '<', $date)->sum('net_salary');
+        $openingBalance = $priorInflow - $priorOutflow;
+        $closingBalance = $openingBalance + $netDailyChange;
+
+        // Method breakdowns
+        $cashInflow  = $payments->where('payment_method', 'cash')->sum('amount') + $incomes->where('payment_method', 'cash')->sum('amount');
+        $onlineInflow = $totalInflow - $cashInflow;
+
+        return view('finance.day-book', compact(
+            'date', 'payments', 'incomes', 'expenses', 'teacherPayrolls', 'staffPayrolls',
+            'feeTotal', 'incomeTotal', 'totalInflow', 'expenseTotal', 'payrollTotal', 'totalOutflow',
+            'netDailyChange', 'openingBalance', 'closingBalance', 'cashInflow', 'onlineInflow'
+        ));
+    }
+
+    /**
+     * Printable Official Day Book PDF.
+     */
+    public function dayBookPdf(Request $request)
+    {
+        $date = $request->input('date', today()->toDateString());
+
+        $payments = Payment::with(['invoice.student', 'invoice.schoolClass'])
+            ->whereDate('payment_date', $date)->get();
+        $incomes = IncomeRecord::whereDate('income_date', $date)->get();
+        $expenses = Expense::whereDate('expense_date', $date)->get();
+        $teacherPayrolls = TeacherPayroll::with('teacher')->where('status', 'paid')->whereDate('payment_date', $date)->get();
+        $staffPayrolls = SalarySlip::with('user')->where('status', 'paid')->whereDate('payment_date', $date)->get();
+
+        $feeTotal     = $payments->sum('amount');
+        $incomeTotal  = $incomes->sum('amount');
+        $totalInflow  = $feeTotal + $incomeTotal;
+        $expenseTotal = $expenses->sum('amount');
+        $payrollTotal = $teacherPayrolls->sum('net_salary') + $staffPayrolls->sum('net_salary');
+        $totalOutflow = $expenseTotal + $payrollTotal;
+        $netDailyChange = $totalInflow - $totalOutflow;
+
+        $priorInflow = Payment::whereDate('payment_date', '<', $date)->sum('amount')
+                     + IncomeRecord::whereDate('income_date', '<', $date)->sum('amount');
+        $priorOutflow = Expense::whereDate('expense_date', '<', $date)->sum('amount')
+                      + TeacherPayroll::where('status', 'paid')->whereDate('payment_date', '<', $date)->sum('net_salary')
+                      + SalarySlip::where('status', 'paid')->whereDate('payment_date', '<', $date)->sum('net_salary');
+        $openingBalance = $priorInflow - $priorOutflow;
+        $closingBalance = $openingBalance + $netDailyChange;
+
+        $school = auth()->user()->school ?? \App\Models\School::first();
+
+        $pdf = Pdf::loadView('finance.day-book-pdf', compact(
+            'date', 'school', 'payments', 'incomes', 'expenses', 'teacherPayrolls', 'staffPayrolls',
+            'feeTotal', 'incomeTotal', 'totalInflow', 'expenseTotal', 'payrollTotal', 'totalOutflow',
+            'netDailyChange', 'openingBalance', 'closingBalance'
+        ))->setPaper('A4', 'portrait');
+
+        return $pdf->stream("day-book-{$date}.pdf");
+    }
 }

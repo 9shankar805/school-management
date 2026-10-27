@@ -26,11 +26,11 @@ class SchoolRegistrationController extends Controller
             'iemis_code'     => 'nullable|string|max:20',
             'district'       => 'required|string|max:80',
             'province'       => 'required|string|max:80',
-            'school_email'   => 'required|email|unique:schools,email',
+            'school_email'   => ['required', 'email', 'unique:schools,email', new \App\Rules\ValidEmailDomain],
             'school_phone'   => 'nullable|string|max:20',
             'plan'           => 'required|in:free,starter,growth,enterprise',
             'contact_person' => 'required|string|max:100',
-            'admin_email'    => 'required|email|unique:users,email',
+            'admin_email'    => ['required', 'email', 'unique:users,email', new \App\Rules\ValidEmailDomain],
             'admin_password' => 'required|min:8|confirmed',
         ]);
 

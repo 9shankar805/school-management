@@ -216,9 +216,8 @@ class ParentPortalController extends Controller
         $child   = $this->resolveChild($studentId);
         $invoice = Invoice::with('payments')->where('student_id', $studentId)->findOrFail($invoiceId);
 
-        // Use the canonical 'amount' column (amount_paid was renamed to amount)
-        $paid      = $invoice->payments->sum('amount');
-        $remaining = max(0, $invoice->amount - $paid);
+        // Use invoice->amount_due which includes cumulative arrears and fines
+        $remaining = $invoice->amount_due;
 
         return view('parent.pay-invoice', compact('child', 'invoice', 'remaining'));
     }
@@ -384,11 +383,88 @@ class ParentPortalController extends Controller
                     $hw->mySubmission = $hw->submissions()
                         ->where('student_id', $studentId)
                         ->first();
+                    // Attach parent diary sign-off if any
+                    $hw->myAcknowledgement = \App\Models\HomeworkAcknowledgement::with('parent')
+                        ->where('homework_id', $hw->id)
+                        ->where('student_id', $studentId)
+                        ->first();
                     return $hw;
                 });
         }
 
         return view('parent.homework', compact('child', 'homeworks', 'promotion'));
+    }
+
+    /**
+     * Parent Sign-off / Acknowledgement of Student Homework Diary (अभिभावक हस्ताक्षर).
+     */
+    public function acknowledgeHomework(Request $request, int $studentId, int $homeworkId)
+    {
+        $child = $this->resolveChild($studentId);
+        $parentId = auth()->id();
+
+        $request->validate([
+            'remarks' => 'nullable|string|max:500',
+        ]);
+
+        \App\Models\HomeworkAcknowledgement::updateOrCreate(
+            [
+                'homework_id' => $homeworkId,
+                'student_id'  => $studentId,
+            ],
+            [
+                'parent_id'       => $parentId,
+                'school_id'       => auth()->user()->school_id ?? 1,
+                'acknowledged_at' => now(),
+                'remarks'         => $request->input('remarks'),
+            ]
+        );
+
+        return back()->with('status', 'गृहकार्य डायरी प्रमाणीकरण सम्पन्न भयो (Homework acknowledged successfully).');
+    }
+
+    /**
+     * Parent View for Official Notices & Circulars (सूचना तथा परिपत्र).
+     */
+    public function notices(int $studentId)
+    {
+        $child     = $this->resolveChild($studentId);
+        $sessionId = $this->getSchoolCurrentSession();
+
+        $notices = \App\Models\Notice::with('publisher')
+            ->where('session_id', $sessionId)
+            ->whereIn('audience', ['all', 'parents', 'students'])
+            ->latest('id')
+            ->paginate(12);
+
+        return view('parent.notices', compact('child', 'notices'));
+    }
+
+    /**
+     * Parent View: Child's Virtual & Online Classes (Zoom / Google Meet).
+     */
+    public function onlineClasses(int $studentId)
+    {
+        $child     = $this->resolveChild($studentId);
+        $sessionId = $this->getSchoolCurrentSession();
+
+        $promotion = Promotion::where('student_id', $studentId)
+            ->where('session_id', $sessionId)
+            ->latest()->first();
+
+        $classes = collect();
+        if ($promotion) {
+            $classes = \App\Models\OnlineClass::with(['course', 'teacher'])
+                ->where('session_id', $sessionId)
+                ->where('class_id', $promotion->class_id)
+                ->where(function($q) use ($promotion) {
+                    $q->whereNull('section_id')->orWhere('section_id', $promotion->section_id);
+                })
+                ->orderByDesc('scheduled_at')
+                ->paginate(12);
+        }
+
+        return view('parent.online-classes', compact('child', 'classes', 'promotion'));
     }
 
     // -------------------------------------------------------------------------

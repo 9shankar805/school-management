@@ -33,6 +33,9 @@
         <tr><td class="label">Payment Date</td><td class="value">{{ \Carbon\Carbon::parse($payment->payment_date)->format('d M Y') }}</td></tr>
         <tr><td class="label">Payment Method</td><td class="value">{{ ucfirst($payment->payment_method ?? 'Cash') }}</td></tr>
         <tr><td class="label">Status</td><td><span class="badge-paid">PAID</span></td></tr>
+        @if(isset($payment->invoice) && $payment->invoice->amount_due > 0)
+        <tr><td class="label" style="color:#b91c1c">Remaining Balance Due</td><td class="value" style="color:#b91c1c">Rs. {{ number_format($payment->invoice->amount_due, 2) }}</td></tr>
+        @endif
     </table>
 
     <div class="amount-box">

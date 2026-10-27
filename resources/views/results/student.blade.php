@@ -43,9 +43,10 @@
             </div>
             <div class="flex gap-2 flex-shrink-0">
                 <a href="{{ route('results.report-card', $result['student']->id) . '?' . http_build_query(request()->query()) }}"
-                   target="_blank"
-                   class="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-lg transition">
-                    <i class="bi bi-file-earmark-pdf"></i> Report Card PDF
+                   data-no-loader
+                   class="btn inline-flex items-center gap-1.5 px-4 py-2 text-white text-sm font-semibold rounded-xl transition shadow-sm"
+                   style="background-color: #e11d48 !important; color: #ffffff !important;">
+                    <i class="bi bi-download"></i> Download Report Card
                 </a>
             </div>
         </div>

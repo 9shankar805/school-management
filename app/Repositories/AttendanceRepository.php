@@ -18,8 +18,49 @@ class AttendanceRepository implements AttendanceInterface
     public function saveAttendance($request): void
     {
         try {
-            $input = $this->prepareInput($request);
-            Attendance::insert($input);
+            $now          = Carbon::now()->toDateTimeString();
+            $takenTime    = Carbon::now()->format('h:i A');
+            $date         = $request['date'] ?? Carbon::today()->toDateString();
+            $schoolId     = auth()->user()?->school_id ?? config('tenant.school_id');
+            $recordedBy   = auth()->id() ?? ($request['recorded_by'] ?? null);
+            $classId      = $request['class_id'];
+            $sectionId    = $request['section_id'] ?? 0;
+            $courseId     = $request['course_id'] ?? 0;
+            $sessionId    = $request['session_id'];
+
+            foreach ($request['student_ids'] as $student_id) {
+                $rawStatus = isset($request['status'][$student_id]) ? strtolower(trim((string)$request['status'][$student_id])) : 'off';
+                $lateMinutes = isset($request['late_minutes'][$student_id]) ? (int)$request['late_minutes'][$student_id] : 0;
+
+                if (in_array($rawStatus, ['l', 'late'], true)) {
+                    $status = 'on';
+                    $lateMinutes = max(15, $lateMinutes);
+                } elseif (in_array($rawStatus, ['p', 'present', 'on', '1'], true)) {
+                    $status = 'on';
+                } else {
+                    $status = 'off';
+                }
+
+                Attendance::updateOrCreate(
+                    [
+                        'student_id' => $student_id,
+                        'class_id'   => $classId,
+                        'section_id' => $sectionId,
+                        'session_id' => $sessionId,
+                        'course_id'  => $courseId,
+                        'date'       => $date,
+                    ],
+                    [
+                        'status'       => $status,
+                        'late_minutes' => $lateMinutes,
+                        'recorded_by'  => $recordedBy,
+                        'submitted_at' => $now,
+                        'taken_time'   => $takenTime,
+                        'school_id'    => $schoolId,
+                        'updated_at'   => $now,
+                    ]
+                );
+            }
         } catch (\Exception $e) {
             throw new \Exception('Failed to save attendance. ' . $e->getMessage());
         }
@@ -27,10 +68,12 @@ class AttendanceRepository implements AttendanceInterface
 
     public function prepareInput($request): array
     {
-        $input    = [];
-        $now      = Carbon::now()->toDateTimeString();
-        $date     = Carbon::today()->toDateString();
-        $schoolId = config('tenant.school_id');
+        $input      = [];
+        $now        = Carbon::now()->toDateTimeString();
+        $takenTime  = Carbon::now()->format('h:i A');
+        $date       = Carbon::today()->toDateString();
+        $schoolId   = config('tenant.school_id');
+        $recordedBy = auth()->id() ?? ($request['recorded_by'] ?? null);
 
         foreach ($request['student_ids'] as $student_id) {
             $row = [
@@ -42,6 +85,9 @@ class AttendanceRepository implements AttendanceInterface
                 'session_id'    => $request['session_id'],
                 'date'          => $date,
                 'late_minutes'  => 0,
+                'recorded_by'   => $recordedBy,
+                'submitted_at'  => $now,
+                'taken_time'    => $takenTime,
                 'created_at'    => $now,
                 'updated_at'    => $now,
             ];
@@ -56,7 +102,7 @@ class AttendanceRepository implements AttendanceInterface
 
     public function getSectionAttendance($class_id, $section_id, $session_id)
     {
-        return Attendance::with('student')
+        return Attendance::with(['student', 'recordedBy'])
             ->where('class_id', $class_id)
             ->where('section_id', $section_id)
             ->where('session_id', $session_id)
@@ -66,7 +112,7 @@ class AttendanceRepository implements AttendanceInterface
 
     public function getCourseAttendance($class_id, $course_id, $session_id)
     {
-        return Attendance::with('student')
+        return Attendance::with(['student', 'recordedBy'])
             ->where('class_id', $class_id)
             ->where('course_id', $course_id)
             ->where('session_id', $session_id)

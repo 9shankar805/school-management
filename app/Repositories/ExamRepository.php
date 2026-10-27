@@ -24,28 +24,23 @@ class ExamRepository implements ExamInterface {
         }
     }
 
-    public function getAll($session_id, $semester_id, $class_id)
+    public function getAll($session_id, $semester_id = 0, $class_id = 0, $course_id = 0)
     {
-        // If no filter provided, try to fall back to the first available values.
-        // Guard against the case where the session has no semesters or classes yet
-        // (e.g. a brand-new school that hasn't set up terms) — return empty collection
-        // rather than crashing with a "Call to a member function on null" error.
-        if ($semester_id == 0 || $class_id == 0) {
-            $firstSemester = Semester::where('session_id', $session_id)->first();
-            $firstClass    = SchoolClass::where('session_id', $session_id)->first();
+        $query = Exam::with(['course', 'schoolClass', 'semester'])
+            ->where('session_id', $session_id);
 
-            if (! $firstSemester || ! $firstClass) {
-                return collect();
-            }
-
-            $semester_id = $firstSemester->id;
-            $class_id    = $firstClass->id;
+        if (!empty($semester_id) && (int)$semester_id > 0) {
+            $query->where('semester_id', (int)$semester_id);
         }
 
-        return Exam::with('course')
-            ->where('session_id',  $session_id)
-            ->where('semester_id', $semester_id)
-            ->where('class_id',    $class_id)
-            ->get();
+        if (!empty($class_id) && (int)$class_id > 0) {
+            $query->where('class_id', (int)$class_id);
+        }
+
+        if (!empty($course_id) && (int)$course_id > 0) {
+            $query->where('course_id', (int)$course_id);
+        }
+
+        return $query->latest('id')->get();
     }
 }

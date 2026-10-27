@@ -53,4 +53,14 @@ class Homework extends Model
         return $this->hasOne(HomeworkSubmission::class)
                     ->where('student_id', auth()->id());
     }
+
+    public function acknowledgements()
+    {
+        return $this->hasMany(HomeworkAcknowledgement::class);
+    }
+
+    public function acknowledgementForStudent(int $studentId)
+    {
+        return $this->acknowledgements()->where('student_id', $studentId)->first();
+    }
 }

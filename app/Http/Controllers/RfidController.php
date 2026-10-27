@@ -8,6 +8,7 @@ use App\Models\BiometricDevice;
 use App\Models\RfidCard;
 use App\Models\RfidScan;
 use App\Models\User;
+use App\Notifications\GeneralNotification;
 use App\Traits\SchoolSession;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -211,7 +212,10 @@ class RfidController extends Controller
         // 5. Log the scan
         $scan = $this->logScan($device->id, $userId, $data, $scannedAt, $marked, $attendanceId);
 
-        // 6. Update device last_seen
+        // 6. Notify parents in real-time on Smart Gate Arrival / Departure (Veda Model)
+        $this->notifyParentsGateActivity($user, $data['direction'] ?? 'unknown', $scannedAt, $device);
+
+        // 7. Update device last_seen
         $device->update(['last_seen_at' => now()]);
 
         return response()->json([
@@ -295,6 +299,51 @@ class RfidController extends Controller
             return $this->getSchoolCurrentSession();
         } catch (\Throwable) {
             return \App\Models\SchoolSession::latest('id')->value('id');
+        }
+    }
+
+    /**
+     * Notify student parents of arrival/departure through Smart Gate / RFID.
+     */
+    private function notifyParentsGateActivity(User $user, string $direction, Carbon $scannedAt, BiometricDevice $device): void
+    {
+        try {
+            // Only trigger for students
+            if (! $user->hasRole('student')) {
+                return;
+            }
+
+            $parents = $user->parents;
+            if ($parents->isEmpty()) {
+                return;
+            }
+
+            $timeStr  = $scannedAt->format('h:i A');
+            $gateName = $device->name ?: ($device->location ?: 'Main Gate');
+
+            if (in_array($direction, ['in', 'unknown'], true)) {
+                $title   = "Campus Arrival: {$user->fullName}";
+                $message = "Dear Parent, {$user->fullName} arrived safely at the school campus at {$timeStr} (Gate: {$gateName}).";
+            } else {
+                $title   = "Campus Departure: {$user->fullName}";
+                $message = "Dear Parent, {$user->fullName} has departed from the school campus at {$timeStr} (Gate: {$gateName}).";
+            }
+
+            foreach ($parents as $parent) {
+                $parent->notify(new GeneralNotification(
+                    title: $title,
+                    message: $message,
+                    type: 'attendance',
+                    actionUrl: '/parent/' . $user->id . '/attendance',
+                    actionText: 'View Attendance Record',
+                    sendEmail: false
+                ));
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('RFID notifyParentsGateActivity failed', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
         }
     }
 }

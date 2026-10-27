@@ -10,12 +10,16 @@
                 </p>
             </div>
             <div class="flex gap-2">
-                <a href="{{ route('results.class.pdf', request()->query()) }}" target="_blank"
-                   class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-medium transition flex items-center gap-1.5">
-                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                <a href="{{ route('results.class.pdf', request()->query()) }}"
+                   data-no-loader
+                   class="btn px-4 py-2 text-white rounded-xl text-sm font-semibold transition flex items-center gap-1.5 shadow-sm"
+                   style="background-color: #e11d48 !important; color: #ffffff !important;">
+                    <i class="bi bi-download"></i> Download PDF
                 </a>
-                <a href="{{ route('results.class.excel', request()->query()) }}" target="_blank"
-                   class="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-medium transition flex items-center gap-1.5">
+                <a href="{{ route('results.class.excel', request()->query()) }}"
+                   data-no-loader
+                   class="btn px-4 py-2 text-white rounded-xl text-sm font-semibold transition flex items-center gap-1.5 shadow-sm"
+                   style="background-color: #0d9488 !important; color: #ffffff !important;">
                     <i class="bi bi-file-earmark-excel"></i> Excel
                 </a>
             </div>

@@ -2,267 +2,331 @@
 
 @section('content')
 
-<div class="flex-1 p-6 lg:p-8 overflow-auto bg-slate-50/50 dark:bg-slate-900/50">
+<style>
+.fintech-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+    transition: all 0.2s ease;
+}
+html.dark .fintech-card,
+[data-theme="dark"] .fintech-card {
+    background: #0f172a !important;
+    border-color: #1e293b !important;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
+}
+.fintech-hero-box {
+    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%);
+    border-radius: 16px;
+    padding: 16px 20px;
+    position: relative;
+    overflow: hidden;
+    color: #ffffff;
+    box-shadow: 0 10px 25px -5px rgba(49, 46, 129, 0.35);
+}
+.fintech-hero-box::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 140px;
+    height: 140px;
+    background: radial-gradient(circle, rgba(52, 211, 153, 0.25) 0%, rgba(52, 211, 153, 0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.fintech-btn-preset {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 8px 6px;
+    border-radius: 10px;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.fintech-btn-preset:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    color: #0f172a;
+}
+.fintech-btn-preset:active {
+    transform: scale(0.96);
+}
+html.dark .fintech-btn-preset,
+[data-theme="dark"] .fintech-btn-preset {
+    background: #1e293b;
+    border-color: #334155;
+    color: #cbd5e1;
+}
+html.dark .fintech-btn-preset:hover,
+[data-theme="dark"] .fintech-btn-preset:hover {
+    background: #27354f;
+    border-color: #475569;
+    color: #ffffff;
+}
+.fintech-submit-btn {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #4338ca 100%);
+    box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.4);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fintech-submit-btn:hover {
+    box-shadow: 0 12px 28px -4px rgba(79, 70, 229, 0.55);
+    transform: translateY(-1.5px);
+}
+.fintech-submit-btn:active {
+    transform: scale(0.98);
+}
+</style>
+
+<div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto bg-slate-50/60 dark:bg-slate-950 min-h-screen">
 
     {{-- Breadcrumb & Title Header --}}
-    <nav class="text-xs text-slate-400 mb-3 flex items-center gap-1.5 font-medium">
-        <a href="{{ route('payments.index') }}" class="hover:text-indigo-600 dark:hover:text-indigo-400 transition">Payments & Finance</a>
-        <i class="bi bi-chevron-right text-slate-300 text-[10px]"></i>
-        <span class="text-slate-600 dark:text-slate-300 font-semibold">POS Billing Terminal</span>
-    </nav>
-
-    <div class="flex flex-wrap justify-between items-center mb-6 gap-4 pb-4 border-b border-slate-200 dark:border-slate-800">
+    <div class="flex flex-wrap justify-between items-center mb-6 gap-4">
         <div>
-            <div class="flex items-center gap-2 mb-1">
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300 flex items-center gap-1.5 shadow-2xs">
-                    <span class="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span> Enterprise POS Terminal
-                </span>
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
-                    Genesis Global School Fee Desk
-                </span>
-            </div>
-            <h1 class="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-                Fee Collection & POS Checkout Terminal
+            <nav class="text-xs text-slate-400 mb-1 flex items-center gap-1.5 font-medium">
+                <a href="{{ route('payments.index') }}" class="hover:text-indigo-600 dark:hover:text-indigo-400 transition">Payments & Finance</a>
+                <span class="text-slate-300 dark:text-slate-700">/</span>
+                <span class="text-slate-600 dark:text-slate-300 font-semibold">POS Billing Terminal</span>
+            </nav>
+            <h1 class="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2.5">
+                <span>💳</span> Fee Collection & POS Billing Terminal
             </h1>
-            <p class="text-slate-500 text-xs mt-0.5">Streamlined 3-step fee billing, auto-loaded student ledgers, itemized fee builder & POS return desk</p>
+            <p class="text-slate-500 dark:text-slate-400 text-xs mt-0.5">Streamlined instant fee settlement, ledger dues integration & receipt counter</p>
         </div>
 
         <div class="flex items-center gap-2">
             <a href="{{ route('payments.index') }}"
-               class="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 shadow-2xs transition flex items-center gap-2">
+               class="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 shadow-sm transition inline-flex items-center gap-1.5">
                 <i class="bi bi-arrow-left"></i> Back to Invoices
             </a>
         </div>
     </div>
 
+    @include('session-messages')
+
     {{-- MAIN FORM CONTAINER --}}
-    <form action="{{ route('payments.store') }}" method="POST" id="posBillingForm" class="space-y-6">
+    <form action="{{ route('payments.store') }}" method="POST" id="posBillingForm">
         @csrf
         <input type="hidden" name="student_id" id="form_student_id">
 
-        {{-- ── STEP 1: STUDENT SELECTION & AUTO-LOADED LEDGER HEADER CARD ── --}}
-        <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/80 dark:border-slate-700/80 p-6 shadow-sm space-y-4">
-            <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-700/80">
-                <div class="flex items-center gap-2.5">
-                    <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm font-bold shadow-xs">
-                        1
-                    </span>
-                    <div>
-                        <h2 class="text-sm font-black text-slate-800 dark:text-slate-100">Select Student & Auto-Load Ledger Dues</h2>
-                        <p class="text-[11px] text-slate-400">Choose a student to fetch their unpaid monthly fees & ledger history</p>
-                    </div>
-                </div>
-                <div id="student_dues_summary_pill" class="hidden">
-                    <span class="px-3 py-1 rounded-full text-xs font-black bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800 flex items-center gap-1.5">
-                        <i class="bi bi-exclamation-circle-fill text-rose-500"></i> Outstanding Dues: <span id="summary_dues_text">Rs. 0.00</span>
-                    </span>
-                </div>
-            </div>
+        {{-- 2-COLUMN UNIFIED POS STUDIO GRID --}}
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-            {{-- Student Select Row --}}
-            <div class="space-y-2">
-                <div class="flex flex-wrap items-center justify-between gap-2">
-                    <label class="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider whitespace-nowrap">
-                        Select Student <span class="text-rose-500">*</span>
-                    </label>
-                    <div class="flex items-center gap-2">
-                        <button type="button" onclick="selectAllUnpaidMonths(true)"
-                                class="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs font-bold transition flex items-center gap-1">
-                            <i class="bi bi-check2-all"></i> Select All Unpaid
-                        </button>
-                        <button type="button" onclick="selectAllUnpaidMonths(false)"
-                                class="px-3 py-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-bold transition flex items-center gap-1">
-                            <i class="bi bi-x-lg"></i> Clear Selection
-                        </button>
-                    </div>
-                </div>
+            {{-- LEFT COLUMN: STUDENT & ITEMIZED FEE BUILDER (7 Cols) --}}
+            <div class="lg:col-span-7 space-y-5">
 
-                <div class="relative w-full">
-                    <select name="student_id_picker" required id="select_student" onchange="autoLoadStudentFees(this.value)"
-                            class="w-full border border-slate-200 dark:border-slate-600 rounded-2xl px-4 py-3.5 text-sm font-extrabold bg-slate-50/60 dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition appearance-none cursor-pointer">
-                        <option value="">— Click here to select student (600 Students Loaded) —</option>
-                        @foreach($students as $st)
-                        <option value="{{ $st->id }}" {{ old('student_id') == $st->id ? 'selected' : '' }}>
-                            {{ $st->first_name }} {{ $st->last_name }} ({{ $st->email }})
-                        </option>
-                        @endforeach
-                    </select>
-                    <div class="absolute right-4 top-4 pointer-events-none text-slate-400">
-                        <i class="bi bi-chevron-down text-xs"></i>
-                    </div>
-                </div>
-            </div>
-
-            {{-- AUTO-LOADED MONTH-BY-MONTH FEE CHIPS CONTAINER --}}
-            <div id="student_fee_breakdown_card" class="hidden rounded-2xl border border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/40 dark:bg-slate-900/50 p-4 space-y-3">
-                <div class="flex items-center justify-between pb-2 border-b border-indigo-100 dark:border-slate-800">
-                    <span class="text-xs font-black text-indigo-900 dark:text-indigo-300 flex items-center gap-1.5">
-                        <i class="bi bi-calendar-range-fill text-indigo-600"></i> Student Monthly Unpaid Ledger Cards:
-                    </span>
-                    <span class="text-[11px] text-slate-500 dark:text-slate-400" id="student_info_subtitle">Loading fees...</span>
-                </div>
-
-                {{-- List of month cards --}}
-                <div id="monthly_invoices_list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 max-h-[260px] overflow-y-auto pr-1"></div>
-            </div>
-        </div>
-
-        {{-- ── 2-COLUMN SPLIT POS STUDIO GRID (STEPS 2 & 3) ────────────────── --}}
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
-
-            {{-- LEFT COLUMN: STEP 2 - ITEMIZED FEE BUILDER STUDIO (7 Cols) --}}
-            <div class="lg:col-span-7 space-y-6">
-
-                <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200/80 dark:border-slate-700/80 p-6 shadow-sm space-y-5">
-
-                    <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-700/80">
+                {{-- 1. STUDENT SELECTION & LEDGER --}}
+                <div class="fintech-card p-5 sm:p-6 space-y-4">
+                    <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
                         <div class="flex items-center gap-2.5">
-                            <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-sm font-bold shadow-xs">
+                            <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-black shadow-xs">
+                                1
+                            </span>
+                            <div>
+                                <h2 class="text-sm font-bold text-slate-900 dark:text-slate-100">Student & Academic Ledger</h2>
+                                <p class="text-[11px] text-slate-400">Select a student to load outstanding dues and history</p>
+                            </div>
+                        </div>
+                        <div id="student_dues_summary_pill" class="hidden">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60 flex items-center gap-1.5">
+                                <i class="bi bi-exclamation-circle-fill text-rose-500"></i> Dues: <span id="summary_dues_text" class="font-black">Rs. 0.00</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Student Dropdown & Actions --}}
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <div class="relative flex-1">
+                                <select name="student_id_picker" required id="select_student" onchange="autoLoadStudentFees(this.value)"
+                                        class="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition appearance-none cursor-pointer">
+                                    <option value="">— Select Student ({{ $students->count() }} Students Loaded) —</option>
+                                    @foreach($students as $st)
+                                    <option value="{{ $st->id }}" {{ old('student_id') == $st->id ? 'selected' : '' }}>
+                                        {{ $st->first_name }} {{ $st->last_name }} ({{ $st->email }})
+                                    </option>
+                                    @endforeach
+                                </select>
+                                <div class="absolute right-3.5 top-3 pointer-events-none text-slate-400 text-xs">
+                                    <i class="bi bi-chevron-down"></i>
+                                </div>
+                            </div>
+                            <button type="button" onclick="selectAllUnpaidMonths(true)" title="Select all unpaid ledger months"
+                                    class="px-3 py-2.5 bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200/70 dark:border-indigo-900/50 rounded-xl text-xs font-bold transition flex items-center gap-1 whitespace-nowrap">
+                                <i class="bi bi-check2-all"></i> <span class="hidden sm:inline">Select All Dues</span>
+                            </button>
+                            <button type="button" onclick="selectAllUnpaidMonths(false)" title="Clear selection"
+                                    class="px-3 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Auto-Loaded Month Cards --}}
+                    <div id="student_fee_breakdown_card" class="hidden rounded-xl border border-indigo-100 dark:border-indigo-950 bg-indigo-50/30 dark:bg-slate-900/50 p-3.5 space-y-2.5">
+                        <div class="flex items-center justify-between pb-2 border-b border-indigo-100/70 dark:border-slate-800">
+                            <span class="text-xs font-bold text-indigo-950 dark:text-indigo-300 flex items-center gap-1.5">
+                                <i class="bi bi-calendar3 text-indigo-600"></i> Monthly Unpaid Invoices:
+                            </span>
+                            <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400" id="student_info_subtitle">Loading fees...</span>
+                        </div>
+                        <div id="monthly_invoices_list" class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[180px] overflow-y-auto pr-1"></div>
+                    </div>
+                </div>
+
+                {{-- 2. ITEMIZED FEE LINE ITEMS BUILDER --}}
+                <div class="fintech-card p-5 sm:p-6 space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-7 h-7 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-xs font-black shadow-xs">
                                 2
                             </span>
                             <div>
-                                <h2 class="text-sm font-black text-slate-800 dark:text-slate-100">Itemized Fee Line Items Builder</h2>
-                                <p class="text-[11px] text-slate-400">Add, edit or append individual fee items to build the student invoice</p>
+                                <h2 class="text-sm font-bold text-slate-900 dark:text-slate-100">Fee Line Items & Summary</h2>
+                                <p class="text-[11px] text-slate-400">Configure fee components and invoice summary</p>
                             </div>
                         </div>
                         <button type="button" onclick="addExtraFeeRow('', 0)"
-                                class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/30 px-3 py-1.5 rounded-xl border border-indigo-100 dark:border-indigo-800 transition">
-                            <i class="bi bi-plus-circle-fill"></i> Add Custom Fee Row
+                                class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/60 px-3 py-1.5 rounded-xl border border-indigo-100 dark:border-indigo-900/50 transition">
+                            <i class="bi bi-plus-circle"></i> Add Custom Row
                         </button>
                     </div>
 
-                    {{-- Quick Component Add Chips --}}
+                    {{-- Quick 1-Click Component Chips --}}
                     <div>
-                        <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">⚡ Quick 1-Click Component Chips</span>
+                        <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">⚡ Quick 1-Click Fee Presets</span>
                         <div class="flex flex-wrap gap-2">
                             <button type="button" onclick="addExtraFeeRow('Monthly Tuition Fee', 3500)"
-                                    class="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800/60 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs">
-                                <i class="bi bi-plus-lg text-indigo-500"></i> Tuition (+3,500)
+                                    class="px-3 py-1 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-900/50 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                <i class="bi bi-plus text-indigo-500 font-bold"></i> Tuition (3,500)
                             </button>
                             <button type="button" onclick="addExtraFeeRow('Term Examination Fee', 1200)"
-                                    class="px-3 py-1.5 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 text-amber-800 dark:text-amber-300 border border-amber-100 dark:border-amber-800/60 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs">
-                                <i class="bi bi-plus-lg text-amber-500"></i> Exam (+1,200)
+                                    class="px-3 py-1 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/50 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                <i class="bi bi-plus text-amber-500 font-bold"></i> Exam (1,200)
                             </button>
                             <button type="button" onclick="addExtraFeeRow('School Bus Transport Fee', 1800)"
-                                    class="px-3 py-1.5 bg-sky-50 dark:bg-sky-900/30 hover:bg-sky-100 dark:hover:bg-sky-900/50 text-sky-800 dark:text-sky-300 border border-sky-100 dark:border-sky-800/60 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs">
-                                <i class="bi bi-plus-lg text-sky-500"></i> Bus (+1,800)
+                                    class="px-3 py-1 bg-sky-50 dark:bg-sky-950/40 hover:bg-sky-100 text-sky-800 dark:text-sky-300 border border-sky-200/60 dark:border-sky-900/50 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                <i class="bi bi-plus text-sky-500 font-bold"></i> Bus (1,800)
                             </button>
                             <button type="button" onclick="addExtraFeeRow('Hostel Accommodation Fee', 4500)"
-                                    class="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800/60 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs">
-                                <i class="bi bi-plus-lg text-emerald-500"></i> Hostel (+4,500)
+                                    class="px-3 py-1 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/50 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                <i class="bi bi-plus text-emerald-500 font-bold"></i> Hostel (4,500)
                             </button>
                             <button type="button" onclick="addExtraFeeRow('Annual Admission Fee', 5000)"
-                                    class="px-3 py-1.5 bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-800 dark:text-purple-300 border border-purple-100 dark:border-purple-800/60 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-2xs">
-                                <i class="bi bi-plus-lg text-purple-500"></i> Admission (+5,000)
+                                    class="px-3 py-1 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 text-purple-800 dark:text-purple-300 border border-purple-200/60 dark:border-purple-900/50 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                <i class="bi bi-plus text-purple-500 font-bold"></i> Admission (5,000)
                             </button>
                         </div>
                     </div>
 
                     {{-- ITEMIZED FEE TABLE CONTAINER --}}
-                    <div class="border border-slate-200 dark:border-slate-700/80 rounded-2xl overflow-hidden shadow-2xs">
-                        <div class="bg-slate-100/70 dark:bg-slate-700/60 px-4 py-2.5 flex items-center justify-between text-xs font-black text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-700/80 uppercase tracking-wider">
+                    <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                        <div class="bg-slate-50 dark:bg-slate-800/80 px-4 py-2 flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 uppercase tracking-wider">
                             <span class="flex-1">Fee Component Name</span>
-                            <span class="w-36 text-right pr-12">Amount (Rs.)</span>
+                            <span class="w-36 text-right pr-9">Amount (NPR)</span>
                         </div>
-                        <div id="fee_items_container" class="divide-y divide-slate-100 dark:divide-slate-700/60 p-2 space-y-2">
+                        <div id="fee_items_container" class="divide-y divide-slate-100 dark:divide-slate-800 p-2 space-y-2 max-h-[240px] overflow-y-auto">
                             {{-- Default initial row --}}
                             <div class="fee-item-row flex items-center gap-2">
                                 <input type="text" name="items[0][name]" value="Monthly Tuition Fee" placeholder="e.g. Monthly Tuition Fee" required
-                                       class="item-name-input flex-1 border border-slate-200 dark:border-slate-600 rounded-xl px-3.5 py-2 text-xs font-bold bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                                       class="item-name-input flex-1 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
                                        oninput="recalculateFeeItemsTotal()">
                                 <div class="w-36 relative">
-                                    <span class="absolute left-2.5 top-2 text-slate-400 text-xs font-bold">Rs.</span>
+                                    <span class="absolute left-3 top-2 text-slate-400 text-xs font-bold">Rs.</span>
                                     <input type="number" step="0.01" name="items[0][amount]" value="3500" placeholder="0.00" required
-                                           class="item-amount-input w-full border border-slate-200 dark:border-slate-600 rounded-xl pl-9 pr-3 py-2 text-xs font-black bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-right focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                                           class="item-amount-input w-full border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs font-black bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-right focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
                                            oninput="recalculateFeeItemsTotal()">
                                 </div>
-                                <button type="button" onclick="removeFeeItemRow(this)" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center text-sm transition">
+                                <button type="button" onclick="removeFeeItemRow(this)" title="Remove item" class="w-8 h-8 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 flex items-center justify-center text-xs transition">
                                     <i class="bi bi-trash-fill"></i>
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    {{-- INVOICE META INPUTS --}}
-                    <div class="space-y-4 pt-2">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                                Combined Invoice Title / Summary <span class="text-rose-500">*</span>
+                    {{-- INVOICE TITLE & DUE DATE ROW --}}
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                Combined Invoice Title <span class="text-rose-500">*</span>
                             </label>
-                            <input type="text" name="title" id="input_title" value="{{ old('title', 'Monthly Tuition Fee') }}" required placeholder="e.g. Monthly Tuition & Examination Fee"
-                                   class="w-full border border-slate-200 dark:border-slate-600/80 rounded-2xl px-4 py-3 text-sm font-bold bg-slate-50/50 dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                            <input type="text" name="title" id="input_title" value="{{ old('title', 'Monthly Tuition Fee') }}" required placeholder="e.g. Monthly Tuition Fee"
+                                   class="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs font-bold bg-slate-50/60 dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                                    Total Payable Amount (Rs.) <span class="text-rose-500">*</span>
-                                </label>
-                                <div class="relative">
-                                    <span class="absolute left-4 top-3 text-slate-400 font-bold text-sm">Rs.</span>
-                                    <input type="number" step="0.01" name="amount" id="input_payable_amount" value="{{ old('amount', '3500') }}" required readonly
-                                           class="w-full border border-slate-200 dark:border-slate-600/80 rounded-2xl pl-12 pr-4 py-2.5 text-lg font-black bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 cursor-not-allowed">
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                                    Due Date
-                                </label>
-                                <input type="date" name="due_date" value="{{ old('due_date', now()->addDays(15)->toDateString()) }}"
-                                       class="w-full border border-slate-200 dark:border-slate-600/80 rounded-2xl px-4 py-3 text-sm font-semibold bg-slate-50/50 dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
-                            </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                                Due Date
+                            </label>
+                            <input type="date" name="due_date" value="{{ old('due_date', now()->addDays(15)->toDateString()) }}"
+                                   class="w-full border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold bg-slate-50/60 dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
                         </div>
                     </div>
                 </div>
+
             </div>
 
-            {{-- RIGHT COLUMN: STEP 3 - PAYMENT DESK & CHECKOUT STUDIO (5 Cols) --}}
-            <div class="lg:col-span-5 space-y-6">
+            {{-- RIGHT COLUMN: ULTRA-MODERN FINTECH CHECKOUT STUDIO (5 Cols) --}}
+            <div class="lg:col-span-5 lg:sticky lg:top-6 space-y-4">
 
-                <div class="bg-gradient-to-b from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 shadow-2xl border border-slate-800 space-y-6 relative overflow-hidden">
+                <div class="fintech-card p-5 sm:p-6 space-y-4 relative overflow-hidden">
 
-                    {{-- Ambient background glow --}}
-                    <div class="absolute -top-12 -right-12 w-48 h-48 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
-
-                    <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                    {{-- Header Row --}}
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                         <div class="flex items-center gap-2.5">
-                            <span class="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center text-sm font-black shadow-xs">
+                            <span class="w-7 h-7 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center text-xs font-black shadow-xs">
                                 3
                             </span>
                             <div>
-                                <h3 class="text-sm font-black text-emerald-400 uppercase tracking-widest">POS Payment Checkout Desk</h3>
-                                <p class="text-[10px] text-slate-400">Collect immediate payment or issue unpaid invoice</p>
+                                <h3 class="text-sm font-black text-slate-900 dark:text-slate-100 tracking-tight">Payment & Settlement</h3>
+                                <p class="text-[11px] text-slate-400">Choose collection mode and settle transaction</p>
                             </div>
                         </div>
-                        <span class="text-[10px] bg-emerald-950 border border-emerald-500/40 text-emerald-300 px-2.5 py-0.5 rounded-full font-black tracking-wider">
-                            LIVE DESK
+                        <span class="text-[10px] bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/80 px-2.5 py-0.5 rounded-full font-black tracking-wider uppercase flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live Desk
                         </span>
                     </div>
 
-                    {{-- Collection Mode Radio Selector --}}
-                    <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-800 space-y-3">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Collection Mode</span>
-                        <div class="grid grid-cols-2 gap-2">
-                            <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-emerald-500/50 bg-emerald-950/30 text-emerald-300 font-extrabold text-xs cursor-pointer hover:bg-emerald-950/60 transition">
-                                <input type="radio" name="payment_status" value="paid" checked onchange="togglePaymentMethodBox(true)" class="text-emerald-500 focus:ring-emerald-500">
-                                🟢 Record Paid
+                    {{-- Collection Status Segmented Toggle --}}
+                    <div class="space-y-1.5">
+                        <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Collection Status</span>
+                        <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700">
+                            <label class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg cursor-pointer transition text-xs font-black text-slate-600 dark:text-slate-300 hover:text-slate-900 has-checked:bg-white dark:has-checked:bg-slate-700 has-checked:text-emerald-600 dark:has-checked:text-emerald-400 has-checked:shadow-sm">
+                                <input type="radio" name="payment_status" value="paid" checked onchange="togglePaymentMethodBox(true)" class="hidden">
+                                <i class="bi bi-check-circle-fill text-emerald-500"></i> Record Paid
                             </label>
-                            <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border border-rose-800/50 bg-rose-950/30 text-rose-300 font-extrabold text-xs cursor-pointer hover:bg-rose-950/60 transition">
-                                <input type="radio" name="payment_status" value="unpaid" onchange="togglePaymentMethodBox(false)" class="text-rose-500 focus:ring-rose-500">
-                                🔴 Bill Unpaid
+                            <label class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg cursor-pointer transition text-xs font-black text-slate-600 dark:text-slate-300 hover:text-slate-900 has-checked:bg-white dark:has-checked:bg-slate-700 has-checked:text-rose-600 dark:has-checked:text-rose-400 has-checked:shadow-sm">
+                                <input type="radio" name="payment_status" value="unpaid" onchange="togglePaymentMethodBox(false)" class="hidden">
+                                <i class="bi bi-clock-history text-rose-500"></i> Bill as Unpaid
                             </label>
                         </div>
                     </div>
 
+                    {{-- Hero Fintech Amount Display Card --}}
+                    <div class="fintech-hero-box text-center">
+                        <span class="text-[10px] font-extrabold text-indigo-200 uppercase tracking-widest block mb-1">Total Fee Amount Payable</span>
+                        <div class="text-3xl sm:text-4xl font-black text-emerald-300 tracking-tight" id="display_net_payable">
+                            Rs. 3,500.00
+                        </div>
+                        <input type="hidden" name="amount" id="input_payable_amount" value="{{ old('amount', '3500') }}">
+                    </div>
+
                     {{-- Payment Method Selection Grid --}}
-                    <div id="payment_method_container" class="space-y-2">
-                        <label class="block text-[10px] font-extrabold text-slate-300 uppercase tracking-wider">
-                            Select Payment Method / Gateway <span class="text-rose-400">*</span>
+                    <div id="payment_method_container" class="space-y-1.5">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                            Payment Method <span class="text-rose-500">*</span>
                         </label>
                         <select name="payment_method" id="select_payment_method"
-                                class="w-full bg-slate-900 text-white border-2 border-slate-700 rounded-2xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-emerald-400 transition cursor-pointer">
-                            <option value="cash" selected>💵 Cash Counter (with Return Desk)</option>
+                                class="w-full bg-slate-50/70 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition cursor-pointer">
+                            <option value="cash" selected>💵 Cash Counter (with Change Desk)</option>
                             <option value="esewa">🟢 eSewa Mobile Wallet (Online)</option>
                             <option value="khalti">🟣 Khalti Wallet (Online)</option>
                             <option value="fonepay">📲 Fonepay Direct QR Code (Online)</option>
@@ -274,78 +338,64 @@
                         </select>
                     </div>
 
-                    {{-- Payable Counter Box --}}
-                    <div class="bg-slate-900/90 rounded-2xl p-4 border border-slate-800 text-center shadow-inner">
-                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest block mb-1">Total Fee Amount Payable</span>
-                        <div class="text-3xl font-black text-emerald-400 tracking-tight" id="display_net_payable">
-                            Rs. 3,500.00
+                    {{-- Cash Received Input & 3x2 Modern Preset Grid --}}
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                Cash Received / Tendered
+                            </label>
+                            <span class="text-[10px] font-bold text-slate-400">Nepali Rupee (NPR)</span>
                         </div>
-                    </div>
-
-                    {{-- Cash Received Input --}}
-                    <div>
-                        <label class="block text-xs font-extrabold text-slate-300 uppercase tracking-wider mb-2">
-                            Cash Received / Tendered (Rs.)
-                        </label>
                         <div class="relative">
-                            <span class="absolute left-4 top-3.5 text-slate-500 font-bold text-sm">Rs.</span>
+                            <span class="absolute left-3.5 top-2.5 text-slate-400 font-black text-xs">Rs.</span>
                             <input type="number" id="input_cash_tendered" placeholder="0.00" step="10"
-                                   class="w-full bg-white text-slate-950 border-2 border-emerald-400 rounded-2xl pl-12 pr-4 py-3.5 text-2xl font-black focus:outline-none focus:ring-4 focus:ring-emerald-500/30 transition shadow-lg">
+                                   class="w-full bg-slate-50/60 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 focus:border-indigo-500 dark:focus:border-indigo-400 rounded-xl pl-10 pr-3.5 py-2 text-base font-black text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition">
                         </div>
-                    </div>
 
-                    {{-- Quick Currency Bill Preset Buttons --}}
-                    <div>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Quick Currency Presets</span>
-                        <div class="grid grid-cols-3 gap-2">
-                            <button type="button" onclick="setCashPreset(0)"
-                                    class="py-2.5 bg-slate-800/90 hover:bg-slate-700 border border-sky-500/40 rounded-xl text-xs font-black text-sky-300 transition shadow-xs">
-                                Exact Cash
+                        {{-- 3x2 Sleek Currency Preset Grid --}}
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;" class="pt-0.5">
+                            <button type="button" onclick="setCashPreset(0)" class="fintech-btn-preset">
+                                <span class="font-black text-indigo-600 dark:text-indigo-400 me-1">⚡</span> Exact
                             </button>
-                            <button type="button" onclick="addCashPreset(500)"
-                                    class="py-2.5 bg-slate-800/90 hover:bg-slate-700 border border-amber-500/40 rounded-xl text-xs font-black text-amber-300 transition shadow-xs">
+                            <button type="button" onclick="addCashPreset(500)" class="fintech-btn-preset">
                                 + Rs. 500
                             </button>
-                            <button type="button" onclick="addCashPreset(1000)"
-                                    class="py-2.5 bg-slate-800/90 hover:bg-slate-700 border border-cyan-500/40 rounded-xl text-xs font-black text-cyan-300 transition shadow-xs">
+                            <button type="button" onclick="addCashPreset(1000)" class="fintech-btn-preset">
                                 + Rs. 1,000
                             </button>
-                            <button type="button" onclick="addCashPreset(2000)"
-                                    class="py-2.5 bg-slate-800/90 hover:bg-slate-700 border border-purple-500/40 rounded-xl text-xs font-black text-purple-300 transition shadow-xs">
+                            <button type="button" onclick="addCashPreset(2000)" class="fintech-btn-preset">
                                 + Rs. 2,000
                             </button>
-                            <button type="button" onclick="addCashPreset(5000)"
-                                    class="py-2.5 bg-slate-800/90 hover:bg-slate-700 border border-emerald-500/40 rounded-xl text-xs font-black text-emerald-300 transition shadow-xs">
+                            <button type="button" onclick="addCashPreset(5000)" class="fintech-btn-preset">
                                 + Rs. 5,000
                             </button>
-                            <button type="button" onclick="clearCashPreset()"
-                                    class="py-2.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 rounded-xl text-xs font-black text-rose-300 transition shadow-xs">
-                                Clear
+                            <button type="button" onclick="clearCashPreset()" class="fintech-btn-preset text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/50 hover:border-rose-200">
+                                <i class="bi bi-x-circle me-1"></i> Clear
                             </button>
                         </div>
                     </div>
 
-                    {{-- Real-Time Cash Change Return Box --}}
-                    <div id="change_result_card" class="rounded-2xl p-5 border transition-all text-center space-y-2 bg-slate-900/90 border-slate-800">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block" id="change_status_label">Cash Return Status</span>
-                        <div class="text-3xl font-black tracking-tight text-slate-400" id="display_change_amount">
+                    {{-- Real-Time Dynamic Cash Change Return Box --}}
+                    <div id="change_result_card" class="rounded-xl p-3.5 border transition-all text-center space-y-1 bg-slate-50 dark:bg-slate-800/70 border-slate-200 dark:border-slate-700">
+                        <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block" id="change_status_label">Cash Return Status</span>
+                        <div class="text-xl font-black tracking-tight text-slate-700 dark:text-slate-300" id="display_change_amount">
                             Rs. 0.00
                         </div>
-                        <p class="text-xs text-slate-400" id="display_change_message">Enter amount & cash tendered to calculate change.</p>
-                        <div id="denomination_breakdown" class="text-xs font-mono text-emerald-300 pt-2 border-t border-slate-800 hidden"></div>
+                        <p class="text-[11px] text-slate-400" id="display_change_message">Enter cash received to calculate return amount.</p>
+                        <div id="denomination_breakdown" class="text-xs font-semibold text-emerald-700 dark:text-emerald-400 pt-1.5 border-t border-slate-200 dark:border-slate-700 hidden"></div>
                     </div>
 
                     {{-- SUBMIT PRIMARY BUTTON --}}
                     <div class="pt-2">
                         <button type="submit"
-                                class="w-full py-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:from-emerald-600 hover:to-indigo-700 text-white rounded-2xl text-base font-black shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 cursor-pointer">
-                            <i class="bi bi-check-circle-fill text-lg"></i> Issue Receipt & Collect Fee
+                                class="fintech-submit-btn w-full py-3.5 px-4 text-white rounded-xl text-sm font-black flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="bi bi-check2-circle text-lg"></i> Settle Payment & Print Receipt
                         </button>
                     </div>
 
-                    <div class="text-center">
-                        <p class="text-[10px] text-slate-400">
-                            <i class="bi bi-shield-check text-emerald-400 me-1"></i> Certified POS Financial Transaction Counter
+                    <div class="text-center pt-0.5">
+                        <p class="text-[10px] text-slate-400 font-semibold flex items-center justify-center gap-1">
+                            <i class="bi bi-shield-check text-emerald-500"></i> Certified School POS Financial Transaction
                         </p>
                     </div>
                 </div>
@@ -379,18 +429,18 @@
         const index = itemRowCounter++;
 
         const row = document.createElement('div');
-        row.className = 'fee-item-row flex items-center gap-2 animate-fade-in';
+        row.className = 'fee-item-row flex items-center gap-1.5 animate-fade-in';
         row.innerHTML = `
             <input type="text" name="items[${index}][name]" value="${name}" placeholder="Fee Item Name" required
-                   class="item-name-input flex-1 border border-slate-200 dark:border-slate-600 rounded-xl px-3.5 py-2 text-xs font-bold bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                   class="item-name-input flex-1 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs font-bold bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
                    oninput="recalculateFeeItemsTotal()">
-            <div class="w-36 relative">
-                <span class="absolute left-2.5 top-2 text-slate-400 text-xs font-bold">Rs.</span>
+            <div class="w-32 relative">
+                <span class="absolute left-2.5 top-1.5 text-slate-400 text-xs font-bold">Rs.</span>
                 <input type="number" step="0.01" name="items[${index}][amount]" value="${amount}" placeholder="0.00" required
-                       class="item-amount-input w-full border border-slate-200 dark:border-slate-600 rounded-xl pl-9 pr-3 py-2 text-xs font-black bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-right focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
+                       class="item-amount-input w-full border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-2.5 py-1.5 text-xs font-black bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-right focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition"
                        oninput="recalculateFeeItemsTotal()">
             </div>
-            <button type="button" onclick="removeFeeItemRow(this)" class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 flex items-center justify-center text-sm transition">
+            <button type="button" onclick="removeFeeItemRow(this)" title="Remove item" class="w-7 h-7 rounded-lg bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 flex items-center justify-center text-xs transition">
                 <i class="bi bi-trash-fill"></i>
             </button>
         `;
@@ -549,11 +599,12 @@
         displayPayable.textContent = 'Rs. ' + payable.toLocaleString('en-US', { minimumFractionDigits: 2 });
 
         if (!inputCash.value || tendered === 0) {
-            changeCard.className = 'rounded-2xl p-5 border transition-all text-center space-y-2 bg-slate-900/90 border-slate-800';
+            changeCard.className = 'rounded-xl p-3.5 border transition-all text-center space-y-1 bg-slate-50 dark:bg-slate-800/70 border-slate-200 dark:border-slate-700';
+            changeLabel.className = 'text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block';
             changeLabel.textContent = 'CASH RETURN STATUS';
-            changeDisplay.className = 'text-3xl font-black tracking-tight text-slate-400';
+            changeDisplay.className = 'text-xl font-extrabold tracking-tight text-slate-700 dark:text-slate-300';
             changeDisplay.textContent = 'Rs. 0.00';
-            changeMessage.textContent = 'Enter cash received amount to calculate change return.';
+            changeMessage.textContent = 'Enter cash received to calculate return amount.';
             denomBreakdown.classList.add('hidden');
             return;
         }
@@ -561,12 +612,12 @@
         const change = tendered - payable;
 
         if (change > 0) {
-            changeCard.className = 'rounded-2xl p-5 border-2 transition-all text-center space-y-2 bg-gradient-to-b from-emerald-950 to-slate-950 border-emerald-400 shadow-xl shadow-emerald-950/50';
-            changeLabel.className = 'text-[10px] font-extrabold text-emerald-400 uppercase tracking-widest block';
-            changeLabel.textContent = 'CHANGE TO RETURN TO PARENT / STUDENT';
-            changeDisplay.className = 'text-4xl font-black tracking-tight text-emerald-400 animate-pulse';
+            changeCard.className = 'rounded-xl p-3.5 border-2 transition-all text-center space-y-1 bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700 shadow-xs';
+            changeLabel.className = 'text-[10px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider block';
+            changeLabel.textContent = 'CHANGE TO RETURN';
+            changeDisplay.className = 'text-2xl font-black tracking-tight text-emerald-700 dark:text-emerald-300';
             changeDisplay.textContent = 'Rs. ' + change.toLocaleString('en-US', { minimumFractionDigits: 2 });
-            changeMessage.textContent = 'Hand Rs. ' + change.toLocaleString() + ' change back to customer.';
+            changeMessage.textContent = 'Hand Rs. ' + change.toLocaleString() + ' change back to student / parent.';
 
             // Calculate Nepali Rupee Denomination Breakdown
             let rem = Math.floor(change);
@@ -575,31 +626,31 @@
             notes.forEach(n => {
                 const count = Math.floor(rem / n);
                 if (count > 0) {
-                    list.push(`${count} &times; Rs. ${n}`);
+                    list.push(`${count} × Rs. ${n}`);
                     rem %= n;
                 }
             });
             if (list.length > 0) {
-                denomBreakdown.innerHTML = '<strong>Suggested Change:</strong> ' + list.join(' &middot; ');
+                denomBreakdown.innerHTML = '<span class="font-bold text-emerald-800 dark:text-emerald-300">Suggested Notes:</span> ' + list.join(' · ');
                 denomBreakdown.classList.remove('hidden');
             } else {
                 denomBreakdown.classList.add('hidden');
             }
 
         } else if (change === 0) {
-            changeCard.className = 'rounded-2xl p-5 border-2 transition-all text-center space-y-2 bg-slate-900 border-sky-400';
-            changeLabel.className = 'text-[10px] font-extrabold text-sky-400 uppercase tracking-widest block';
+            changeCard.className = 'rounded-xl p-3.5 border-2 transition-all text-center space-y-1 bg-sky-50/70 dark:bg-sky-950/40 border-sky-300 dark:border-sky-700';
+            changeLabel.className = 'text-[10px] font-bold text-sky-800 dark:text-sky-300 uppercase tracking-wider block';
             changeLabel.textContent = 'EXACT CASH RECEIVED';
-            changeDisplay.className = 'text-3xl font-black tracking-tight text-sky-400';
+            changeDisplay.className = 'text-2xl font-black tracking-tight text-sky-700 dark:text-sky-300';
             changeDisplay.textContent = 'Rs. 0.00';
             changeMessage.textContent = 'Exact cash received — zero change required.';
             denomBreakdown.classList.add('hidden');
         } else {
             const short = Math.abs(change);
-            changeCard.className = 'rounded-2xl p-5 border-2 transition-all text-center space-y-2 bg-slate-950 border-amber-500';
-            changeLabel.className = 'text-[10px] font-extrabold text-amber-400 uppercase tracking-widest block';
-            changeLabel.textContent = 'PARTIAL CASH RECEIVED';
-            changeDisplay.className = 'text-3xl font-black tracking-tight text-amber-400';
+            changeCard.className = 'rounded-xl p-3.5 border-2 transition-all text-center space-y-1 bg-amber-50/70 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700';
+            changeLabel.className = 'text-[10px] font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider block';
+            changeLabel.textContent = 'PARTIAL CASH TENDERED';
+            changeDisplay.className = 'text-2xl font-black tracking-tight text-amber-700 dark:text-amber-300';
             changeDisplay.textContent = '- Rs. ' + short.toLocaleString('en-US', { minimumFractionDigits: 2 });
             changeMessage.textContent = 'Cash tendered is short by Rs. ' + short.toLocaleString() + '.';
             denomBreakdown.classList.add('hidden');

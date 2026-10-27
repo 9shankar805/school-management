@@ -1,97 +1,183 @@
 @extends('layouts.app')
 
+@push('head-scripts')
+<style>
+.iemis-stat-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    padding: 14px 16px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 14px !important;
+    text-decoration: none !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+.iemis-stat-card:hover {
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08) !important;
+    transform: translateY(-2px) !important;
+    border-color: #cbd5e1 !important;
+}
+[data-theme="dark"] .iemis-stat-card,
+html.dark .iemis-stat-card {
+    background: #111927 !important;
+    border-color: #223049 !important;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4) !important;
+}
+.iemis-icon-wrapper {
+    font-size: 2.25rem !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.iemis-card-details {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+.iemis-title {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.03em !important;
+    line-height: 1.1 !important;
+    margin-bottom: 2px !important;
+}
+[data-theme="dark"] .iemis-title,
+html.dark .iemis-title {
+    color: #94a3b8 !important;
+}
+.iemis-num-group {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 6px !important;
+}
+.iemis-value {
+    font-size: 22px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    line-height: 1.1 !important;
+}
+[data-theme="dark"] .iemis-value,
+html.dark .iemis-value {
+    color: #f8fafc !important;
+}
+.iemis-badge-green { font-size: 10px !important; font-weight: 700 !important; color: #10b981 !important; }
+.iemis-badge-amber { font-size: 10px !important; font-weight: 700 !important; color: #f59e0b !important; }
+.iemis-badge-rose  { font-size: 10px !important; font-weight: 700 !important; color: #ef4444 !important; }
+</style>
+@endpush
+
 @section('content')
+<div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto space-y-6 bg-slate-50/50 dark:bg-slate-950 min-h-screen">
 
-    <div class="flex-1 p-6 lg:p-8 overflow-auto">
-
-        <div class="flex flex-wrap justify-between items-start mb-7 gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Library Dashboard</h1>
-                <p class="text-slate-400 text-sm mt-0.5">{{ now()->format('l, F j, Y') }}</p>
+        {{-- Header & Quick Actions --}}
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-violet-500/25 flex-shrink-0">
+                    <i class="bi bi-book-half text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Library Dashboard</h1>
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{{ now()->format('l, F j, Y') }} &bull; Catalog & Circulation Hub</p>
+                </div>
             </div>
-            <div class="flex gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
                 @can('create books')
-                <a href="{{ route('library.create') }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition">
-                    <i class="bi bi-plus-lg"></i> Add Book
+                <a href="{{ route('library.create') }}" class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-semibold rounded-xl shadow-sm shadow-violet-600/25 transition active:scale-95">
+                    <i class="bi bi-plus-lg text-sm"></i>
+                    <span>Add Book</span>
                 </a>
                 @endcan
-                <a href="{{ route('library.index') }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-white border border-slate-200 text-sm font-medium rounded-lg hover:bg-slate-50 transition text-slate-700">
-                    <i class="bi bi-journals"></i> View Catalog
+                <a href="{{ route('library.index') }}" class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-semibold rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition active:scale-95">
+                    <i class="bi bi-journals text-slate-500 text-sm"></i>
+                    <span>View Catalog</span>
                 </a>
             </div>
         </div>
 
-        {{-- KPI Cards --}}
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-                <div class="flex items-center justify-between mb-3">
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Total Books</p>
-                    <span class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 text-sm"><i class="bi bi-journals"></i></span>
+        {{-- CEHRD IEMIS 3D Stat Cards --}}
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+            <a href="{{ route('library.index') }}" class="iemis-stat-card">
+                <div class="iemis-icon-wrapper">📚</div>
+                <div class="iemis-card-details">
+                    <span class="iemis-title">Total Books</span>
+                    <div class="iemis-num-group">
+                        <span class="iemis-value">{{ number_format($totalBooks) }}</span>
+                        <span class="iemis-badge-green">Catalog</span>
+                    </div>
                 </div>
-                <p class="text-3xl font-bold text-slate-800">{{ number_format($totalBooks) }}</p>
-                <p class="mt-1 text-xs text-indigo-600">In catalog</p>
+            </a>
+            <div class="iemis-stat-card">
+                <div class="iemis-icon-wrapper">📖</div>
+                <div class="iemis-card-details">
+                    <span class="iemis-title">Issued Books</span>
+                    <div class="iemis-num-group">
+                        <span class="iemis-value text-amber-600">{{ number_format($issuedBooks) }}</span>
+                        <span class="iemis-badge-amber">Borrowed</span>
+                    </div>
+                </div>
             </div>
-            <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
-                <div class="flex items-center justify-between mb-3">
-                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Issued</p>
-                    <span class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 text-sm"><i class="bi bi-book"></i></span>
+            <div class="iemis-stat-card col-span-2 lg:col-span-1">
+                <div class="iemis-icon-wrapper">⚠️</div>
+                <div class="iemis-card-details">
+                    <span class="iemis-title">Overdue Books</span>
+                    <div class="iemis-num-group">
+                        <span class="iemis-value text-rose-600">{{ number_format($overdueBooks) }}</span>
+                        <span class="iemis-badge-rose">Past Due</span>
+                    </div>
                 </div>
-                <p class="text-3xl font-bold text-amber-600">{{ number_format($issuedBooks) }}</p>
-                <p class="mt-1 text-xs text-slate-400">Currently borrowed</p>
-            </div>
-            <div class="bg-white rounded-2xl p-5 border border-rose-50 shadow-sm">
-                <div class="flex items-center justify-between mb-3">
-                    <p class="text-xs font-semibold text-rose-400 uppercase tracking-wide">Overdue</p>
-                    <span class="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center text-rose-600 text-sm"><i class="bi bi-exclamation-circle"></i></span>
-                </div>
-                <p class="text-3xl font-bold text-rose-600">{{ number_format($overdueBooks) }}</p>
-                <p class="mt-1 text-xs text-rose-500">Past due date</p>
             </div>
         </div>
 
-        {{-- Book issue module coming soon notice --}}
-        @if($issuedBooks === 0 && $overdueBooks === 0)
-        <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
-            <i class="bi bi-info-circle-fill text-blue-500 text-lg mt-0.5"></i>
-            <div>
-                <p class="font-semibold text-blue-800 text-sm">Book Issue/Return Module</p>
-                <p class="text-blue-700 text-xs mt-0.5">Issue and return tracking will be available when Module 12 (Library) is fully implemented.</p>
-            </div>
-        </div>
-        @endif
-
-        {{-- Recent Books --}}
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div class="px-5 py-3 border-b border-slate-100 flex justify-between items-center">
-                <p class="text-sm font-semibold text-slate-700"><i class="bi bi-clock-history me-1 text-slate-400"></i>Recently Added Books</p>
-                <a href="{{ route('library.index') }}" class="text-xs text-indigo-600 hover:underline">View all</a>
+        {{-- Recent Books Table --}}
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/60 dark:bg-slate-800/40">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Recently Added Books</p>
+                </div>
+                <a href="{{ route('library.index') }}" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">View catalog &rarr;</a>
             </div>
             @if($recentBooks->count())
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
-                        <tr class="text-left text-xs text-slate-400 bg-slate-50">
-                            <th class="px-5 py-2.5 font-medium">Title</th>
-                            <th class="px-5 py-2.5 font-medium">Author</th>
-                            <th class="px-5 py-2.5 font-medium">ISBN</th>
-                            <th class="px-5 py-2.5 font-medium">Qty</th>
-                            <th class="px-5 py-2.5 font-medium">Added</th>
+                        <tr class="text-left text-xs font-semibold text-slate-400 dark:text-slate-500 bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800">
+                            <th class="px-5 py-3">Book Title</th>
+                            <th class="px-5 py-3">Author</th>
+                            <th class="px-5 py-3">ISBN</th>
+                            <th class="px-5 py-3">Stock Qty</th>
+                            <th class="px-5 py-3">Date Added</th>
                             @can('create books')
-                            <th class="px-5 py-2.5 font-medium"></th>
+                            <th class="px-5 py-3 text-right">Action</th>
                             @endcan
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-50">
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/80">
                         @foreach($recentBooks as $book)
-                        <tr class="hover:bg-slate-50">
-                            <td class="px-5 py-3 font-medium text-slate-700">{{ $book->title }}</td>
-                            <td class="px-5 py-3 text-slate-500">{{ $book->author }}</td>
-                            <td class="px-5 py-3 text-slate-400 font-mono text-xs">{{ $book->isbn ?? '—' }}</td>
-                            <td class="px-5 py-3 text-slate-700">{{ $book->qty ?? '—' }}</td>
-                            <td class="px-5 py-3 text-slate-400">{{ $book->created_at->format('M d, Y') }}</td>
+                        <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                            <td class="px-5 py-3.5 font-bold text-slate-800 dark:text-slate-100 text-xs sm:text-sm">{{ $book->title }}</td>
+                            <td class="px-5 py-3.5 text-xs text-slate-500 dark:text-slate-400">{{ $book->author }}</td>
+                            <td class="px-5 py-3.5 text-xs text-slate-400 dark:text-slate-500 font-mono">{{ $book->isbn ?? '—' }}</td>
+                            <td class="px-5 py-3.5 text-xs text-slate-700 dark:text-slate-300 font-semibold">{{ $book->qty ?? '—' }}</td>
+                            <td class="px-5 py-3.5 text-xs text-slate-400 dark:text-slate-500">{{ $book->created_at?->format('M d, Y') ?? '—' }}</td>
                             @can('create books')
-                            <td class="px-5 py-3">
-                                <a href="{{ route('library.edit', $book->id) }}" class="text-xs text-indigo-600 hover:underline">Edit</a>
+                            <td class="px-5 py-3.5 text-right">
+                                <a href="{{ route('library.edit', $book->id) }}" class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg transition active:scale-95">
+                                    <i class="bi bi-pencil-square text-[11px]"></i>
+                                    <span>Edit</span>
+                                </a>
                             </td>
                             @endcan
                         </tr>
@@ -100,10 +186,12 @@
                 </table>
             </div>
             @else
-            <p class="text-sm text-slate-400 text-center py-10">No books in the catalog yet.</p>
+            <div class="text-center py-12 px-4">
+                <i class="bi bi-journal-x text-3xl text-slate-300 dark:text-slate-600 block mb-2"></i>
+                <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">No books in the library catalog yet.</p>
+            </div>
             @endif
         </div>
 
     </div>
-</div>
 @endsection

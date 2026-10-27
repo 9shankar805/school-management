@@ -16,6 +16,11 @@ class ScholarshipController extends Controller
     {
         $this->authorize('create students');
 
+        $user = auth()->user();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            \App\Models\User::where('school_id', $user->school_id)->findOrFail($studentId);
+        }
+
         $types = implode(',', array_keys(Scholarship::TYPES));
 
         $data = $request->validate([
@@ -30,9 +35,10 @@ class ScholarshipController extends Controller
         ]);
 
         Scholarship::create(array_merge($data, [
+            'school_id'  => $user->school_id,
             'student_id' => $studentId,
             'status'     => 'active',
-            'awarded_by' => auth()->id(),
+            'awarded_by' => $user->id,
         ]));
 
         return back()->with('status', 'Scholarship added.');
@@ -41,7 +47,14 @@ class ScholarshipController extends Controller
     public function update(Request $request, int $id)
     {
         $this->authorize('create students');
-        $scholarship = Scholarship::findOrFail($id);
+
+        $user = auth()->user();
+        $query = Scholarship::query();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $query->where('school_id', $user->school_id);
+        }
+
+        $scholarship = $query->findOrFail($id);
 
         $data = $request->validate([
             'status'     => 'required|in:active,expired,revoked',
@@ -56,7 +69,15 @@ class ScholarshipController extends Controller
     public function destroy(int $id)
     {
         $this->authorize('create students');
-        Scholarship::findOrFail($id)->delete();
+
+        $user = auth()->user();
+        $query = Scholarship::query();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $query->where('school_id', $user->school_id);
+        }
+
+        $scholarship = $query->findOrFail($id);
+        $scholarship->delete();
         return back()->with('status', 'Scholarship removed.');
     }
 }

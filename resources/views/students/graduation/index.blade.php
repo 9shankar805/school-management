@@ -64,8 +64,13 @@
         {{-- Search --}}
         <form method="GET" action="{{ route('students.graduation.index') }}" class="mb-4 flex gap-2">
             <input type="hidden" name="tab" value="{{ $tab }}">
-            <input type="text" name="search" value="{{ $search }}" placeholder="Search students…" class="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
-            <button type="submit" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition">Search</button>
+            <div class="relative flex-1">
+                <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" name="search" value="{{ $search }}" placeholder="Search students…" class="w-full border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+            </div>
+            <button type="submit" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition flex items-center gap-1.5">
+                <i class="bi bi-search"></i> Search
+            </button>
         </form>
 
         @php $students = $tab === 'eligible' ? $active : ($tab === 'graduated' ? $graduated : $dropouts); @endphp

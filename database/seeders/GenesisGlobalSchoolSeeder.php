@@ -38,12 +38,40 @@ class GenesisGlobalSchoolSeeder extends Seeder
             $school = School::updateOrCreate(
                 ['id' => 3],
                 [
-                    'name'    => 'Genesis Global School',
-                    'slug'    => 'genesis-global-school',
-                    'website' => 'https://genesisglobalschool.edu.in',
-                    'address' => 'Sector 132, Expressway, Noida / Kathmandu Campus',
-                    'phone'   => '+91 97110 00560',
-                    'email'   => 'info@genesisgs.edu.in',
+                    'name'                 => 'Genesis Global School',
+                    'slug'                 => 'genesis-global-school',
+                    'iemis_code'           => '27001928',
+                    'website'              => 'https://genesisglobalschool.nshlms.com',
+                    'address'              => 'Kathmandu Campus, Bagmati Province',
+                    'city'                 => 'Kathmandu',
+                    'district'             => 'Kathmandu',
+                    'province'             => 'Bagmati Province',
+                    'country'              => 'Nepal',
+                    'phone'                => '+977-1-4412345',
+                    'email'                => 'genesisglobalschool@gmail.com',
+                    'contact_person'       => 'Prof. Dr. A. Sharma (Principal)',
+                    'status'               => 'active',
+                    'preset_theme'         => 'royal_blue',
+                    'primary_color'        => '#1e3a8a',
+                    'secondary_color'      => '#f59e0b',
+                    'logo'                 => 'school-logos/genesis_crest.jpg',
+                    'description'          => 'A premier center of academic excellence and holistic character formation inspired by world-class institutions, nurturing critical thinkers, innovators, and compassionate leaders for tomorrow.',
+                    'about_us'             => 'Established with an uncompromising commitment to academic rigor and moral integrity, Genesis Global School combines the time-tested traditions of classical education with modern inquiry-based learning. Located in Kathmandu, our world-class campus offers state-of-the-art science and robotics laboratories, comprehensive digital libraries, and extensive athletic grounds.',
+                    'mission'              => 'To inspire intellectual curiosity, instill ethical courage, and empower every student to lead purposeful, innovative lives in an interconnected global community.',
+                    'vision'               => 'To be the preeminent educational benchmark in Nepal, celebrated for cultivating graduates who combine academic mastery with profound compassion and civic responsibility.',
+                    'history'              => 'Founded by seasoned academicians and educational visionaries, Genesis Global School has grown from a humble initiative into one of the country\'s most respected institutions, regularly producing national toppers in board examinations.',
+                    'principal_message'    => 'At Genesis Global School, education is not simply about acquiring degrees; it is a sacred journey of personal transformation. Guided by our motto \'Sapientia, Virtus, Excellentia\', we challenge our students to pursue knowledge with passion, live with honor, and serve society with compassion.',
+                    'admission_info'       => 'Admissions are currently OPEN for Academic Session 2026-2027 from Grade I through Grade XII (+2 Science, Management & Humanities). Merit scholarships covering up to 100% of tuition are awarded based on our rigorous entrance assessment and interactive faculty panel interview.',
+                    'result_info'          => '100% Pass Rate in National Examinations Board (NEB) Class XII and SEE examinations for five consecutive years. Over 82% of our students secured GPA 3.6 to 4.0 with distinction in Science and Management disciplines.',
+                    'notice_board'         => "ADMISSIONS 2026-2027: Online entrance registration is now open for Science, Management & Humanities.\nSCHOLARSHIPS: Merit and need-based scholarship assessment tests will be held on Chaitra 25, 2082.\nSPORTS: Annual Inter-House Athletics and Basketball Championship commences next Friday.\nACADEMICS: Pre-board mock examination schedule for Grade X (SEE) and Grade XII published on portal.",
+                    'popup_active'         => true,
+                    'popup_show_once'      => false,
+                    'popup_title'          => 'ADMISSIONS OPEN: Academic Session 2026-2027',
+                    'popup_subtitle'       => 'Applications are invited for Grade XI & XII (Science, Management, Humanities) and Grades I - IX. Entrance examination registration is now live. Limited merit scholarships available.',
+                    'popup_image'          => 'school-popup/admission_flyer_2026.jpg',
+                    'popup_btn_text'       => 'Apply Online Now',
+                    'popup_btn_url'        => '/admissions/apply?school=genesis-global-school',
+                    'payment_instructions' => "For online fee payment, please scan the QR code via eSewa, Khalti, or Mobile Banking app.\nAccount Name: Genesis Global School Pvt. Ltd.\nBank: Nepal Investment Mega Bank (A/C: 01901030048291)\neSewa / Khalti ID: 9801234567\nRemark: Please include Student Name & Roll Number in transaction remarks.",
                 ]
             );
 
@@ -164,6 +192,7 @@ class GenesisGlobalSchoolSeeder extends Seeder
                 ['first_name' => 'Vikram',  'last_name' => 'Singh',    'email' => 'transport@genesisgs.edu.in',   'role' => 'transport-manager',    'title' => 'Transport Manager'],
                 ['first_name' => 'Karan',   'last_name' => 'Thapa',    'email' => 'hostel@genesisgs.edu.in',      'role' => 'hostel-manager',       'title' => 'Hostel Warden & Manager'],
                 ['first_name' => 'Anita',   'last_name' => 'Pradhan',  'email' => 'attendance@genesisgs.edu.in',  'role' => 'attendance-officer',   'title' => 'Attendance Officer'],
+                ['first_name' => 'Genesis', 'last_name' => 'Admin',    'email' => 'genesisglobalschool@gmail.com','role' => 'admin',                'title' => 'School Admin'],
             ];
 
             $staffUsers = [];
@@ -413,7 +442,7 @@ class GenesisGlobalSchoolSeeder extends Seeder
 
             if (!empty($studentsToSeat)) {
                 $hallRepo = new ExamHallRepository();
-                $hallRepo->autoAllocateSeats($examSchedule->id, $studentsToSeat, 4, 5, 2, 'staggered');
+                $hallRepo->autoAllocateSeats($examSchedule->id, array_slice($studentsToSeat, 0, 40), 4, 5, 2, 'staggered');
             }
 
             // Student Marks

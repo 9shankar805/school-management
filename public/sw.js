@@ -10,7 +10,7 @@
  * Cache versioning: bump SW_VERSION to invalidate all caches on deploy.
  */
 
-const SW_VERSION   = 'v1.1.0';   // bumped: offline-first layer added
+const SW_VERSION   = 'v2.0.0';   // v2.0.0: comprehensive offline-first platform
 const CACHE_SHELL  = `shell-${SW_VERSION}`;
 const CACHE_PAGES  = `pages-${SW_VERSION}`;
 const CACHE_ASSETS = `assets-${SW_VERSION}`;
@@ -25,6 +25,8 @@ const SHELL_URLS = [
     '/js/offline-db.js',
     '/js/offline-seed.js',
     '/js/attendance-sync.js',
+    '/js/offline-forms.js',
+    '/js/offline-sync.js',
     '/favicon_io/android-chrome-192x192.png',
     '/favicon_io/favicon-32x32.png',
     '/manifest.json',
@@ -41,14 +43,10 @@ const CACHE_FIRST_PATTERNS = [
 ];
 
 // ── Never cache these ─────────────────────────────────────────────────────
-// NOTE: /api/offline/* is intentionally EXCLUDED from this list so that the
-// seed-data and sync endpoints can be reached by the page (they are same-origin
-// authenticated fetch calls, not handled by the SW).
 const BYPASS_PATTERNS = [
     /\/api\/(?!offline\/)/,   // bypass all /api/* EXCEPT /api/offline/*
     /\/horizon/,
     /\/webhooks\//,
-    /\/admin\//,
     /\/_debugbar/,
     /logout/,
     /\/sanctum\//,
@@ -56,23 +54,39 @@ const BYPASS_PATTERNS = [
 
 // ── Always pre-cache these HTML pages for offline use ────────────────────
 const PRECACHE_PAGES = [
-    // Core
-    '/attendances/take',
+    // Core & Dashboards
     '/home',
     '/offline',
-    // Student management
+    '/attendances/take',
+    '/attendance/qr',
+    // Homework & Assignments
+    '/homework',
+    '/homework/create',
+    '/assignments',
+    '/courses/assignments/create',
+    // Timetables & Routine
+    '/routine/view',
+    // Student & Academics
     '/students/add',
     '/students/view/list',
-    // Syllabus
-    '/syllabus/create',
     '/syllabus/index',
-    // Assignments
-    '/courses/assignments/create',
-    '/assignments',
-    // Marks
+    '/syllabus/create',
     '/marks/create',
-    // Notices
+    // Communication & Notices
+    '/notices',
     '/notice/create',
+    // Visitors & Front Desk
+    '/visitors',
+    '/visitors/create',
+    // Feedback & Grievances
+    '/feedback',
+    '/feedback/create',
+    '/feedback/my',
+    // Leave
+    '/leave',
+    '/leave/create',
+    // Finance
+    '/finance/day-book',
 ];
 
 // Max age for page cache entries (5 minutes)

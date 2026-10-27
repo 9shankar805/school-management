@@ -32,6 +32,15 @@ class StaffAttendanceController extends Controller
      */
     public function index(Request $request)
     {
+        $user = auth()->user();
+        if (!$user || $user->isStudent() || $user->isParent() || !$user->isStaff()) {
+            abort(403, 'Unauthorized to view staff attendance.');
+        }
+
+        if (!$user->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'vice-principal', 'hr-manager', 'hr', 'attendance-officer'])) {
+            abort(403, 'Unauthorized to manage staff attendance.');
+        }
+
         $date = $request->query('date', today()->toDateString());
 
         $staff = User::role(self::STAFF_ROLES)
@@ -55,7 +64,10 @@ class StaffAttendanceController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorize('create staff');
+        $user = auth()->user();
+        if (!$user || !$user->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'vice-principal', 'hr-manager', 'hr', 'attendance-officer'])) {
+            abort(403, 'Unauthorized to mark staff attendance.');
+        }
 
         $request->validate([
             'date'              => 'required|date',

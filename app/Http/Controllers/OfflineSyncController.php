@@ -3,10 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Assignment;
+use App\Models\Feedback;
+use App\Models\Homework;
+use App\Models\HomeworkAcknowledgement;
+use App\Models\LeaveApplication;
 use App\Models\Mark;
 use App\Models\Notice;
 use App\Models\Syllabus;
 use App\Models\User;
+use App\Models\Visitor;
 use App\Repositories\NoticeRepository;
 use App\Repositories\PromotionRepository;
 use App\Repositories\StudentAcademicInfoRepository;
@@ -78,7 +83,7 @@ class OfflineSyncController extends Controller
             Log::info("[OfflineSync] Processing local_id={$localId} module={$module} action={$action}");
 
             try {
-                $result = $this->dispatch($module, $action, $payload, $request);
+                $result = $this->dispatchSyncAction($module, $action, $payload, $request);
                 $results[] = array_merge(['local_id' => $localId, 'ok' => true], $result);
                 $synced++;
             } catch (\Throwable $e) {
@@ -101,7 +106,7 @@ class OfflineSyncController extends Controller
 
     // ── Dispatch to module handler ─────────────────────────────────────────────
 
-    private function dispatch(string $module, string $action, array $payload, Request $request): array
+    private function dispatchSyncAction(string $module, string $action, array $payload, Request $request): array
     {
         return match ($module) {
             'student'        => $this->handleStudent($payload, $request),
@@ -114,6 +119,11 @@ class OfflineSyncController extends Controller
             'fee_collection' => $this->handleFeeCollection($payload, $request),
             'expense'        => $this->handleExpense($payload, $request),
             'income'         => $this->handleIncome($payload, $request),
+            'homework'       => $this->handleHomework($payload, $request),
+            'homework_sign'  => $this->handleHomeworkSign($payload, $request),
+            'visitor'        => $this->handleVisitor($payload, $request),
+            'leave'          => $this->handleLeave($payload, $request),
+            'feedback'       => $this->handleFeedback($payload, $request),
             default          => throw new \InvalidArgumentException("Unknown module: {$module}"),
         };
     }
@@ -328,20 +338,42 @@ class OfflineSyncController extends Controller
 
     private function handleFeeCollection(array $p, Request $req): array
     {
-        // Cash payment record only (online gateways can't work offline anyway)
-        $v = Validator::make($p, [
-            'invoice_id' => 'required',
-            'amount'     => 'required|numeric|min:0',
-        ]);
-        if ($v->fails()) throw new \InvalidArgumentException($v->errors()->first());
+        $invoiceId = $p['invoice_id'] ?? $p['id'] ?? null;
+        $amount    = (float) ($p['amount'] ?? 0);
 
-        $fakeRequest = Request::create('/finance/payments', 'POST', $p);
+        if (!$invoiceId && !empty($p['student_id'])) {
+            // New POS invoice + payment creation from scratch
+            $fakeRequest = Request::create('/payments', 'POST', array_merge([
+                'title'          => $p['title'] ?? 'Tuition Fee Payment',
+                'amount'         => $amount,
+                'payment_date'   => $p['payment_date'] ?? now()->toDateString(),
+                'payment_method' => $p['payment_method'] ?? 'cash',
+                'payment_status' => 'paid',
+                'notes'          => $p['notes'] ?? 'Offline POS cash collection synced',
+            ], $p));
+            $fakeRequest->setUserResolver(fn () => $req->user());
+            $controller = app(\App\Http\Controllers\PaymentController::class);
+            $controller->store($fakeRequest);
+            return ['server_id' => null, 'message' => 'New POS Fee Payment created & synced successfully.'];
+        }
+
+        if (!$invoiceId) throw new \InvalidArgumentException('Invoice ID or Student ID required.');
+
+        $invoice = \App\Models\Invoice::findOrFail((int) $invoiceId);
+
+        $fakeRequest = Request::create('/payments/' . $invoice->id . '/pay', 'POST', [
+            'amount'                 => $amount,
+            'payment_date'           => $p['payment_date'] ?? now()->toDateString(),
+            'payment_method'         => $p['payment_method'] ?? 'cash',
+            'notes'                  => $p['notes'] ?? 'Offline Fee Collection synced',
+            'gateway_transaction_id' => $p['gateway_transaction_id'] ?? null,
+        ]);
         $fakeRequest->setUserResolver(fn () => $req->user());
 
         try {
             $controller = app(\App\Http\Controllers\PaymentController::class);
-            $controller->processPayment($fakeRequest);
-            return ['server_id' => null, 'message' => 'Payment recorded.'];
+            $controller->processPayment($fakeRequest, (int) $invoice->id);
+            return ['server_id' => $invoice->id, 'message' => 'Fee Payment of Rs. ' . number_format($amount, 2) . ' synced on Invoice #' . $invoice->invoice_number];
         } catch (\Throwable $e) {
             throw new \RuntimeException('Payment failed: ' . $e->getMessage());
         }
@@ -350,18 +382,28 @@ class OfflineSyncController extends Controller
     private function handleExpense(array $p, Request $req): array
     {
         $v = Validator::make($p, [
-            'title'  => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0',
+            'title'          => 'required|string|max:255',
+            'amount'         => 'required|numeric|min:0.01',
+            'category'       => 'nullable|string',
+            'expense_date'   => 'nullable|date',
+            'payment_method' => 'nullable|string|in:cash,bank,cheque',
         ]);
         if ($v->fails()) throw new \InvalidArgumentException($v->errors()->first());
 
-        $fakeRequest = Request::create('/finance/expenses', 'POST', $p);
+        $payload = array_merge([
+            'category'       => 'General',
+            'expense_date'   => now()->toDateString(),
+            'payment_method' => 'cash',
+            'reference'      => 'OFFLINE-SYNC',
+        ], $p);
+
+        $fakeRequest = Request::create('/finance/expenses', 'POST', $payload);
         $fakeRequest->setUserResolver(fn () => $req->user());
 
         try {
             $controller = app(\App\Http\Controllers\ExpenseController::class);
-            $response   = $controller->store($fakeRequest);
-            return ['server_id' => null, 'message' => 'Expense saved.'];
+            $controller->store($fakeRequest);
+            return ['server_id' => null, 'message' => 'Expense of Rs. ' . number_format((float)$p['amount'], 2) . ' saved.'];
         } catch (\Throwable $e) {
             throw new \RuntimeException('Expense save failed: ' . $e->getMessage());
         }
@@ -370,20 +412,161 @@ class OfflineSyncController extends Controller
     private function handleIncome(array $p, Request $req): array
     {
         $v = Validator::make($p, [
-            'title'  => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0',
+            'title'          => 'required|string|max:255',
+            'amount'         => 'required|numeric|min:0.01',
+            'category'       => 'nullable|string',
+            'income_date'    => 'nullable|date',
+            'payment_method' => 'nullable|string|in:cash,bank,cheque',
         ]);
         if ($v->fails()) throw new \InvalidArgumentException($v->errors()->first());
 
-        $fakeRequest = Request::create('/finance/income', 'POST', $p);
+        $payload = array_merge([
+            'category'       => 'General',
+            'income_date'    => now()->toDateString(),
+            'payment_method' => 'cash',
+            'reference'      => 'OFFLINE-SYNC',
+        ], $p);
+
+        $fakeRequest = Request::create('/finance/income', 'POST', $payload);
         $fakeRequest->setUserResolver(fn () => $req->user());
 
         try {
             $controller = app(\App\Http\Controllers\IncomeController::class);
-            $response   = $controller->store($fakeRequest);
-            return ['server_id' => null, 'message' => 'Income saved.'];
+            $controller->store($fakeRequest);
+            return ['server_id' => null, 'message' => 'Income of Rs. ' . number_format((float)$p['amount'], 2) . ' saved.'];
         } catch (\Throwable $e) {
             throw new \RuntimeException('Income save failed: ' . $e->getMessage());
         }
+    }
+
+    private function handleHomework(array $p, Request $req): array
+    {
+        $v = Validator::make($p, [
+            'title'     => 'required|string|max:255',
+            'class_id'  => 'required|exists:school_classes,id',
+            'course_id' => 'required',
+            'due_date'  => 'required|date',
+        ]);
+        if ($v->fails()) throw new \InvalidArgumentException($v->errors()->first());
+
+        $sessionId = $p['session_id'] ?? app(\App\Interfaces\SchoolSessionInterface::class)->getLatestSession()?->id;
+
+        $homework = Homework::create([
+            'title'       => $p['title'],
+            'class_id'    => $p['class_id'],
+            'section_id'  => $p['section_id'] ?? null,
+            'course_id'   => $p['course_id'],
+            'session_id'  => $sessionId,
+            'teacher_id'  => $req->user()?->id ?? auth()->id(),
+            'due_date'    => $p['due_date'],
+            'description' => $p['description'] ?? '',
+            'total_marks' => $p['total_marks'] ?? 100,
+            'status'      => 'active',
+        ]);
+
+        return ['server_id' => $homework->id, 'message' => 'Homework created successfully.'];
+    }
+
+    private function handleHomeworkSign(array $p, Request $req): array
+    {
+        $v = Validator::make($p, [
+            'homework_id' => 'required',
+            'student_id'  => 'required',
+        ]);
+        if ($v->fails()) throw new \InvalidArgumentException($v->errors()->first());
+
+        $ack = HomeworkAcknowledgement::updateOrCreate(
+            [
+                'homework_id' => $p['homework_id'],
+                'student_id'  => $p['student_id'],
+            ],
+            [
+                'parent_id'       => $req->user()?->id ?? auth()->id(),
+                'acknowledged_at' => now(),
+                'remarks'         => $p['remarks'] ?? 'Checked & supervised (offline sync)',
+            ]
+        );
+
+        return ['server_id' => $ack->id, 'message' => 'Homework diary signed successfully.'];
+    }
+
+    private function handleVisitor(array $p, Request $req): array
+    {
+        $v = Validator::make($p, [
+            'name'           => 'required|string|max:100',
+            'phone'          => 'required|string|max:20',
+            'person_to_meet' => 'required|string|max:100',
+            'purpose'        => 'required|string|max:255',
+        ]);
+        if ($v->fails()) throw new \InvalidArgumentException($v->errors()->first());
+
+        $visitor = Visitor::create([
+            'name'           => $p['name'],
+            'phone'          => $p['phone'],
+            'person_to_meet' => $p['person_to_meet'],
+            'purpose'        => $p['purpose'],
+            'id_proof_type'  => $p['id_proof_type'] ?? 'citizenship',
+            'id_proof_number'=> $p['id_proof_number'] ?? null,
+            'check_in_time'  => now(),
+            'status'         => 'in_premises',
+            'badge_number'   => 'VIS-' . strtoupper(substr(uniqid(), -5)),
+            'entry_remarks'  => $p['entry_remarks'] ?? 'Registered via gate tablet (offline sync)',
+            'registered_by'  => $req->user()?->id ?? auth()->id(),
+        ]);
+
+        return ['server_id' => $visitor->id, 'message' => 'Visitor checked in successfully.'];
+    }
+
+    private function handleLeave(array $p, Request $req): array
+    {
+        $v = Validator::make($p, [
+            'from_date'     => 'required|date',
+            'to_date'       => 'required|date',
+            'leave_type_id' => 'required',
+            'reason'        => 'required|string',
+        ]);
+        if ($v->fails()) throw new \InvalidArgumentException($v->errors()->first());
+
+        $days = (new \Carbon\Carbon($p['from_date']))->diffInDays(new \Carbon\Carbon($p['to_date'])) + 1;
+
+        $leave = LeaveApplication::create([
+            'user_id'       => $p['user_id'] ?? $req->user()?->id ?? auth()->id(),
+            'leave_type_id' => $p['leave_type_id'],
+            'from_date'     => $p['from_date'],
+            'to_date'       => $p['to_date'],
+            'total_days'    => $days,
+            'reason'        => $p['reason'],
+            'status'        => 'pending',
+        ]);
+
+        return ['server_id' => $leave->id, 'message' => 'Leave application submitted.'];
+    }
+
+    private function handleFeedback(array $p, Request $req): array
+    {
+        $v = Validator::make($p, [
+            'category'    => 'required|string',
+            'priority'    => 'required|string',
+            'title'       => 'required|string|max:200',
+            'description' => 'required|string',
+        ]);
+        if ($v->fails()) throw new \InvalidArgumentException($v->errors()->first());
+
+        $user = $req->user() ?? auth()->user();
+        $isAnonymous = !empty($p['is_anonymous']);
+
+        $feedback = Feedback::create([
+            'user_id'        => $isAnonymous ? null : ($user?->id),
+            'submitter_name' => $isAnonymous ? 'Anonymous' : ($user ? ($user->first_name . ' ' . $user->last_name) : 'User'),
+            'submitter_role' => $user?->roles->first()?->name ?? 'general',
+            'is_anonymous'   => $isAnonymous,
+            'category'       => $p['category'],
+            'priority'       => $p['priority'],
+            'title'          => $p['title'],
+            'description'    => $p['description'],
+            'status'         => 'pending',
+        ]);
+
+        return ['server_id' => $feedback->id, 'message' => 'Feedback received. Ticket #' . $feedback->ticket_code];
     }
 }

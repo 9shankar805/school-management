@@ -40,9 +40,20 @@ class RoutineController extends Controller
         $current_school_session_id = $this->getSchoolCurrentSession();
         $school_classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
 
+        $user = auth()->user();
+        $teachersQuery = \App\Models\User::where(function ($q) {
+            $q->whereIn('role', ['teacher', 'class-teacher', 'admin', 'principal'])
+              ->orWhereHas('roles', fn($r) => $r->whereIn('name', ['teacher', 'class-teacher']));
+        });
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $teachersQuery->where('school_id', $user->school_id);
+        }
+        $teachers = $teachersQuery->orderBy('first_name')->get();
+
         $data = [
             'current_school_session_id' => $current_school_session_id,
             'classes'                   => $school_classes,
+            'teachers'                  => $teachers,
         ];
 
         return view('routines.create', $data);
@@ -113,20 +124,61 @@ class RoutineController extends Controller
     /** Show timetable grid for a class+section */
     public function show(Request $request)
     {
-        $class_id   = $request->query('class_id', 0);
-        $section_id = $request->query('section_id', 0);
         $current_school_session_id = $this->getSchoolCurrentSession();
-        $routineRepository = new RoutineRepository();
-        $routines = $routineRepository->getAll($class_id, $section_id, $current_school_session_id);
-        $routines = $routines->sortBy('start')->groupBy('weekday');
-
         $classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
 
+        $class_id   = $request->query('class_id', 0);
+        $section_id = $request->query('section_id', 0);
+
+        // Auto-select first available class & section if none selected
+        if (!$class_id && $classes->isNotEmpty()) {
+            $firstClass = $classes->first();
+            $class_id = $firstClass->id;
+            if (!$section_id && $firstClass->sections->isNotEmpty()) {
+                $section_id = $firstClass->sections->first()->id;
+            }
+        } elseif ($class_id && !$section_id) {
+            $selectedCls = $classes->firstWhere('id', $class_id);
+            if ($selectedCls && $selectedCls->sections->isNotEmpty()) {
+                $section_id = $selectedCls->sections->first()->id;
+            }
+        }
+
+        $routineRepository = new RoutineRepository();
+        $rawRoutines = $routineRepository->getAll($class_id, $section_id, $current_school_session_id);
+        $routines = $rawRoutines->sortBy('start')->groupBy('weekday');
+
+        $selectedClass   = $classes->firstWhere('id', $class_id);
+        $selectedSection = $selectedClass?->sections?->firstWhere('id', $section_id);
+
+        $user = auth()->user();
+        $teachersQuery = \App\Models\User::where(function ($q) {
+            $q->whereIn('role', ['teacher', 'class-teacher', 'admin', 'principal'])
+              ->orWhereHas('roles', fn($r) => $r->whereIn('name', ['teacher', 'class-teacher']));
+        });
+        if ($user && $user->school_id && !$user->hasRole('super-admin')) {
+            $teachersQuery->where('school_id', $user->school_id);
+        }
+        $teachers = $teachersQuery->orderBy('first_name')->get();
+
+        $courses = $class_id ? \App\Models\Course::where('class_id', $class_id)->get() : collect();
+
+        $currentSchool = $user?->school ?? \App\Models\School::first();
+        $allSchools = ($user && $user->hasRole('super-admin')) ? \App\Models\School::all() : collect();
+
         $data = [
-            'routines'   => $routines,
-            'classes'    => $classes,
-            'class_id'   => (int) $class_id,
-            'section_id' => (int) $section_id,
+            'routines'        => $routines,
+            'rawRoutines'     => $rawRoutines,
+            'classes'         => $classes,
+            'class_id'        => (int) $class_id,
+            'section_id'      => (int) $section_id,
+            'selectedClass'   => $selectedClass,
+            'selectedSection' => $selectedSection,
+            'teachers'        => $teachers,
+            'courses'         => $courses,
+            'currentSchool'   => $currentSchool,
+            'allSchools'      => $allSchools,
+            'session_id'      => $current_school_session_id,
         ];
 
         return view('routines.show', $data);
@@ -138,24 +190,38 @@ class RoutineController extends Controller
         $session_id = $this->getSchoolCurrentSession();
         $classes    = $this->schoolClassRepository->getAllBySession($session_id);
 
-        return view('routines.edit', compact('routine', 'classes', 'session_id'));
+        $user = auth()->user();
+        $teachersQuery = \App\Models\User::where(function ($q) {
+            $q->whereIn('role', ['teacher', 'class-teacher', 'admin', 'principal'])
+              ->orWhereHas('roles', fn($r) => $r->whereIn('name', ['teacher', 'class-teacher']));
+        });
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $teachersQuery->where('school_id', $user->school_id);
+        }
+        $teachers = $teachersQuery->orderBy('first_name')->get();
+        $courses  = \App\Models\Course::where('class_id', $routine->class_id)->get();
+
+        return view('routines.edit', compact('routine', 'classes', 'session_id', 'teachers', 'courses'));
     }
 
     /** Update a slot with conflict detection */
     public function update(Request $request, Routine $routine)
     {
-        $request->validate([
-            'start'   => 'required',
-            'end'     => 'required',
-            'weekday' => 'required|integer',
-            'room'    => 'nullable|string|max:50',
-            'color'   => 'nullable|string|max:20',
+        $data = $request->validate([
+            'start'      => 'required',
+            'end'        => 'required',
+            'weekday'    => 'required|integer|min:1|max:7',
+            'course_id'  => 'nullable|exists:courses,id',
+            'teacher_id' => 'nullable|exists:users,id',
+            'room'       => 'nullable|string|max:50',
+            'color'      => 'nullable|string|max:20',
         ]);
 
         $session_id = $routine->session_id;
-        $weekday    = $request->weekday;
-        $start      = $request->start;
-        $end        = $request->end;
+        $weekday    = $data['weekday'];
+        $start      = $data['start'];
+        $end        = $data['end'];
+        $teacher_id = $request->input('teacher_id');
 
         // Section conflict (exclude self)
         $conflict = Routine::where('session_id', $session_id)
@@ -168,18 +234,45 @@ class RoutineController extends Controller
         if ($conflict) {
             return back()
                 ->withInput()
-                ->withErrors(['conflict' => "Slot conflicts with {$conflict->start}–{$conflict->end}."]);
+                ->withErrors(['conflict' => "Slot conflicts with an existing class ({$conflict->start}–{$conflict->end}) on that day."]);
         }
 
-        $routine->update([
+        // Teacher conflict (exclude self)
+        if ($teacher_id) {
+            $teacherConflict = Routine::where('session_id', $session_id)
+                ->where('teacher_id', $teacher_id)
+                ->where('weekday', $weekday)
+                ->where('id', '!=', $routine->id)
+                ->where(fn($q) => $q->where('start', '<', $end)->where('end', '>', $start))
+                ->first();
+
+            if ($teacherConflict) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['conflict' => "The selected teacher is already scheduled in another section from {$teacherConflict->start} to {$teacherConflict->end} on that day."]);
+            }
+        }
+
+        $updateData = [
             'start'   => $start,
             'end'     => $end,
             'weekday' => $weekday,
             'room'    => $request->room,
             'color'   => $request->color,
-        ]);
+        ];
+        if ($request->filled('course_id')) {
+            $updateData['course_id'] = $request->course_id;
+        }
+        if ($request->has('teacher_id')) {
+            $updateData['teacher_id'] = $teacher_id;
+        }
 
-        return back()->with('status', 'Timetable slot updated.');
+        $routine->update($updateData);
+
+        return redirect()->route('section.routine.show', [
+            'class_id'   => $routine->class_id,
+            'section_id' => $routine->section_id,
+        ])->with('status', 'Timetable slot updated successfully.');
     }
 
     /** Delete a slot */

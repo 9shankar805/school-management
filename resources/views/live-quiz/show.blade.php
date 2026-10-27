@@ -150,26 +150,27 @@
                                     <h6 class="fw-bold text-dark mb-3">{{ $q->question_text }}</h6>
 
                                     @if($q->question_type === 'direct')
-                                    <div class="p-2 rounded-3 small border border-success bg-success bg-opacity-10 text-success fw-semibold mb-2">
-                                        <i class="bi bi-mic-fill me-1"></i>
-                                        Verbal Answer: <span class="fw-bold">{{ $q->direct_answer ?: '(Not set)' }}</span>
-                                        &nbsp;·&nbsp; Phase 1: <strong>{{ $q->time_limit_seconds }}s</strong>
-                                        &nbsp;·&nbsp; Phase 2 (pass): <strong>{{ $q->pass_time_seconds ?? 30 }}s</strong>
-                                        &nbsp;·&nbsp; Pass pts: <strong>{{ $q->pass_points ?? 50 }}</strong>
+                                    <div class="quiz-verbal-banner p-2.5 px-3 rounded-3 small border mb-2">
+                                        <i class="bi bi-mic-fill me-1 text-warning"></i>
+                                        <span class="fw-semibold">Verbal Answer:</span> <strong class="ms-1">{{ $q->direct_answer ?: '(Not set)' }}</strong>
+                                        <span class="text-muted mx-2">·</span> Phase 1: <strong>{{ $q->time_limit_seconds }}s</strong>
+                                        <span class="text-muted mx-2">·</span> Phase 2 (pass): <strong>{{ $q->pass_time_seconds ?? 30 }}s</strong>
+                                        <span class="text-muted mx-2">·</span> Pass pts: <strong>{{ $q->pass_points ?? 50 }}</strong>
                                     </div>
                                     @endif
 
                                     <div class="row g-2 mb-2">
                                         @if(!empty($q->options) && is_array($q->options))
                                             @foreach($q->options as $opt)
+                                                @php
+                                                    $isCorrect = strtoupper((string)($q->correct_option ?? '')) === strtoupper((string)($opt['key'] ?? ''));
+                                                @endphp
                                                 <div class="col-sm-6">
-                                                    <div class="p-2 rounded-3 small d-flex align-items-center gap-2 border {{ strtoupper($q->correct_option) === strtoupper($opt['key']) ? 'bg-success bg-opacity-10 border-success text-success fw-bold' : 'bg-white' }}">
-                                                        <span class="badge {{ strtoupper($q->correct_option) === strtoupper($opt['key']) ? 'bg-success text-white' : 'bg-secondary text-white' }} px-2 py-1">
-                                                            {{ $opt['key'] }}
-                                                        </span>
-                                                        <span>{{ $opt['text'] }}</span>
-                                                        @if(strtoupper($q->correct_option) === strtoupper($opt['key']))
-                                                            <i class="bi bi-check-circle-fill ms-auto text-success"></i>
+                                                    <div class="quiz-opt-item {{ $isCorrect ? 'is-correct' : '' }}">
+                                                        <span class="quiz-opt-key">{{ $opt['key'] }}</span>
+                                                        <span class="quiz-opt-text">{{ $opt['text'] }}</span>
+                                                        @if($isCorrect)
+                                                            <i class="bi bi-check-circle-fill quiz-opt-check ms-auto" title="Correct Answer"></i>
                                                         @endif
                                                     </div>
                                                 </div>
@@ -304,5 +305,109 @@ function handleModalTypeChange(val) {
 <style>
 .bg-indigo { background-color: #4f46e5 !important; }
 .text-indigo { color: #4f46e5 !important; }
+
+/* Quiz option items styling */
+.quiz-opt-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background-color: #ffffff;
+    color: #1e293b;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.quiz-opt-key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background-color: #475569;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.quiz-opt-text {
+    font-weight: 500;
+    color: inherit;
+    word-break: break-word;
+}
+
+/* Correct option highlight - Light Mode */
+.quiz-opt-item.is-correct {
+    background-color: #ecfdf5 !important;
+    border-color: #10b981 !important;
+    color: #065f46 !important;
+    font-weight: 700 !important;
+}
+
+.quiz-opt-item.is-correct .quiz-opt-key {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+}
+
+.quiz-opt-item.is-correct .quiz-opt-text {
+    color: #065f46 !important;
+    font-weight: 700 !important;
+}
+
+.quiz-opt-check {
+    color: #10b981 !important;
+    font-size: 1.15rem !important;
+    flex-shrink: 0;
+}
+
+/* Dark Mode support */
+html[data-theme="dark"] .quiz-opt-item,
+html.dark .quiz-opt-item {
+    background-color: #162032 !important;
+    border-color: #223049 !important;
+    color: #cbd5e1 !important;
+}
+
+html[data-theme="dark"] .quiz-opt-item.is-correct,
+html.dark .quiz-opt-item.is-correct {
+    background-color: rgba(16, 185, 129, 0.18) !important;
+    border-color: rgba(16, 185, 129, 0.6) !important;
+    color: #f8fafc !important;
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.15) !important;
+}
+
+html[data-theme="dark"] .quiz-opt-item.is-correct .quiz-opt-text,
+html.dark .quiz-opt-item.is-correct .quiz-opt-text {
+    color: #f8fafc !important;
+    font-weight: 700 !important;
+}
+
+html[data-theme="dark"] .quiz-opt-item.is-correct .quiz-opt-key,
+html.dark .quiz-opt-item.is-correct .quiz-opt-key {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] .quiz-opt-item.is-correct .quiz-opt-check,
+html.dark .quiz-opt-item.is-correct .quiz-opt-check {
+    color: #34d399 !important;
+}
+
+.quiz-verbal-banner {
+    background-color: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #92400e;
+}
+
+html[data-theme="dark"] .quiz-verbal-banner,
+html.dark .quiz-verbal-banner {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+    border-color: rgba(245, 158, 11, 0.4) !important;
+    color: #fde68a !important;
+}
 </style>
 @endsection

@@ -16,6 +16,11 @@ class EmergencyContactController extends Controller
     {
         $this->authorize('create students');
 
+        $user = auth()->user();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            \App\Models\User::where('school_id', $user->school_id)->findOrFail($studentId);
+        }
+
         $data = $request->validate([
             'name'                  => 'required|string|max:255',
             'relationship'          => 'required|string|max:100',
@@ -33,6 +38,7 @@ class EmergencyContactController extends Controller
         }
 
         EmergencyContact::create(array_merge($data, [
+            'school_id'             => $user->school_id,
             'student_id'            => $studentId,
             'is_primary'            => $request->boolean('is_primary'),
             'is_authorized_pickup'  => $request->boolean('is_authorized_pickup'),
@@ -44,7 +50,14 @@ class EmergencyContactController extends Controller
     public function update(Request $request, int $id)
     {
         $this->authorize('create students');
-        $contact = EmergencyContact::findOrFail($id);
+
+        $user = auth()->user();
+        $query = EmergencyContact::query();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $query->where('school_id', $user->school_id);
+        }
+
+        $contact = $query->findOrFail($id);
 
         $data = $request->validate([
             'name'                  => 'required|string|max:255',
@@ -74,7 +87,16 @@ class EmergencyContactController extends Controller
     public function destroy(int $id)
     {
         $this->authorize('create students');
-        EmergencyContact::findOrFail($id)->delete();
+
+        $user = auth()->user();
+        $query = EmergencyContact::query();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $query->where('school_id', $user->school_id);
+        }
+
+        $contact = $query->findOrFail($id);
+        $contact->delete();
+
         return back()->with('status', 'Contact removed.');
     }
 }

@@ -764,7 +764,8 @@
                     </div>
                     
                     <div class="contact-form-container">
-                        <form class="contact-form" action="#" method="POST">
+                        <form class="contact-form" action="{{ route('saas.contact') }}" method="POST">
+                            @csrf
                             <h3 class="form-title">Send us a Message</h3>
                             <div class="form-group">
                                 <label for="name" class="form-label">Full Name</label>
@@ -774,6 +775,7 @@
                                 <label for="email" class="form-label">Email Address</label>
                                 <input type="email" id="email" name="email" class="form-input" placeholder="john@example.com" required>
                             </div>
+                            <input type="hidden" name="subject" value="Website General Inquiry">
                             <div class="form-group">
                                 <label for="message" class="form-label">Message</label>
                                 <textarea id="message" name="message" rows="4" class="form-input" placeholder="How can we help you?" required></textarea>

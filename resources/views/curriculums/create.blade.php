@@ -8,26 +8,26 @@
             <span class="text-slate-600">New Curriculum</span>
         </nav>
 
-        <h1 class="text-2xl font-bold text-slate-800 mb-6">New Curriculum</h1>
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-6">New Curriculum</h1>
 
         @include('session-messages')
 
         <form action="{{ route('curriculums.store') }}" method="POST" class="space-y-6">
             @csrf
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
-                <h2 class="text-sm font-semibold text-slate-600 uppercase tracking-wide">Basic Info</h2>
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 space-y-4">
+                <h2 class="text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide">Basic Info</h2>
 
                 <div>
-                    <label class="text-xs font-medium text-slate-600 block mb-1">Title <span class="text-rose-400">*</span></label>
+                    <label class="text-xs font-medium text-slate-600 dark:text-slate-300 block mb-1">Title <span class="text-rose-400">*</span></label>
                     <input type="text" name="title" value="{{ old('title') }}" required
-                           class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="e.g. Mathematics Grade 10 Curriculum">
+                           class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="e.g. Mathematics Grade 10 Curriculum">
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                        <label class="text-xs font-medium text-slate-600 block mb-1">Class <span class="text-rose-400">*</span></label>
+                        <label class="text-xs font-medium text-slate-600 dark:text-slate-300 block mb-1">Class <span class="text-rose-400">*</span></label>
                         <select name="class_id" id="class_id" required onchange="loadCourses(this.value)"
-                                class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
                             <option value="">Select class…</option>
                             @foreach($classes as $cls)
                             <option value="{{ $cls->id }}" {{ old('class_id') == $cls->id ? 'selected' : '' }}>{{ $cls->class_name }}</option>
@@ -35,15 +35,15 @@
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs font-medium text-slate-600 block mb-1">Course <span class="text-rose-400">*</span></label>
+                        <label class="text-xs font-medium text-slate-600 dark:text-slate-300 block mb-1">Course <span class="text-rose-400">*</span></label>
                         <select name="course_id" id="course_id" required
-                                class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
                             <option value="">Select class first…</option>
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs font-medium text-slate-600 block mb-1">Program</label>
-                        <select name="program_id" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        <label class="text-xs font-medium text-slate-600 dark:text-slate-300 block mb-1">Program</label>
+                        <select name="program_id" class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
                             <option value="">— None —</option>
                             @foreach($programs as $prog)
                             <option value="{{ $prog->id }}" {{ old('program_id') == $prog->id ? 'selected' : '' }}>{{ $prog->name }}</option>
@@ -53,8 +53,8 @@
                 </div>
 
                 <div>
-                    <label class="text-xs font-medium text-slate-600 block mb-1">Status</label>
-                    <select name="status" class="w-full sm:w-48 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                    <label class="text-xs font-medium text-slate-600 dark:text-slate-300 block mb-1">Status</label>
+                    <select name="status" class="w-full sm:w-48 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
                         <option value="draft" {{ old('status') === 'draft' ? 'selected' : '' }}>Draft</option>
                         <option value="published" {{ old('status') === 'published' ? 'selected' : '' }}>Published</option>
                         <option value="archived" {{ old('status') === 'archived' ? 'selected' : '' }}>Archived</option>
@@ -62,31 +62,31 @@
                 </div>
 
                 <div>
-                    <label class="text-xs font-medium text-slate-600 block mb-1">Description</label>
+                    <label class="text-xs font-medium text-slate-600 dark:text-slate-300 block mb-1">Description</label>
                     <textarea name="description" rows="2"
-                              class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Brief overview…">{{ old('description') }}</textarea>
+                              class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="Brief overview…">{{ old('description') }}</textarea>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-xs font-medium text-slate-600 block mb-1">Learning Objectives</label>
+                        <label class="text-xs font-medium text-slate-600 dark:text-slate-300 block mb-1">Learning Objectives</label>
                         <textarea name="objectives" rows="3"
-                                  class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="What students will learn…">{{ old('objectives') }}</textarea>
+                                  class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="What students will learn…">{{ old('objectives') }}</textarea>
                     </div>
                     <div>
-                        <label class="text-xs font-medium text-slate-600 block mb-1">Learning Outcomes</label>
+                        <label class="text-xs font-medium text-slate-600 dark:text-slate-300 block mb-1">Learning Outcomes</label>
                         <textarea name="learning_outcomes" rows="3"
-                                  class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="What students will be able to do…">{{ old('learning_outcomes') }}</textarea>
+                                  class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" placeholder="What students will be able to do…">{{ old('learning_outcomes') }}</textarea>
                     </div>
                 </div>
             </div>
 
             {{-- Topics --}}
-            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-sm font-semibold text-slate-600 uppercase tracking-wide">Topics / Chapters</h2>
+                    <h2 class="text-sm font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wide">Topics / Chapters</h2>
                     <button type="button" onclick="addTopic()"
-                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-medium hover:bg-indigo-100 transition">
+                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/60 rounded-lg text-xs font-medium hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition cursor-pointer">
                         <i class="bi bi-plus-lg"></i> Add Topic
                     </button>
                 </div>
@@ -96,36 +96,36 @@
             </div>
 
             <div class="flex gap-3">
-                <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition">
+                <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition cursor-pointer">
                     <i class="bi bi-check2 me-1"></i>Create Curriculum
                 </button>
-                <a href="{{ route('curriculums.index') }}" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition">Cancel</a>
+                <a href="{{ route('curriculums.index') }}" class="px-6 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition">Cancel</a>
             </div>
         </form>
     </div>
 </div>
 
 <template id="topic-template">
-    <div class="topic-row border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3">
+    <div class="topic-row border border-slate-200 dark:border-slate-700 rounded-xl p-4 bg-slate-50 dark:bg-slate-800/40 space-y-3">
         <div class="flex justify-between items-center">
-            <span class="text-xs font-semibold text-slate-600 topic-label">Topic #1</span>
-            <button type="button" onclick="removeTopic(this)" class="text-slate-400 hover:text-rose-500 transition">
+            <span class="text-xs font-semibold text-slate-600 dark:text-slate-300 topic-label">Topic #1</span>
+            <button type="button" onclick="removeTopic(this)" class="text-slate-400 hover:text-rose-500 transition cursor-pointer bg-transparent border-0">
                 <i class="bi bi-x-circle text-sm"></i>
             </button>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div class="sm:col-span-2">
                 <input type="text" name="topics[0][title]" placeholder="Topic title *" required
-                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white">
+                       class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
             </div>
             <div>
                 <input type="number" name="topics[0][estimated_hours]" placeholder="Hours" min="1" value="1"
-                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white">
+                       class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
             </div>
         </div>
         <div>
             <select name="topics[0][term_id]"
-                    class="w-full sm:w-48 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white">
+                    class="w-full sm:w-48 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
                 <option value="">— No term —</option>
                 @foreach($terms as $term)
                 <option value="{{ $term->id }}">{{ $term->name }}</option>
@@ -133,7 +133,7 @@
             </select>
         </div>
         <textarea name="topics[0][description]" rows="2" placeholder="Description (optional)"
-                  class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"></textarea>
+                  class="w-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"></textarea>
     </div>
 </template>
 

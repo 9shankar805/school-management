@@ -103,13 +103,60 @@ class TranscriptController extends Controller
 
         $cgpaData = $repo->getCgpa($studentId, $student->academic_info?->class_id ?? 0, $sessionId);
         $session  = SchoolSession::find($sessionId);
+        $school   = config('tenant.school') ?? ($student ? \App\Models\School::find($student->school_id) : null) ?? \App\Models\School::first();
+        $logoSrc  = $this->getSchoolLogoBase64($school);
 
         $pdf = Pdf::loadView('results.pdf.transcript', compact(
-            'student', 'semesterResults', 'cgpaData', 'session'
+            'student', 'semesterResults', 'cgpaData', 'session', 'school', 'logoSrc'
         ))
         ->setPaper('A4', 'portrait')
-        ->setOptions(['defaultFont' => 'sans-serif', 'dpi' => 120, 'isRemoteEnabled' => true]);
+        ->setOptions(['defaultFont' => 'sans-serif', 'dpi' => 120, 'isRemoteEnabled' => true, 'chroot' => public_path()]);
 
-        return $pdf->stream("transcript-{$student->full_name}.pdf");
+        if ($request->query('stream') == '1') {
+            return $pdf->stream("transcript-{$student->full_name}.pdf");
+        }
+        return $pdf->download("transcript-{$student->full_name}.pdf");
+    }
+
+    public function getSchoolLogoBase64($school = null): string
+    {
+        $filePath = $this->getSchoolLogoPath($school);
+        if ($filePath && file_exists($filePath)) {
+            $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+            if ($ext === 'webp' && function_exists('imagecreatefromwebp')) {
+                $im = @imagecreatefromwebp($filePath);
+                if ($im) {
+                    ob_start();
+                    imagepng($im);
+                    $pngData = ob_get_clean();
+                    imagedestroy($im);
+                    if ($pngData) {
+                        return 'data:image/png;base64,' . base64_encode($pngData);
+                    }
+                }
+            }
+
+            $data = @file_get_contents($filePath);
+            if ($data) {
+                $mime = ($ext === 'png') ? 'image/png' : (($ext === 'svg') ? 'image/svg+xml' : 'image/jpeg');
+                return 'data:' . $mime . ';base64,' . base64_encode($data);
+            }
+        }
+
+        return '';
+    }
+
+    public function getSchoolLogoPath($school = null): ?string
+    {
+        $school = $school ?? config('tenant.school') ?? \App\Models\School::first();
+        if ($school && $school->logo) {
+            $clean = ltrim(str_replace('storage/', '', $school->logo), '/');
+            if (file_exists(storage_path('app/public/' . $clean))) return storage_path('app/public/' . $clean);
+            if (file_exists(public_path('storage/' . $clean))) return public_path('storage/' . $clean);
+            if (file_exists(public_path($clean))) return public_path($clean);
+        }
+        if (file_exists(public_path('imgs/logo_icon_192.webp'))) return public_path('imgs/logo_icon_192.webp');
+        if (file_exists(public_path('imgs/logo_icon.webp'))) return public_path('imgs/logo_icon.webp');
+        return null;
     }
 }

@@ -20,9 +20,11 @@ class SchoolProfileController extends Controller
         $steps = [
             ['icon' => 'bi-building',       'label' => 'Basic Info'],
             ['icon' => 'bi-palette',         'label' => 'Branding'],
+            ['icon' => 'bi-sliders2',       'label' => 'Hero Slider'],
             ['icon' => 'bi-file-text',       'label' => 'Content'],
             ['icon' => 'bi-images',          'label' => 'Gallery'],
             ['icon' => 'bi-qr-code',         'label' => 'Payment QR'],
+            ['icon' => 'bi-megaphone',       'label' => 'Popup Notice'],
         ];
 
         $activeStep = (int) request('step', 1);
@@ -123,7 +125,115 @@ class SchoolProfileController extends Controller
             'payment_qr_bank'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:1024',
             'payment_qr_fonepay'         => 'nullable|image|mimes:jpeg,png,jpg,webp|max:1024',
             'payment_instructions'       => 'nullable|string|max:1000',
+            // Popup notice fields
+            'popup_active'               => 'nullable',
+            'popup_show_once'            => 'nullable',
+            'popup_title'                => 'nullable|string|max:255',
+            'popup_subtitle'             => 'nullable|string|max:1000',
+            'popup_btn_text'             => 'nullable|string|max:100',
+            'popup_btn_url'              => 'nullable|string|max:500',
+            'popup_expires_at'           => 'nullable|date',
+            'popup_image'                => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            // School Timings & Operating Hours
+            'school_hours_weekdays'      => 'nullable|string|max:255',
+            'school_hours_friday'        => 'nullable|string|max:255',
+            'school_hours_weekend'       => 'nullable|string|max:255',
+            'office_hours'               => 'nullable|string|max:255',
+            // Upcoming Exam Routine & Academic Schedules
+            'exam_title'                 => 'nullable|string|max:255',
+            'exam_start_date'            => 'nullable|string|max:100',
+            'exam_end_date'              => 'nullable|string|max:100',
+            'exam_instructions'          => 'nullable|string|max:2000',
+            'exam_shift_details'         => 'nullable|string|max:1000',
+            'exam_routine_file'          => 'nullable|file|mimes:pdf,jpeg,png,jpg,webp|max:5120',
+            'remove_exam_routine_file'   => 'nullable|in:0,1',
+            // Principal Photo & Settings
+            'principal_image'            => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'remove_principal_image'     => 'nullable|in:0,1',
+            'principal_name'             => 'nullable|string|max:255',
+            'principal_title'            => 'nullable|string|max:255',
+            // Hero Slider Banners (Supports Images & MP4 Videos)
+            'new_slider_image'           => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm,ogg,mov|max:51200',
+            'new_slider_title'           => 'nullable|string|max:255',
+            'new_slider_subtitle'        => 'nullable|string|max:1000',
+            'new_slider_tag'             => 'nullable|string|max:100',
+            'new_slider_btn_text'        => 'nullable|string|max:100',
+            'new_slider_btn_url'         => 'nullable|string|max:500',
+            'new_slider_secondary_btn_text' => 'nullable|string|max:100',
+            'new_slider_secondary_btn_url'  => 'nullable|string|max:500',
+            'slider_banners'             => 'nullable|array',
+            'replace_slider_image.*'     => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm,ogg,mov|max:51200',
+            'delete_slider_banners'      => 'nullable|array',
         ]);
+
+        // ── Principal Photo & Operational Settings ───────────────────────────
+        $settings = $school->settings ?? [];
+        if ($request->hasFile('principal_image')) {
+            if (!empty($settings['principal_image'])) {
+                Storage::disk('public')->delete($settings['principal_image']);
+            }
+            $settings['principal_image'] = \App\Services\ImageWebpService::storeAsWebp($request->file('principal_image'), 'school-staff', 'public');
+        } elseif ($request->input('remove_principal_image') == '1' && !empty($settings['principal_image'])) {
+            Storage::disk('public')->delete($settings['principal_image']);
+            $settings['principal_image'] = null;
+        }
+
+        if ($request->has('principal_name')) {
+            $settings['principal_name'] = $request->input('principal_name');
+        }
+        if ($request->has('principal_title')) {
+            $settings['principal_title'] = $request->input('principal_title');
+        }
+
+        // School Operating Hours
+        if ($request->has('school_hours_weekdays')) {
+            $settings['school_hours_weekdays'] = $request->input('school_hours_weekdays');
+        }
+        if ($request->has('school_hours_friday')) {
+            $settings['school_hours_friday'] = $request->input('school_hours_friday');
+        }
+        if ($request->has('school_hours_weekend')) {
+            $settings['school_hours_weekend'] = $request->input('school_hours_weekend');
+        }
+        if ($request->has('office_hours')) {
+            $settings['office_hours'] = $request->input('office_hours');
+        }
+
+        // Upcoming Exam Routine & Guidelines
+        if ($request->has('exam_title')) {
+            $settings['exam_title'] = $request->input('exam_title');
+        }
+        if ($request->has('exam_start_date')) {
+            $settings['exam_start_date'] = $request->input('exam_start_date');
+        }
+        if ($request->has('exam_end_date')) {
+            $settings['exam_end_date'] = $request->input('exam_end_date');
+        }
+        if ($request->has('exam_instructions')) {
+            $settings['exam_instructions'] = $request->input('exam_instructions');
+        }
+        if ($request->has('exam_shift_details')) {
+            $settings['exam_shift_details'] = $request->input('exam_shift_details');
+        }
+
+        // Exam Routine File Upload
+        if ($request->hasFile('exam_routine_file')) {
+            if (!empty($settings['exam_routine_file'])) {
+                Storage::disk('public')->delete($settings['exam_routine_file']);
+            }
+            $file = $request->file('exam_routine_file');
+            $ext = strtolower($file->getClientOriginalExtension());
+            if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp'])) {
+                $settings['exam_routine_file'] = \App\Services\ImageWebpService::storeAsWebp($file, 'exam-routines', 'public');
+            } else {
+                $settings['exam_routine_file'] = $file->store('exam-routines', 'public');
+            }
+        } elseif ($request->input('remove_exam_routine_file') == '1' && !empty($settings['exam_routine_file'])) {
+            Storage::disk('public')->delete($settings['exam_routine_file']);
+            $settings['exam_routine_file'] = null;
+        }
+
+        $school->settings = $settings;
 
         // ── Logo ─────────────────────────────────────────────────────────────
         if ($request->hasFile('logo')) {
@@ -198,10 +308,86 @@ class SchoolProfileController extends Controller
             if (empty($data['secondary_color'])) $data['secondary_color'] = $theme['secondary'];
         }
 
+        // ── Hero Slider Banners (Images & MP4 Autoplay Videos) ────────────────
+        $sliders = $school->slider_banners ?? [];
+
+        // 1. Update text metadata for existing sliders
+        if ($request->has('slider_banners') && is_array($request->input('slider_banners'))) {
+            foreach ($request->input('slider_banners') as $idx => $meta) {
+                if (isset($sliders[$idx])) {
+                    $sliders[$idx]['title']              = $meta['title'] ?? ($sliders[$idx]['title'] ?? null);
+                    $sliders[$idx]['subtitle']           = $meta['subtitle'] ?? ($sliders[$idx]['subtitle'] ?? null);
+                    $sliders[$idx]['tag']                = $meta['tag'] ?? ($sliders[$idx]['tag'] ?? null);
+                    $sliders[$idx]['btn_text']           = $meta['btn_text'] ?? ($sliders[$idx]['btn_text'] ?? null);
+                    $sliders[$idx]['btn_url']            = $meta['btn_url'] ?? ($sliders[$idx]['btn_url'] ?? null);
+                    $sliders[$idx]['secondary_btn_text'] = $meta['secondary_btn_text'] ?? ($sliders[$idx]['secondary_btn_text'] ?? null);
+                    $sliders[$idx]['secondary_btn_url']  = $meta['secondary_btn_url'] ?? ($sliders[$idx]['secondary_btn_url'] ?? null);
+                }
+            }
+        }
+
+        // 2. Replace individual slide media (Image or MP4 Video)
+        if ($request->hasFile('replace_slider_image')) {
+            foreach ($request->file('replace_slider_image') as $idx => $file) {
+                if (isset($sliders[$idx])) {
+                    if (!empty($sliders[$idx]['image']) && Storage::disk('public')->exists($sliders[$idx]['image'])) {
+                        Storage::disk('public')->delete($sliders[$idx]['image']);
+                    }
+                    if (\App\Services\ImageWebpService::isImage($file)) {
+                        $sliders[$idx]['image'] = \App\Services\ImageWebpService::storeAsWebp($file, 'school-sliders', 'public');
+                        $sliders[$idx]['type']  = 'image';
+                    } else {
+                        $sliders[$idx]['image'] = $file->store('school-sliders', 'public');
+                        $sliders[$idx]['type']  = 'video';
+                    }
+                }
+            }
+        }
+
+        // 3. Delete marked slides
+        if ($request->has('delete_slider_banners')) {
+            foreach ((array) $request->input('delete_slider_banners') as $idx) {
+                if (isset($sliders[$idx])) {
+                    if (!empty($sliders[$idx]['image']) && Storage::disk('public')->exists($sliders[$idx]['image'])) {
+                        Storage::disk('public')->delete($sliders[$idx]['image']);
+                    }
+                    unset($sliders[$idx]);
+                }
+            }
+            $sliders = array_values($sliders);
+        }
+
+        // 4. Add new slide if uploaded (Image or MP4 Video)
+        if ($request->hasFile('new_slider_image')) {
+            $file = $request->file('new_slider_image');
+            if (\App\Services\ImageWebpService::isImage($file)) {
+                $newMedia = \App\Services\ImageWebpService::storeAsWebp($file, 'school-sliders', 'public');
+                $mediaType = 'image';
+            } else {
+                $newMedia = $file->store('school-sliders', 'public');
+                $mediaType = 'video';
+            }
+
+            $sliders[] = [
+                'image'              => $newMedia,
+                'type'               => $mediaType,
+                'title'              => $request->input('new_slider_title') ?: null,
+                'subtitle'           => $request->input('new_slider_subtitle') ?: null,
+                'tag'                => $request->input('new_slider_tag') ?: null,
+                'btn_text'           => $request->input('new_slider_btn_text') ?: null,
+                'btn_url'            => $request->input('new_slider_btn_url') ?: null,
+                'secondary_btn_text' => $request->input('new_slider_secondary_btn_text') ?: null,
+                'secondary_btn_url'  => $request->input('new_slider_secondary_btn_url') ?: null,
+            ];
+        }
+
+        $school->slider_banners = $sliders;
+
         // ── Persist ───────────────────────────────────────────────────────────
         $school->gallery_images = $gallery;
         $school->fill(array_filter([
             'name'              => $data['name'],
+            'iemis_code'         => $data['iemis_code']         ?? null,
             'email'             => $data['email'],
             'phone'             => $data['phone']             ?? null,
             'website'           => $data['website']           ?? null,
@@ -229,6 +415,28 @@ class SchoolProfileController extends Controller
             'result_info'       => $data['result_info']       ?? null,
             'notice_board'      => $data['notice_board']      ?? null,
         ], fn($v) => $v !== null));
+
+        // ── Popup Notice ───────────────────────────────────────────────────────
+        $school->popup_active    = $request->has('popup_active');
+        $school->popup_show_once = $request->has('popup_show_once');
+        $school->popup_title     = $request->input('popup_title');
+        $school->popup_subtitle  = $request->input('popup_subtitle');
+        $school->popup_btn_text  = $request->input('popup_btn_text');
+        $school->popup_btn_url   = $request->input('popup_btn_url');
+        $school->popup_expires_at= $request->input('popup_expires_at') ?: null;
+
+        if ($request->hasFile('popup_image')) {
+            if ($school->popup_image) {
+                Storage::disk('public')->delete($school->popup_image);
+            }
+            $school->popup_image = \App\Services\ImageWebpService::storeAsWebp(
+                $request->file('popup_image'), 'school-popup', 'public'
+            );
+        } elseif ($request->input('remove_popup_image') == '1' && $school->popup_image) {
+            Storage::disk('public')->delete($school->popup_image);
+            $school->popup_image = null;
+        }
+
         $school->save();
 
         $step = $request->input('active_step', 1);

@@ -49,13 +49,45 @@
                 @csrf
                 @method('PUT')
 
+                {{-- Subject / Course selection --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                            Subject / Course <span class="text-rose-500">*</span>
+                        </label>
+                        <select name="course_id" required
+                                class="w-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            @foreach($courses as $c)
+                            <option value="{{ $c->id }}" {{ old('course_id', $routine->course_id) == $c->id ? 'selected' : '' }}>
+                                {{ $c->course_name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                            Assigned Teacher
+                        </label>
+                        <select name="teacher_id"
+                                class="w-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            <option value="">— No Teacher Assigned —</option>
+                            @foreach($teachers as $t)
+                            <option value="{{ $t->id }}" {{ old('teacher_id', $routine->teacher_id) == $t->id ? 'selected' : '' }}>
+                                {{ $t->full_name }}
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
                 {{-- Day of week --}}
                 <div>
-                    <label class="text-xs font-medium text-slate-600 block mb-1">
-                        Day of Week <span class="text-rose-400">*</span>
+                    <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                        Day of Week <span class="text-rose-500">*</span>
                     </label>
                     <select name="weekday" required
-                            class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            class="w-full border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
                         @foreach([1=>'Monday',2=>'Tuesday',3=>'Wednesday',4=>'Thursday',5=>'Friday',6=>'Saturday',7=>'Sunday'] as $num => $name)
                         <option value="{{ $num }}" {{ old('weekday', $routine->weekday) == $num ? 'selected' : '' }}>{{ $name }}</option>
                         @endforeach

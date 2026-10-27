@@ -25,7 +25,10 @@ class Invoice extends Model
         'total_amount',
         'discount_amount',
         'tax_amount',
-        'amount',           // net amount = total_amount - discount_amount + tax_amount
+        'amount',           // current net amount = total_amount - discount_amount + tax_amount
+        'previous_due',     // unpaid balance carried forward from previous months (arrears/बक्यौता)
+        'fine_amount',      // late payment fine/penalty
+        'paid_amount',      // cached payments total
         'status',           // unpaid | partial | paid
         'due_date',
         'billing_month',
@@ -38,6 +41,9 @@ class Invoice extends Model
         'discount_amount'   => 'decimal:2',
         'tax_amount'        => 'decimal:2',
         'amount'            => 'decimal:2',
+        'previous_due'      => 'decimal:2',
+        'fine_amount'       => 'decimal:2',
+        'paid_amount'       => 'decimal:2',
         'due_date'          => 'date',
         'is_auto_generated' => 'boolean',
     ];
@@ -56,11 +62,28 @@ class Invoice extends Model
     public static function generateInvoiceNumber(): string
     {
         $year   = now()->year;
-        $latest = static::whereYear('created_at', $year)
-                        ->latest('id')
-                        ->first();
-        $next = $latest ? ((int) substr($latest->invoice_number, -6)) + 1 : 1;
-        return 'INV-' . $year . '-' . str_pad($next, 6, '0', STR_PAD_LEFT);
+        $prefix = 'INV-' . $year . '-';
+
+        $latest = static::withoutGlobalScopes()
+            ->withTrashed()
+            ->where('invoice_number', 'like', $prefix . '%')
+            ->orderByDesc('invoice_number')
+            ->first();
+
+        $next = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest->invoice_number, $matches)) {
+            $next = ((int) $matches[1]) + 1;
+        }
+
+        do {
+            $candidate = $prefix . str_pad($next, 6, '0', STR_PAD_LEFT);
+            $exists = static::withoutGlobalScopes()->withTrashed()->where('invoice_number', $candidate)->exists();
+            if ($exists) {
+                $next++;
+            }
+        } while ($exists);
+
+        return $candidate;
     }
 
     // ── Relationships ─────────────────────────────────────────────────────────
@@ -68,6 +91,16 @@ class Invoice extends Model
     public function student()
     {
         return $this->belongsTo(User::class, 'student_id');
+    }
+
+    public function schoolClass()
+    {
+        return $this->belongsTo(SchoolClass::class, 'class_id');
+    }
+
+    public function section()
+    {
+        return $this->belongsTo(Section::class, 'section_id');
     }
 
     public function session()
@@ -99,12 +132,36 @@ class Invoice extends Model
 
     public function getAmountPaidAttribute(): float
     {
+        if (isset($this->attributes['paid_amount']) && (float) $this->attributes['paid_amount'] > 0) {
+            return (float) $this->attributes['paid_amount'];
+        }
         return (float) $this->payments()->sum('amount');
     }
 
+    /**
+     * Grand total payable for this billing statement:
+     * Current Net Fee + Previous Unpaid Arrears (बक्यौता) + Late Fines
+     */
+    public function getTotalPayableAttribute(): float
+    {
+        return round((float) $this->amount + (float) ($this->previous_due ?? 0) + (float) ($this->fine_amount ?? 0), 2);
+    }
+
+    /**
+     * Total remaining amount due to clear this cumulative statement:
+     * Total Payable minus payments made.
+     */
     public function getAmountDueAttribute(): float
     {
-        return max(0, (float) $this->amount - $this->amount_paid);
+        return max(0, round($this->total_payable - $this->amount_paid, 2));
+    }
+
+    /**
+     * Net fee for this month only (excluding arrears and fines)
+     */
+    public function getCurrentNetDueAttribute(): float
+    {
+        return max(0, round((float) $this->amount - $this->amount_paid, 2));
     }
 
     public function getIsOverdueAttribute(): bool

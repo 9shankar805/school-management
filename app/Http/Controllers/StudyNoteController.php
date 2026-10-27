@@ -68,7 +68,23 @@ class StudyNoteController extends Controller
         $this->authorize('create study notes');
 
         $session_id = $this->getSchoolCurrentSession();
-        $classes    = $this->schoolClassRepository->getAllBySession($session_id);
+        $user       = auth()->user();
+        $isRestrictedTeacher = $user && ($user->hasRole('teacher') || $user->hasRole('class-teacher'))
+                             && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator']);
+
+        if ($isRestrictedTeacher) {
+            $assignedClassIds = \App\Models\AssignedTeacher::where('session_id', $session_id)
+                ->where('teacher_id', $user->id)
+                ->pluck('class_id')
+                ->unique()
+                ->filter()
+                ->all();
+            $classes = \App\Models\SchoolClass::where('session_id', $session_id)
+                ->whereIn('id', $assignedClassIds)
+                ->get();
+        } else {
+            $classes = $this->schoolClassRepository->getAllBySession($session_id);
+        }
         $terms      = Term::where('session_id', $session_id)->orderBy('start_date')->get();
 
         return view('study-notes.create', compact('classes', 'terms', 'session_id'));

@@ -1,5 +1,8 @@
 @extends('layouts.app')
 @section('content')
+<style>
+.question-content img, .question-img { max-width: 100% !important; width: auto !important; height: auto !important; max-height: none !important; border-radius: 8px; display: block; margin: 10px auto; object-fit: contain; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+</style>
     <div class="flex-1 p-6 lg:p-8 overflow-auto">
 
         <nav class="text-xs text-slate-400 mb-4">
@@ -138,7 +141,7 @@
                         <div class="flex gap-3 items-start">
                             <span class="text-xs font-bold text-slate-400 w-6 flex-shrink-0 pt-0.5">{{ $q->question_number }}.</span>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm text-slate-800 leading-relaxed">{!! $q->question_text !!}</p>
+                                <div class="text-sm text-slate-800 leading-relaxed question-content">{!! $q->question_text !!}</div>
                                 @if($q->question_type === 'mcq' && $q->options)
                                 <div class="mt-2 space-y-1">
                                     @foreach($q->options as $i => $opt)

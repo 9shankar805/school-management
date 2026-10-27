@@ -49,8 +49,17 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
 /* Server-side LaTeX Math Styles for DomPDF */
 .math-latex-inline { font-family: "DejaVu Sans", sans-serif !important; font-size: 1em; display: inline; }
 .math-sym { font-family: "DejaVu Sans", sans-serif !important; font-weight: normal; }
-/* Images from question content */
-.tiptap-editor img,.q-body img{max-width:220px;max-height:180px;object-fit:contain;border-radius:6px;margin:4px 0;}
+/* Images from question content - show in full width and natural aspect ratio */
+.tiptap-editor img, .q-body img, .question-img {
+  max-width: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain;
+  border-radius: 4px;
+  margin: 8px auto;
+  display: block;
+}
 </style>
 </head>
 <body>
@@ -213,7 +222,7 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
 @php
   $isLandscape = ($paper->orientation === 'landscape');
 
-  // If landscape mode, split questions between Left Column and Right Column
+  // If landscape mode, fill Column 1 (Page 1) completely before flowing to Column 2 (Page 2)
   if ($isLandscape) {
       $allFlatItems = [];
       foreach ($paper->sections as $section) {
@@ -225,10 +234,98 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
               ];
           }
       }
-      $totalFlat  = count($allFlatItems);
-      $halfFlat   = (int) ceil($totalFlat / 2);
-      $leftItems  = array_slice($allFlatItems, 0, $halfFlat);
-      $rightItems = array_slice($allFlatItems, $halfFlat);
+
+      $estSecHeaderH = function($sec) {
+          $chars = strlen($sec->title ?? '') + strlen($sec->instructions ?? '');
+          if ($chars > 120) return 42;
+          if ($chars > 60) return 34;
+          return 28;
+      };
+
+      $estQuestionH = function($q) {
+          $textLen = strlen(strip_tags($q->question_text ?? ''));
+          $lines = max(1, (int) ceil($textLen / 80));
+          $h = ($lines * 14) + 9;
+
+          if (!empty($q->options) && is_array($q->options)) {
+              $optLen = 0;
+              foreach ($q->options as $o) {
+                  $optLen += strlen(is_array($o) ? ($o['text'] ?? '') : (string)$o) + 8;
+              }
+              $optLines = max(1, (int) ceil($optLen / 80));
+              $h += ($optLines * 14) + 6;
+          } elseif (($q->question_type ?? '') === 'true_false') {
+              $h += 16;
+          }
+
+          if (str_contains($q->question_text ?? '', '<img')) {
+              $h += 220;
+          }
+          return $h;
+      };
+
+      // Header height on Page 1 (Left column of Sheet 1)
+      $headerHeight = ($template && $template->header_html) ? 140 : 70;
+      $boxUsableHeight = 790;
+      $footerReserve = 25;
+
+      $columns = [];
+      $currentColItems = [];
+      $currentColHeight = 0;
+      $currentSecId = null;
+
+      $maxHeightForCol = $boxUsableHeight - $headerHeight;
+
+      foreach ($allFlatItems as $item) {
+          $sec = $item['section'];
+          $q = $item['question'];
+          $neededH = $estQuestionH($q);
+
+          $isNewSecInCol = ($currentSecId !== $sec->id);
+          if ($isNewSecInCol) {
+              $neededH += $estSecHeaderH($sec);
+          }
+
+          if ($currentColHeight + $neededH > $maxHeightForCol && !empty($currentColItems)) {
+              $columns[] = $currentColItems;
+              $currentColItems = [];
+              $currentColHeight = 0;
+              $currentSecId = null;
+              $maxHeightForCol = $boxUsableHeight - $footerReserve;
+
+              $neededH = $estQuestionH($q) + $estSecHeaderH($sec);
+          }
+
+          $currentColItems[] = $item;
+          $currentColHeight += $neededH;
+          $currentSecId = $sec->id;
+      }
+      if (!empty($currentColItems)) {
+          $columns[] = $currentColItems;
+      }
+
+      // Pair columns into sheets (2 columns per sheet: left and right)
+      $sheets = [];
+      $colCount = count($columns);
+      for ($i = 0; $i < $colCount; $i += 2) {
+          $leftCol = $columns[$i] ?? [];
+          $rightCol = $columns[$i + 1] ?? [];
+          $isLastSheet = ($i + 2 >= $colCount);
+          $sheets[] = [
+              'left'              => $leftCol,
+              'right'             => $rightCol,
+              'is_last_col_left'  => ($isLastSheet && empty($rightCol)),
+              'is_last_col_right' => ($isLastSheet && !empty($rightCol)),
+          ];
+      }
+      if (empty($sheets)) {
+          $sheets[] = [
+              'left'              => [],
+              'right'             => [],
+              'is_last_col_left'  => true,
+              'is_last_col_right' => false,
+          ];
+      }
   }
 @endphp
 
@@ -236,6 +333,7 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
 {{-- ══════════════════════════════════════════════════════════════════════════
      LANDSCAPE 2-COLUMN BOOKLET LAYOUT
      Header title & metadata appears ONLY ONCE on the Left Column (Top Left)
+     Questions fill the first page completely before continuing to the second page
 ══════════════════════════════════════════════════════════════════════════ --}}
 <style>
 @page { size: A4 landscape; margin: 6mm 8mm 6mm 8mm; }
@@ -243,25 +341,31 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
 .landscape-page-box .header > div[style*="double"] { border:none !important; padding:0 !important; margin-bottom:8px !important; }
 </style>
 
+@foreach($sheets as $sheetIndex => $sheet)
+@if($sheetIndex > 0)
+<div style="page-break-before:always;"></div>
+@endif
 <table width="100%" height="880" cellpadding="0" cellspacing="0" style="border-collapse:collapse; table-layout:fixed;">
   <tr>
     {{-- LEFT COLUMN: Wrapped in Full-Page Double-Border Outer Container --}}
     <td width="48.5%" valign="top" style="height:880px;">
       <div class="landscape-page-box">
-        @if($template && $template->header_html)
-          <div class="header" style="margin-bottom:10px;">
-            {!! $template->renderHeader($placeholders) !!}
-          </div>
-        @else
-          <div style="padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid #000;">
-            <div style="font-size:16px; font-weight:900; text-align:center;">{{ $schoolName }}</div>
-            <div style="font-size:10px; text-align:center;">{{ $schoolAddress }}</div>
-            <div style="text-align:center; margin-top:4px; font-weight:700;">{{ $paper->exam_name }}</div>
-          </div>
+        @if($sheetIndex === 0)
+          @if($template && $template->header_html)
+            <div class="header" style="margin-bottom:10px;">
+              {!! $template->renderHeader($placeholders) !!}
+            </div>
+          @else
+            <div style="padding-bottom:10px; margin-bottom:10px; border-bottom:1px solid #000;">
+              <div style="font-size:16px; font-weight:900; text-align:center;">{{ $schoolName }}</div>
+              <div style="font-size:10px; text-align:center;">{{ $schoolAddress }}</div>
+              <div style="text-align:center; margin-top:4px; font-weight:700;">{{ $paper->exam_name }}</div>
+            </div>
+          @endif
         @endif
 
         @php $currentSecIdLeft = null; @endphp
-        @foreach($leftItems as $item)
+        @foreach($sheet['left'] as $item)
           @php
             $sec = $item['section'];
             $q   = $item['question'];
@@ -282,7 +386,7 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
             @php $romanMap = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii']; @endphp
             <div style="margin:3px 0 5px 16px; font-size:10px; color:#000; display:flex; flex-wrap:wrap; gap:12px;">
               @foreach($q->options as $optIdx => $opt)
-              <span style="margin-right:12px;">({{ $romanMap[$optIdx] ?? ($optIdx + 1) }}) {!! renderLatexToHtmlForDomPdf(is_array($opt) ? ($opt['text'] ?? '') : (string)$opt) !!}</span>
+              <span style="margin-right:12px;">({{ $romanMap[$loop->index] ?? $loop->iteration }}) {!! renderLatexToHtmlForDomPdf(is_array($opt) ? ($opt['text'] ?? '') : (string)$opt) !!}</span>
               @endforeach
             </div>
             @elseif($q->question_type==='true_false')
@@ -290,6 +394,12 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
             @endif
           </div>
         @endforeach
+
+        @if($sheet['is_last_col_left'])
+        <div style="position:absolute; bottom:12px; left:0; right:0; text-align:center; font-weight:800; font-size:11px; color:#000;">
+          *** BEST OF LUCK ***
+        </div>
+        @endif
       </div>
     </td>
 
@@ -300,14 +410,14 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
     <td width="48.5%" valign="top" style="height:880px;">
       <div class="landscape-page-box">
         @php $currentSecIdRight = null; @endphp
-        @foreach($rightItems as $item)
+        @foreach($sheet['right'] as $item)
           @php
             $sec = $item['section'];
             $q   = $item['question'];
           @endphp
           @if($currentSecIdRight !== $sec->id)
             @php $currentSecIdRight = $sec->id; @endphp
-            <div style="text-align:center; margin:item-top 0 8px 0;">
+            <div style="text-align:center; margin:12px 0 8px 0;">
               <span style="background:#e2e8f0; border:1.5px solid #000; border-radius:4px; padding:2px 16px; font-weight:800; font-size:11.5px; color:#000; display:inline-block; font-family:sans-serif;">
                 {!! renderLatexToHtmlForDomPdf($sec->title) !!}@if($sec->instructions) — {!! renderLatexToHtmlForDomPdf($sec->instructions) !!}@endif [{{ count($sec->questions) }} &times; {{ $sec->questions->first()?->allocated_marks ?? 1 }} = {{ $sec->total_marks }}]
               </span>
@@ -321,7 +431,7 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
             @php $romanMap = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii']; @endphp
             <div style="margin:3px 0 5px 16px; font-size:10px; color:#000; display:flex; flex-wrap:wrap; gap:12px;">
               @foreach($q->options as $optIdx => $opt)
-              <span style="margin-right:12px;">({{ $romanMap[$optIdx] ?? ($optIdx + 1) }}) {!! renderLatexToHtmlForDomPdf(is_array($opt) ? ($opt['text'] ?? '') : (string)$opt) !!}</span>
+              <span style="margin-right:12px;">({{ $romanMap[$loop->index] ?? $loop->iteration }}) {!! renderLatexToHtmlForDomPdf(is_array($opt) ? ($opt['text'] ?? '') : (string)$opt) !!}</span>
               @endforeach
             </div>
             @elseif($q->question_type==='true_false')
@@ -330,14 +440,16 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
           </div>
         @endforeach
 
-        {{-- Footer --}}
+        @if($sheet['is_last_col_right'])
         <div style="position:absolute; bottom:12px; left:0; right:0; text-align:center; font-weight:800; font-size:11px; color:#000;">
           *** BEST OF LUCK ***
         </div>
+        @endif
       </div>
     </td>
   </tr>
 </table>
+@endforeach
 
 @else
 {{-- ══════════════════════════════════════════════════════════════════════════
@@ -415,7 +527,7 @@ h1{font-size:16px;font-weight:800;}h2{font-size:13px;font-weight:700;}h3{font-si
   @php $romanMap = ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii']; @endphp
   <div style="margin:4px 0 6px 20px; font-size:10.5px; color:#000; display:flex; flex-wrap:wrap; gap:16px;">
     @foreach($q->options as $optIdx => $opt)
-    <span style="margin-right:16px;">({{ $romanMap[$optIdx] ?? ($optIdx + 1) }}) {!! renderLatexToHtmlForDomPdf(is_array($opt) ? ($opt['text'] ?? '') : (string)$opt) !!}</span>
+    <span style="margin-right:16px;">({{ $romanMap[$loop->index] ?? $loop->iteration }}) {!! renderLatexToHtmlForDomPdf(is_array($opt) ? ($opt['text'] ?? '') : (string)$opt) !!}</span>
     @endforeach
   </div>
   @elseif($q->question_type==='true_false')

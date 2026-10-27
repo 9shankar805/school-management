@@ -265,8 +265,8 @@ class DashboardController extends Controller
 
     private function getCurrentSessionId(): int
     {
-        return (int) (\App\Models\SchoolSession::where('is_current', true)->value('id')
-            ?? \App\Models\SchoolSession::latest()->value('id')
+        return (int) (\App\Models\SchoolSession::current()?->id
+            ?? \App\Models\SchoolSession::latest('id')->value('id')
             ?? 0);
     }
 }

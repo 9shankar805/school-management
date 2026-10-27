@@ -84,9 +84,11 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
+        'address' => env('MAIL_FROM_ADDRESS', 'nepalschoolhub@gmail.com'),
+        'name' => env('MAIL_FROM_NAME', 'Nepal School Hub'),
     ],
+
+    'admin_address' => env('ADMIN_EMAIL', env('MAIL_USERNAME', 'nepalschoolhub@gmail.com')),
 
     /*
     |--------------------------------------------------------------------------

@@ -17,11 +17,11 @@
     'use strict';
 
     const SEED_TTL_MS   = 6 * 60 * 60 * 1000;  // 6 hours
-    const SEED_KEY      = 'offline_seed_v3_at';  // new key so v2 stale-check doesn't suppress v3 seed
+    const SEED_KEY      = 'offline_seed_v5_at';  // v5 cache busting with full finance
     const SEED_ENDPOINT = '/api/offline/seed-data';
-    const TOTAL_BATCHES = 13; // v3: 8 reference + 5 live-data stores
+    const TOTAL_BATCHES = 22; // v5: 8 reference + 14 live-data stores (including finance)
 
-    function log(msg, ...args) { console.log('[OfflineSeed v3]', msg, ...args); }
+    function log(msg, ...args) { console.log('[OfflineSeed v5]', msg, ...args); }
 
     function isStale() {
         const last = parseInt(localStorage.getItem(SEED_KEY) || '0', 10);
@@ -207,7 +207,70 @@
             }
             progress(++done);
 
-            // 14. Reference KV
+            // 14. Homework  ── V4
+            if (Array.isArray(data.homework) && data.homework.length) {
+                await offlineDbBulkPut('homework_cache', data.homework);
+                log(`✓ homework_cache (${data.homework.length})`);
+            }
+            progress(++done);
+
+            // 15. Routines / Timetables  ── V4
+            if (Array.isArray(data.routines) && data.routines.length) {
+                await offlineDbBulkPut('routines_cache', data.routines);
+                log(`✓ routines_cache (${data.routines.length})`);
+            }
+            progress(++done);
+
+            // 16. Fee Invoices  ── V4
+            if (Array.isArray(data.invoices) && data.invoices.length) {
+                await offlineDbBulkPut('invoices_cache', data.invoices);
+                log(`✓ invoices_cache (${data.invoices.length})`);
+            }
+            progress(++done);
+
+            // 17. Visitors  ── V4
+            if (Array.isArray(data.visitors) && data.visitors.length) {
+                await offlineDbBulkPut('visitors_cache', data.visitors);
+                log(`✓ visitors_cache (${data.visitors.length})`);
+            }
+            progress(++done);
+
+            // 18. Leave Applications  ── V4
+            if (Array.isArray(data.leave) && data.leave.length) {
+                await offlineDbBulkPut('leave_cache', data.leave);
+                log(`✓ leave_cache (${data.leave.length})`);
+            }
+            progress(++done);
+
+            // 19. Feedbacks  ── V4
+            if (Array.isArray(data.feedback) && data.feedback.length) {
+                await offlineDbBulkPut('feedback_cache', data.feedback);
+                log(`✓ feedback_cache (${data.feedback.length})`);
+            }
+            progress(++done);
+
+            // 20. Expenses  ── V5
+            if (Array.isArray(data.expenses) && data.expenses.length) {
+                await offlineDbBulkPut('expenses_cache', data.expenses);
+                log(`✓ expenses_cache (${data.expenses.length})`);
+            }
+            progress(++done);
+
+            // 21. Income  ── V5
+            if (Array.isArray(data.income) && data.income.length) {
+                await offlineDbBulkPut('income_cache', data.income);
+                log(`✓ income_cache (${data.income.length})`);
+            }
+            progress(++done);
+
+            // 22. Payments / Receipts  ── V5
+            if (Array.isArray(data.payments) && data.payments.length) {
+                await offlineDbBulkPut('payments_cache', data.payments);
+                log(`✓ payments_cache (${data.payments.length})`);
+            }
+            progress(++done);
+
+            // Reference KV
             if (Array.isArray(data.reference)) {
                 for (const kv of data.reference) {
                     await offlineRefPut(kv.key, kv.value);

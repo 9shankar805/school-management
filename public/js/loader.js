@@ -105,6 +105,13 @@
       40%            { transform: translateY(-8px); opacity: 1;   }
     }
 
+    .erp-spin-icon {
+      display: inline-block;
+      animation: erp-spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+
     /* ── Button Loading State ── */
     .erp-btn-loading {
       position: relative;
@@ -151,11 +158,11 @@
   overlay.id  = 'erp-page-overlay';
   overlay.innerHTML = `
     <div class="erp-overlay-logo">
-      <img src="/imgs/logo_icon.png" alt="NepalSchoolHub" onerror="this.style.display='none'">
+      <img src="/imgs/logo_icon.webp" alt="NepalSchoolHub" onerror="this.style.display='none'">
       <div class="erp-dot-train">
         <span></span><span></span><span></span><span></span>
       </div>
-      <span>Loading…</span>
+      <span><i class="bi bi-arrow-repeat erp-spin-icon"></i> Loading…</span>
     </div>
   `;
   document.body.appendChild(overlay);
@@ -219,20 +226,34 @@
 
   /* ─── 4. PAGE NAVIGATION TRIGGERS ──────────────────────────────── */
   var _overlayTimer = null;
+  var _overlaySafetyTimer = null;
 
   function showOverlay () {
     clearTimeout(_overlayTimer);
+    clearTimeout(_overlaySafetyTimer);
     _overlayTimer = setTimeout(function () {
       overlay.classList.add('visible');
-    }, 150); // only show if navigation takes > 150ms
+      // Auto-dismiss safety timeout: If window does not unload (e.g. file download), dismiss after 2.2s
+      _overlaySafetyTimer = setTimeout(function () {
+        hideOverlay();
+        Progress.done();
+      }, 2200);
+    }, 150);
   }
 
   function hideOverlay () {
     clearTimeout(_overlayTimer);
+    clearTimeout(_overlaySafetyTimer);
     overlay.classList.remove('visible');
   }
 
-  // Intercept ALL link clicks (except anchors, external, download, target=_blank)
+  // Dismiss overlay if user clicks on it
+  overlay.addEventListener('click', function () {
+    hideOverlay();
+    Progress.done();
+  });
+
+  // Intercept link clicks
   document.addEventListener('click', function (e) {
     var link = e.target.closest('a[href]');
     if (!link) return;
@@ -240,9 +261,20 @@
     var href = link.getAttribute('href');
     if (!href || href.startsWith('#') || href.startsWith('mailto:') ||
         href.startsWith('tel:') || href.startsWith('javascript:') ||
-        link.target === '_blank' || link.hasAttribute('download') ||
+        link.target === '_blank' ||
         link.getAttribute('data-bs-toggle') || // Bootstrap modal/tab triggers
         link.getAttribute('data-no-loader') !== null) return;
+
+    // Check if link is a download / export / PDF / Excel / Word file action
+    var isDownload = link.hasAttribute('download') ||
+                     /\.(pdf|docx|doc|xlsx|xls|zip|csv|txt)(\?.*)?$/i.test(href) ||
+                     /(download|export|\/pdf|\/excel|report-card|id-card|transcript|slip)/i.test(href);
+
+    if (isDownload) {
+      Progress.start();
+      setTimeout(function () { Progress.done(); }, 1200);
+      return;
+    }
 
     // External link
     try {
@@ -259,6 +291,15 @@
     var form = e.target;
     if (form.getAttribute('data-no-loader') !== null) return;
     if (form.method && form.method.toLowerCase() === 'get') return; // search/filter forms
+    
+    // Check if form is an export / download form
+    var action = form.getAttribute('action') || '';
+    if (/(download|export|\/pdf|\/excel|\/word|\/docx|bulk)/i.test(action)) {
+      Progress.start();
+      setTimeout(function () { Progress.done(); }, 1500);
+      return;
+    }
+
     Progress.start();
     showOverlay();
   });

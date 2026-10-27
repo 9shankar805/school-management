@@ -148,7 +148,6 @@ class UserRepository implements UserInterface {
                     'submit assignments',
                     'view exams',
                     'view marks',
-                    'view users',
                     'view routines',
                     'view syllabi',
                     'view events',
@@ -293,7 +292,8 @@ class UserRepository implements UserInterface {
     public function changePassword($new_password) {
         try {
             return User::where('id', auth()->user()->id)->update([
-                'password'  => Hash::make($new_password)
+                'password'             => Hash::make($new_password),
+                'must_change_password' => false,
             ]);
         } catch (\Exception $e) {
             throw new \Exception('Failed to change password. '.$e->getMessage());

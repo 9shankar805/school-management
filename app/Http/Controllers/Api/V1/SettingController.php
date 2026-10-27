@@ -79,9 +79,229 @@ class SettingController extends Controller
         }
 
         $results = [];
-        $schoolId = $request->user()?->school_id ?? null;
+        $user = $request->user();
+        $schoolId = $user?->school_id ?? null;
 
-        // Search students
+        // ── 1. If User is a STUDENT ──────────────────────────────────────────
+        if ($user && $user->isStudent()) {
+            // Self Profile match
+            if (stripos($user->full_name, $query) !== false || stripos($user->email, $query) !== false) {
+                $results[] = [
+                    'type'     => 'profile',
+                    'label'    => 'My Student Profile (' . $user->full_name . ')',
+                    'sublabel' => 'View my personal information, records & fees',
+                    'href'     => "/students/view/profile/{$user->id}",
+                    'icon'     => 'bi-person-circle',
+                ];
+            }
+
+            // Search Notices
+            $noticesQuery = \App\Models\Notice::where('title', 'like', "%{$query}%")
+                ->orWhere('notice', 'like', "%{$query}%");
+            if ($schoolId) {
+                $noticesQuery->where(function($q) use ($schoolId) {
+                    $q->where('school_id', $schoolId)->orWhereNull('school_id');
+                });
+            }
+            foreach ($noticesQuery->limit(5)->get() as $notice) {
+                $results[] = [
+                    'type'     => 'notice',
+                    'label'    => $notice->title,
+                    'sublabel' => 'Notice — ' . ($notice->created_at ? $notice->created_at->format('M d, Y') : ''),
+                    'href'     => "/notices",
+                    'icon'     => 'bi-megaphone',
+                ];
+            }
+
+            // Search Homework
+            $hwQuery = \App\Models\Homework::where('title', 'like', "%{$query}%");
+            if ($schoolId) {
+                $hwQuery->where('school_id', $schoolId);
+            }
+            foreach ($hwQuery->limit(5)->get() as $hw) {
+                $results[] = [
+                    'type'     => 'homework',
+                    'label'    => $hw->title,
+                    'sublabel' => 'Homework Assignment',
+                    'href'     => "/homework",
+                    'icon'     => 'bi-journal-text',
+                ];
+            }
+
+            // Search Library Books
+            $booksQuery = \App\Models\Book::where('title', 'like', "%{$query}%")
+                ->orWhere('author', 'like', "%{$query}%");
+            if ($schoolId) {
+                $booksQuery->where('school_id', $schoolId);
+            }
+            foreach ($booksQuery->limit(5)->get() as $book) {
+                $results[] = [
+                    'type'     => 'book',
+                    'label'    => $book->title,
+                    'sublabel' => 'Library Book — ' . ($book->author ?? 'Author'),
+                    'href'     => "/library",
+                    'icon'     => 'bi-book',
+                ];
+            }
+
+            return response()->json(['status' => 'success', 'data' => array_slice($results, 0, $limit)]);
+        }
+
+        // ── 2. If User is a PARENT ───────────────────────────────────────────
+        if ($user && $user->isParent()) {
+            // Search linked children
+            if (method_exists($user, 'children')) {
+                $children = $user->children()
+                    ->where(function ($q) use ($query) {
+                        $q->where('first_name', 'like', "%{$query}%")
+                          ->orWhere('last_name', 'like', "%{$query}%");
+                    })
+                    ->get();
+
+                foreach ($children as $child) {
+                    $results[] = [
+                        'type'     => 'child',
+                        'label'    => $child->full_name . ' (My Child)',
+                        'sublabel' => 'View child attendance & reports',
+                        'href'     => "/parent/{$child->id}/attendance",
+                        'icon'     => 'bi-person-badge',
+                    ];
+                }
+            }
+
+            // Search Notices
+            $noticesQuery = \App\Models\Notice::where('title', 'like', "%{$query}%");
+            if ($schoolId) {
+                $noticesQuery->where('school_id', $schoolId);
+            }
+            foreach ($noticesQuery->limit(5)->get() as $notice) {
+                $results[] = [
+                    'type'     => 'notice',
+                    'label'    => $notice->title,
+                    'sublabel' => 'School Notice',
+                    'href'     => "/notices",
+                    'icon'     => 'bi-megaphone',
+                ];
+            }
+
+            return response()->json(['status' => 'success', 'data' => array_slice($results, 0, $limit)]);
+        }
+
+        // ── 3. STAFF / TEACHERS / ADMINS / COORDINATORS ──────────────────────
+        $isClassQuery = in_array(strtolower($query), ['class', 'classes', 'grade', 'grades', 'sec', 'section', 'sections', 'classroom']);
+        $isCourseQuery = in_array(strtolower($query), ['course', 'courses', 'subject', 'subjects', 'curriculum', 'book']);
+        $isExamQuery = in_array(strtolower($query), ['exam', 'exams', 'test', 'examination', 'marks', 'result', 'gradebook']);
+        $isDeptQuery = in_array(strtolower($query), ['dept', 'department', 'departments', 'academic dept']);
+        $isProgQuery = in_array(strtolower($query), ['program', 'programs', 'stream', 'faculty']);
+
+        // 3a. Search Departments
+        if (class_exists(\App\Models\Department::class)) {
+            $deptQ = \App\Models\Department::query();
+            if (!$isDeptQuery) {
+                $deptQ->where(function($q) use ($query) {
+                    $q->where('name', 'like', "%{$query}%")
+                      ->orWhere('code', 'like', "%{$query}%");
+                });
+            }
+            if ($schoolId) {
+                $deptQ->where('school_id', $schoolId);
+            }
+            foreach ($deptQ->limit(5)->get() as $dept) {
+                $results[] = [
+                    'type'     => 'department',
+                    'label'    => $dept->name,
+                    'sublabel' => 'Academic Department (' . ($dept->code ?? 'Dept') . ')',
+                    'href'     => "/departments",
+                    'icon'     => 'bi-building',
+                ];
+            }
+        }
+
+        // 3b. Search Programs
+        if (class_exists(\App\Models\Program::class)) {
+            $progQ = \App\Models\Program::query();
+            if (!$isProgQuery) {
+                $progQ->where(function($q) use ($query) {
+                    $q->where('name', 'like', "%{$query}%")
+                      ->orWhere('code', 'like', "%{$query}%");
+                });
+            }
+            if ($schoolId) {
+                $progQ->where('school_id', $schoolId);
+            }
+            foreach ($progQ->limit(5)->get() as $prog) {
+                $results[] = [
+                    'type'     => 'program',
+                    'label'    => $prog->name,
+                    'sublabel' => 'Academic Program / Stream',
+                    'href'     => "/programs",
+                    'icon'     => 'bi-mortarboard-fill',
+                ];
+            }
+        }
+
+        // 3c. Search Classes & Grades
+        $classesQuery = \App\Models\SchoolClass::query();
+        if (!$isClassQuery) {
+            $classesQuery->where('class_name', 'like', "%{$query}%");
+        }
+        if ($schoolId) {
+            $classesQuery->where('school_id', $schoolId);
+        }
+        foreach ($classesQuery->limit(6)->get() as $c) {
+            $results[] = [
+                'type'     => 'class',
+                'label'    => $c->class_name,
+                'sublabel' => 'Academic Class & Grade',
+                'href'     => "/classes",
+                'icon'     => 'bi-diagram-3-fill',
+            ];
+        }
+
+        // 3d. Search Courses & Subjects
+        $coursesQuery = \App\Models\Course::query();
+        if (!$isCourseQuery) {
+            $coursesQuery->where(function ($q) use ($query) {
+                $q->where('course_name', 'like', "%{$query}%")
+                  ->orWhere('course_type', 'like', "%{$query}%");
+            });
+        }
+        $coursesQuery->with('schoolClass');
+        if ($schoolId) {
+            $coursesQuery->where('school_id', $schoolId);
+        }
+        foreach ($coursesQuery->limit(6)->get() as $course) {
+            $className = $course->schoolClass?->class_name ? ' (' . $course->schoolClass->class_name . ')' : '';
+            $results[] = [
+                'type'     => 'course',
+                'label'    => $course->course_name . $className,
+                'sublabel' => 'Subject — ' . ($course->course_type ?? 'Core'),
+                'href'     => "/classes",
+                'icon'     => 'bi-book-fill',
+            ];
+        }
+
+        // 3e. Search Exams
+        if (class_exists(\App\Models\Exam::class)) {
+            $examQ = \App\Models\Exam::query();
+            if (!$isExamQuery) {
+                $examQ->where('exam_name', 'like', "%{$query}%");
+            }
+            if ($schoolId) {
+                $examQ->where('school_id', $schoolId);
+            }
+            foreach ($examQ->latest()->limit(4)->get() as $exam) {
+                $results[] = [
+                    'type'     => 'exam',
+                    'label'    => $exam->exam_name ?? 'Examination',
+                    'sublabel' => 'Exam Schedule & Marks',
+                    'href'     => "/exams/view",
+                    'icon'     => 'bi-file-earmark-text-fill',
+                ];
+            }
+        }
+
+        // 3d. Search Students
         $studentsQuery = \App\Models\User::whereHas('roles', function ($q) {
             $q->where('name', 'student');
         })
@@ -92,28 +312,25 @@ class SettingController extends Controller
         })
         ->with('academic_info');
 
-        // Filter by school if user is authenticated
         if ($schoolId) {
             $studentsQuery->where('school_id', $schoolId);
         }
 
         $students = $studentsQuery->limit($limit)->get();
 
-        \Log::info('Students found', ['count' => $students->count(), 'query' => $query, 'school_id' => $schoolId]);
-
         foreach ($students as $student) {
             $results[] = [
-                'type' => 'student',
-                'label' => $student->full_name,
-                'sublabel' => $student->academic_info->admission_no ?? 'No admission no',
-                'href' => "/students/{$student->id}",
-                'icon' => 'bi-person',
+                'type'     => 'student',
+                'label'    => $student->full_name,
+                'sublabel' => $student->academic_info->admission_no ?? 'Student',
+                'href'     => "/students/view/profile/{$student->id}",
+                'icon'     => 'bi-person',
             ];
         }
 
-        // Search teachers/staff
+        // 3e. Search Teachers & Staff
         $staffQuery = \App\Models\User::whereHas('roles', function ($q) {
-            $q->whereIn('name', ['teacher', 'admin', 'principal', 'vice-principal']);
+            $q->whereIn('name', ['teacher', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'accountant', 'hr']);
         })
         ->where(function ($q) use ($query) {
             $q->where('first_name', 'like', "%{$query}%")
@@ -121,27 +338,37 @@ class SettingController extends Controller
               ->orWhere('email', 'like', "%{$query}%");
         });
 
-        // Filter by school if user is authenticated
         if ($schoolId) {
             $staffQuery->where('school_id', $schoolId);
         }
 
         $staff = $staffQuery->limit($limit)->get();
 
-        \Log::info('Staff found', ['count' => $staff->count(), 'query' => $query, 'school_id' => $schoolId]);
-
         foreach ($staff as $person) {
             $results[] = [
-                'type' => 'staff',
-                'label' => $person->full_name,
+                'type'     => 'staff',
+                'label'    => $person->full_name,
                 'sublabel' => ucfirst(str_replace('-', ' ', $person->primary_role)),
-                'href' => "/teachers/view/{$person->id}",
-                'icon' => 'bi-person-badge',
+                'href'     => "/teachers/view/profile/{$person->id}",
+                'icon'     => 'bi-person-badge',
             ];
         }
 
-        \Log::info('Search results returned', ['total_results' => count($results)]);
+        // 3f. Search Notices
+        $noticesQuery = \App\Models\Notice::where('title', 'like', "%{$query}%");
+        if ($schoolId) {
+            $noticesQuery->where('school_id', $schoolId);
+        }
+        foreach ($noticesQuery->limit(4)->get() as $notice) {
+            $results[] = [
+                'type'     => 'notice',
+                'label'    => $notice->title,
+                'sublabel' => 'Notice / Circular',
+                'href'     => "/notice/create",
+                'icon'     => 'bi-megaphone',
+            ];
+        }
 
-        return response()->json(['status' => 'success', 'data' => $results]);
+        return response()->json(['status' => 'success', 'data' => array_slice($results, 0, $limit)]);
     }
 }

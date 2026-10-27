@@ -18,23 +18,39 @@
         <div class="max-w-lg">
             {{-- Invoice summary --}}
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-5 mb-5">
-                <p class="text-xs text-slate-400 uppercase font-semibold tracking-wide mb-3">Invoice Summary</p>
+                <p class="text-xs text-slate-400 uppercase font-semibold tracking-wide mb-3">Billing Statement Summary</p>
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between">
                         <span class="text-slate-500">Invoice</span>
                         <span class="font-semibold text-slate-800">{{ $invoice->title }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-slate-500">Total Amount</span>
-                        <span class="font-semibold text-slate-800">{{ number_format($invoice->amount, 2) }}</span>
+                        <span class="text-slate-500">Current Month Charges</span>
+                        <span class="font-semibold text-slate-800">Rs. {{ number_format($invoice->amount, 2) }}</span>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-500">Already Paid</span>
-                        <span class="font-semibold text-emerald-600">{{ number_format($invoice->amount - $remaining, 2) }}</span>
+                    @if($invoice->previous_due > 0)
+                    <div class="flex justify-between text-amber-600 font-medium">
+                        <span><i class="bi bi-clock-history me-1"></i>Previous Dues (बक्यौता Arrears)</span>
+                        <span>+Rs. {{ number_format($invoice->previous_due, 2) }}</span>
                     </div>
-                    <div class="flex justify-between border-t border-slate-100 pt-2 mt-2">
-                        <span class="text-slate-700 font-semibold">Remaining Balance</span>
-                        <span class="font-bold text-rose-600 text-base">{{ number_format($remaining, 2) }}</span>
+                    @endif
+                    @if($invoice->fine_amount > 0)
+                    <div class="flex justify-between text-rose-600 font-medium">
+                        <span><i class="bi bi-exclamation-triangle me-1"></i>Late Fine (विलम्ब शुल्क)</span>
+                        <span>+Rs. {{ number_format($invoice->fine_amount, 2) }}</span>
+                    </div>
+                    @endif
+                    <div class="flex justify-between border-t border-slate-100 pt-2 font-bold text-slate-900">
+                        <span>Total Payable</span>
+                        <span>Rs. {{ number_format($invoice->total_payable, 2) }}</span>
+                    </div>
+                    <div class="flex justify-between text-emerald-600">
+                        <span>Already Paid</span>
+                        <span class="font-semibold">-Rs. {{ number_format($invoice->amount_paid, 2) }}</span>
+                    </div>
+                    <div class="flex justify-between border-t-2 border-slate-200 pt-2 mt-2">
+                        <span class="text-slate-800 font-bold">Total Balance Due</span>
+                        <span class="font-extrabold text-rose-600 text-lg">Rs. {{ number_format($remaining, 2) }}</span>
                     </div>
                 </div>
             </div>

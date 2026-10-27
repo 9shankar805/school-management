@@ -21,6 +21,25 @@ class PasswordChangeRequest extends FormRequest
         return $this->user() !== null;
     }
 
+    /**
+     * Map alternative input names (old_password / new_password) to standard fields
+     * so both conventions work seamlessly.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('old_password') && ! $this->filled('current_password')) {
+            $this->merge(['current_password' => $this->input('old_password')]);
+        }
+
+        if ($this->filled('new_password') && ! $this->filled('password')) {
+            $this->merge(['password' => $this->input('new_password')]);
+        }
+
+        if ($this->filled('new_password_confirmation') && ! $this->filled('password_confirmation')) {
+            $this->merge(['password_confirmation' => $this->input('new_password_confirmation')]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -31,8 +50,7 @@ class PasswordChangeRequest extends FormRequest
                 Password::min(8)
                     ->mixedCase()
                     ->numbers()
-                    ->symbols()
-                    ->uncompromised(),   // checks HaveIBeenPwned — optional, safe to remove if no internet
+                    ->symbols(),
             ],
         ];
     }
@@ -40,10 +58,14 @@ class PasswordChangeRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'password.min'      => 'Password must be at least 8 characters.',
-            'password.mixed'    => 'Password must contain uppercase and lowercase letters.',
-            'password.numbers'  => 'Password must contain at least one number.',
-            'password.symbols'  => 'Password must contain at least one symbol.',
+            'current_password.required'         => 'The current password field is required.',
+            'current_password.current_password' => 'The provided current password does not match your account password.',
+            'password.required'                 => 'The new password field is required.',
+            'password.confirmed'                => 'The password confirmation does not match.',
+            'password.min'                      => 'Password must be at least 8 characters.',
+            'password.mixed'                    => 'Password must contain uppercase and lowercase letters.',
+            'password.numbers'                  => 'Password must contain at least one number.',
+            'password.symbols'                  => 'Password must contain at least one symbol.',
         ];
     }
 }

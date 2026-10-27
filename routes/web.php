@@ -26,6 +26,8 @@ use App\Http\Controllers\GradingSystemController;
 use App\Http\Controllers\SchoolSessionController;
 use App\Http\Controllers\AcademicSettingController;
 use App\Http\Controllers\AssignedTeacherController;
+use App\Http\Controllers\ClassTeacherPortalController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\UpdatePasswordController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\BookCategoryController;
@@ -106,18 +108,20 @@ use App\Http\Controllers\HrController;
 
 
 
-Route::get('/', function () {
-    return view('welcome');
-});
+
+
+// Dynamic Multi-Tenant PWA Manifest (Tailored to active school logo, name & theme)
+Route::get('/manifest.json', [\App\Http\Controllers\PwaController::class, 'manifest'])->name('pwa.manifest');
+Route::get('/pwa-manifest.json', [\App\Http\Controllers\PwaController::class, 'manifest'])->name('pwa.manifest.dynamic');
 
 Auth::routes();
 
 // QR attendance scan — public endpoint (auth enforced inside controller)
 Route::get('/attendance/scan/{token}', [QrAttendanceController::class, 'scan'])->name('attendance.qr.scan');
 
-// Public Online Admission Application Routes (no auth required)
+// Public Online Admission Application Routes (no auth required — rate limited to prevent spam)
 Route::get('/admissions/apply',  [\App\Http\Controllers\PublicAdmissionController::class, 'create'])->name('admissions.public.apply');
-Route::post('/admissions/apply', [\App\Http\Controllers\PublicAdmissionController::class, 'store'])->name('admissions.public.store');
+Route::post('/admissions/apply', [\App\Http\Controllers\PublicAdmissionController::class, 'store'])->middleware('throttle:10,1')->name('admissions.public.store');
 
 // Official CEHRD IEMIS School Performance Dashboard (Public & Authenticated)
 Route::get('/iemis-school-report-card-dashboard', [\App\Http\Controllers\HomeController::class, 'iemisDashboard'])->name('iemis.school.dashboard');
@@ -132,7 +136,7 @@ Route::middleware(['auth'])->prefix('iemis')->name('iemis.')->group(function () 
 
 Route::middleware(['auth'])->group(function () {
 
-    Route::prefix('school')->name('school.')->group(function () {
+    Route::prefix('school')->name('school.')->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|hr-manager|hr|admission-officer|receptionist|teacher|class-teacher'])->group(function () {
         Route::post('session/create', [SchoolSessionController::class, 'store'])->name('session.store');
         Route::post('session/browse', [SchoolSessionController::class, 'browse'])->name('session.browse');
 
@@ -144,11 +148,13 @@ Route::middleware(['auth'])->group(function () {
         // Class
         Route::post('class/create', [SchoolClassController::class, 'store'])->name('class.create');
         Route::post('class/update', [SchoolClassController::class, 'update'])->name('class.update');
+        Route::post('class/bulk-delete', [SchoolClassController::class, 'bulkDestroy'])->name('class.bulk.delete');
         Route::post('class/delete/{id}', [SchoolClassController::class, 'destroy'])->name('class.delete');
 
         // Sections
         Route::post('section/create', [SectionController::class, 'store'])->name('section.create');
         Route::post('section/update', [SectionController::class, 'update'])->name('section.update');
+        Route::post('section/bulk-delete', [SectionController::class, 'bulkDestroy'])->name('section.bulk.delete');
         Route::post('section/delete/{id}', [SectionController::class, 'destroy'])->name('section.delete');
 
         // Courses
@@ -160,39 +166,53 @@ Route::middleware(['auth'])->group(function () {
         Route::post('teacher/update', [UserController::class, 'updateTeacher'])->name('teacher.update');
         Route::post('teacher/assign', [AssignedTeacherController::class, 'store'])->name('teacher.assign');
         Route::post('teacher/toggle-class-teacher/{id}', [AssignedTeacherController::class, 'toggleClassTeacher'])->name('teacher.toggle-class-teacher');
-
+        Route::post('classes/{classId}/sections/{sectionId}/class-teacher', [AssignedTeacherController::class, 'assignSectionClassTeacher'])->name('class.section.class-teacher.assign');
 
         // Student
         Route::post('student/create', [UserController::class, 'storeStudent'])->name('student.create');
         Route::post('student/update', [UserController::class, 'updateStudent'])->name('student.update');
     });
 
+    // Direct named route aliases for teachers and class teacher management
+    Route::post('teacher/assign', [AssignedTeacherController::class, 'store'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator'])->name('teacher.assign');
+    Route::post('teacher/toggle-class-teacher/{id}', [AssignedTeacherController::class, 'toggleClassTeacher'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator'])->name('teacher.toggle-class-teacher');
+    Route::post('classes/{classId}/sections/{sectionId}/class-teacher', [AssignedTeacherController::class, 'assignSectionClassTeacher'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator'])->name('class.section.class-teacher.assign');
+
+    // Class In-Charge (कक्षा शिक्षक) Command Center
+    Route::prefix('class-incharge')->name('class-incharge.')->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher'])->group(function () {
+        Route::get('/',                   [ClassTeacherPortalController::class, 'index'])->name('dashboard');
+        Route::get('students',            [ClassTeacherPortalController::class, 'students'])->name('students');
+        Route::get('gradebook',           [ClassTeacherPortalController::class, 'gradebook'])->name('gradebook');
+        Route::post('leaves/{id}/action', [ClassTeacherPortalController::class, 'handleLeave'])->name('leaves.action');
+        Route::post('diary',              [ClassTeacherPortalController::class, 'postDiary'])->name('diary');
+    });
 
     Route::get('/home', [HomeController::class, 'index'])->name('home');
 
     // Attendance — core (original)
+    Route::get('/attendance', [AttendanceController::class, 'index']);
     Route::get('/attendances', [AttendanceController::class, 'index'])->name('attendance.index');
-    Route::get('/attendances/view', [AttendanceController::class, 'show'])->name('attendance.list.show');
-    Route::get('/attendances/take', [AttendanceController::class, 'create'])->name('attendance.create.show');
-    Route::post('/attendances', [AttendanceController::class, 'store'])->name('attendances.store');
+    Route::get('/attendances/view', [AttendanceController::class, 'show'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher|attendance-officer'])->name('attendance.list.show');
+    Route::get('/attendances/take', [AttendanceController::class, 'create'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher|attendance-officer'])->name('attendance.create.show');
+    Route::post('/attendances', [AttendanceController::class, 'store'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher|attendance-officer'])->name('attendances.store');
 
     // Attendance — analytics
-    Route::get('/attendances/analytics', [AttendanceController::class, 'analytics'])->name('attendance.analytics');
+    Route::get('/attendances/analytics', [AttendanceController::class, 'analytics'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|attendance-officer'])->name('attendance.analytics');
 
     // Attendance — shortage alerts
-    Route::get('/attendances/shortage', [AttendanceController::class, 'shortage'])->name('attendance.shortage');
+    Route::get('/attendances/shortage', [AttendanceController::class, 'shortage'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|attendance-officer'])->name('attendance.shortage');
 
     // Attendance — monthly reports (PDF + Excel)
-    Route::get('/attendances/report',       [AttendanceController::class, 'reportForm'])->name('attendance.report.form');
-    Route::get('/attendances/report/pdf',   [AttendanceController::class, 'monthlyReportPdf'])->name('attendance.report.pdf');
-    Route::get('/attendances/report/excel', [AttendanceController::class, 'monthlyReportExcel'])->name('attendance.report.excel');
+    Route::get('/attendances/report',       [AttendanceController::class, 'reportForm'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|attendance-officer'])->name('attendance.report.form');
+    Route::get('/attendances/report/pdf',   [AttendanceController::class, 'monthlyReportPdf'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|attendance-officer'])->name('attendance.report.pdf');
+    Route::get('/attendances/report/excel', [AttendanceController::class, 'monthlyReportExcel'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|attendance-officer'])->name('attendance.report.excel');
 
     // Attendance — bulk CSV import
-    Route::get('/attendances/import',  [AttendanceController::class, 'importForm'])->name('attendance.import.form');
-    Route::post('/attendances/import', [AttendanceController::class, 'import'])->name('attendance.import');
+    Route::get('/attendances/import',  [AttendanceController::class, 'importForm'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|attendance-officer'])->name('attendance.import.form');
+    Route::post('/attendances/import', [AttendanceController::class, 'import'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|attendance-officer'])->name('attendance.import');
 
     // Attendance — QR code (teacher side + public scan endpoint)
-    Route::prefix('attendance/qr')->name('attendance.qr.')->group(function () {
+    Route::prefix('attendance/qr')->name('attendance.qr.')->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher|attendance-officer'])->group(function () {
         Route::get('/',           [QrAttendanceController::class, 'index'])->name('index');
         Route::get('/create',     [QrAttendanceController::class, 'create'])->name('create');
         Route::post('/',          [QrAttendanceController::class, 'store'])->name('store');
@@ -201,10 +221,10 @@ Route::middleware(['auth'])->group(function () {
     }); // QR scan public endpoint is registered at top of file (Route::get attendance/scan/{token})
 
     // Attendance — staff
-    Route::get('/staff/attendance',                      [StaffAttendanceController::class, 'index'])->name('staff.attendance.index');
-    Route::post('/staff/attendance',                     [StaffAttendanceController::class, 'store'])->name('staff.attendance.store');
-    Route::get('/staff/{staffId}/attendance',            [StaffAttendanceController::class, 'show'])->name('staff.attendance.show');
-    Route::patch('/staff/attendance/{id}/time',          [StaffAttendanceController::class, 'updateTime'])->name('staff.attendance.time');
+    Route::get('/staff/attendance',                      [StaffAttendanceController::class, 'index'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr|attendance-officer'])->name('staff.attendance.index');
+    Route::post('/staff/attendance',                     [StaffAttendanceController::class, 'store'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr|attendance-officer'])->name('staff.attendance.store');
+    Route::get('/staff/{staffId}/attendance',            [StaffAttendanceController::class, 'show'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr|attendance-officer'])->name('staff.attendance.show');
+    Route::patch('/staff/attendance/{id}/time',          [StaffAttendanceController::class, 'updateTime'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr|attendance-officer'])->name('staff.attendance.time');
 
     // Classes and sections
     Route::get('/classes', [SchoolClassController::class, 'index']);
@@ -212,13 +232,24 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/sections', [SectionController::class, 'getByClassId'])->name('get.sections.courses.by.classId');
     Route::get('/section/edit/{id}', [SectionController::class, 'edit'])->name('section.edit');
 
+    // ── TEACHER BULK IMPORT (must be declared before the /teachers/{id} wildcard) ──
+    Route::get('/teachers/bulk-import',            [\App\Http\Controllers\TeacherImportController::class, 'index'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|hr-manager|hr'])->name('teachers.import.index');
+    Route::post('/teachers/bulk-import',           [\App\Http\Controllers\TeacherImportController::class, 'importCsv'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|hr-manager|hr'])->name('teachers.import.process');
+    Route::post('/teachers/bulk-import/direct',    [\App\Http\Controllers\TeacherImportController::class, 'importDirect'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|hr-manager|hr'])->name('teachers.import.direct');
+    Route::get('/teachers/bulk-import/sample-csv', [\App\Http\Controllers\TeacherImportController::class, 'downloadSample'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|hr-manager|hr'])->name('teachers.import.sample');
+
     // Teachers
+    Route::get('/teachers', [UserController::class, 'getTeacherList'])->name('teachers.index');
+    Route::get('/teacher',  [UserController::class, 'getTeacherList']);
+    Route::get('/teachers/view', [UserController::class, 'getTeacherList']);
     Route::get('/teachers/add', function () {
         return view('teachers.add');
-    })->name('teacher.create.show');
-    Route::get('/teachers/edit/{id}', [UserController::class, 'editTeacher'])->name('teacher.edit.show');
+    })->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('teacher.create.show');
+    Route::get('/teachers/edit/{id}', [UserController::class, 'editTeacher'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('teacher.edit.show');
     Route::get('/teachers/view/list', [UserController::class, 'getTeacherList'])->name('teacher.list.show');
     Route::get('/teachers/view/profile/{id}', [UserController::class, 'showTeacherProfile'])->name('teacher.profile.show');
+    Route::get('/teachers/view/{id}', [UserController::class, 'showTeacherProfile']);
+    Route::get('/teachers/{id}', [UserController::class, 'showTeacherProfile'])->where('id', '[0-9]+');
     // Teacher timetable slot management (admin)
     Route::post('/teachers/{id}/timetable',          [\App\Http\Controllers\RoutineController::class, 'storeForTeacher'])->name('teacher.timetable.store');
     Route::delete('/teachers/timetable/{routineId}', [\App\Http\Controllers\RoutineController::class, 'destroySlot'])->name('teacher.timetable.destroy');
@@ -228,22 +259,31 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/classes/{id}/show', [\App\Http\Controllers\SchoolClassController::class, 'detail'])->name('class.detail.show');
 
     //Students
-    Route::get('/students/add', [UserController::class, 'createStudent'])->name('student.create.show');
-    Route::get('/students/edit/{id}', [UserController::class, 'editStudent'])->name('student.edit.show');
+    Route::get('/students', [UserController::class, 'getStudentList'])->name('students.index');
+    Route::get('/student',  [UserController::class, 'getStudentList']);
+    Route::get('/students/view', [UserController::class, 'getStudentList']);
+    Route::get('/students/bulk-import', [\App\Http\Controllers\StudentImportController::class, 'index'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|admission-officer|receptionist'])->name('students.import.index');
+    Route::post('/students/bulk-import', [\App\Http\Controllers\StudentImportController::class, 'importCsv'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|admission-officer|receptionist'])->name('students.import.process');
+    Route::post('/students/bulk-import/direct', [\App\Http\Controllers\StudentImportController::class, 'importDirect'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|admission-officer|receptionist'])->name('students.import.direct');
+    Route::get('/students/bulk-import/sample-csv', [\App\Http\Controllers\StudentImportController::class, 'downloadSample'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|admission-officer|receptionist'])->name('students.import.sample');
+    Route::get('/students/add', [UserController::class, 'createStudent'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|admission-officer|receptionist'])->name('student.create.show');
+    Route::get('/students/edit/{id}', [UserController::class, 'editStudent'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|admission-officer'])->name('student.edit.show');
     Route::get('/students/view/list', [UserController::class, 'getStudentList'])->name('student.list.show');
     Route::get('/students/view/profile/{id}', [UserController::class, 'showStudentProfile'])->name('student.profile.show');
+    Route::get('/students/view/{id}', [UserController::class, 'showStudentProfile']);
+    Route::get('/students/{id}', [UserController::class, 'showStudentProfile'])->where('id', '[0-9]+');
     Route::get('/students/view/attendance/{id}', [AttendanceController::class, 'showStudentAttendance'])->name('student.attendance.show');
 
     // Marks
-    Route::get('/marks/create', [MarkController::class, 'create'])->name('course.mark.create');
-    Route::post('/marks/store', [MarkController::class, 'store'])->name('course.mark.store');
+    Route::get('/marks/create', [MarkController::class, 'create'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher'])->name('course.mark.create');
+    Route::post('/marks/store', [MarkController::class, 'store'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher'])->name('course.mark.store');
     Route::get('/marks/results', [MarkController::class, 'index'])->name('course.mark.list.show');
     // Route::get('/marks/view', function () {
     //     return view('marks.view');
     // });
     Route::get('/marks/view', [MarkController::class, 'showCourseMark'])->name('course.mark.show');
-    Route::get('/marks/final/submit', [MarkController::class, 'showFinalMark'])->name('course.final.mark.submit.show');
-    Route::post('/marks/final/submit', [MarkController::class, 'storeFinalMark'])->name('course.final.mark.submit.store');
+    Route::get('/marks/final/submit', [MarkController::class, 'showFinalMark'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher'])->name('course.final.mark.submit.show');
+    Route::post('/marks/final/submit', [MarkController::class, 'storeFinalMark'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher'])->name('course.final.mark.submit.store');
 
     // Exams
     Route::get('/exams/view', [ExamController::class, 'index'])->name('exam.list.show');
@@ -261,7 +301,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/exams/grade/add-rule', [GradeRuleController::class, 'create'])->name('exam.grade.system.rule.create');
     Route::post('/exams/grade/add-rule', [GradeRuleController::class, 'store'])->name('exam.grade.system.rule.store');
     Route::get('/exams/grade/view-rules', [GradeRuleController::class, 'index'])->name('exam.grade.system.rule.show');
-    Route::post('/exams/grade/delete-rule', [GradeRuleController::class, 'destroy'])->name('exam.grade.system.rule.delete');
+    // Exam Admit Cards (प्रवेश-पत्र)
+    Route::get('/exams/{exam}/admit-card/{student}', [\App\Http\Controllers\AdmitCardController::class, 'single'])->name('exam.admit-card.single');
+    Route::get('/exams/{exam}/admit-cards/batch', [\App\Http\Controllers\AdmitCardController::class, 'batch'])->name('exam.admit-card.batch');
+
     // Dynamic exam routes — must come AFTER all static /exams/* paths
     Route::get('/exams/{exam}/edit', [ExamController::class, 'edit'])->name('exam.edit');
     Route::put('/exams/{exam}', [ExamController::class, 'update'])->name('exam.update');
@@ -277,12 +320,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/roll-numbers/update-bulk', [RollNumberController::class, 'updateBulk'])->name('roll-numbers.update-bulk');
     Route::post('/roll-numbers/auto-assign', [RollNumberController::class, 'autoAssign'])->name('roll-numbers.auto-assign');
 
-    // Academic settings
-    Route::get('/academics/settings', [AcademicSettingController::class, 'index']);
+    // School Setup & Academic Settings
+    Route::get('/school/setup', [AcademicSettingController::class, 'index'])->name('school.setup');
+    Route::get('/academics/settings', [AcademicSettingController::class, 'index'])->name('academic.settings');
 
-    // Calendar events
+    // Calendar & Academic Events
     Route::get('calendar-event', [EventController::class, 'index'])->name('events.show');
     Route::post('calendar-crud-ajax', [EventController::class, 'calendarEvents'])->name('events.crud');
+    Route::post('calendar/presets/generate', [EventController::class, 'generatePresets'])->name('events.presets.generate');
+    Route::get('calendar/print', [EventController::class, 'printCalendar'])->name('events.print');
 
     // Routines
     Route::get('/routine/create', [RoutineController::class, 'create'])->name('section.routine.create');
@@ -294,9 +340,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/syllabus/create', [SyllabusController::class, 'store'])->name('syllabus.store');
     Route::get('/syllabus/index', [SyllabusController::class, 'index'])->name('course.syllabus.index');
 
-    // Notices
-    Route::get('/notice/create', [NoticeController::class, 'create'])->name('notice.create');
-    Route::post('/notice/create', [NoticeController::class, 'store'])->name('notice.store');
+    // Notices & Circulars
+    Route::get('/notices',               [NoticeController::class, 'index'])->name('notice.index');
+    Route::get('/notice/create',         [NoticeController::class, 'create'])->name('notice.create');
+    Route::post('/notice/create',        [NoticeController::class, 'store'])->name('notice.store');
+    Route::get('/notice/{notice}',       [NoticeController::class, 'show'])->name('notice.show');
+    Route::get('/notice/{notice}/edit',  [NoticeController::class, 'edit'])->name('notice.edit');
+    Route::put('/notice/{notice}',       [NoticeController::class, 'update'])->name('notice.update');
+    Route::delete('/notice/{notice}',    [NoticeController::class, 'destroy'])->name('notice.destroy');
 
     // Courses
     Route::get('courses/teacher/index', [AssignedTeacherController::class, 'getTeacherCourses'])->name('course.teacher.list.show');
@@ -317,6 +368,16 @@ Route::middleware(['auth'])->group(function () {
     // Discipline log (teacher view)
     Route::get('discipline',                        [\App\Http\Controllers\DisciplinaryRecordController::class, 'index'])->name('student.discipline.index');
 
+    // User profile & account settings (Name, Gmail/Email, Phone, Photo, Password)
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/',                 [ProfileController::class, 'edit'])->name('edit');
+        Route::put('/',                 [ProfileController::class, 'update'])->name('update');
+        Route::post('/',                [ProfileController::class, 'update']);
+        Route::put('/password',        [ProfileController::class, 'updatePassword'])->name('password.update');
+        Route::post('/password',       [ProfileController::class, 'updatePassword']);
+        Route::delete('/photo',         [ProfileController::class, 'removePhoto'])->name('photo.remove');
+    });
+
     // Update password
     Route::get('password/edit', [UpdatePasswordController::class, 'edit'])->name('password.change');
     Route::post('password/edit', [UpdatePasswordController::class, 'update'])->name('password.change.update');
@@ -332,7 +393,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}',                         [PaymentController::class, 'show'])->name('show');
         Route::get('/{id}/pay',                  [PaymentController::class, 'pay'])->name('pay');
         Route::post('/{id}/pay',                 [PaymentController::class, 'processPayment'])->name('process');
-        Route::get('/receipt/{paymentId}',       [PaymentController::class, 'receiptPage'])->name('receipt');
+        Route::get('/receipt/{paymentId}',          [PaymentController::class, 'receiptPage'])->name('receipt');
+        Route::get('/receipt/{paymentId}/page',     [PaymentController::class, 'receiptPage'])->name('receipt.page');
+        Route::get('/receipt/{paymentId}/download', [PaymentController::class, 'receipt'])->name('receipt-download');
     });
 
     // ── LIBRARY (Module 12) ────────────────────────────────────────────────────
@@ -476,6 +539,11 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('finance')->name('finance.')->group(function () {
         Route::get('/',                         [FeeController::class, 'overview'])->name('overview');
+        Route::get('/pos',                      [\App\Http\Controllers\PaymentController::class, 'posIndex'])->name('pos');
+        Route::get('/pos/search-students',      [\App\Http\Controllers\PaymentController::class, 'posSearchStudents'])->name('pos.search-students');
+        Route::get('/pos/student/{id}/details', [\App\Http\Controllers\PaymentController::class, 'posStudentDetails'])->name('pos.student-details');
+        Route::post('/pos/collect',             [\App\Http\Controllers\PaymentController::class, 'posCollect'])->name('pos.collect');
+        Route::get('/fee-profiles/{studentId?}', [FeeController::class, 'feeProfiles'])->name('fee-profiles');
 
         // Fee categories
         Route::prefix('categories')->name('categories.')->group(function () {
@@ -599,7 +667,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ── TEACHER MANAGEMENT (Module 5) ────────────────────────────────────────
-    Route::prefix('departments')->name('departments.')->group(function () {
+    Route::prefix('departments')->name('departments.')->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr|academic-coordinator'])->group(function () {
         Route::get('/',                              [DepartmentController::class, 'index'])->name('index');
         Route::post('/',                             [DepartmentController::class, 'store'])->name('store');
         Route::put('/{id}',                          [DepartmentController::class, 'update'])->name('update');
@@ -608,7 +676,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}/teachers/{teacherId}',  [DepartmentController::class, 'removeTeacher'])->name('teacher.remove');
     });
 
-    Route::prefix('teacher/{teacherId}')->name('teacher.')->group(function () {
+    Route::prefix('teacher/{teacherId}')->name('teacher.')->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->group(function () {
         Route::post('qualifications',       [TeacherQualificationController::class, 'store'])->name('qualifications.store');
         Route::delete('qualifications/{id}',[TeacherQualificationController::class, 'destroy'])->name('qualifications.destroy');
         Route::post('contracts',            [TeacherContractController::class, 'store'])->name('contracts.store');
@@ -622,22 +690,22 @@ Route::middleware(['auth'])->group(function () {
         Route::post('reviews',              [PerformanceReviewController::class, 'store'])->name('reviews.store');
     });
 
-    Route::get('teacher/attendance',          [TeacherAttendanceController::class, 'index'])->name('teacher.attendance.index');
-    Route::post('teacher/attendance',         [TeacherAttendanceController::class, 'store'])->name('teacher.attendance.store');
-    Route::get('teacher/{teacherId}/attendance', [TeacherAttendanceController::class, 'show'])->name('teacher.attendance.show');
+    Route::get('teacher/attendance',          [TeacherAttendanceController::class, 'index'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr|teacher|class-teacher'])->name('teacher.attendance.index');
+    Route::post('teacher/attendance',         [TeacherAttendanceController::class, 'store'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('teacher.attendance.store');
+    Route::get('teacher/{teacherId}/attendance', [TeacherAttendanceController::class, 'show'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr|teacher|class-teacher'])->name('teacher.attendance.show');
 
     Route::prefix('leave')->name('leave.')->group(function () {
         Route::get('/',              [LeaveController::class, 'index'])->name('index');
         Route::get('/types',         [LeaveController::class, 'types'])->name('types');
-        Route::post('/types',        [LeaveController::class, 'storeType'])->name('types.store');
-        Route::put('/types/{id}',    [LeaveController::class, 'updateType'])->name('types.update');
-        Route::delete('/types/{id}', [LeaveController::class, 'destroyType'])->name('types.destroy');
+        Route::post('/types',        [LeaveController::class, 'storeType'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('types.store');
+        Route::put('/types/{id}',    [LeaveController::class, 'updateType'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('types.update');
+        Route::delete('/types/{id}', [LeaveController::class, 'destroyType'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('types.destroy');
         Route::post('/apply',        [LeaveController::class, 'apply'])->name('apply');
-        Route::post('/{id}/review',  [LeaveController::class, 'review'])->name('review');
+        Route::post('/{id}/review',  [LeaveController::class, 'review'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('review');
         Route::post('/{id}/cancel',  [LeaveController::class, 'cancel'])->name('cancel');
     });
 
-    Route::prefix('teacher/payroll')->name('teacher.payroll.')->group(function () {
+    Route::prefix('teacher/payroll')->name('teacher.payroll.')->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr|teacher|class-teacher'])->group(function () {
         Route::get('/',          [TeacherPayrollController::class, 'index'])->name('index');
         Route::post('/',         [TeacherPayrollController::class, 'store'])->name('store');
         Route::post('/{id}/paid',[TeacherPayrollController::class, 'markPaid'])->name('paid');
@@ -645,9 +713,9 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}',   [TeacherPayrollController::class, 'destroy'])->name('destroy');
     });
 
-    Route::get('performance-reviews',      [PerformanceReviewController::class, 'index'])->name('reviews.index');
-    Route::put('performance-reviews/{id}', [PerformanceReviewController::class, 'update'])->name('reviews.update');
-    Route::delete('performance-reviews/{id}', [PerformanceReviewController::class, 'destroy'])->name('reviews.destroy');
+    Route::get('performance-reviews',      [PerformanceReviewController::class, 'index'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('reviews.index');
+    Route::put('performance-reviews/{id}', [PerformanceReviewController::class, 'update'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('reviews.update');
+    Route::delete('performance-reviews/{id}', [PerformanceReviewController::class, 'destroy'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('reviews.destroy');
     Route::prefix('admissions')->name('admissions.')->group(function () {
         Route::get('/',              [AdmissionController::class, 'index'])->name('index');
         Route::get('/create',        [AdmissionController::class, 'create'])->name('create');
@@ -795,6 +863,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/submit',              [\App\Http\Controllers\HomeworkController::class, 'submit'])->name('submit');
         Route::post('/submissions/{id}/grade',   [\App\Http\Controllers\HomeworkController::class, 'grade'])->name('grade');
         Route::post('/{id}/toggle-status',       [\App\Http\Controllers\HomeworkController::class, 'toggleStatus'])->name('toggle-status');
+        Route::get('/submissions/{id}/annotate', [\App\Http\Controllers\HomeworkController::class, 'annotateView'])->name('submission.annotate');
+        Route::post('/submissions/{id}/annotate/save', [\App\Http\Controllers\HomeworkController::class, 'saveAnnotation'])->name('submission.annotate.save');
     });
 
     // ── MODULE 7: ACADEMIC — PROJECTS ─────────────────────────────────────────
@@ -828,6 +898,30 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/status',       [\App\Http\Controllers\OnlineClassController::class, 'updateStatus'])->name('status');
     });
 
+    // ── MODULE: DISCUSSION FORUM ──────────────────────────────────────────────
+    Route::prefix('forum')->name('forum.')->group(function () {
+        Route::get('/',                     [\App\Http\Controllers\ForumController::class, 'index'])->name('index');
+        Route::get('/create',               [\App\Http\Controllers\ForumController::class, 'create'])->name('create');
+        Route::post('/',                    [\App\Http\Controllers\ForumController::class, 'store'])->name('store');
+        Route::get('/{id}',                 [\App\Http\Controllers\ForumController::class, 'show'])->name('show');
+        Route::post('/{id}/reply',          [\App\Http\Controllers\ForumController::class, 'reply'])->name('reply.store');
+        Route::post('/reply/{id}/vote',     [\App\Http\Controllers\ForumController::class, 'toggleVote'])->name('reply.vote');
+        Route::post('/reply/{id}/solution', [\App\Http\Controllers\ForumController::class, 'markSolution'])->name('reply.solution');
+        Route::post('/{id}/pin',            [\App\Http\Controllers\ForumController::class, 'togglePin'])->name('pin');
+        Route::post('/{id}/lock',           [\App\Http\Controllers\ForumController::class, 'toggleLock'])->name('lock');
+        Route::delete('/{id}',              [\App\Http\Controllers\ForumController::class, 'destroy'])->name('destroy');
+    });
+
+    // ── MODULE: FEEDBACK & GRIEVANCES ──────────────────────────────────────────
+    Route::prefix('feedback')->name('feedback.')->group(function () {
+        Route::get('/',                     [\App\Http\Controllers\FeedbackController::class, 'index'])->name('index');
+        Route::get('/create',               [\App\Http\Controllers\FeedbackController::class, 'create'])->name('create');
+        Route::post('/',                    [\App\Http\Controllers\FeedbackController::class, 'store'])->name('store');
+        Route::get('/my',                   [\App\Http\Controllers\FeedbackController::class, 'myFeedback'])->name('my');
+        Route::get('/{id}',                 [\App\Http\Controllers\FeedbackController::class, 'show'])->name('show');
+        Route::post('/{id}/status',         [\App\Http\Controllers\FeedbackController::class, 'updateStatus'])->name('update-status');
+    });
+
     // ── MODULE 6: PARENT PORTAL ───────────────────────────────────────────────
     Route::prefix('parent')->name('parent.')->middleware('role:parent')->group(function () {
         // Per-child views
@@ -843,8 +937,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{studentId}/leave/{applicationId}/cancel', [\App\Http\Controllers\ParentPortalController::class, 'cancelLeave'])->name('leave.cancel');
         // New routes
         Route::get('/{studentId}/homework',    [\App\Http\Controllers\ParentPortalController::class, 'homework'])->name('homework');
+        Route::post('/{studentId}/homework/{homeworkId}/acknowledge', [\App\Http\Controllers\ParentPortalController::class, 'acknowledgeHomework'])->name('homework.acknowledge');
         Route::get('/{studentId}/timetable',   [\App\Http\Controllers\ParentPortalController::class, 'timetable'])->name('timetable');
         Route::get('/{studentId}/transport',   [\App\Http\Controllers\ParentPortalController::class, 'transport'])->name('transport');
+        Route::get('/{studentId}/notices',     [\App\Http\Controllers\ParentPortalController::class, 'notices'])->name('notices');
+        Route::get('/{studentId}/online-classes', [\App\Http\Controllers\ParentPortalController::class, 'onlineClasses'])->name('online-classes');
         
         // Modules from API translation
         Route::get('/{studentId}/teachers',    [\App\Http\Controllers\ParentPortalController::class, 'teachers'])->name('teachers');
@@ -1027,6 +1124,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Approval dashboard (separate page)
     Route::get('/question-papers-pending', [QuestionApprovalController::class, 'index'])->name('question-papers.approvals');
+    // Backward compatibility alias for exam.paper.create
+    Route::get('/question-papers/create-redirect', [QuestionPaperController::class, 'create'])->name('exam.paper.create');
 
     // ── ROLE & PERMISSION MANAGEMENT ────────────────────────────────────────
     Route::middleware('permission:manage roles')->prefix('roles')->name('roles.')->group(function () {
@@ -1059,6 +1158,15 @@ Route::middleware(['auth'])->group(function () {
              ->only(['index','store','update','destroy']);
         Route::resource('maintenance',\App\Http\Controllers\HostelMaintenanceRequestController::class)
              ->only(['index','store','update','destroy']);
+    });
+
+    // ── RECEPTION & VISITOR MANAGEMENT ─────────────────────────────────────────
+    Route::prefix('visitors')->name('visitors.')->group(function () {
+        Route::get('/',                 [\App\Http\Controllers\VisitorController::class, 'index'])->name('index');
+        Route::post('/',                [\App\Http\Controllers\VisitorController::class, 'store'])->name('store');
+        Route::post('/{id}/checkout',   [\App\Http\Controllers\VisitorController::class, 'checkOut'])->name('checkout');
+        Route::get('/{id}/badge',       [\App\Http\Controllers\VisitorController::class, 'printBadge'])->name('badge');
+        Route::delete('/{id}',          [\App\Http\Controllers\VisitorController::class, 'destroy'])->name('destroy');
     });
 
     // ── AI FEATURES (Module 19) ──────────────────────────────────────────────
@@ -1194,6 +1302,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/balance-sheet',   [\App\Http\Controllers\LedgerController::class, 'balanceSheet'])->name('balance-sheet');
         Route::get('/balance-sheet/pdf',[\App\Http\Controllers\LedgerController::class, 'balanceSheetPdf'])->name('balance-sheet.pdf');
 
+        // Day Book (रोजनाम्चा / दैनिक हिसाब)
+        Route::get('/day-book',        [\App\Http\Controllers\LedgerController::class, 'dayBook'])->name('day-book');
+        Route::get('/day-book/pdf',    [\App\Http\Controllers\LedgerController::class, 'dayBookPdf'])->name('day-book.pdf');
+
         // Fee types master list
         Route::prefix('fee-types')->name('fee-types.')->group(function () {
             Route::get('/',        [\App\Http\Controllers\FeeController::class, 'feeTypes'])->name('index');
@@ -1227,12 +1339,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/finance/esewa/success',  [\App\Http\Controllers\OnlinePaymentController::class, 'esewaSuccess'])->name('finance.esewa.success');
     Route::get('/finance/esewa/failure',  [\App\Http\Controllers\OnlinePaymentController::class, 'esewaFailure'])->name('finance.esewa.failure');
     Route::get('/finance/khalti/callback',[\App\Http\Controllers\OnlinePaymentController::class, 'khaltiCallback'])->name('finance.khalti.callback');
-    Route::post('/finance/initiate',      [\App\Http\Controllers\OnlinePaymentController::class, 'initiate'])->name('finance.payment.initiate');
+    Route::post('/finance/initiate',      [\App\Http\Controllers\OnlinePaymentController::class, 'initiate'])->middleware('throttle:15,1')->name('finance.payment.initiate');
 
     // ── PAYMENT PROOF (QR payment evidence submission & approval) ─────────
-    // Parent/student: submit proof after scanning QR
+    // Parent/student: submit proof after scanning QR (rate limited)
     Route::get('/payment-proof/{invoiceId}',  [\App\Http\Controllers\PaymentProofController::class, 'showForm'])->name('payment-proof.show');
-    Route::post('/payment-proof/{invoiceId}', [\App\Http\Controllers\PaymentProofController::class, 'submit'])->name('payment-proof.submit');
+    Route::post('/payment-proof/{invoiceId}', [\App\Http\Controllers\PaymentProofController::class, 'submit'])->middleware('throttle:10,1')->name('payment-proof.submit');
 
     // Admin/Accountant: review queue
     Route::get('/payment-proofs',                   [\App\Http\Controllers\PaymentProofController::class, 'index'])->name('payment-proofs.index');
@@ -1278,6 +1390,9 @@ Route::middleware(['auth'])->group(function () {
 // ── Certificate public verification (no auth required — accessed via QR) ──
 Route::get('/certificates/verify/{token}', [CertificateController::class, 'verify'])->name('certificates.verify');
 
+// Marksheet / Grade Sheet public verification (no auth required — scanned via QR on Marksheet PDF)
+Route::get('/results/verify/{token}', [\App\Http\Controllers\ResultSheetController::class, 'verifyMarksheet'])->name('results.verify');
+
 // TC public verification (no auth required — receiving school scans QR)
 Route::get('/transfer/verify/{token}', [StudentTransferController::class, 'verifyTC'])->name('student.transfer.verify');
 
@@ -1316,9 +1431,31 @@ Route::middleware(['auth'])->prefix('school/profile')->name('school.profile.')->
     Route::get('/payment-qr',  [SchoolProfileController::class, 'paymentQr'])->name('payment-qr');
     Route::post('/payment-qr', [SchoolProfileController::class, 'updatePaymentQr'])->name('payment-qr.update');
 });
-// ── Public School Landing Pages (no auth required) ──
-Route::get('/school/{slug}', [SchoolLandingController::class, 'show'])->name('school.landing');
-Route::domain('{subdomain}.nshlms.com')->get('/', [SchoolLandingController::class, 'showBySubdomain'])->name('school.subdomain');
+// ── Public School Multi-Page Portal Routes (no auth required) ──
+Route::prefix('school/{slug}')->group(function () {
+    Route::get('/',            [SchoolLandingController::class, 'show'])->name('school.landing');
+    Route::get('/about',       [SchoolLandingController::class, 'about'])->name('school.landing.about');
+    Route::get('/academics',   [SchoolLandingController::class, 'academics'])->name('school.landing.academics');
+    Route::get('/admissions',  [SchoolLandingController::class, 'admissions'])->name('school.landing.admissions');
+    Route::get('/notices',     [SchoolLandingController::class, 'notices'])->name('school.landing.notices');
+    Route::get('/facilities',  [SchoolLandingController::class, 'facilities'])->name('school.landing.facilities');
+    Route::get('/faculty',     [SchoolLandingController::class, 'faculty'])->name('school.landing.faculty');
+    Route::get('/gallery',     [SchoolLandingController::class, 'gallery'])->name('school.landing.gallery');
+    Route::get('/contact',     [SchoolLandingController::class, 'contact'])->name('school.landing.contact');
+});
+
+Route::domain('{subdomain}.' . env('APP_DOMAIN', 'nshlms.com'))->group(function () {
+    Route::get('/',            [SchoolLandingController::class, 'showBySubdomain'])->name('school.subdomain');
+    Route::get('/about',       [SchoolLandingController::class, 'aboutBySubdomain'])->name('school.subdomain.about');
+    Route::get('/academics',   [SchoolLandingController::class, 'academicsBySubdomain'])->name('school.subdomain.academics');
+    Route::get('/admissions',  [SchoolLandingController::class, 'admissionsBySubdomain'])->name('school.subdomain.admissions');
+    Route::get('/notices',     [SchoolLandingController::class, 'noticesBySubdomain'])->name('school.subdomain.notices');
+    Route::get('/facilities',  [SchoolLandingController::class, 'facilitiesBySubdomain'])->name('school.subdomain.facilities');
+    Route::get('/faculty',     [SchoolLandingController::class, 'facultyBySubdomain'])->name('school.subdomain.faculty');
+    Route::get('/gallery',     [SchoolLandingController::class, 'galleryBySubdomain'])->name('school.subdomain.gallery');
+    Route::get('/contact',     [SchoolLandingController::class, 'contactBySubdomain'])->name('school.subdomain.contact');
+    Route::get('/school/{slug}', [SchoolLandingController::class, 'showBySubdomain']);
+});
 
 // Payment gateway webhooks — no CSRF (raw POST from gateways)
 Route::post('/webhooks/stripe',      [\App\Http\Controllers\WebhookController::class, 'stripe'])->name('webhooks.stripe');
@@ -1383,6 +1520,18 @@ Route::get('/robots.txt', function () {
     $content .= "Disallow: /api/\n";
     $content .= "Disallow: /storage/\n";
     $content .= "\n";
+    $content .= "User-agent: GPTBot\n";
+    $content .= "Allow: /\n";
+    $content .= "\n";
+    $content .= "User-agent: PerplexityBot\n";
+    $content .= "Allow: /\n";
+    $content .= "\n";
+    $content .= "User-agent: ClaudeBot\n";
+    $content .= "Allow: /\n";
+    $content .= "\n";
+    $content .= "User-agent: Google-Extended\n";
+    $content .= "Allow: /\n";
+    $content .= "\n";
     $content .= "Sitemap: ".url('/sitemap.xml')."\n";
     return response($content, 200)->header('Content-Type', 'text/plain');
 });
@@ -1391,9 +1540,144 @@ Route::get('/robots.txt', function () {
 Route::get('/', [\App\Http\Controllers\SaasLandingController::class, 'index'])->name('saas.landing');
 Route::post('/contact', [\App\Http\Controllers\SaasLandingController::class, 'contact'])->name('saas.contact');
 
-// School registration (public)
+// Test Email endpoint
+Route::get('/send-test-email', function (\Illuminate\Http\Request $request) {
+    $to = $request->query('email', '98059shankar@gmail.com');
+    try {
+        $logoUrl = 'https://nshlms.com/imgs/logo_icon_192.webp';
+        $currentYear = date('Y');
+        $timestamp = now()->toDayDateTimeString();
+
+        $htmlContent = "
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset='utf-8'>
+                <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                <title>Nepal School Hub</title>
+            </head>
+            <body style='margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;'>
+                <table width='100%' border='0' cellspacing='0' cellpadding='0' style='background-color: #f1f5f9; padding: 40px 16px;'>
+                    <tr>
+                        <td align='center'>
+                            <table width='100%' border='0' cellspacing='0' cellpadding='0' style='max-width: 600px; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;'>
+                                
+                                <!-- Brand Header -->
+                                <tr>
+                                    <td style='background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 50%, #3b82f6 100%); padding: 36px 32px; text-align: center;'>
+                                        <table width='100%' border='0' cellspacing='0' cellpadding='0'>
+                                            <tr>
+                                                <td align='center'>
+                                                    <div style='display: inline-block; background: #ffffff; padding: 8px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.18); margin-bottom: 16px;'>
+                                                        <img src='{$logoUrl}' alt='Nepal School Hub' width='56' height='56' style='display: block; border-radius: 14px; object-contain: cover;'>
+                                                    </div>
+                                                    <h1 style='color: #ffffff; font-size: 24px; font-weight: 800; margin: 0 0 6px 0; letter-spacing: -0.5px;'>Nepal School Hub</h1>
+                                                    <p style='color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; margin: 0;'>Next-Gen Smart Campus &amp; School ERP Platform</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- Main Body Card -->
+                                <tr>
+                                    <td style='padding: 36px 32px;'>
+                                        
+                                        <!-- Verification Badge -->
+                                        <div style='background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 14px; padding: 16px 20px; margin-bottom: 28px;'>
+                                            <table width='100%' border='0' cellspacing='0' cellpadding='0'>
+                                                <tr>
+                                                    <td width='28' valign='top' style='padding-right: 12px;'>
+                                                        <div style='background-color: #10b981; color: #ffffff; width: 24px; height: 24px; border-radius: 50%; text-align: center; line-height: 24px; font-size: 14px; font-weight: bold;'>✓</div>
+                                                    </td>
+                                                    <td>
+                                                        <strong style='color: #065f46; font-size: 15px; display: block; margin-bottom: 2px;'>SMTP Service Operational</strong>
+                                                        <span style='color: #047857; font-size: 13px;'>Your mail delivery system is online and verified.</span>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+
+                                        <h2 style='color: #0f172a; font-size: 18px; font-weight: 700; margin: 0 0 12px 0;'>Hello Shankar,</h2>
+                                        <p style='color: #475569; font-size: 14px; line-height: 1.65; margin: 0 0 24px 0;'>
+                                            This official test message confirms that automated email dispatch, Firebase Cloud integration, and custom domain delivery for <strong>Nepal School Hub (NSH LMS)</strong> are configured properly and operating smoothly.
+                                        </p>
+
+                                        <!-- Diagnostic Details Table -->
+                                        <table width='100%' border='0' cellspacing='0' cellpadding='0' style='background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; margin-bottom: 28px;'>
+                                            <tr>
+                                                <td style='padding: 14px 18px; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 13px; font-weight: 600; width: 130px;'>Recipient</td>
+                                                <td style='padding: 14px 18px; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-size: 13px; font-weight: 700;'>{$to}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style='padding: 14px 18px; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 13px; font-weight: 600;'>Sender Identity</td>
+                                                <td style='padding: 14px 18px; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-size: 13px; font-weight: 600;'>noreply@nepalschoolhub.firebaseapp.com</td>
+                                            </tr>
+                                            <tr>
+                                                <td style='padding: 14px 18px; border-bottom: 1px solid #e2e8f0; color: #64748b; font-size: 13px; font-weight: 600;'>Transport</td>
+                                                <td style='padding: 14px 18px; border-bottom: 1px solid #e2e8f0; color: #4338ca; font-size: 13px; font-weight: 700;'>smtp.gmail.com : 587 (TLS Secured)</td>
+                                            </tr>
+                                            <tr>
+                                                <td style='padding: 14px 18px; color: #64748b; font-size: 13px; font-weight: 600;'>Dispatched At</td>
+                                                <td style='padding: 14px 18px; color: #0f172a; font-size: 13px;'>{$timestamp}</td>
+                                            </tr>
+                                        </table>
+
+                                        <!-- Call to action button -->
+                                        <div style='text-align: center; margin-bottom: 16px;'>
+                                            <a href='https://nshlms.com' target='_blank' style='display: inline-block; background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%); color: #ffffff; font-size: 14px; font-weight: 700; text-decoration: none; padding: 14px 32px; border-radius: 12px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);'>
+                                                Open Nepal School Hub Portal &rarr;
+                                            </a>
+                                        </div>
+
+                                    </td>
+                                </tr>
+
+                                <!-- Footer -->
+                                <tr>
+                                    <td style='background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 32px; text-align: center;'>
+                                        <p style='color: #64748b; font-size: 12px; line-height: 1.5; margin: 0 0 8px 0;'>
+                                            <strong>Nepal School Hub (NSH LMS)</strong> &middot; Empowering 200+ Institutions across Nepal
+                                        </p>
+                                        <p style='color: #94a3b8; font-size: 11px; margin: 0;'>
+                                            &copy; {$currentYear} Tech Procod Pvt. Ltd. &middot; Kathmandu, Nepal. All rights reserved.
+                                        </p>
+                                    </td>
+                                </tr>
+
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+        ";
+
+        \Illuminate\Support\Facades\Mail::html($htmlContent, function ($message) use ($to) {
+            $message->to($to)
+                ->subject('✓ Official Confirmation: Nepal School Hub Mail System Online');
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Professional test email successfully sent to ' . $to,
+            'recipient' => $to,
+            'timestamp' => now()->toDateTimeString(),
+            'sender' => config('mail.from.address'),
+            'mailer' => config('mail.default'),
+            'host' => config('mail.mailers.smtp.host'),
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+        ], 500);
+    }
+});
+
+// School registration (public) — throttled to prevent spam
 Route::get('/register/school',         [\App\Http\Controllers\SchoolRegistrationController::class, 'create'])->name('saas.register');
-Route::post('/register/school',        [\App\Http\Controllers\SchoolRegistrationController::class, 'store'])->name('saas.register.store');
+Route::post('/register/school',        [\App\Http\Controllers\SchoolRegistrationController::class, 'store'])->middleware('throttle:5,1')->name('saas.register.store');
 Route::get('/register/school/success', [\App\Http\Controllers\SchoolRegistrationController::class, 'registered'])->name('saas.registered');
 
 // Super-admin school management panel
@@ -1441,16 +1725,8 @@ Route::get('/offline', function () {
 
 // ── Laravel Horizon dashboard ──────────────────────────────────────────────
 // Access is gated inside HorizonServiceProvider::gate() to super-admin / Admin roles.
-// The Horizon package self-registers its routes via HorizonServiceProvider, so
-// no manual route registration is required. The block below keeps a named alias
-// for redirect-back links used in left-menu and admin tools.
-if (class_exists(\Laravel\Horizon\Horizon::class)) {
-    // Horizon routes are auto-registered by the package; this is a named alias
-    // so we can link to the dashboard without hard-coding the path.
-    Route::get(config('horizon.path', 'horizon'), function () {
-        return redirect(config('horizon.path', 'horizon'));
-    })->middleware(['auth'])->name('horizon.index');
-}
+// The Horizon package self-registers its routes (including 'horizon.index') via HorizonServiceProvider.
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MODULE 24 — INTERACTIVE LIVE QUIZ COMPETITION SYSTEM
@@ -1499,6 +1775,15 @@ Route::get('/403', fn() => view('errors.403'));
 Route::get('/503', fn() => view('errors.503'));
 Route::get('/401', fn() => view('errors.401'));
 Route::get('/429', fn() => view('errors.429'));
+
+// Navigation & Shortcut Compatibility Redirects
+Route::middleware(['auth'])->group(function () {
+    Route::redirect('/students/id-card', '/students/id-cards/bulk');
+    Route::redirect('/grades', '/exams/grade/view');
+    Route::redirect('/invoices', '/payments');
+    Route::redirect('/library/books', '/library');
+});
+
 
 
 

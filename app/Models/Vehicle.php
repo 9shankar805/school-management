@@ -51,6 +51,16 @@ class Vehicle extends Model
         return $this->hasMany(MaintenanceLog::class, 'vehicle_id');
     }
 
+    public function busLocations()
+    {
+        return $this->hasMany(\App\Models\BusLocation::class, 'vehicle_id')->orderByDesc('recorded_at');
+    }
+
+    public function latestLocation()
+    {
+        return $this->hasOne(\App\Models\BusLocation::class, 'vehicle_id')->latestOfMany('recorded_at');
+    }
+
     // ── Accessors ─────────────────────────────────────────────────────────────
 
     public function getStatusBadgeAttribute(): string

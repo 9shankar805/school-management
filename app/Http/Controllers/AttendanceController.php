@@ -56,16 +56,48 @@ class AttendanceController extends Controller
         if (auth()->check() && auth()->user()->hasRole('student')) {
             return redirect()->route('student.attendance.show', auth()->id());
         }
-        return back();
+        return redirect()->route('attendance.create.show');
     }
 
     public function create(Request $request)
     {
+        $user = auth()->user();
+        if (!$user || $user->isStudent() || $user->isParent() || !$user->isStaff()) {
+            abort(403, 'Unauthorized to take attendance.');
+        }
+
         try {
             $academic_setting          = $this->academicSettingRepository->getAcademicSetting();
             $current_school_session_id = $this->getSchoolCurrentSession();
             $class_id                  = $request->query('class_id');
-            $school_classes            = $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id);
+            $isRestrictedTeacher       = $user && ($user->hasRole('teacher') || $user->hasRole('class-teacher'))
+                                         && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'attendance-officer']);
+
+            if ($isRestrictedTeacher) {
+                $assignedClassIds = \App\Models\AssignedTeacher::where('session_id', $current_school_session_id)
+                    ->where('teacher_id', $user->id)
+                    ->where('is_class_teacher', true)
+                    ->pluck('class_id')
+                    ->unique()
+                    ->filter()
+                    ->all();
+
+                $school_classes = \App\Models\SchoolClass::with(['courses', 'syllabi', 'sections' => function($q) use ($current_school_session_id, $user) {
+                    $inChargeSectionIds = \App\Models\AssignedTeacher::where('session_id', $current_school_session_id)
+                        ->where('teacher_id', $user->id)
+                        ->where('is_class_teacher', true)
+                        ->pluck('section_id')
+                        ->unique()
+                        ->filter()
+                        ->all();
+                    $q->whereIn('id', $inChargeSectionIds);
+                }, 'sections.promotions', 'promotions'])
+                    ->where('session_id', $current_school_session_id)
+                    ->whereIn('id', $assignedClassIds)
+                    ->get();
+            } else {
+                $school_classes = $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id);
+            }
 
             if ($class_id === null) {
                 return view('attendances.take', [
@@ -79,8 +111,46 @@ class AttendanceController extends Controller
                 ]);
             }
 
-            $section_id                = $request->query('section_id', 0);
-            $course_id                 = $request->query('course_id');
+            // Verify teacher is designated Class In-Charge of this class
+            if ($isRestrictedTeacher && !in_array((int)$class_id, $assignedClassIds)) {
+                return redirect()->route('attendance.create.show')
+                    ->with('error', 'Only the designated Class In-Charge (Class Teacher) is authorized to take attendance for this class.');
+            }
+
+            $section_id = (int) $request->query('section_id', 0);
+            $course_id  = $request->query('course_id');
+
+            // Strictly verify teacher is the designated Class In-Charge of this specific section
+            if ($isRestrictedTeacher) {
+                $inChargeSectionIds = \App\Models\AssignedTeacher::where('session_id', $current_school_session_id)
+                    ->where('teacher_id', $user->id)
+                    ->where('class_id', $class_id)
+                    ->where('is_class_teacher', true)
+                    ->pluck('section_id')
+                    ->unique()
+                    ->filter()
+                    ->values()
+                    ->all();
+
+                $classHasSections = \App\Models\Section::where('class_id', $class_id)->exists();
+
+                if ($classHasSections) {
+                    if (empty($inChargeSectionIds)) {
+                        return redirect()->route('attendance.create.show')
+                            ->with('error', 'Unauthorized: You are not assigned as Class In-Charge for any section of this class.');
+                    }
+
+                    if ($section_id === 0 && count($inChargeSectionIds) === 1) {
+                        $section_id = (int) $inChargeSectionIds[0];
+                    }
+
+                    if (!in_array($section_id, $inChargeSectionIds, true)) {
+                        $inChargeSectionNames = \App\Models\Section::whereIn('id', $inChargeSectionIds)->pluck('section_name')->implode(', ');
+                        return redirect()->route('attendance.create.show')
+                            ->with('error', "Unauthorized: You are only the Class In-Charge for Section {$inChargeSectionNames}. You cannot take attendance for other sections.");
+                    }
+                }
+            }
 
             $student_list   = $this->userRepository->getAllStudents($current_school_session_id, $class_id, $section_id);
             $school_class   = $this->schoolClassRepository->findById($class_id);
@@ -94,6 +164,15 @@ class AttendanceController extends Controller
                 $attendance_count = $attendanceRepository->getCourseAttendance($class_id, $course_id, $current_school_session_id)->count();
             }
 
+            $selected_date = $request->query('date', Carbon::today()->toDateString());
+            $existing_attendances = \App\Models\Attendance::where('class_id', $class_id)
+                ->when($section_id > 0, fn($q) => $q->where('section_id', $section_id))
+                ->when($course_id > 0, fn($q) => $q->where('course_id', $course_id))
+                ->where('session_id', $current_school_session_id)
+                ->whereDate('date', $selected_date)
+                ->get()
+                ->keyBy('student_id');
+
             return view('attendances.take', [
                 'current_school_session_id' => $current_school_session_id,
                 'academic_setting'          => $academic_setting,
@@ -102,6 +181,8 @@ class AttendanceController extends Controller
                 'school_class'              => $school_class,
                 'school_section'            => $school_section,
                 'attendance_count'          => $attendance_count,
+                'existing_attendances'      => $existing_attendances,
+                'selected_date'             => $selected_date,
             ]);
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
@@ -110,12 +191,54 @@ class AttendanceController extends Controller
 
     public function store(AttendanceStoreRequest $request)
     {
+        $user = auth()->user();
+        if (!$user || $user->isStudent() || $user->isParent() || !$user->isStaff()) {
+            abort(403, 'Unauthorized to submit attendance.');
+        }
+
         try {
-            (new AttendanceRepository())->saveAttendance($request->validated());
+            $validated = $request->validated();
+            $current_school_session_id = $validated['session_id'] ?? $this->getSchoolCurrentSession();
+            $isRestrictedTeacher = $user && ($user->hasRole('teacher') || $user->hasRole('class-teacher'))
+                                 && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'attendance-officer']);
+
+            if ($isRestrictedTeacher) {
+                $classId = (int) ($validated['class_id'] ?? 0);
+                $sectionId = (int) ($validated['section_id'] ?? 0);
+
+                $inChargeSectionIds = \App\Models\AssignedTeacher::where('session_id', $current_school_session_id)
+                    ->where('teacher_id', $user->id)
+                    ->where('class_id', $classId)
+                    ->where('is_class_teacher', true)
+                    ->pluck('section_id')
+                    ->unique()
+                    ->filter()
+                    ->values()
+                    ->all();
+
+                if (empty($inChargeSectionIds)) {
+                    return back()->with('error', 'Unauthorized: You are not assigned as Class In-Charge for this class.');
+                }
+
+                $classHasSections = \App\Models\Section::where('class_id', $classId)->exists();
+                if ($classHasSections) {
+                    if ($sectionId === 0 && count($inChargeSectionIds) === 1) {
+                        $sectionId = (int) $inChargeSectionIds[0];
+                        $validated['section_id'] = $sectionId;
+                    }
+
+                    if (!in_array($sectionId, $inChargeSectionIds, true)) {
+                        $inChargeSectionNames = \App\Models\Section::whereIn('id', $inChargeSectionIds)->pluck('section_name')->implode(', ');
+                        return back()->with('error', "Unauthorized: You are only the Class In-Charge for Section {$inChargeSectionNames}. You cannot submit attendance for other sections.");
+                    }
+                }
+            }
+
+            (new AttendanceRepository())->saveAttendance($validated);
 
             // Queue absent-parent notifications (non-blocking)
             $date      = today()->toDateString();
-            $sessionId = $request->validated()['session_id'];
+            $sessionId = $validated['session_id'];
             SendAbsentParentNotification::dispatchForDate((int) $sessionId, $date);
 
             return back()->with('status', 'Attendance saved successfully!');
@@ -131,7 +254,35 @@ class AttendanceController extends Controller
         }
         $current_school_session_id = $this->getSchoolCurrentSession();
         $class_id                  = $request->query('class_id');
-        $school_classes            = $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id);
+        $user                      = auth()->user();
+        $isRestrictedTeacher       = $user && ($user->hasRole('teacher') || $user->hasRole('class-teacher'))
+                                     && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'attendance-officer']);
+
+        if ($isRestrictedTeacher) {
+            $assignedClassIds = \App\Models\AssignedTeacher::where('session_id', $current_school_session_id)
+                ->where('teacher_id', $user->id)
+                ->where('is_class_teacher', true)
+                ->pluck('class_id')
+                ->unique()
+                ->filter()
+                ->all();
+
+            $school_classes = \App\Models\SchoolClass::with(['courses', 'syllabi', 'sections' => function($q) use ($current_school_session_id, $user) {
+                $inChargeSectionIds = \App\Models\AssignedTeacher::where('session_id', $current_school_session_id)
+                    ->where('teacher_id', $user->id)
+                    ->where('is_class_teacher', true)
+                    ->pluck('section_id')
+                    ->unique()
+                    ->filter()
+                    ->all();
+                $q->whereIn('id', $inChargeSectionIds);
+            }, 'sections.promotions', 'promotions'])
+                ->where('session_id', $current_school_session_id)
+                ->whereIn('id', $assignedClassIds)
+                ->get();
+        } else {
+            $school_classes = $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id);
+        }
 
         if ($class_id === null) {
             return view('attendances.view', [
@@ -141,8 +292,38 @@ class AttendanceController extends Controller
             ]);
         }
 
-        $section_id = $request->query('section_id');
+        if ($isRestrictedTeacher && !in_array((int)$class_id, $assignedClassIds)) {
+            return redirect()->route('attendance.list.show')
+                ->with('error', 'You are only authorized to view attendance for your designated Class In-Charge sections.');
+        }
+
+        $section_id = (int) $request->query('section_id', 0);
         $course_id  = $request->query('course_id');
+
+        if ($isRestrictedTeacher) {
+            $inChargeSectionIds = \App\Models\AssignedTeacher::where('session_id', $current_school_session_id)
+                ->where('teacher_id', $user->id)
+                ->where('class_id', $class_id)
+                ->where('is_class_teacher', true)
+                ->pluck('section_id')
+                ->unique()
+                ->filter()
+                ->values()
+                ->all();
+
+            $classHasSections = \App\Models\Section::where('class_id', $class_id)->exists();
+            if ($classHasSections) {
+                if ($section_id === 0 && count($inChargeSectionIds) === 1) {
+                    $section_id = (int) $inChargeSectionIds[0];
+                }
+
+                if (!in_array($section_id, $inChargeSectionIds, true)) {
+                    $inChargeSectionNames = \App\Models\Section::whereIn('id', $inChargeSectionIds)->pluck('section_name')->implode(', ');
+                    return redirect()->route('attendance.list.show')
+                        ->with('error', "Unauthorized: You are only the Class In-Charge for Section {$inChargeSectionNames}. You cannot view other sections.");
+                }
+            }
+        }
         $repo       = new AttendanceRepository();
 
         try {
@@ -203,6 +384,11 @@ class AttendanceController extends Controller
      */
     public function analytics(Request $request)
     {
+        $user = auth()->user();
+        if (!$user || $user->isStudent() || $user->isParent() || !$user->isStaff()) {
+            abort(403, 'Unauthorized to view attendance analytics.');
+        }
+
         $this->authorize('view attendances');
 
         $sessionId = $this->getSchoolCurrentSession();
@@ -253,6 +439,11 @@ class AttendanceController extends Controller
      */
     public function reportForm(Request $request)
     {
+        $user = auth()->user();
+        if (!$user || $user->isStudent() || $user->isParent() || !$user->isStaff()) {
+            abort(403, 'Unauthorized.');
+        }
+
         $this->authorize('view attendances');
 
         $sessionId = $this->getSchoolCurrentSession();

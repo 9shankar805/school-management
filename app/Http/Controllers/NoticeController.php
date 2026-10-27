@@ -24,9 +24,23 @@ class NoticeController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $current_school_session_id = $this->getSchoolCurrentSession();
+        $audience = $request->input('audience');
+        $search   = $request->input('search');
+
+        $noticeRepository = new NoticeRepository();
+        $notices = $noticeRepository->getAll($current_school_session_id, $audience, $search);
+
+        $stats = [
+            'total'    => Notice::where('session_id', $current_school_session_id)->count(),
+            'urgent'   => Notice::where('session_id', $current_school_session_id)->where('priority', 'urgent')->count(),
+            'holidays' => Notice::where('session_id', $current_school_session_id)->where('priority', 'holiday')->count(),
+            'exams'    => Notice::where('session_id', $current_school_session_id)->where('priority', 'exam')->count(),
+        ];
+
+        return view('notices.index', compact('notices', 'stats', 'audience', 'search', 'current_school_session_id'));
     }
 
     /**
@@ -52,9 +66,9 @@ class NoticeController extends Controller
             $noticeRepository = new NoticeRepository();
             $noticeRepository->store($request->validated());
 
-            return back()->with('status', 'Creating Notice was successful!');
+            return redirect()->route('notice.index')->with('status', 'Notice published successfully!');
         } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
+            return back()->with('error', $e->getMessage())->withInput();
         }
     }
 
@@ -66,7 +80,8 @@ class NoticeController extends Controller
      */
     public function show(Notice $notice)
     {
-        //
+        $school = auth()->user()->school ?? \App\Models\School::first();
+        return view('notices.show', compact('notice', 'school'));
     }
 
     /**
@@ -77,7 +92,8 @@ class NoticeController extends Controller
      */
     public function edit(Notice $notice)
     {
-        //
+        $current_school_session_id = $this->getSchoolCurrentSession();
+        return view('notices.edit', compact('notice', 'current_school_session_id'));
     }
 
     /**
@@ -89,7 +105,22 @@ class NoticeController extends Controller
      */
     public function update(Request $request, Notice $notice)
     {
-        //
+        $data = $request->validate([
+            'title'       => 'required|string|max:255',
+            'priority'    => 'nullable|string|in:normal,urgent,holiday,exam',
+            'audience'    => 'nullable|string|in:all,parents,students,teachers',
+            'expiry_date' => 'nullable|date',
+            'notice'      => 'required|string',
+            'attachment'  => 'nullable|file|mimes:pdf,jpg,jpeg,png,docx|max:10240',
+        ]);
+
+        if ($request->hasFile('attachment')) {
+            $data['attachment_path'] = $request->file('attachment')->store('notices', 'public');
+        }
+
+        $notice->update($data);
+
+        return redirect()->route('notice.index')->with('status', 'Notice updated successfully!');
     }
 
     /**
@@ -100,6 +131,7 @@ class NoticeController extends Controller
      */
     public function destroy(Notice $notice)
     {
-        //
+        $notice->delete();
+        return redirect()->route('notice.index')->with('status', 'Notice removed successfully.');
     }
 }

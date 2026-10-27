@@ -26,8 +26,6 @@ class UserController extends Controller
     SchoolClassInterface $schoolClassRepository,
     SectionInterface $schoolSectionRepository)
     {
-        $this->middleware(['can:view users']);
-
         $this->userRepository = $userRepository;
         $this->schoolSessionRepository = $schoolSessionRepository;
         $this->schoolClassRepository = $schoolClassRepository;
@@ -42,6 +40,11 @@ class UserController extends Controller
      */
     public function storeTeacher(TeacherStoreRequest $request)
     {
+        $authUser = auth()->user();
+        if (!$authUser || !$authUser->hasAnyRole(['super-admin', 'admin', 'principal', 'hr'])) {
+            abort(403, 'Unauthorized to create teacher records.');
+        }
+
         try {
             $this->userRepository->createTeacher($request->validated());
 
@@ -52,6 +55,11 @@ class UserController extends Controller
     }
 
     public function getStudentList(Request $request) {
+        $authUser = auth()->user();
+        if (!$authUser || $authUser->isStudent() || $authUser->isParent() || !$authUser->isStaff()) {
+            abort(403, 'Unauthorized to view student directory.');
+        }
+
         $current_school_session_id = $this->getSchoolCurrentSession();
 
         $class_id = $request->query('class_id', 0);
@@ -76,7 +84,32 @@ class UserController extends Controller
 
 
     public function showStudentProfile($id) {
+        $authUser = auth()->user();
+        if (!$authUser) {
+            abort(401, 'Unauthenticated');
+        }
+
+        // Authorization checks:
+        // - Students can ONLY view their own profile
+        // - Parents can ONLY view their linked children's profile
+        // - Staff (teachers/admins) can view students in their school
+        if ($authUser->isStudent()) {
+            if ((int)$authUser->id !== (int)$id) {
+                abort(403, 'Unauthorized. Students may only access their own profile.');
+            }
+        } elseif ($authUser->isParent()) {
+            $isMyChild = $authUser->children()->where('users.id', $id)->exists();
+            if (!$isMyChild) {
+                abort(403, 'Unauthorized. Parents may only access their linked children\'s profile.');
+            }
+        } elseif (!$authUser->isStaff()) {
+            abort(403, 'Unauthorized to view student profile.');
+        }
+
         $student = $this->userRepository->findStudent($id);
+        if (!$student) {
+            abort(404, 'Student not found.');
+        }
 
         $current_school_session_id = $this->getSchoolCurrentSession();
         $promotionRepository = new PromotionRepository();
@@ -97,7 +130,55 @@ class UserController extends Controller
             'achievements',
             'statusHistory.processor',
             'currentStatus',
+            'invoices.items.feeType',
+            'invoices.payments',
         ]);
+
+        // Finance & Fee Stats
+        $studentInvoices = \App\Models\Invoice::withoutGlobalScopes()
+            ->where('student_id', $id)
+            ->with(['items.feeType', 'payments'])
+            ->latest()
+            ->get();
+        $totalInvoiced = (float) $studentInvoices->sum(fn($i) => $i->total_payable > 0 ? $i->total_payable : $i->amount);
+        $totalPaid     = (float) $studentInvoices->sum('paid_amount');
+        $totalDue      = max(0, $totalInvoiced - $totalPaid);
+
+        $studentPayments = \App\Models\Payment::withoutGlobalScopes()
+            ->whereHas('invoice', fn($q) => $q->withoutGlobalScopes()->where('student_id', $id))
+            ->with('invoice')
+            ->latest()
+            ->get();
+
+        // Student Ledger
+        $studentLedgers = \App\Models\StudentLedger::withoutGlobalScopes()
+            ->where('student_id', $id)
+            ->orderBy('entry_date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        $ledgerBalance = $studentLedgers->last()?->balance ?? null;
+        if ($totalInvoiced == 0 && $studentLedgers->isNotEmpty()) {
+            $totalInvoiced = (float) $studentLedgers->sum('debit');
+            $totalPaid     = (float) $studentLedgers->sum('credit');
+            $totalDue      = max(0, $totalInvoiced - $totalPaid);
+        }
+
+        // Applicable Class Fee Structure
+        $classId = $promotion_info?->class_id;
+        $classFeeStructures = $classId
+            ? \App\Models\FeeStructure::withoutGlobalScopes()
+                ->where('class_id', $classId)
+                ->where('is_active', true)
+                ->with(['category', 'feeType'])
+                ->get()
+            : collect();
+
+        // Student Fee Discounts
+        $studentDiscounts = \App\Models\StudentFeeDiscount::withoutGlobalScopes()
+            ->where('student_id', $id)
+            ->with('feeDiscount')
+            ->get();
 
         // Gather attendance stats for the timeline
         // Student Attendance model uses 'on'/'off' as canonical status values
@@ -115,10 +196,19 @@ class UserController extends Controller
             ->first();
 
         $data = [
-            'student'           => $student,
-            'promotion_info'    => $promotion_info,
-            'attendanceStats'   => $attendanceStats,
-            'currentHouse'      => $currentHouse,
+            'student'            => $student,
+            'promotion_info'     => $promotion_info,
+            'attendanceStats'    => $attendanceStats,
+            'currentHouse'       => $currentHouse,
+            'studentInvoices'    => $studentInvoices,
+            'studentPayments'    => $studentPayments,
+            'studentLedgers'     => $studentLedgers,
+            'classFeeStructures' => $classFeeStructures,
+            'studentDiscounts'   => $studentDiscounts,
+            'ledgerBalance'      => $ledgerBalance,
+            'totalInvoiced'      => $totalInvoiced,
+            'totalPaid'          => $totalPaid,
+            'totalDue'           => $totalDue,
         ];
 
         // Always fetch parent_info bypassing tenant scope so null school_id rows are visible
@@ -129,6 +219,23 @@ class UserController extends Controller
     }
 
     public function showTeacherProfile($id) {
+        $authUser = auth()->user();
+        if (!$authUser) {
+            abort(401, 'Unauthenticated');
+        }
+
+        // Students and Parents CANNOT access teacher HR/confidential profiles
+        if ($authUser->isStudent() || $authUser->isParent() || !$authUser->isStaff()) {
+            abort(403, 'Unauthorized. Staff profile details are restricted.');
+        }
+
+        // Teachers can view their own profile; only management can view other teachers' full HR profile
+        if ($authUser->isTeacher() && !$authUser->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'hr-manager', 'hr'])) {
+            if ((int)$authUser->id !== (int)$id) {
+                abort(403, 'Unauthorized to view other staff profiles.');
+            }
+        }
+
         $teacher = $this->userRepository->findTeacher($id);
 
         if (!$teacher) {
@@ -186,6 +293,11 @@ class UserController extends Controller
 
 
     public function createStudent() {
+        $authUser = auth()->user();
+        if (!$authUser || !$authUser->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'admission-officer', 'receptionist'])) {
+            abort(403, 'Unauthorized to create student records.');
+        }
+
         $current_school_session_id = $this->getSchoolCurrentSession();
 
         $school_classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
@@ -206,6 +318,11 @@ class UserController extends Controller
      */
     public function storeStudent(StudentStoreRequest $request)
     {
+        $authUser = auth()->user();
+        if (!$authUser || !$authUser->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'admission-officer', 'receptionist'])) {
+            abort(403, 'Unauthorized to create student records.');
+        }
+
         try {
             $this->userRepository->createStudent($request->validated());
 
@@ -216,7 +333,16 @@ class UserController extends Controller
     }
 
     public function editStudent($student_id) {
+        $authUser = auth()->user();
+        if (!$authUser || !$authUser->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'admission-officer'])) {
+            abort(403, 'Unauthorized to edit student records.');
+        }
+
         $student = $this->userRepository->findStudent($student_id);
+        if (!$student) {
+            abort(404, 'Student not found.');
+        }
+
         $studentParentInfoRepository = new StudentParentInfoRepository();
         $parent_info = $studentParentInfoRepository->getParentInfo($student_id);
         $promotionRepository = new PromotionRepository();
@@ -232,6 +358,11 @@ class UserController extends Controller
     }
 
     public function updateStudent(Request $request) {
+        $authUser = auth()->user();
+        if (!$authUser || !$authUser->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'admission-officer'])) {
+            abort(403, 'Unauthorized to update student records.');
+        }
+
         try {
             $this->userRepository->updateStudent($request->toArray());
 
@@ -242,7 +373,15 @@ class UserController extends Controller
     }
 
     public function editTeacher($teacher_id) {
+        $authUser = auth()->user();
+        if (!$authUser || !$authUser->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'hr-manager', 'hr'])) {
+            abort(403, 'Unauthorized to edit teacher records.');
+        }
+
         $teacher = $this->userRepository->findTeacher($teacher_id);
+        if (!$teacher) {
+            abort(404, 'Teacher not found.');
+        }
 
         $data = [
             'teacher'   => $teacher,
@@ -250,7 +389,13 @@ class UserController extends Controller
 
         return view('teachers.edit', $data);
     }
+
     public function updateTeacher(Request $request) {
+        $authUser = auth()->user();
+        if (!$authUser || !$authUser->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'hr-manager', 'hr'])) {
+            abort(403, 'Unauthorized to update teacher records.');
+        }
+
         try {
             $this->userRepository->updateTeacher($request->toArray());
 
@@ -261,6 +406,11 @@ class UserController extends Controller
     }
 
     public function getTeacherList(Request $request){
+        $authUser = auth()->user();
+        if (!$authUser || $authUser->isStudent() || $authUser->isParent() || !$authUser->isStaff()) {
+            abort(403, 'Unauthorized to view teacher directory.');
+        }
+
         $search = $request->query('search');
         $deptId = $request->query('department_id');
 

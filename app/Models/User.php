@@ -37,6 +37,8 @@ use App\Models\Conversation;
 use App\Models\Invoice;
 use App\Models\StudentLedger;
 use App\Models\StaffSalaryStructure;
+use App\Models\SchoolClass;
+use App\Models\Section;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -250,6 +252,35 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Promotion::class, 'student_id');
     }
 
+    public function latestPromotion(): HasOne
+    {
+        return $this->hasOne(Promotion::class, 'student_id')->latestOfMany();
+    }
+
+    public function schoolClass()
+    {
+        return $this->hasOneThrough(
+            SchoolClass::class,
+            Promotion::class,
+            'student_id',
+            'id',
+            'id',
+            'class_id'
+        );
+    }
+
+    public function section()
+    {
+        return $this->hasOneThrough(
+            Section::class,
+            Promotion::class,
+            'student_id',
+            'id',
+            'id',
+            'section_id'
+        );
+    }
+
     public function statusHistory(): HasMany
     {
         return $this->hasMany(StudentStatus::class, 'student_id')->latest();
@@ -315,6 +346,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isExamController(): bool{ return $this->hasRole('exam-controller'); }
     public function isAttendanceOfficer():bool{ return $this->hasRole('attendance-officer'); }
     public function isAdmissionOfficer():bool{ return $this->hasRole('admission-officer'); }
+    public function isDriver(): bool        { return $this->hasRole('driver'); }
 
     /** True for all staff/management roles (not student/parent/guest) */
     public function isStaff(): bool
@@ -323,7 +355,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'super-admin','organization-owner','admin','principal','vice-principal',
             'academic-coordinator','teacher','class-teacher','accountant','librarian',
             'receptionist','hr-manager','transport-manager','hostel-manager',
-            'exam-controller','attendance-officer','admission-officer',
+            'exam-controller','attendance-officer','admission-officer','driver',
         ]);
     }
 

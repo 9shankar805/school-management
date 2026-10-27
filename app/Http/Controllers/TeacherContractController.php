@@ -17,6 +17,11 @@ class TeacherContractController extends Controller
     {
         $this->authorize('create teachers');
 
+        $user = auth()->user();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            \App\Models\User::where('school_id', $user->school_id)->findOrFail($teacherId);
+        }
+
         $data = $request->validate([
             'contract_type' => 'required|in:' . implode(',', array_keys(TeacherContract::TYPES)),
             'position'      => 'nullable|string|max:255',
@@ -34,6 +39,7 @@ class TeacherContractController extends Controller
         unset($data['attachment']);
 
         TeacherContract::create(array_merge($data, [
+            'school_id'  => $user->school_id,
             'teacher_id' => $teacherId,
             'status'     => 'active',
             'created_by' => auth()->id(),
@@ -45,7 +51,14 @@ class TeacherContractController extends Controller
     public function update(Request $request, int $id)
     {
         $this->authorize('create teachers');
-        $contract = TeacherContract::findOrFail($id);
+
+        $user = auth()->user();
+        $query = TeacherContract::query();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $query->whereHas('teacher', fn($t) => $t->where('school_id', $user->school_id));
+        }
+
+        $contract = $query->findOrFail($id);
         $contract->update($request->validate([
             'status' => 'required|in:active,expired,terminated,renewed',
         ]));
@@ -55,7 +68,14 @@ class TeacherContractController extends Controller
     public function destroy(int $id)
     {
         $this->authorize('create teachers');
-        $c = TeacherContract::findOrFail($id);
+
+        $user = auth()->user();
+        $query = TeacherContract::query();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $query->whereHas('teacher', fn($t) => $t->where('school_id', $user->school_id));
+        }
+
+        $c = $query->findOrFail($id);
         if ($c->attachment_path) Storage::disk('public')->delete($c->attachment_path);
         $c->delete();
         return back()->with('status', 'Contract deleted.');

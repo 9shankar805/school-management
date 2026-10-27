@@ -20,6 +20,7 @@
     text-decoration: none !important;
     transition: all 0.2s ease-in-out !important;
     position: relative !important;
+    min-width: 0 !important;
     overflow: hidden !important;
 }
 .iemis-stat-card:hover {
@@ -28,15 +29,12 @@
     border-color: #cbd5e1 !important;
 }
 .iemis-icon-wrapper {
-    width: auto !important;
-    height: auto !important;
-    border-radius: 0 !important;
-    background-color: transparent !important;
-    background: transparent !important;
+    width: 38px !important;
+    height: 38px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 2.2rem !important;
+    font-size: 1.85rem !important;
     line-height: 1 !important;
     flex-shrink: 0 !important;
 }
@@ -46,44 +44,57 @@
     justify-content: center !important;
     align-items: flex-start !important;
     flex: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
 }
 .iemis-title {
     font-size: 12px !important;
     font-weight: 700 !important;
-    color: #475569 !important;
-    line-height: 1.1 !important;
+    color: #64748b !important;
+    line-height: 1.2 !important;
     margin-bottom: 2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
 }
 .iemis-num-group {
     display: flex !important;
+    flex-wrap: wrap !important;
     align-items: baseline !important;
-    gap: 6px !important;
+    gap: 2px 6px !important;
+    width: 100% !important;
 }
 .iemis-value {
-    font-size: 20px !important;
+    font-size: 18px !important;
     font-weight: 800 !important;
     color: #0f172a !important;
-    line-height: 1.1 !important;
+    line-height: 1.15 !important;
+    letter-spacing: -0.01em !important;
+    white-space: nowrap !important;
 }
 .iemis-badge-green {
-    font-size: 10px !important;
+    font-size: 10.5px !important;
     font-weight: 700 !important;
-    color: #10b981 !important;
+    color: #059669 !important;
+    white-space: nowrap !important;
 }
 .iemis-badge-amber {
-    font-size: 10px !important;
+    font-size: 10.5px !important;
     font-weight: 700 !important;
-    color: #f59e0b !important;
+    color: #d97706 !important;
+    white-space: nowrap !important;
 }
 .iemis-badge-teal {
-    font-size: 10px !important;
+    font-size: 10.5px !important;
     font-weight: 700 !important;
     color: #0d9488 !important;
+    white-space: nowrap !important;
 }
 .iemis-badge-rose {
-    font-size: 10px !important;
+    font-size: 10.5px !important;
     font-weight: 700 !important;
-    color: #ef4444 !important;
+    color: #dc2626 !important;
+    white-space: nowrap !important;
 }
 .stat-card .card-value {
     font-size: 22px;
@@ -102,13 +113,48 @@
     height: 44px;
     flex-shrink: 0;
 }
-.section-card {
+:root {
+    --dash-heading: #0f172a;
+    --dash-text: #334155;
+    --dash-muted: #64748b;
+}
+html[data-theme="dark"],
+html.dark {
+    --dash-heading: #f8fafc;
+    --dash-text: #e2e8f0;
+    --dash-muted: #94a3b8;
+}
+
+.dashboard-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+    display: flex;
+    flex-direction: column;
+}
+html[data-theme="dark"] .dashboard-card,
+html.dark .dashboard-card {
+    background: #111927 !important;
+    border-color: #223049 !important;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4) !important;
+    color: #cbd5e1 !important;
+}
+
 .section-card {
     background: #ffffff !important;
     border: 1px solid #e2e8f0 !important;
     border-radius: 14px !important;
     box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04) !important;
     overflow: hidden;
+}
+html[data-theme="dark"] .section-card,
+html.dark .section-card {
+    background: #111927 !important;
+    border-color: #223049 !important;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4) !important;
+    color: #cbd5e1 !important;
 }
 .section-card .sc-header {
     padding: 14px 18px 12px;
@@ -117,6 +163,10 @@
     align-items: center;
     justify-content: space-between;
 }
+html[data-theme="dark"] .section-card .sc-header,
+html.dark .section-card .sc-header {
+    border-color: #1e293b !important;
+}
 .section-card .sc-title {
     font-size: 14px !important;
     font-weight: 800 !important;
@@ -124,6 +174,10 @@
     display: flex;
     align-items: center;
     gap: 8px;
+}
+html[data-theme="dark"] .section-card .sc-title,
+html.dark .section-card .sc-title {
+    color: #f1f5f9 !important;
 }
 .section-card .sc-link {
     font-size: 11px;
@@ -149,6 +203,37 @@
     transition: background .15s;
 }
 .row-item:hover { background: #f8fafc; }
+html[data-theme="dark"] .row-item:hover,
+html.dark .row-item:hover {
+    background: #1e293b !important;
+}
+.header-notice-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569 !important;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    text-decoration: none;
+    transition: all .15s ease;
+}
+.header-notice-btn:hover {
+    background: #f8fafc;
+}
+html[data-theme="dark"] .header-notice-btn,
+html.dark .header-notice-btn {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #cbd5e1 !important;
+}
+html[data-theme="dark"] .header-notice-btn:hover,
+html.dark .header-notice-btn:hover {
+    background: #27354f !important;
+}
 </style>
 @endpush
 
@@ -157,7 +242,7 @@
 {{-- ── HEADER ── --}}
 <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px;">
     <div>
-        <h1 style="font-size:22px; font-weight:900; color:#0f172a !important; letter-spacing:-.02em; margin:0;">
+        <h1 style="font-size:22px; font-weight:900; color:var(--dash-heading) !important; letter-spacing:-.02em; margin:0;">
             Good {{ now()->hour < 12 ? 'Morning' : (now()->hour < 18 ? 'Afternoon' : 'Evening') }}, {{ auth()->user()->first_name }}! 👋
         </h1>
         <p style="font-size:11px; color:#94a3b8 !important; margin:3px 0 0; font-weight:500;">
@@ -172,7 +257,7 @@
         </a>
         @endcan
         @can('create notices')
-        <a href="{{ route('notice.create') }}" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:12px;font-weight:600;color:#475569 !important;background:#fff;border:1px solid #e2e8f0;text-decoration:none;">
+        <a href="{{ route('notice.create') }}" class="header-notice-btn">
             <i class="bi bi-megaphone" style="color:#f59e0b;"></i> Notice
         </a>
         @endcan
@@ -185,12 +270,11 @@
 </div>
 
 {{-- ── 6 STAT CARDS (CEHRD IEMIS CARD STYLE) ── --}}
-<div style="display:grid; grid-template-columns:repeat(2,1fr); gap:14px;"
-     class="sm:grid-cols-3 lg:grid-cols-6"
+<div style="display:grid; grid-template-columns:repeat(2,1fr); gap:12px;"
      id="stat-cards-grid">
 <style>
 @media(min-width:640px){ #stat-cards-grid{ grid-template-columns:repeat(3,1fr)!important; } }
-@media(min-width:1024px){ #stat-cards-grid{ grid-template-columns:repeat(6,1fr)!important; } }
+@media(min-width:1200px){ #stat-cards-grid{ grid-template-columns:repeat(6,1fr)!important; } }
 </style>
 
 {{-- Students --}}
@@ -282,9 +366,9 @@
 <style>@media(min-width:1024px){#row1-grid{grid-template-columns:2fr 3fr!important;}}</style>
 
     {{-- 1. Today's Attendance --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="dashboard-card" style="justify-content:space-between;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Today's Attendance</span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Today's Attendance</span>
             <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;
                 {{ $attendancePct >= 75 ? 'background:#dcfce7;color:#15803d !important;' : 'background:#fee2e2;color:#dc2626 !important;' }}">
                 {{ $attendancePct }}% Rate
@@ -309,9 +393,9 @@
     </div>
 
     {{-- 2. Fee Collection vs Outstanding --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="dashboard-card" style="justify-content:space-between;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Fee Collection vs Outstanding</span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Fee Collection vs Outstanding</span>
             <a href="{{ route('payments.index') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">View Payments →</a>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;">
@@ -338,9 +422,9 @@
 <style>@media(min-width:1024px){#row2-grid{grid-template-columns:2fr 1fr!important;}}</style>
 
     {{-- 4. Class Enrollment (Wider 2-column span) --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;">
+    <div class="dashboard-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Class Enrollment (ECD–12)</span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Class Enrollment (ECD–12)</span>
             <a href="{{ url('classes') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">All Classes →</a>
         </div>
         <div style="flex:1;">
@@ -353,9 +437,9 @@
     </div>
 
     {{-- 5. Student Gender Distribution --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;">
+    <div class="dashboard-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Student Gender Distribution</span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Student Gender Distribution</span>
         </div>
         <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;">
             <div style="display:flex;align-items:center;justify-content:center;margin:4px 0;">
@@ -375,18 +459,18 @@
 <style>@media(min-width:1024px){#row3-grid{grid-template-columns:repeat(3,1fr)!important;}}</style>
 
     {{-- 3. 7-Day Attendance Trend --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;">
+    <div class="dashboard-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">7-Day Attendance Trend</span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">7-Day Attendance Trend</span>
             <a href="{{ route('attendance.analytics') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">Analytics →</a>
         </div>
         <div id="chart-attendance-trend" style="flex:1;min-height:200px;"></div>
     </div>
 
     {{-- Average Marks by Course --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;">
+    <div class="dashboard-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Average Marks by Course</span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Average Marks by Course</span>
             <a href="{{ route('results.index') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">View Results →</a>
         </div>
         <div style="flex:1;">
@@ -399,9 +483,9 @@
     </div>
 
     {{-- Attendance Heatmap --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;">
+    <div class="dashboard-card">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Attendance Heatmap <span style="font-size:10px;color:#94a3b8;font-weight:400;">(10 weeks)</span></span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Attendance Heatmap <span style="font-size:10px;color:#94a3b8;font-weight:400;">(10 weeks)</span></span>
             <a href="{{ route('attendance.analytics') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">Analytics →</a>
         </div>
         <div style="flex:1;">
@@ -415,9 +499,9 @@
 <style>@media(min-width:1024px){#row4-grid{grid-template-columns:repeat(3,1fr)!important;}}</style>
 
     {{-- Upcoming Exams --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="dashboard-card" style="justify-content:space-between;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Upcoming Exams</span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Upcoming Exams</span>
             @can('view exams')
             <a href="{{ route('exam.list.show') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">View all →</a>
             @endcan
@@ -430,7 +514,7 @@
                     <i class="bi bi-file-earmark-text" style="color:#ef4444;font-size:13px;"></i>
                 </div>
                 <div style="flex:1;min-width:0;">
-                    <div style="font-size:12px;font-weight:700;color:#0f172a !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $exam->exam_name }}</div>
+                    <div style="font-size:12px;font-weight:700;color:var(--dash-heading) !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $exam->exam_name }}</div>
                     <div style="font-size:10px;color:#64748b !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $exam->course?->course_name ?? '—' }}</div>
                 </div>
                 <span style="font-size:10px;font-weight:800;background:#eef2ff;color:#4f46e5 !important;border:1px solid #c7d2fe;padding:3px 8px;border-radius:6px;flex-shrink:0;">
@@ -446,9 +530,9 @@
     </div>
 
     {{-- Upcoming Events --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="dashboard-card" style="justify-content:space-between;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Upcoming Events</span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Upcoming Events</span>
             @can('view events')
             <a href="{{ route('events.show') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">Calendar →</a>
             @endcan
@@ -460,7 +544,7 @@
                 <div style="width:32px;height:32px;border-radius:8px;background:#eef2ff;border:1px solid #c7d2fe;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <i class="bi bi-calendar-event" style="color:#6366f1;font-size:13px;"></i>
                 </div>
-                <div style="flex:1;min-width:0;font-size:12px;font-weight:700;color:#0f172a !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $evt->title }}</div>
+                <div style="flex:1;min-width:0;font-size:12px;font-weight:700;color:var(--dash-heading) !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $evt->title }}</div>
                 <span style="font-size:10px;font-weight:800;background:#fefce8;color:#b45309 !important;border:1px solid #fef08a;padding:3px 8px;border-radius:6px;flex-shrink:0;">
                     {{ \Carbon\Carbon::parse($evt->start)->format('M d') }}
                 </span>
@@ -473,43 +557,43 @@
     </div>
 
     {{-- Quick Actions --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="dashboard-card" style="justify-content:space-between;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Quick Actions</span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Quick Actions</span>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1;">
             <a href="{{ route('school.profile.edit') }}" style="text-decoration:none;padding:10px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.background='#eff6ff';this.style.borderColor='#bfdbfe';" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9';">
                 <div style="width:28px;height:28px;border-radius:6px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-building" style="color:#2563eb;font-size:13px;"></i></div>
-                <span style="font-size:11px;font-weight:700;color:#0f172a !important;line-height:1.2;">School Profile</span>
+                <span style="font-size:11px;font-weight:700;color:var(--dash-heading) !important;line-height:1.2;">School Profile</span>
             </a>
             @can('manage roles')
             <a href="{{ route('roles.index') }}" style="text-decoration:none;padding:10px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.background='#eef2ff';this.style.borderColor='#c7d2fe';" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9';">
                 <div style="width:28px;height:28px;border-radius:6px;background:#eef2ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-shield-check" style="color:#6366f1;font-size:13px;"></i></div>
-                <span style="font-size:11px;font-weight:700;color:#0f172a !important;line-height:1.2;">Manage Roles</span>
+                <span style="font-size:11px;font-weight:700;color:var(--dash-heading) !important;line-height:1.2;">Manage Roles</span>
             </a>
             @endcan
             @can('view academic settings')
-            <a href="{{ url('academics/settings') }}" style="text-decoration:none;padding:10px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.background='#fffbeb';this.style.borderColor='#fde68a';" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9';">
-                <div style="width:28px;height:28px;border-radius:6px;background:#fffbeb;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-sliders" style="color:#d97706;font-size:13px;"></i></div>
-                <span style="font-size:11px;font-weight:700;color:#0f172a !important;line-height:1.2;">Academic Settings</span>
+            <a href="{{ route('school.setup') }}" style="text-decoration:none;padding:10px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.background='#fffbeb';this.style.borderColor='#fde68a';" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9';">
+                <div style="width:28px;height:28px;border-radius:6px;background:#fffbeb;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-gear-wide-connected" style="color:#d97706;font-size:13px;"></i></div>
+                <span style="font-size:11px;font-weight:700;color:var(--dash-heading) !important;line-height:1.2;">School Setup</span>
             </a>
             @endcan
             @can('create teachers')
             <a href="{{ route('teacher.create.show') }}" style="text-decoration:none;padding:10px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.background='#f0fdf4';this.style.borderColor='#bbf7d0';" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9';">
                 <div style="width:28px;height:28px;border-radius:6px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-person-plus" style="color:#16a34a;font-size:13px;"></i></div>
-                <span style="font-size:11px;font-weight:700;color:#0f172a !important;line-height:1.2;">Add Teacher</span>
+                <span style="font-size:11px;font-weight:700;color:var(--dash-heading) !important;line-height:1.2;">Add Teacher</span>
             </a>
             @endcan
             @can('create invoices')
             <a href="{{ route('payments.create') }}" style="text-decoration:none;padding:10px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.background='#f0fdfa';this.style.borderColor='#99f6e4';" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9';">
                 <div style="width:28px;height:28px;border-radius:6px;background:#f0fdfa;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-receipt" style="color:#0d9488;font-size:13px;"></i></div>
-                <span style="font-size:11px;font-weight:700;color:#0f172a !important;line-height:1.2;">New Invoice</span>
+                <span style="font-size:11px;font-weight:700;color:var(--dash-heading) !important;line-height:1.2;">New Invoice</span>
             </a>
             @endcan
             @can('promote students')
             <a href="{{ url('promotions/index') }}" style="text-decoration:none;padding:10px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;display:flex;align-items:center;gap:8px;transition:all .15s;" onmouseover="this.style.background='#faf5ff';this.style.borderColor='#e9d5ff';" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#f1f5f9';">
                 <div style="width:28px;height:28px;border-radius:6px;background:#faf5ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-arrow-up-circle" style="color:#7c3aed;font-size:13px;"></i></div>
-                <span style="font-size:11px;font-weight:700;color:#0f172a !important;line-height:1.2;">Promotions</span>
+                <span style="font-size:11px;font-weight:700;color:var(--dash-heading) !important;line-height:1.2;">Promotions</span>
             </a>
             @endcan
         </div>
@@ -522,9 +606,9 @@
 <style>@media(min-width:1024px){#row5-grid{grid-template-columns:repeat(3,1fr)!important;}}</style>
 
     {{-- Top Performers --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="dashboard-card" style="justify-content:space-between;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Top Performers</span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Top Performers</span>
         </div>
         <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
             @if($topPerformers->count())
@@ -537,7 +621,7 @@
                 </span>
                 <img src="{{ $tp->student->avatar }}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">
                 <div style="flex:1;min-width:0;">
-                    <div style="font-size:12px;font-weight:700;color:#0f172a !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $tp->student->full_name }}</div>
+                    <div style="font-size:12px;font-weight:700;color:var(--dash-heading) !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $tp->student->full_name }}</div>
                     <div style="font-size:10px;color:#64748b !important;">{{ $tp->exams_count }} exams</div>
                 </div>
                 <span style="font-size:12px;font-weight:900;flex-shrink:0;color:{{ $tp->avg_marks>=80?'#16a34a':($tp->avg_marks>=60?'#d97706':'#dc2626') }} !important;">
@@ -553,9 +637,9 @@
     </div>
 
     {{-- Recent Admissions --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="dashboard-card" style="justify-content:space-between;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Recent Admissions</span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Recent Admissions</span>
             @can('view students')
             <a href="{{ route('student.list.show') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">View all →</a>
             @endcan
@@ -566,7 +650,7 @@
             <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;">
                 <img src="{{ $s->avatar }}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">
                 <div style="flex:1;min-width:0;">
-                    <div style="font-size:12px;font-weight:700;color:#0f172a !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $s->full_name }}</div>
+                    <div style="font-size:12px;font-weight:700;color:var(--dash-heading) !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $s->full_name }}</div>
                     <div style="font-size:10px;color:#64748b !important;">{{ $s->created_at->diffForHumans() }}</div>
                 </div>
                 @can('view students')
@@ -582,9 +666,9 @@
 
     {{-- Recent Payments --}}
     @can('view payments')
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="dashboard-card" style="justify-content:space-between;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Recent Payments</span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Recent Payments</span>
             <a href="{{ route('payments.index') }}" style="font-size:11px;font-weight:700;color:#2563eb !important;text-decoration:none;">View all →</a>
         </div>
         <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
@@ -599,7 +683,7 @@
                     <div style="width:28px;height:28px;border-radius:50%;background:#e2e8f0;flex-shrink:0;"></div>
                     @endif
                     <div style="min-width:0;">
-                        <div style="font-size:12px;font-weight:700;color:#0f172a !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $pSt?->full_name ?? 'Student Payment' }}</div>
+                        <div style="font-size:12px;font-weight:700;color:var(--dash-heading) !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $pSt?->full_name ?? 'Student Payment' }}</div>
                         <div style="font-size:10px;color:#64748b !important;">{{ $pmt->created_at->format('M d, Y') }}</div>
                     </div>
                 </div>
@@ -622,9 +706,9 @@
 <style>@media(min-width:1024px){#row6-grid{grid-template-columns:repeat(3,1fr)!important;}}</style>
 
     {{-- Today's Schedule --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="dashboard-card" style="justify-content:space-between;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">
                 Today's Schedule <span style="font-size:10px;color:#64748b;font-weight:600;">({{ now()->format('l') }})</span>
             </span>
             @can('view routines')
@@ -641,9 +725,9 @@
             @endphp
             <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:{{ $isNow ? '#eff6ff' : '#f8fafc' }};border:1px solid {{ $isNow ? '#bfdbfe' : '#f1f5f9' }};border-radius:10px;">
                 <div style="width:6px;height:6px;border-radius:50%;flex-shrink:0;background:{{ $isNow ? '#2563eb' : '#cbd5e1' }};"></div>
-                <span style="font-size:10px;font-weight:700;font-family:monospace;color:#475569 !important;width:76px;flex-shrink:0;">{{ $slot->start }}–{{ $slot->end }}</span>
+                <span style="font-size:10px;font-weight:700;font-family:monospace;color:var(--dash-muted) !important;width:76px;flex-shrink:0;">{{ $slot->start }}–{{ $slot->end }}</span>
                 <div style="flex:1;min-width:0;">
-                    <div style="font-size:12px;font-weight:700;color:#0f172a !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $slot->course?->course_name ?? '—' }}</div>
+                    <div style="font-size:12px;font-weight:700;color:var(--dash-heading) !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $slot->course?->course_name ?? '—' }}</div>
                     <div style="font-size:10px;color:#64748b !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
                         {{ $slot->schoolClass?->class_name ?? '' }}{{ $slot->section?->section_name ? ' · '.$slot->section->section_name : '' }}
                     </div>
@@ -660,21 +744,36 @@
     </div>
 
     {{-- Upcoming Birthdays --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="dashboard-card" style="justify-content:space-between;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Upcoming Birthdays</span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Upcoming Birthdays</span>
         </div>
         @if($birthdayUsers->count())
         <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
             @foreach($birthdayUsers->take(6) as $u)
-            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;">
-                <img src="{{ $u->avatar }}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid #fbcfe8;" alt="">
+            @php
+                $bday = \Carbon\Carbon::parse($u->birthday);
+                $isToday = $bday->isBirthday();
+            @endphp
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:{{ $isToday ? '#fef3c7' : '#f8fafc' }};border:1px solid {{ $isToday ? '#fde68a' : '#f1f5f9' }};border-radius:10px;">
+                <img src="{{ $u->avatar }}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid {{ $isToday ? '#f59e0b' : '#fbcfe8' }};" alt="">
                 <div style="flex:1;min-width:0;">
-                    <div style="font-size:12px;font-weight:700;color:#0f172a !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $u->full_name }}</div>
+                    <div style="font-size:12px;font-weight:700;color:var(--dash-heading) !important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                        {{ $u->full_name }}
+                        @if($isToday)
+                        <span style="background:#f59e0b;color:#fff;font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;margin-left:4px;">TODAY! 🎉</span>
+                        @endif
+                    </div>
                     <div style="font-size:10px;color:#64748b !important;text-transform:capitalize;">{{ $u->primary_role }}</div>
                 </div>
+                @if($u->phone)
+                <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $u->phone) }}?text={{ urlencode('Dear ' . $u->first_name . ', Warmest Happy Birthday wishes to you from ' . (auth()->user()->school->name ?? config('app.name')) . '! Have a blessed year ahead! 🎂🎉') }}"
+                   target="_blank" style="font-size:10px;font-weight:700;background:#dcfce7;color:#166534;border:1px solid #bbf7d0;padding:3px 8px;border-radius:6px;text-decoration:none;display:flex;align-items:center;gap:3px;" title="Send WhatsApp Wish">
+                    <i class="bi bi-whatsapp"></i> Wish
+                </a>
+                @endif
                 <span style="font-size:10px;font-weight:800;background:#fdf2f8;color:#be185d !important;border:1px solid #fbcfe8;padding:3px 8px;border-radius:6px;flex-shrink:0;">
-                    🎂 {{ \Carbon\Carbon::parse($u->birthday)->format('M d') }}
+                    🎂 {{ $bday->format('M d') }}
                 </span>
             </div>
             @endforeach
@@ -685,9 +784,9 @@
     </div>
 
     {{-- Notice Board --}}
-    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);display:flex;flex-direction:column;justify-content:space-between;">
+    <div class="dashboard-card" style="justify-content:space-between;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Notice Board</span>
+            <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Notice Board</span>
             @can('create notices')
             <a href="{{ route('notice.create') }}" style="font-size:11px;font-weight:800;background:#eff6ff;color:#2563eb !important;border:1px solid #bfdbfe;padding:3px 10px;border-radius:6px;text-decoration:none;">+ New Notice</a>
             @endcan
@@ -698,7 +797,7 @@
             <div style="padding:9px 12px;background:#f8fafc;border:1px solid #f1f5f9;border-radius:10px;">
                 <div style="display:flex;gap:8px;align-items:flex-start;">
                     <span style="font-size:12px;flex-shrink:0;margin-top:1px;">📌</span>
-                    <p style="font-size:11px;font-weight:600;color:#334155 !important;line-height:1.4;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                    <p style="font-size:11px;font-weight:600;color:var(--dash-text) !important;line-height:1.4;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
                         {!! \Stevebauman\Purify\Facades\Purify::clean(strip_tags($notice->notice)) !!}
                     </p>
                 </div>
@@ -714,9 +813,9 @@
 
 {{-- ── ROW 7: Recent Activity Log ── --}}
 @if($activityLog->count())
-<div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 6px rgba(15,23,42,0.04);margin-top:18px;">
+<div class="dashboard-card" style="margin-top:18px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <span style="font-size:14px;font-weight:800;color:#0f172a !important;">Recent Activity Log</span>
+        <span style="font-size:14px;font-weight:800;color:var(--dash-heading) !important;">Recent Activity Log</span>
     </div>
     <div style="display:flex;flex-direction:column;gap:6px;">
         @foreach($activityLog->take(6) as $log)
@@ -729,8 +828,8 @@
                 @endif
             </div>
             <div style="flex:1;min-width:0;">
-                <p style="font-size:11px;font-weight:600;color:#334155 !important;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                    <span style="font-weight:800;color:#0f172a !important;">{{ $log->user?->full_name ?? 'System' }}</span>
+                <p style="font-size:11px;font-weight:600;color:var(--dash-text) !important;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    <span style="font-weight:800;color:var(--dash-heading) !important;">{{ $log->user?->full_name ?? 'System' }}</span>
                     — {{ $log->description ?? $log->action ?? 'performed an action' }}
                 </p>
             </div>
@@ -746,7 +845,7 @@
 {{-- ── FOOTER ── --}}
 <div style="padding-top:16px;border-top:1px solid #e2e8f0;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;">
     <p style="font-size:11px;color:#94a3b8 !important;margin:0;">&copy; {{ date('Y') }} NepalSchoolHub. All rights reserved.</p>
-    <a href="{{ url('academics/settings') }}" style="font-size:11px;color:#94a3b8 !important;text-decoration:none;" onmouseover="this.style.color='#475569'" onmouseout="this.style.color='#94a3b8'">Settings</a>
+    <a href="{{ route('school.setup') }}" style="font-size:11px;color:#94a3b8 !important;text-decoration:none;" onmouseover="this.style.color='#475569'" onmouseout="this.style.color='#94a3b8'">School Setup</a>
 </div>
 
 </div>{{-- /main padding wrapper --}}
@@ -824,19 +923,25 @@ window.addEventListener('load', function () {
         var b2X = cx + perpX;
         var b2Y = cy + perpY;
         
+        var isDarkGauge  = document.documentElement.getAttribute('data-theme') === 'dark' || document.documentElement.classList.contains('dark');
+        var trackStroke  = isDarkGauge ? '#1e293b' : '#e2e8f0';
+        var needleFill   = isDarkGauge ? '#f8fafc' : '#0f172a';
+        var centerCircle = isDarkGauge ? '#111927' : '#ffffff';
+        var labelMuted   = isDarkGauge ? '#94a3b8' : '#64748b';
+        
         var svg = `
         <svg viewBox="0 0 ${w} ${h}" style="width:100%;max-width:320px;height:auto;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg">
-            <path d="M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}" fill="none" stroke="#e2e8f0" stroke-width="${strokeW}" stroke-linecap="butt" />
+            <path d="M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}" fill="none" stroke="${trackStroke}" stroke-width="${strokeW}" stroke-linecap="butt" />
             ${pct > 0 ? `<path d="${leftPath}" fill="none" stroke="${leftColor}" stroke-width="${strokeW}" stroke-linecap="butt" />` : ''}
             ${pct < 100 ? `<path d="${rightPath}" fill="none" stroke="${rightColor}" stroke-width="${strokeW}" stroke-linecap="butt" />` : ''}
             ${pct >= 8 ? `<text x="${xLeftText}" y="${yLeftText}" fill="#ffffff" font-size="12" font-weight="900" text-anchor="middle" dominant-baseline="middle">${leftPctStr}</text>` : ''}
             ${(100 - pct) >= 8 ? `<text x="${xRightText}" y="${yRightText}" fill="#ffffff" font-size="12" font-weight="900" text-anchor="middle" dominant-baseline="middle">${rightPctStr}</text>` : ''}
-            <polygon points="${tipX},${tipY} ${b1X},${b1Y} ${b2X},${b2Y}" fill="#0f172a" />
-            <circle cx="${cx}" cy="${cy}" r="10" fill="#0f172a" />
-            <circle cx="${cx}" cy="${cy}" r="3.5" fill="#ffffff" />
-            <text x="${cx - r - 2}" y="${cy + 20}" font-size="12" font-weight="800" fill="#64748b" text-anchor="start">0%</text>
+            <polygon points="${tipX},${tipY} ${b1X},${b1Y} ${b2X},${b2Y}" fill="${needleFill}" />
+            <circle cx="${cx}" cy="${cy}" r="10" fill="${needleFill}" />
+            <circle cx="${cx}" cy="${cy}" r="3.5" fill="${centerCircle}" />
+            <text x="${cx - r - 2}" y="${cy + 20}" font-size="12" font-weight="800" fill="${labelMuted}" text-anchor="start">0%</text>
             <text x="${cx - r - 2}" y="${cy + 38}" font-size="14" font-weight="900" fill="${leftColor}" text-anchor="start">${leftLabel}</text>
-            <text x="${cx + r + 2}" y="${cy + 20}" font-size="12" font-weight="800" fill="#64748b" text-anchor="end">100%</text>
+            <text x="${cx + r + 2}" y="${cy + 20}" font-size="12" font-weight="800" fill="${labelMuted}" text-anchor="end">100%</text>
             <text x="${cx + r + 2}" y="${cy + 38}" font-size="14" font-weight="900" fill="${rightColor}" text-anchor="end">${rightLabel}</text>
         </svg>
         `;
@@ -846,6 +951,11 @@ window.addEventListener('load', function () {
 
     // ── Today Attendance Speedometer Gauge (Pure Green for Present, Pure Red for Absent) ──
     renderIemisSpeedometer('chart-attendance-donut', {{ $attendancePct }}, 'Present', 'Absent', '#10b981', '#ef4444');
+
+    window.addEventListener('theme-changed', function () {
+        renderIemisSpeedometer('chart-attendance-donut', {{ $attendancePct }}, 'Present', 'Absent', '#10b981', '#ef4444');
+        renderIemisSpeedometer('chart-gender', {{ $malePct }}, 'Boys', 'Girls', '#2563eb', '#ec4899');
+    });
 
     // ── Fee Collection (grouped bar) ─────────────────────────────────────
     var feeEl = document.getElementById('chart-fee-collection');
@@ -1059,7 +1169,7 @@ window.addEventListener('load', function () {
                 heatmap: {
                     shadeIntensity: 0.9, radius: 4,
                     colorScale: { ranges: [
-                        { from: 0,  to: 0,   color: '#f1f5f9', name: 'No data' },
+                        { from: 0,  to: 0,   color: isDark ? '#1e293b' : '#f1f5f9', name: 'No data' },
                         { from: 1,  to: 50,  color: '#fca5a5', name: '<50%' },
                         { from: 51, to: 74,  color: '#fbbf24', name: '51–74%' },
                         { from: 75, to: 89,  color: '#86efac', name: '75–89%' },

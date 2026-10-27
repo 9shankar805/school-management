@@ -26,7 +26,7 @@ class AiQuestionExtractorService
      * @return array
      * @throws Exception
      */
-    public function generateSectionsAndQuestions(?UploadedFile $file, ?string $topicOrPrompt, string $difficulty = 'mixed', string $targetGrade = 'Secondary'): array
+    public function generateSectionsAndQuestions(?UploadedFile $file, ?string $topicOrPrompt, string $difficulty = 'mixed', string $targetGrade = 'Secondary', ?string $targetSectionTitle = null): array
     {
         $isImage = false;
         $imageBase64 = null;
@@ -47,7 +47,8 @@ class AiQuestionExtractorService
                 "Read and transcribe this uploaded question paper image carefully. Extract ALL questions, section titles, instructions, multiple choice options, and marks visible in the paper image.\n" .
                 ($topicOrPrompt ? "TEACHER NOTES / TOPIC: " . $topicOrPrompt : ""),
                 $difficulty,
-                $targetGrade
+                $targetGrade,
+                $targetSectionTitle
             );
 
             $rawAiResponse = $this->freeAiService->generateVision($prompt, $imageBase64, $mimeType);
@@ -71,7 +72,7 @@ class AiQuestionExtractorService
             $combinedContent = mb_substr($combinedContent, 0, 8000) . "\n...[truncated for AI processing]";
         }
 
-        $prompt = $this->buildPrompt($combinedContent, $difficulty, $targetGrade);
+        $prompt = $this->buildPrompt($combinedContent, $difficulty, $targetGrade, $targetSectionTitle);
         $rawAiResponse = $this->freeAiService->generate($prompt);
 
         return $this->parseJsonResponse($rawAiResponse);
@@ -163,18 +164,23 @@ class AiQuestionExtractorService
     /**
      * Build strict JSON output prompt for Groq / Pollinations.
      */
-    protected function buildPrompt(string $content, string $difficulty, string $targetGrade): string
+    protected function buildPrompt(string $content, string $difficulty, string $targetGrade, ?string $targetSectionTitle = null): string
     {
+        $sectionInstruction = $targetSectionTitle
+            ? "1. TARGET SECTION: \"{$targetSectionTitle}\". Extract, format, or generate ALL questions specifically for this single section (\"{$targetSectionTitle}\"). Do not create other sections."
+            : "1. Organize the questions into logical sections (e.g. Group A: Multiple Choice Questions, Group B: Short Answer Questions, Group C: Long Answer / Numerical Questions).";
+
+        $specTitle = $targetSectionTitle ?: "Group A: Questions";
+
         return <<<PROMPT
 You are an expert school exam paper setter and AI question organizer.
 
 TASK INSTRUCTIONS:
-1. Analyze the reference material, document text, or raw unformatted questions provided below.
-2. If raw or unformatted questions are pasted (e.g. copied from notes, chat, Word, or rough drafts), clean up their wording, fix grammar/formatting, and extract all questions accurately.
-3. Organize the questions into logical sections (e.g. Group A: Multiple Choice Questions, Group B: Short Answer Questions, Group C: Long Answer / Numerical Questions).
-4. If options exist for MCQs (a, b, c, d), format them cleanly into a JSON string array.
-5. Infer or assign appropriate allocated marks, difficulty levels (easy, medium, hard), and Bloom's taxonomy levels if not explicitly specified.
-6. MATHEMATICAL FORMULAS & EQUATIONS: Always wrap mathematical formulas, fractions, roots, powers, matrices, and algebraic expressions in standard LaTeX inline math delimiters \( ... \) or $ ... $ (for example: \( \sqrt[4]{\left(\frac{132}{143}\right)^{-2}} \) or \( 6 - x - x^2 \)). Do NOT use plain computer text like sqrt[4]((132/143)^-2).
+{$sectionInstruction}
+2. If raw or unformatted questions are pasted below (e.g. copied from notes, chat, Word, or rough drafts), clean up their wording, fix grammar/formatting, and extract all questions accurately.
+3. If options exist for MCQs (a, b, c, d), format them cleanly into a JSON string array.
+4. Infer or assign appropriate allocated marks, difficulty levels (easy, medium, hard), and Bloom's taxonomy levels if not explicitly specified.
+5. MATHEMATICAL FORMULAS & EQUATIONS: Always wrap mathematical formulas, fractions, roots, powers, matrices, and algebraic expressions in standard LaTeX inline math delimiters \( ... \) or $ ... $ (for example: \( \sqrt[4]{\left(\frac{132}{143}\right)^{-2}} \) or \( 6 - x - x^2 \)). Do NOT use plain computer text like sqrt[4]((132/143)^-2).
 
 INPUT CONTENT / RAW QUESTIONS / TOPIC:
 {$content}
@@ -188,50 +194,18 @@ Respond ONLY with a valid, raw JSON array of sections. Do not include markdown c
 JSON FORMAT SPECIFICATION:
 [
   {
-    "title": "Group A: Multiple Choice Questions",
-    "instructions": "Attempt all questions. Choose the correct option.",
-    "questions": [
-      {
-        "question_type": "mcq",
-        "question_text": "What is the capital of Nepal?",
-        "options": ["Kathmandu", "Pokhara", "Lalitpur", "Biratnagar"],
-        "correct_answer": "Kathmandu",
-        "answer_text": "Kathmandu is the capital city of Nepal.",
-        "allocated_marks": 1,
-        "difficulty": "easy",
-        "bloom_taxonomy": "remember"
-      }
-    ]
-  },
-  {
-    "title": "Group B: Short Answer Questions",
-    "instructions": "Answer the following questions concisely.",
+    "title": "{$specTitle}",
+    "instructions": "Answer the questions concisely.",
     "questions": [
       {
         "question_type": "short_answer",
-        "question_text": "Explain the law of conservation of energy with a suitable example.",
+        "question_text": "Sample question text here...",
         "options": null,
         "correct_answer": null,
-        "answer_text": "Energy can neither be created nor destroyed, only transformed from one form to another. Example: A pendulum converting potential energy to kinetic energy.",
-        "allocated_marks": 4,
+        "answer_text": "Sample answer or solution here...",
+        "allocated_marks": 2,
         "difficulty": "medium",
         "bloom_taxonomy": "understand"
-      }
-    ]
-  },
-  {
-    "title": "Group C: Long Answer Questions",
-    "instructions": "Solve the following detailed problems.",
-    "questions": [
-      {
-        "question_type": "long_answer",
-        "question_text": "Derive the quadratic formula and solve 2x^2 + 5x - 3 = 0.",
-        "options": null,
-        "correct_answer": null,
-        "answer_text": "Full step-by-step derivation and solution: x = 0.5 or x = -3.",
-        "allocated_marks": 8,
-        "difficulty": "hard",
-        "bloom_taxonomy": "apply"
       }
     ]
   }

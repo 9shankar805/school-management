@@ -19,7 +19,7 @@
             <i class="bi bi-check-circle me-1"></i> {{ session('status') }}
         </div>
         @endif
-        @if($errors->any())
+        @if(isset($errors) && $errors->any())
         <div class="mb-4 px-4 py-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm">
             @foreach($errors->all() as $e)<p>{{ $e }}</p>@endforeach
         </div>
@@ -60,8 +60,8 @@
                         <p class="text-[10px] text-slate-400">Scholarships</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-lg font-bold {{ $student->disciplinaryRecords->where('resolved',false)->count() > 0 ? 'text-rose-600' : 'text-slate-500' }}">{{ $student->disciplinaryRecords->count() }}</p>
-                        <p class="text-[10px] text-slate-400">Incidents</p>
+                        <p class="text-lg font-bold {{ $totalDue > 0 ? 'text-rose-600' : 'text-emerald-600' }}">Rs. {{ number_format($totalDue) }}</p>
+                        <p class="text-[10px] text-slate-400">Fee Due</p>
                     </div>
                 </div>
             </div>
@@ -84,6 +84,7 @@
         <div class="flex gap-1 overflow-x-auto mb-6 bg-white rounded-xl border border-slate-100 shadow-sm p-1">
             @foreach([
                 ['overview',    'bi-person-lines-fill', 'Overview'],
+                ['finance',     'bi-receipt-cutoff',    'Fees & Finance'],
                 ['documents',   'bi-folder2-open',      'Documents'],
                 ['medical',     'bi-heart-pulse',       'Medical'],
                 ['contacts',    'bi-telephone',         'Emergency'],
@@ -266,8 +267,393 @@
                             @endif
                         </div>
                     </div>
+
+                    {{-- Fee & Financial Quick Summary in Overview --}}
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                        <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between font-semibold text-sm text-slate-700">
+                            <span class="flex items-center gap-1.5">
+                                <i class="bi bi-wallet2 text-emerald-500"></i> Fee & Payment Status
+                            </span>
+                            <button onclick="showTab('finance')" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+                                Full Statement <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                        <div class="p-4 grid grid-cols-3 gap-3 text-center border-b border-slate-50">
+                            <div class="bg-slate-50 rounded-xl p-2.5">
+                                <p class="text-[11px] font-semibold text-slate-400 uppercase">Invoiced</p>
+                                <p class="text-sm font-bold text-slate-800 mt-0.5">Rs. {{ number_format($totalInvoiced, 2) }}</p>
+                            </div>
+                            <div class="bg-emerald-50/60 rounded-xl p-2.5">
+                                <p class="text-[11px] font-semibold text-emerald-600 uppercase">Paid</p>
+                                <p class="text-sm font-bold text-emerald-700 mt-0.5">Rs. {{ number_format($totalPaid, 2) }}</p>
+                            </div>
+                            <div class="{{ $totalDue > 0 ? 'bg-rose-50/70' : 'bg-slate-50' }} rounded-xl p-2.5">
+                                <p class="text-[11px] font-semibold {{ $totalDue > 0 ? 'text-rose-600' : 'text-slate-400' }} uppercase">Balance Due</p>
+                                <p class="text-sm font-bold {{ $totalDue > 0 ? 'text-rose-700' : 'text-slate-700' }} mt-0.5">Rs. {{ number_format($totalDue, 2) }}</p>
+                            </div>
+                        </div>
+                        <div class="px-5 py-3 bg-slate-50/50 flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <span class="text-slate-600 font-medium">
+                                Status:
+                                @if($totalDue == 0 && $totalInvoiced > 0)
+                                    <span class="font-bold text-emerald-600">✓ Fully Cleared</span>
+                                @elseif($totalPaid > 0)
+                                    <span class="font-bold text-amber-600">⏳ Partial (Rs. {{ number_format($totalDue, 2) }} due)</span>
+                                @elseif($totalInvoiced > 0)
+                                    <span class="font-bold text-rose-600">⚠️ Unpaid (Rs. {{ number_format($totalDue, 2) }})</span>
+                                @else
+                                    <span class="font-medium text-slate-500">No active balance due</span>
+                                @endif
+                            </span>
+                            <div class="flex items-center gap-2">
+                                @can('create payments')
+                                @if(\Illuminate\Support\Facades\Route::has('payments.create'))
+                                <a href="{{ route('payments.create') }}?student_id={{ $student->id }}" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-[11px] transition shadow-xs">
+                                    <i class="bi bi-cash-coin me-1"></i> Collect Fee
+                                </a>
+                                @endif
+                                @endcan
+                                <button onclick="showTab('finance')" class="px-2.5 py-1 bg-slate-200/80 hover:bg-slate-300 text-slate-700 rounded-lg font-semibold text-[11px] transition">
+                                    Breakdown
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
+        </div>
+
+        {{-- ═══════════════ TAB: FEES & FINANCE ═══════════════ --}}
+        <div id="tab-finance" class="tab-panel hidden space-y-6">
+            
+            {{-- KPI Summary Cards --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Invoiced / Assigned</p>
+                        <h3 class="text-2xl font-black text-slate-800 mt-1">Rs. {{ number_format($totalInvoiced, 2) }}</h3>
+                    </div>
+                    <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                        <i class="bi bi-receipt text-xl"></i>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Paid</p>
+                        <h3 class="text-2xl font-black text-emerald-600 mt-1">Rs. {{ number_format($totalPaid, 2) }}</h3>
+                    </div>
+                    <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                        <i class="bi bi-check2-circle text-xl"></i>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Outstanding Due</p>
+                        <h3 class="text-2xl font-black {{ $totalDue > 0 ? 'text-rose-600' : 'text-slate-700' }} mt-1">Rs. {{ number_format($totalDue, 2) }}</h3>
+                    </div>
+                    <div class="w-11 h-11 rounded-xl {{ $totalDue > 0 ? 'bg-rose-50 text-rose-600' : 'bg-slate-50 text-slate-400' }} flex items-center justify-center">
+                        <i class="bi bi-exclamation-circle text-xl"></i>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Fee Status</p>
+                        <span class="inline-flex items-center gap-1 mt-2 px-2.5 py-1 rounded-full text-xs font-bold {{ $totalDue == 0 && $totalInvoiced > 0 ? 'bg-emerald-100 text-emerald-800' : ($totalPaid > 0 ? 'bg-amber-100 text-amber-800' : ($totalInvoiced > 0 ? 'bg-rose-100 text-rose-800' : 'bg-slate-100 text-slate-700')) }}">
+                            {{ $totalDue == 0 && $totalInvoiced > 0 ? '✓ Fully Cleared' : ($totalPaid > 0 ? '⏳ Partial Paid' : ($totalInvoiced > 0 ? '⚠️ Unpaid Balance' : 'No Balance')) }}
+                        </span>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        @if(\Illuminate\Support\Facades\Route::has('payments.student-ledger'))
+                        <a href="{{ route('payments.student-ledger', $student->id) }}" class="text-[11px] font-semibold text-indigo-600 hover:underline">
+                            View Ledger <i class="bi bi-arrow-right"></i>
+                        </a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- Quick Actions --}}
+            <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200/70">
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Student Fee Management</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    @can('create payments')
+                    @if(\Illuminate\Support\Facades\Route::has('payments.create'))
+                    <a href="{{ route('payments.create') }}?student_id={{ $student->id }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition">
+                        <i class="bi bi-cash-coin"></i> Collect Fee
+                    </a>
+                    @endif
+                    @endcan
+                    @if(\Illuminate\Support\Facades\Route::has('payments.student-ledger'))
+                    <a href="{{ route('payments.student-ledger', $student->id) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold shadow-xs transition">
+                        <i class="bi bi-journal-text"></i> Full Ledger Statement
+                    </a>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Class Fee Structure (Scheduled Fee Heads) --}}
+            @if(isset($classFeeStructures) && $classFeeStructures->count() > 0)
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <div class="flex items-center gap-2">
+                        <i class="bi bi-calendar-check text-blue-500"></i>
+                        <h4 class="text-sm font-bold text-slate-800">Class Fee Structure ({{ $promotion_info?->schoolClass?->class_name ?? 'Current Class' }})</h4>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-500">{{ $classFeeStructures->count() }} Fee Heads Applicable</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                            <tr>
+                                <th class="px-4 py-3">Fee Name / Head</th>
+                                <th class="px-4 py-3">Category</th>
+                                <th class="px-4 py-3">Fee Type</th>
+                                <th class="px-4 py-3">Frequency</th>
+                                <th class="px-4 py-3 text-right">Standard Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @php $structureTotal = 0; @endphp
+                            @foreach($classFeeStructures as $fs)
+                            @php $structureTotal += (float)$fs->amount; @endphp
+                            <tr class="hover:bg-slate-50/60 transition">
+                                <td class="px-4 py-3 font-semibold text-slate-800">
+                                    {{ $fs->name }}
+                                </td>
+                                <td class="px-4 py-3 text-slate-600">
+                                    {{ $fs->category?->name ?? 'General' }}
+                                </td>
+                                <td class="px-4 py-3 text-slate-600">
+                                    {{ $fs->feeType?->name ?? 'Tuition' }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700">
+                                        {{ $fs->frequency_label }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 font-bold text-slate-800 text-right">
+                                    Rs. {{ number_format($fs->amount, 2) }}
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="bg-slate-50 font-bold border-t border-slate-100">
+                            <tr>
+                                <td colspan="4" class="px-4 py-3 text-right text-slate-600">Total Standard Class Fees:</td>
+                                <td class="px-4 py-3 text-right text-indigo-700 font-black">Rs. {{ number_format($structureTotal, 2) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            @endif
+
+            {{-- Invoices Table --}}
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <div class="flex items-center gap-2">
+                        <i class="bi bi-receipt text-indigo-500"></i>
+                        <h4 class="text-sm font-bold text-slate-800">Fee Invoices ({{ $studentInvoices->count() }})</h4>
+                    </div>
+                </div>
+                @if($studentInvoices->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                            <tr>
+                                <th class="px-4 py-3">Invoice #</th>
+                                <th class="px-4 py-3">Title / Month</th>
+                                <th class="px-4 py-3">Payable (Rs.)</th>
+                                <th class="px-4 py-3">Paid (Rs.)</th>
+                                <th class="px-4 py-3">Due (Rs.)</th>
+                                <th class="px-4 py-3">Due Date</th>
+                                <th class="px-4 py-3">Status</th>
+                                <th class="px-4 py-3 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($studentInvoices as $inv)
+                            @php
+                                $invPayable = (float)($inv->total_payable > 0 ? $inv->total_payable : $inv->amount);
+                                $invPaid    = (float)$inv->paid_amount;
+                                $invDue     = max(0, $invPayable - $invPaid);
+                            @endphp
+                            <tr class="hover:bg-slate-50/60 transition">
+                                <td class="px-4 py-3 font-mono font-bold text-indigo-600">
+                                    {{ $inv->invoice_number ?? 'INV-'.$inv->id }}
+                                </td>
+                                <td class="px-4 py-3 font-medium text-slate-700">
+                                    {{ $inv->title ?? ($inv->month ? date('F Y', strtotime($inv->month)) : 'Tuition & Academic Fees') }}
+                                </td>
+                                <td class="px-4 py-3 font-bold text-slate-800">
+                                    {{ number_format($invPayable, 2) }}
+                                </td>
+                                <td class="px-4 py-3 font-bold text-emerald-600">
+                                    {{ number_format($invPaid, 2) }}
+                                </td>
+                                <td class="px-4 py-3 font-bold {{ $invDue > 0 ? 'text-rose-600' : 'text-slate-400' }}">
+                                    {{ number_format($invDue, 2) }}
+                                </td>
+                                <td class="px-4 py-3 text-slate-500">
+                                    {{ $inv->due_date ? date('M d, Y', strtotime($inv->due_date)) : '—' }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    @if($inv->status === 'paid' || $invDue == 0)
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Paid</span>
+                                    @elseif($inv->status === 'partial' || $invPaid > 0)
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Partial</span>
+                                    @else
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">Unpaid</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <div class="inline-flex items-center gap-1.5">
+                                        @if(\Illuminate\Support\Facades\Route::has('payments.show'))
+                                        <a href="{{ route('payments.show', $inv->id) }}" class="px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-[11px]" title="View Invoice">
+                                            View
+                                        </a>
+                                        @endif
+                                        @if($invDue > 0 && \Illuminate\Support\Facades\Route::has('payments.pay'))
+                                        <a href="{{ route('payments.pay', $inv->id) }}" class="px-2 py-1 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-[11px]" title="Collect Payment">
+                                            Pay
+                                        </a>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <div class="py-8 text-center text-slate-400 text-xs">
+                    <i class="bi bi-receipt text-2xl text-slate-300 block mb-1"></i>
+                    No fee invoices generated for this student yet.
+                </div>
+                @endif
+            </div>
+
+            {{-- Student Ledger History (if any records exist) --}}
+            @if(isset($studentLedgers) && $studentLedgers->count() > 0)
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <div class="flex items-center gap-2">
+                        <i class="bi bi-journal-text text-amber-500"></i>
+                        <h4 class="text-sm font-bold text-slate-800">Student Account Ledger ({{ $studentLedgers->count() }})</h4>
+                    </div>
+                    @if(isset($ledgerBalance))
+                    <span class="text-xs font-bold text-slate-700">
+                        Current Balance: <span class="{{ $ledgerBalance > 0 ? 'text-rose-600' : 'text-emerald-600' }}">Rs. {{ number_format($ledgerBalance, 2) }}</span>
+                    </span>
+                    @endif
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                            <tr>
+                                <th class="px-4 py-3">Date</th>
+                                <th class="px-4 py-3">Type</th>
+                                <th class="px-4 py-3">Description</th>
+                                <th class="px-4 py-3 text-right">Debit (Fee Due)</th>
+                                <th class="px-4 py-3 text-right">Credit (Paid)</th>
+                                <th class="px-4 py-3 text-right">Running Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($studentLedgers as $ledger)
+                            <tr class="hover:bg-slate-50/60 transition">
+                                <td class="px-4 py-3 text-slate-500">
+                                    {{ $ledger->entry_date ? date('M d, Y', strtotime($ledger->entry_date)) : $ledger->created_at->format('M d, Y') }}
+                                </td>
+                                <td class="px-4 py-3 capitalize">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $ledger->type === 'payment' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700' }}">
+                                        {{ $ledger->type }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 font-medium text-slate-700">
+                                    {{ $ledger->description ?? '—' }}
+                                </td>
+                                <td class="px-4 py-3 font-bold text-rose-600 text-right">
+                                    {{ $ledger->debit > 0 ? 'Rs. ' . number_format($ledger->debit, 2) : '—' }}
+                                </td>
+                                <td class="px-4 py-3 font-bold text-emerald-600 text-right">
+                                    {{ $ledger->credit > 0 ? 'Rs. ' . number_format($ledger->credit, 2) : '—' }}
+                                </td>
+                                <td class="px-4 py-3 font-bold text-slate-800 text-right">
+                                    Rs. {{ number_format($ledger->balance, 2) }}
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+
+            {{-- Payment Transactions History --}}
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <div class="flex items-center gap-2">
+                        <i class="bi bi-clock-history text-emerald-500"></i>
+                        <h4 class="text-sm font-bold text-slate-800">Payment Transactions & Receipts ({{ $studentPayments->count() }})</h4>
+                    </div>
+                </div>
+                @if($studentPayments->count() > 0)
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100">
+                            <tr>
+                                <th class="px-4 py-3">Receipt / Txn #</th>
+                                <th class="px-4 py-3">Date</th>
+                                <th class="px-4 py-3">Invoice #</th>
+                                <th class="px-4 py-3">Payment Method</th>
+                                <th class="px-4 py-3">Amount (Rs.)</th>
+                                <th class="px-4 py-3 text-right">Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($studentPayments as $pay)
+                            <tr class="hover:bg-slate-50/60 transition">
+                                <td class="px-4 py-3 font-mono font-bold text-slate-700">
+                                    {{ $pay->receipt_number ?? $pay->transaction_id ?? ('REC-'.$pay->id) }}
+                                </td>
+                                <td class="px-4 py-3 text-slate-500">
+                                    {{ $pay->created_at ? $pay->created_at->format('M d, Y g:i A') : '—' }}
+                                </td>
+                                <td class="px-4 py-3 font-mono text-indigo-600">
+                                    {{ $pay->invoice?->invoice_number ?? '—' }}
+                                </td>
+                                <td class="px-4 py-3 capitalize text-slate-600">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+                                        <i class="bi bi-wallet2 text-[10px]"></i> {{ $pay->payment_method ?? 'Cash' }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 font-bold text-emerald-600">
+                                    Rs. {{ number_format($pay->amount, 2) }}
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    @if(\Illuminate\Support\Facades\Route::has('payments.receipt'))
+                                    <a href="{{ route('payments.receipt', $pay->id) }}" target="_blank" class="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-[11px]">
+                                        <i class="bi bi-printer"></i> Print Receipt
+                                    </a>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <div class="py-8 text-center text-slate-400 text-xs">
+                    <i class="bi bi-wallet2 text-2xl text-slate-300 block mb-1"></i>
+                    No payment transactions recorded for this student yet.
+                </div>
+                @endif
+            </div>
+
         </div>
 
         {{-- ═══════════════ TAB: DOCUMENTS ═══════════════ --}}

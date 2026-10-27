@@ -36,11 +36,26 @@
                 </div>
             </div>
         </div>
-        <div class="flex gap-2 flex-wrap">
-            <a href="{{ route('student.id-cards.bulk') }}" target="_blank"
-               class="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-indigo-800 hover:bg-slate-100 rounded-xl text-xs font-bold transition shadow-sm">
-                <i class="bi bi-person-vcard-fill"></i> Bulk ID Cards
-            </a>
+        <div class="flex gap-2 flex-wrap items-center">
+            <div class="relative group">
+                <button type="button" class="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-indigo-800 hover:bg-slate-100 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer">
+                    <i class="bi bi-person-vcard-fill"></i> Bulk ID Cards <i class="bi bi-chevron-down text-[10px]"></i>
+                </button>
+                <div class="absolute left-0 mt-1 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl py-2 hidden group-hover:block z-30">
+                    <div class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">PDF Document</div>
+                    <a href="{{ route('student.id-cards.bulk', ['class_id' => $schoolClass->id, 'format' => 'pdf', 'layout' => 'dualsided']) }}" target="_blank" class="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-600 transition">
+                        <i class="bi bi-file-earmark-pdf text-rose-500"></i> Dual Sided PDF (with QR)
+                    </a>
+                    <a href="{{ route('student.id-cards.bulk', ['class_id' => $schoolClass->id, 'format' => 'pdf', 'layout' => 'front']) }}" target="_blank" class="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 hover:text-indigo-600 transition">
+                        <i class="bi bi-grid text-slate-500"></i> 8 Cards / Page Grid (PDF)
+                    </a>
+                    <div class="border-t border-slate-100 dark:border-slate-800 my-1"></div>
+                    <div class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Microsoft Word</div>
+                    <a href="{{ route('student.id-cards.bulk', ['class_id' => $schoolClass->id, 'format' => 'docx']) }}" target="_blank" class="flex items-center gap-2 px-3 py-1.5 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/60 transition font-semibold">
+                        <i class="bi bi-file-earmark-word text-blue-500"></i> Download Word (.docx)
+                    </a>
+                </div>
+            </div>
             <a href="{{ route('class.edit', $schoolClass->id) }}"
                class="inline-flex items-center gap-1.5 px-4 py-2 bg-white/15 hover:bg-white/25 border border-white/20 rounded-xl text-xs font-semibold transition">
                 <i class="bi bi-pencil"></i> Edit Class
@@ -243,6 +258,59 @@
         @endforeach
     </div>
 
+    {{-- ── Class Teacher (In-Charge) Card ── --}}
+    @php
+        $currentSectionObj = $sections->firstWhere('id', $activeSection) ?? $sections->first();
+        $sectionClassTeacher = $assignedTeachers
+            ->where('is_class_teacher', true)
+            ->when($activeSection, fn($c) => $c->where('section_id', $activeSection))
+            ->first()?->teacher ?? $classTeacher;
+    @endphp
+    <div class="bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent bg-white dark:bg-slate-800 rounded-2xl border border-amber-200/80 dark:border-amber-700/40 shadow-sm overflow-hidden p-5 relative">
+        <div class="flex items-center justify-between gap-2 mb-3">
+            <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm font-bold shadow-sm">
+                    <i class="bi bi-star-fill"></i>
+                </span>
+                <div>
+                    <h3 class="text-xs font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Class Teacher</h3>
+                    <p class="text-[10px] text-amber-700 dark:text-amber-400 font-medium">
+                        {{ $currentSectionObj ? 'Section ' . preg_replace('/^Section\s+/i', '', $currentSectionObj->section_name) : 'Class In-charge' }}
+                    </p>
+                </div>
+            </div>
+            @if(auth()->user()->hasAnyRole(['super-admin', 'admin', 'principal']) || auth()->user()->can('assign teachers'))
+            <button type="button" onclick="openClassTeacherModal()"
+                    class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[11px] font-bold transition shadow-sm flex items-center gap-1">
+                <i class="bi bi-pencil-square"></i> {{ $sectionClassTeacher ? 'Change' : 'Assign' }}
+            </button>
+            @endif
+        </div>
+
+        @if($sectionClassTeacher)
+        <div class="flex items-center gap-3 bg-white/80 dark:bg-slate-700/60 backdrop-blur rounded-xl p-3 border border-amber-100 dark:border-slate-600">
+            <img src="{{ $sectionClassTeacher->avatar }}" alt=""
+                 class="w-11 h-11 rounded-xl object-cover border-2 border-amber-300 dark:border-amber-500/50 shadow-sm flex-shrink-0">
+            <div class="min-w-0 flex-1">
+                <a href="{{ route('teacher.profile.show', $sectionClassTeacher->id) }}" 
+                   class="text-xs font-bold text-slate-800 dark:text-slate-100 hover:text-amber-600 transition truncate block">
+                    {{ $sectionClassTeacher->full_name }}
+                </a>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5"><i class="bi bi-envelope me-1"></i>{{ $sectionClassTeacher->email }}</p>
+                @if($sectionClassTeacher->phone)
+                <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate"><i class="bi bi-telephone me-1"></i>{{ $sectionClassTeacher->phone }}</p>
+                @endif
+            </div>
+        </div>
+        @else
+        <div class="text-center py-4 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl border border-dashed border-amber-200 dark:border-amber-800">
+            <i class="bi bi-person-x text-2xl text-amber-400 block mb-1"></i>
+            <p class="text-xs font-medium text-slate-600 dark:text-slate-300">No Class Teacher assigned</p>
+            <p class="text-[10px] text-slate-400">Principal can designate a teacher for this section.</p>
+        </div>
+        @endif
+    </div>
+
     {{-- Subject → Teacher mapping --}}
     <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
         <div class="px-5 py-3.5 border-b border-slate-100 dark:border-slate-700">
@@ -405,4 +473,81 @@
 </div>{{-- /right col --}}
 </div>{{-- /grid --}}
 </div>{{-- /content --}}
+
+{{-- ── Assign / Change Class Teacher Modal ── --}}
+@if(auth()->user()->hasAnyRole(['super-admin', 'admin', 'principal']) || auth()->user()->can('assign teachers'))
+<div id="classTeacherModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50 dark:from-slate-800 dark:to-slate-800">
+            <div class="flex items-center gap-2.5">
+                <span class="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center text-sm shadow-md">
+                    <i class="bi bi-star-fill"></i>
+                </span>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Designate Class Teacher</h3>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">{{ $schoolClass->class_name }}</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeClassTeacherModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                <i class="bi bi-x-lg text-sm"></i>
+            </button>
+        </div>
+        <form id="assignClassTeacherForm" method="POST" action="{{ route('class.section.class-teacher.assign', [$schoolClass->id, $activeSection ?? $sections->first()?->id ?? 1]) }}" class="p-6 space-y-4">
+            @csrf
+
+            {{-- Section selector --}}
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5 uppercase tracking-wider">Select Section</label>
+                <select name="section_id" id="modal_section_id" onchange="updateModalAction(this.value)" class="w-full text-xs font-medium bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    @foreach($sections as $sec)
+                    <option value="{{ $sec->id }}" {{ ($activeSection ?? $sections->first()?->id) == $sec->id ? 'selected' : '' }}>
+                        Section {{ preg_replace('/^Section\s+/i', '', $sec->section_name) }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Teacher selector --}}
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-200 mb-1.5 uppercase tracking-wider">Select Teacher</label>
+                <select name="teacher_id" required class="w-full text-xs font-medium bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl px-3 py-2.5 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                    <option value="" disabled selected>-- Choose Teacher as Class In-charge --</option>
+                    @foreach($allTeachers as $t)
+                    <option value="{{ $t->id }}">
+                        {{ $t->full_name }} ({{ $t->email }})
+                    </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 rounded-xl text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
+                <i class="bi bi-info-circle-fill me-1 text-amber-500"></i>
+                Assigning this teacher will automatically grant them the <strong>Class Teacher</strong> portal permissions, daily roll-call, and report card verification rights for this section.
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+                <button type="button" onclick="closeClassTeacherModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition">
+                    Cancel
+                </button>
+                <button type="submit" class="px-5 py-2 text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white rounded-xl shadow-md transition flex items-center gap-1.5">
+                    <i class="bi bi-check2-circle text-sm"></i> Confirm Designation
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openClassTeacherModal() {
+    document.getElementById('classTeacherModal').classList.remove('hidden');
+}
+function closeClassTeacherModal() {
+    document.getElementById('classTeacherModal').classList.add('hidden');
+}
+function updateModalAction(sectionId) {
+    const form = document.getElementById('assignClassTeacherForm');
+    form.action = "{{ url('classes/' . $schoolClass->id . '/sections') }}/" + sectionId + "/class-teacher";
+}
+</script>
+@endif
 @endsection

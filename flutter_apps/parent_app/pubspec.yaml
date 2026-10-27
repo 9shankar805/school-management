@@ -1,0 +1,38 @@
+name: parent_app
+description: "Nepal School Hub (NSHLMS) - Ultra-Modern Parent & Guardian Mobile Application."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  
+  # UI, Fonts & Animations
+  google_fonts: ^6.1.0
+  flutter_animate: ^4.5.0
+  fl_chart: ^0.66.0
+  intl: ^0.19.0
+  cached_network_image: ^3.3.1
+  
+  # State Management & Providers
+  provider: ^6.1.1
+  
+  # Networking & Storage
+  http: ^1.2.0
+  shared_preferences: ^2.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/

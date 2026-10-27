@@ -332,6 +332,12 @@ class NepaliDateService
      * @param  string $adDate  YYYY-MM-DD
      * @param  bool   $nepali  Devanagari or English name
      */
+    /**
+     * Get BS month name for a given AD date.
+     *
+     * @param  string $adDate  YYYY-MM-DD
+     * @param  bool   $nepali  Devanagari or English name
+     */
     public static function bsMonthName(string $adDate, bool $nepali = true): string
     {
         $bs = self::adToBS($adDate);
@@ -341,4 +347,119 @@ class NepaliDateService
             ? (self::$monthsNp[$m - 1] ?? '')
             : (self::$monthsEn[$m - 1] ?? '');
     }
+
+    /**
+     * Standard Nepali Tithis list (15 in Shukla Paksha + 15 in Krishna Paksha).
+     */
+    public static array $tithis = [
+        'प्रतिपदा', 'द्वितीया', 'तृतीया', 'चतुर्थी', 'पञ्चमी',
+        'षष्ठी', 'सप्तमी', 'अष्टमी', 'नवमी', 'दशमी',
+        'एकादशी', 'द्वादशी', 'त्रयोदशी', 'चतुर्दशी', 'पूर्णिमा',
+        'प्रतिपदा', 'द्वितीया', 'तृतीया', 'चतुर्थी', 'पञ्चमी',
+        'षष्ठी', 'सप्तमी', 'अष्टमी', 'नवमी', 'दशमी',
+        'एकादशी', 'द्वादशी', 'त्रयोदशी', 'चतुर्दशी', 'औंसी'
+    ];
+
+    /**
+     * Complete Nepal National Festivals, Tithis, and Public Holidays by BS Month.
+     */
+    public static function getMonthEventsData(int $bsMonth): array
+    {
+        // Reference lookup for month 1 (Baisakh) to 12 (Chaitra)
+        $monthFestivals = [
+            1 => [ // बैशाख (Baisakh)
+                1 => ['title' => 'नयाँ वर्ष / बिस्केट जात्रा प्रारम्भ', 'tithi' => 'प्रतिपदा', 'is_holiday' => true, 'category' => 'holiday'],
+                5 => ['title' => 'मातातीर्थ औंसी (आमाको मुख हेर्ने दिन)', 'tithi' => 'औंसी', 'is_holiday' => false, 'category' => 'celebration'],
+                11 => ['title' => 'लोकतन्त्र दिवस', 'tithi' => 'षष्ठी', 'is_holiday' => true, 'category' => 'holiday'],
+                18 => ['title' => 'अन्तर्राष्ट्रिय मजदुर दिवस (May Day)', 'tithi' => 'त्रयोदशी', 'is_holiday' => true, 'category' => 'holiday'],
+                25 => ['title' => 'बुद्ध जयन्ती / उभौली पर्व / चण्डी पूर्णिमा', 'tithi' => 'पूर्णिमा', 'is_holiday' => true, 'category' => 'holiday'],
+            ],
+            2 => [ // जेठ (Jestha)
+                11 => ['title' => 'मोहिनी एकादशी व्रत', 'tithi' => 'एकादशी', 'is_holiday' => false, 'category' => 'academic'],
+                15 => ['title' => 'गणतन्त्र दिवस (Republic Day)', 'tithi' => 'प्रतिपदा', 'is_holiday' => true, 'category' => 'holiday'],
+                22 => ['title' => 'विश्व वातावरण दिवस (World Environment Day)', 'tithi' => 'सप्तमी', 'is_holiday' => false, 'category' => 'academic'],
+                30 => ['title' => 'गंगा दशहरा / निर्जला एकादशी', 'tithi' => 'एकादशी', 'is_holiday' => false, 'category' => 'celebration'],
+            ],
+            3 => [ // असार (Ashadh)
+                8 => ['title' => 'अन्तर्राष्ट्रिय योग दिवस (Yoga Day)', 'tithi' => 'सप्तमी', 'is_holiday' => false, 'category' => 'academic'],
+                15 => ['title' => 'राष्ट्रिय धान दिवस / असार १५ (दही चिउरा खाने दिन)', 'tithi' => 'चतुर्दशी', 'is_holiday' => false, 'category' => 'celebration'],
+                29 => ['title' => 'भानु जयन्ती / गुरु पूर्णिमा', 'tithi' => 'पूर्णिमा', 'is_holiday' => false, 'category' => 'celebration'],
+            ],
+            4 => [ // श्रावण (Shrawan)
+                1 => ['title' => 'साउने संक्रान्ति / लुतो फाल्ने दिन', 'tithi' => 'प्रतिपदा', 'is_holiday' => false, 'category' => 'celebration'],
+                15 => ['title' => 'खीर खाने दिन', 'tithi' => 'पूर्णिमा', 'is_holiday' => false, 'category' => 'celebration'],
+                20 => ['title' => 'नाग पञ्चमी', 'tithi' => 'पञ्चमी', 'is_holiday' => false, 'category' => 'celebration'],
+                31 => ['title' => 'जनै पूर्णिमा / रक्षा बन्धन / गाईजात्रा', 'tithi' => 'पूर्णिमा', 'is_holiday' => true, 'category' => 'holiday'],
+            ],
+            5 => [ // भाद्र (Bhadra)
+                8 => ['title' => 'श्रीकृष्ण जन्माष्टमी', 'tithi' => 'अष्टमी', 'is_holiday' => true, 'category' => 'holiday'],
+                15 => ['title' => 'कुशे औंसी (बुवाको मुख हेर्ने दिन / मोती जयन्ती)', 'tithi' => 'औंसी', 'is_holiday' => false, 'category' => 'celebration'],
+                28 => ['title' => 'दर खाने दिन', 'tithi' => 'द्वितीया', 'is_holiday' => false, 'category' => 'celebration'],
+                29 => ['title' => 'हरितालिका तीज (महिला बिदा)', 'tithi' => 'तृतीया', 'is_holiday' => true, 'category' => 'holiday'],
+                31 => ['title' => 'ऋषि पञ्चमी / गणेश चतुर्थी', 'tithi' => 'पञ्चमी', 'is_holiday' => false, 'category' => 'celebration'],
+            ],
+            6 => [ // असोज (Ashoj)
+                1 => ['title' => 'विश्वकर्मा पूजा / कन्या संक्रान्ति', 'tithi' => 'षष्ठी', 'is_holiday' => false, 'category' => 'celebration'],
+                3 => ['title' => 'संविधान दिवस / राष्ट्रिय दिवस', 'tithi' => 'अष्टमी', 'is_holiday' => true, 'category' => 'holiday'],
+                9 => ['title' => 'इन्द्रजात्रा (काठमाडौँ उपत्यका बिदा)', 'tithi' => 'चतुर्दशी', 'is_holiday' => true, 'category' => 'holiday'],
+                11 => ['title' => 'सोह्र श्राद्ध प्रारम्भ (प्रतिपदा श्राद्ध)', 'tithi' => 'प्रतिपदा', 'is_holiday' => false, 'category' => 'academic'],
+                19 => ['title' => 'विश्व शिक्षक दिवस / दशमी श्राद्ध', 'tithi' => 'दशमी', 'is_holiday' => false, 'category' => 'academic'],
+                24 => ['title' => 'पितृ विसर्जन / औंसी श्राद्ध / विश्व मानसिक स्वास्थ्य दिवस', 'tithi' => 'औंसी', 'is_holiday' => true, 'category' => 'holiday'],
+                25 => ['title' => 'घटस्थापना व्रत / नवरात्र आरम्भ (बडादशैं प्रारम्भ)', 'tithi' => 'प्रतिपदा', 'is_holiday' => true, 'category' => 'holiday'],
+                27 => ['title' => 'अन्तर्राष्ट्रिय प्रकोप जोखिम न्यूनीकरण दिवस', 'tithi' => 'तृतीया', 'is_holiday' => false, 'category' => 'academic'],
+                29 => ['title' => 'विश्व हातधुने दिवस / ग्रामीण महिला दिवस', 'tithi' => 'पञ्चमी', 'is_holiday' => false, 'category' => 'academic'],
+                30 => ['title' => 'विश्व खाद्य दिवस', 'tithi' => 'षष्ठी', 'is_holiday' => false, 'category' => 'academic'],
+                31 => ['title' => 'फूलपाती / दशैं बिदा प्रारम्भ / अन्तर्राष्ट्रिय गरिबी निवारण दिवस', 'tithi' => 'सप्तमी', 'is_holiday' => true, 'category' => 'holiday'],
+            ],
+            7 => [ // कात्तिक (Kartik)
+                1 => ['title' => 'महाअष्टमी / कालरात्रि (दशैं बिदा)', 'tithi' => 'अष्टमी', 'is_holiday' => true, 'category' => 'holiday'],
+                2 => ['title' => 'महानवमी / आयुध पूजा (दशैं बिदा)', 'tithi' => 'नवमी', 'is_holiday' => true, 'category' => 'holiday'],
+                3 => ['title' => 'विजयादशमी (दशैं टीका)', 'tithi' => 'दशमी', 'is_holiday' => true, 'category' => 'holiday'],
+                4 => ['title' => 'पापांकुशा एकादशी / दशैं बिदा', 'tithi' => 'एकादशी', 'is_holiday' => true, 'category' => 'holiday'],
+                8 => ['title' => 'कोजाग्रत पूर्णिमा (दशैं समापन)', 'tithi' => 'पूर्णिमा', 'is_holiday' => false, 'category' => 'celebration'],
+                14 => ['title' => 'काग तिहार / यमपञ्चक प्रारम्भ', 'tithi' => 'त्रयोदशी', 'is_holiday' => false, 'category' => 'celebration'],
+                15 => ['title' => 'कुकुर तिहार / नरक चतुर्दशी', 'tithi' => 'चतुर्दशी', 'is_holiday' => false, 'category' => 'celebration'],
+                16 => ['title' => 'लक्ष्मी पूजा / सुखरात्रि (तिहार बिदा)', 'tithi' => 'औंसी', 'is_holiday' => true, 'category' => 'holiday'],
+                17 => ['title' => 'गाई पूजा / गोवर्धन पूजा / म्ह पूजा', 'tithi' => 'प्रतिपदा', 'is_holiday' => true, 'category' => 'holiday'],
+                18 => ['title' => 'भाइटीका / किजापूजा (तिहार बिदा)', 'tithi' => 'द्वितीया', 'is_holiday' => true, 'category' => 'holiday'],
+                22 => ['title' => 'छठ पर्व (सूर्य षष्ठी व्रत)', 'tithi' => 'षष्ठी', 'is_holiday' => true, 'category' => 'holiday'],
+                27 => ['title' => 'हरिबोधिनी एकादशी (तुलसी विवाह)', 'tithi' => 'एकादशी', 'is_holiday' => false, 'category' => 'celebration'],
+            ],
+            8 => [ // मंसिर (Mangsir)
+                10 => ['title' => 'लैंगिक हिंसा विरुद्धको १६ दिने अभियान प्रारम्भ', 'tithi' => 'दशमी', 'is_holiday' => false, 'category' => 'academic'],
+                15 => ['title' => 'विश्व एड्स दिवस', 'tithi' => 'पूर्णिमा', 'is_holiday' => false, 'category' => 'academic'],
+                18 => ['title' => 'अन्तर्राष्ट्रिय अपाङ्गता दिवस', 'tithi' => 'तृतीया', 'is_holiday' => false, 'category' => 'academic'],
+                24 => ['title' => 'अन्तर्राष्ट्रिय मानव अधिकार दिवस', 'tithi' => 'नवमी', 'is_holiday' => false, 'category' => 'academic'],
+                28 => ['title' => 'उधौली पर्व / धान्य पूर्णिमा / योमरी पुन्ही', 'tithi' => 'पूर्णिमा', 'is_holiday' => true, 'category' => 'holiday'],
+            ],
+            9 => [ // पौष (Poush)
+                10 => ['title' => 'क्रिसमस डे (Christmas Day)', 'tithi' => 'एकादशी', 'is_holiday' => true, 'category' => 'holiday'],
+                15 => ['title' => 'तमु ल्होसार (गुरुङ समुदायको नयाँ वर्ष)', 'tithi' => 'प्रतिपदा', 'is_holiday' => true, 'category' => 'holiday'],
+                27 => ['title' => 'पृथ्वी जयन्ती / राष्ट्रिय एकता दिवस', 'tithi' => 'त्रयोदशी', 'is_holiday' => true, 'category' => 'holiday'],
+            ],
+            10 => [ // माघ (Magh)
+                1 => ['title' => 'माघे संक्रान्ति / माघी पर्व (मकर संक्रान्ति)', 'tithi' => 'प्रतिपदा', 'is_holiday' => true, 'category' => 'holiday'],
+                16 => ['title' => 'सहिद दिवस (Martyrs Day)', 'tithi' => 'प्रतिपदा', 'is_holiday' => true, 'category' => 'holiday'],
+                18 => ['title' => 'सोनाम ल्होसार (तामाङ नयाँ वर्ष)', 'tithi' => 'तृतीया', 'is_holiday' => true, 'category' => 'holiday'],
+                23 => ['title' => 'श्रीपञ्चमी / सरस्वती पूजा (अक्षरारम्भ)', 'tithi' => 'पञ्चमी', 'is_holiday' => false, 'category' => 'celebration'],
+            ],
+            11 => [ // फाल्गुन (Falgun)
+                1 => ['title' => 'जनयुद्ध दिवस', 'tithi' => 'त्रयोदशी', 'is_holiday' => false, 'category' => 'academic'],
+                7 => ['title' => 'राष्ट्रिय प्रजातन्त्र दिवस (Democracy Day)', 'tithi' => 'सप्तमी', 'is_holiday' => true, 'category' => 'holiday'],
+                12 => ['title' => 'ग्याल्पो ल्होसार (शेर्पा नयाँ वर्ष)', 'tithi' => 'द्वादशी', 'is_holiday' => true, 'category' => 'holiday'],
+                17 => ['title' => 'महाशिवरात्रि / सेना दिवस', 'tithi' => 'चतुर्दशी', 'is_holiday' => true, 'category' => 'holiday'],
+                24 => ['title' => 'अन्तर्राष्ट्रिय महिला दिवस (८ मार्च)', 'tithi' => 'सप्तमी', 'is_holiday' => true, 'category' => 'holiday'],
+                29 => ['title' => 'फागु पूर्णिमा / होली पर्व (पहाडी बिदा)', 'tithi' => 'पूर्णिमा', 'is_holiday' => true, 'category' => 'holiday'],
+                30 => ['title' => 'फागु पूर्णिमा / होली पर्व (तराई बिदा)', 'tithi' => 'प्रतिपदा', 'is_holiday' => true, 'category' => 'holiday'],
+            ],
+            12 => [ // चैत्र (Chaitra)
+                15 => ['title' => 'घोडेजात्रा (काठमाडौँ उपत्यका बिदा)', 'tithi' => 'औंसी', 'is_holiday' => true, 'category' => 'holiday'],
+                24 => ['title' => 'चैते दशैं / राम नवमी व्रत', 'tithi' => 'नवमी', 'is_holiday' => true, 'category' => 'holiday'],
+                30 => ['title' => 'शैक्षिक सत्र समापन तथा वार्षिक परीक्षा नतिजा', 'tithi' => 'पूर्णिमा', 'is_holiday' => false, 'category' => 'academic'],
+            ],
+        ];
+
+        return $monthFestivals[$bsMonth] ?? [];
+    }
 }
+

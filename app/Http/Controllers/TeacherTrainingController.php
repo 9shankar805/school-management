@@ -17,6 +17,11 @@ class TeacherTrainingController extends Controller
     {
         $this->authorize('create teachers');
 
+        $user = auth()->user();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            \App\Models\User::where('school_id', $user->school_id)->findOrFail($teacherId);
+        }
+
         $data = $request->validate([
             'title'          => 'required|string|max:255',
             'organizer'      => 'nullable|string|max:255',
@@ -35,7 +40,10 @@ class TeacherTrainingController extends Controller
         }
         unset($data['attachment']);
 
-        TeacherTraining::create(array_merge($data, ['teacher_id' => $teacherId]));
+        TeacherTraining::create(array_merge($data, [
+            'school_id'  => $user->school_id,
+            'teacher_id' => $teacherId,
+        ]));
 
         return back()->with('status', 'Training record added.');
     }
@@ -43,7 +51,14 @@ class TeacherTrainingController extends Controller
     public function destroy(int $id)
     {
         $this->authorize('create teachers');
-        $t = TeacherTraining::findOrFail($id);
+
+        $user = auth()->user();
+        $query = TeacherTraining::query();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $query->whereHas('teacher', fn($t) => $t->where('school_id', $user->school_id));
+        }
+
+        $t = $query->findOrFail($id);
         if ($t->attachment_path) Storage::disk('public')->delete($t->attachment_path);
         $t->delete();
         return back()->with('status', 'Training record removed.');

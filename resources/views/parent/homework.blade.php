@@ -114,6 +114,39 @@
                 </a>
             </div>
             @endif
+
+            @if($sub && $sub->annotated_file_path)
+            <div class="mt-3">
+                <a href="{{ asset('storage/'.$sub->annotated_file_path) }}" target="_blank"
+                   class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl hover:bg-emerald-100 transition">
+                    <i class="bi bi-pencil-square text-emerald-600"></i> शिक्षकद्वारा जाँचिएको कपी हेर्नुहोस् (View Teacher Marked Copy)
+                </a>
+            </div>
+            @endif
+
+            {{-- Digital Diary: Parent Sign-off (अभिभावक हस्ताक्षर) --}}
+            <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                @if($hw->myAcknowledgement)
+                <div class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2 text-xs text-emerald-800">
+                    <i class="bi bi-patch-check-fill text-emerald-600 text-sm"></i>
+                    <div>
+                        <span class="font-bold">अभिभावक हस्ताक्षर प्रमाणित (Diary Signed)</span>
+                        <span class="text-slate-500 ms-1">by {{ $hw->myAcknowledgement->parent->full_name ?? 'Parent' }} on {{ $hw->myAcknowledgement->acknowledged_at->format('M d, Y · h:i A') }}</span>
+                        @if($hw->myAcknowledgement->remarks)
+                        <div class="text-[11px] text-emerald-700 italic mt-0.5">"{{ $hw->myAcknowledgement->remarks }}"</div>
+                        @endif
+                    </div>
+                </div>
+                @else
+                <form action="{{ route('parent.homework.acknowledge', [$child->id, $hw->id]) }}" method="POST" class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    @csrf
+                    <input type="text" name="remarks" placeholder="Optional remark (e.g. Checked & supervised)..." class="text-xs border border-slate-200 rounded-xl px-3 py-1.5 focus:ring-2 focus:ring-indigo-500/20 w-full sm:w-64">
+                    <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl shadow-sm transition">
+                        <i class="bi bi-pen-fill"></i> दस्तखत गर्नुहोस् (Sign Diary)
+                    </button>
+                </form>
+                @endif
+            </div>
         </div>
         @endforeach
     </div>

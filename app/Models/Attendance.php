@@ -20,18 +20,27 @@ class Attendance extends Model
         'session_id',
         'course_id',
         'status',       // "on" = present | "off" = absent  (legacy; kept for BC)
+        'recorded_by',
+        'submitted_at',
+        'taken_time',
         'date',
         'late_minutes',
         'check_in',
     ];
 
     protected $casts = [
-        'date' => 'date',
+        'date'         => 'date',
+        'submitted_at' => 'datetime',
     ];
 
     // ──────────────────────────────────────────────────────────────────────────
     // Relationships
     // ──────────────────────────────────────────────────────────────────────────
+
+    public function recordedBy()
+    {
+        return $this->belongsTo(User::class, 'recorded_by');
+    }
 
     public function student()
     {

@@ -178,6 +178,15 @@ class LiveQuizHostController extends Controller
     public function passQuestion(Request $request, $sessionId)
     {
         $session = LiveQuizSession::with(['currentQuestion', 'teams'])->findOrFail($sessionId);
+        return $this->processPass($session);
+    }
+
+    /**
+     * Internal Pass Question Processor reusable across Host and Player triggers.
+     */
+    public function processPass(LiveQuizSession $session)
+    {
+        $session->loadMissing(['currentQuestion', 'teams']);
         $question = $session->currentQuestion;
 
         $teams = $session->teams;
@@ -201,7 +210,7 @@ class LiveQuizHostController extends Controller
 
         if ($nextTeam) {
             $passSeq[] = $nextTeam->id;
-            $passDuration = $question->pass_time_seconds ?: 15;
+            $passDuration = ($question && $question->pass_time_seconds) ? $question->pass_time_seconds : 15;
             $now = Carbon::now();
 
             $session->update([
@@ -334,7 +343,7 @@ class LiveQuizHostController extends Controller
             ->where('live_quiz_question_id', $question->id)
             ->get();
 
-        $correctOption = strtoupper($question->correct_option);
+        $correctOption = strtoupper((string)($question->correct_option ?? ''));
         $basePoints = $question->points ?: 100;
         $timeLimit = $question->time_limit_seconds ?: 30;
         $speedBonus = $session->settings['speed_bonus'] ?? true;

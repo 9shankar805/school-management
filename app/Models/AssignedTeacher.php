@@ -69,4 +69,11 @@ class AssignedTeacher extends Model
     public function course() {
         return $this->belongsTo(Course::class, 'course_id');
     }
+
+    /**
+     * Get the semester / term.
+     */
+    public function semester() {
+        return $this->belongsTo(\App\Models\Semester::class, 'semester_id');
+    }
 }

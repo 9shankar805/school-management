@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\Semester;
 use Illuminate\Http\Request;
 use App\Traits\SchoolSession;
 use App\Interfaces\CourseInterface;
@@ -57,9 +58,56 @@ class CourseController extends Controller
     public function store(CourseStoreRequest $request)
     {
         try {
-            $this->schoolCourseRepository->create($request->validated());
+            $validated = $request->validated();
+            $sessionId = (int) $validated['session_id'];
+            $courseName = $validated['course_name'];
+            $courseType = $validated['course_type'];
+            $classIds = array_map('intval', $validated['class_ids']);
+            $allTerms = !empty($validated['all_terms']);
 
-            return back()->with('status', 'Course creation was successful!');
+            // Determine which semesters to create the course for
+            if ($allTerms) {
+                $semesterIds = Semester::where('session_id', $sessionId)->pluck('id')->all();
+                if (empty($semesterIds)) {
+                    return back()->with('error', 'No semesters/terms found for the current session. Please create semesters first.');
+                }
+            } else {
+                $semesterIds = [(int) $validated['semester_id']];
+            }
+
+            $createdCount = 0;
+            $skippedCount = 0;
+
+            // Create course for each class × each semester combination
+            foreach ($classIds as $classId) {
+                foreach ($semesterIds as $semesterId) {
+                    $course = Course::firstOrCreate([
+                        'course_name' => $courseName,
+                        'class_id'    => $classId,
+                        'semester_id' => $semesterId,
+                        'session_id'  => $sessionId,
+                    ], [
+                        'course_type' => $courseType,
+                    ]);
+
+                    if ($course->wasRecentlyCreated) {
+                        $createdCount++;
+                    } else {
+                        $skippedCount++;
+                    }
+                }
+            }
+
+            $classNames = \App\Models\SchoolClass::whereIn('id', $classIds)->pluck('class_name')->all();
+            $classStr = implode(', ', array_slice($classNames, 0, 5)) . (count($classNames) > 5 ? ' +' . (count($classNames) - 5) . ' more' : '');
+            $termStr = $allTerms ? 'all terms/semesters' : 'selected semester';
+
+            $msg = "Subject \"{$courseName}\" created for {$classStr} across {$termStr} — {$createdCount} new record(s).";
+            if ($skippedCount > 0) {
+                $msg .= " ({$skippedCount} already existed, skipped.)";
+            }
+
+            return back()->with('status', $msg);
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }

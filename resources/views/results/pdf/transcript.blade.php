@@ -30,10 +30,22 @@ tbody tr:nth-child(even) { background:#f8fafc; }
 </style>
 </head>
 <body>
-<div class="header">
-    <h1>{{ config('app.name') }}</h1>
-    <p>OFFICIAL ACADEMIC TRANSCRIPT &mdash; {{ $session?->session_name }}</p>
-</div>
+<table style="width: 100%; border-bottom: 3px solid #4f46e5; padding-bottom: 10px; margin-bottom: 14px; border-collapse: collapse;">
+    <tr>
+        <td style="width: 15%; vertical-align: middle; text-align: left;">
+            @if(!empty($logoSrc))
+                <img src="{{ $logoSrc }}" style="max-height: 50px; max-width: 80px;" alt="Logo">
+            @endif
+        </td>
+        <td style="width: 70%; text-align: center; vertical-align: middle;">
+            <h1 style="font-size: 16px; color: #4f46e5; font-weight: 800; margin: 0 0 2px 0;">{{ $school?->name ?? config('app.name') }}</h1>
+            <p style="font-size: 10px; color: #64748b; margin: 0; text-transform: uppercase; letter-spacing: 1px;">OFFICIAL ACADEMIC TRANSCRIPT &mdash; {{ $session?->session_name ?? $session?->year_title ?? 'Academic Session' }}</p>
+        </td>
+        <td style="width: 15%; text-align: right; vertical-align: middle; font-size: 8.5px; color: #64748b;">
+            {{ now()->format('d M Y') }}
+        </td>
+    </tr>
+</table>
 
 <div class="student-row">
     <div class="item"><p>Student Name</p><p>{{ $student->full_name }}</p></div>

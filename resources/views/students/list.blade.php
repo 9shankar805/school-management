@@ -20,11 +20,14 @@
             </p>
         </div>
         <div class="page-actions flex items-center gap-2">
-            <a href="{{ route('student.id-cards.bulk') }}" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold rounded-xl hover:bg-indigo-100 transition shadow-sm">
+            <button type="button" onclick="openBulkIdModal()" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition shadow-sm cursor-pointer">
                 <i class="bi bi-person-vcard-fill text-sm"></i> Bulk ID Cards
-            </a>
+            </button>
             @can('create students')
             @unless(session()->has('browse_session_id'))
+            <a href="{{ route('students.import.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition shadow-sm cursor-pointer">
+                <i class="bi bi-file-earmark-spreadsheet-fill text-sm"></i> Bulk Import
+            </a>
             <a href="{{ route('student.create.show') }}" class="btn-primary">
                 <i class="bi bi-person-plus"></i> Add Student
             </a>
@@ -339,6 +342,125 @@
 
     @endif
 
+    {{-- ── Bulk ID Card Export Modal ─────────────────────────────── --}}
+    <div id="bulkIdModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all">
+            
+            {{-- Modal Header --}}
+            <div class="bg-gradient-to-r from-indigo-600 to-indigo-800 p-6 text-white flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
+                        <i class="bi bi-person-vcard text-xl text-white"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-lg tracking-tight">Bulk Student ID Cards</h3>
+                        <p class="text-xs text-indigo-100">Choose export format & print layout</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeBulkIdModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center text-white transition cursor-pointer">
+                    <i class="bi bi-x-lg text-sm"></i>
+                </button>
+            </div>
+
+            {{-- Modal Body / Form --}}
+            <form id="bulkIdCardForm" action="{{ route('student.id-cards.bulk') }}" method="GET" target="_blank" class="p-6 space-y-5">
+                
+                {{-- Format Selector (PDF vs Word) --}}
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                        1. Select Export Format
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="format-card relative flex flex-col items-center p-4 rounded-2xl border-2 border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30 cursor-pointer transition hover:border-indigo-600">
+                            <input type="radio" name="format" value="pdf" checked class="sr-only" onchange="updateFormatSelection(this)">
+                            <div class="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center mb-2">
+                                <i class="bi bi-file-earmark-pdf-fill text-xl"></i>
+                            </div>
+                            <span class="font-bold text-sm text-slate-800 dark:text-slate-100">PDF Document</span>
+                            <span class="text-[11px] text-slate-400 text-center mt-0.5">Print-ready A4 grid</span>
+                            <div class="active-badge absolute top-2 right-2 w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">
+                                <i class="bi bi-check"></i>
+                            </div>
+                        </label>
+
+                        <label class="format-card relative flex flex-col items-center p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 cursor-pointer transition hover:border-indigo-400">
+                            <input type="radio" name="format" value="docx" class="sr-only" onchange="updateFormatSelection(this)">
+                            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-2">
+                                <i class="bi bi-file-earmark-word-fill text-xl"></i>
+                            </div>
+                            <span class="font-bold text-sm text-slate-800 dark:text-slate-100">Word (.docx)</span>
+                            <span class="text-[11px] text-slate-400 text-center mt-0.5">Editable Microsoft Word</span>
+                            <div class="active-badge hidden absolute top-2 right-2 w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">
+                                <i class="bi bi-check"></i>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                {{-- Layout Selector --}}
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                        2. Choose Card Layout
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="layout-card flex items-center gap-3 p-3 rounded-xl border-2 border-indigo-600 bg-indigo-50/30 dark:bg-indigo-950/20 cursor-pointer transition">
+                            <input type="radio" name="layout" value="dualsided" checked class="sr-only" onchange="updateLayoutSelection(this)">
+                            <i class="bi bi-front text-indigo-600 text-lg"></i>
+                            <div>
+                                <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Dual Sided</p>
+                                <p class="text-[10px] text-slate-400">Front + Back with QR</p>
+                            </div>
+                        </label>
+                        <label class="layout-card flex items-center gap-3 p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 cursor-pointer transition">
+                            <input type="radio" name="layout" value="front" class="sr-only" onchange="updateLayoutSelection(this)">
+                            <i class="bi bi-grid-fill text-slate-500 text-lg"></i>
+                            <div>
+                                <p class="text-xs font-bold text-slate-800 dark:text-slate-200">Front Only Grid</p>
+                                <p class="text-[10px] text-slate-400">8 cards per A4 page</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                {{-- Class & Section Filter --}}
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Target Class</label>
+                        <select name="class_id" id="modal_class_select" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">All Classes</option>
+                            @isset($school_classes)
+                                @foreach($school_classes as $c)
+                                <option value="{{ $c->id }}" {{ $c->id == request('class_id') ? 'selected' : '' }}>
+                                    {{ $c->class_name }}
+                                </option>
+                                @endforeach
+                            @endisset
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Max Students</label>
+                        <select name="limit" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="50">50 Students</option>
+                            <option value="100" selected>100 Students</option>
+                            <option value="200">200 Students</option>
+                        </select>
+                    </div>
+                </div>
+
+                {{-- Modal Action Buttons --}}
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="button" onclick="submitBulkForm('docx')" class="flex-1 py-2.5 px-4 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer">
+                        <i class="bi bi-file-earmark-word text-sm"></i> Download Word
+                    </button>
+                    <button type="button" onclick="submitBulkForm('pdf')" class="flex-1 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition cursor-pointer">
+                        <i class="bi bi-file-earmark-pdf text-sm"></i> Generate PDF
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
 </div>{{-- /page-wrapper --}}
 @endsection
 
@@ -371,6 +493,65 @@ function getSections(obj) {
             select.innerHTML = '<option>Failed to load</option>';
             showToast('Could not load sections. Please try again.', 'error');
         });
+}
+
+// ── Bulk ID Card Modal Handlers ────────────────────────────────
+function openBulkIdModal() {
+    var modal = document.getElementById('bulkIdModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        var pageClass = document.getElementById('class-select');
+        var modalClass = document.getElementById('modal_class_select');
+        if (pageClass && modalClass && pageClass.value) {
+            modalClass.value = pageClass.value;
+        }
+    }
+}
+
+function closeBulkIdModal() {
+    var modal = document.getElementById('bulkIdModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function updateFormatSelection(radio) {
+    document.querySelectorAll('.format-card').forEach(function(card) {
+        card.classList.remove('border-indigo-600', 'bg-indigo-50/50', 'dark:bg-indigo-950/30');
+        card.classList.add('border-slate-200', 'dark:border-slate-700', 'bg-white', 'dark:bg-slate-800');
+        var b = card.querySelector('.active-badge');
+        if (b) b.classList.add('hidden');
+    });
+    var parent = radio.closest('.format-card');
+    if (parent) {
+        parent.classList.add('border-indigo-600', 'bg-indigo-50/50', 'dark:bg-indigo-950/30');
+        parent.classList.remove('border-slate-200', 'dark:border-slate-700', 'bg-white', 'dark:bg-slate-800');
+        var b = parent.querySelector('.active-badge');
+        if (b) b.classList.remove('hidden');
+    }
+}
+
+function updateLayoutSelection(radio) {
+    document.querySelectorAll('.layout-card').forEach(function(card) {
+        card.classList.remove('border-indigo-600', 'bg-indigo-50/30', 'dark:bg-indigo-950/20');
+        card.classList.add('border-slate-200', 'dark:border-slate-700', 'bg-white', 'dark:bg-slate-800');
+    });
+    var parent = radio.closest('.layout-card');
+    if (parent) {
+        parent.classList.add('border-indigo-600', 'bg-indigo-50/30', 'dark:bg-indigo-950/20');
+        parent.classList.remove('border-slate-200', 'dark:border-slate-700', 'bg-white', 'dark:bg-slate-800');
+    }
+}
+
+function submitBulkForm(format) {
+    var form = document.getElementById('bulkIdCardForm');
+    if (form) {
+        var radio = form.querySelector('input[name="format"][value="' + format + '"]');
+        if (radio) {
+            radio.checked = true;
+            updateFormatSelection(radio);
+        }
+        form.submit();
+        setTimeout(closeBulkIdModal, 600);
+    }
 }
 
 // ── View toggle (table ↔ card) ────────────────────────────────

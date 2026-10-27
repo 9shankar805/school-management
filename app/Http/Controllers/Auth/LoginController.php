@@ -21,6 +21,38 @@ class LoginController extends Controller
     }
 
     /**
+     * Show the application's login form, scoped to the current school tenant if on a subdomain.
+     */
+    public function showLoginForm(Request $request)
+    {
+        $school = config('tenant.school') ?? view()->shared('currentSchool');
+
+        // Fallback: check query parameter ?school=... or ?school_id=...
+        if (!$school && ($request->has('school') || $request->has('school_id'))) {
+            $schoolParam = $request->get('school') ?: $request->get('school_id');
+            if (is_numeric($schoolParam)) {
+                $school = \App\Models\School::find((int) $schoolParam);
+            } else {
+                $slug = strtolower(trim((string) $schoolParam));
+                $cleanSlug = str_replace(['-', '_', ' '], '', $slug);
+                $school = \App\Models\School::where(function ($q) use ($slug, $cleanSlug) {
+                    $q->where('slug', $slug)
+                      ->orWhereRaw("REPLACE(slug, '-', '') = ?", [$cleanSlug])
+                      ->orWhereRaw("LOWER(REPLACE(name, ' ', '')) = ?", [$cleanSlug]);
+                })->orderByRaw("CASE WHEN status = 'active' THEN 0 WHEN status = 'pending' THEN 1 ELSE 2 END")->first();
+            }
+
+            if ($school) {
+                \Illuminate\Support\Facades\Config::set('tenant.school_id', $school->id);
+                \Illuminate\Support\Facades\Config::set('tenant.school', $school);
+                \Illuminate\Support\Facades\View::share('currentSchool', $school);
+            }
+        }
+
+        return view('auth.login', compact('school'));
+    }
+
+    /**
      * Validate login request — adds reCAPTCHA v3 check on top of default validation.
      */
     protected function validateLogin(Request $request): void

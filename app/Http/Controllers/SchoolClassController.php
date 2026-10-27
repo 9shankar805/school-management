@@ -64,31 +64,127 @@ class SchoolClassController extends Controller
     public function store(SchoolClassStoreRequest $request)
     {
         try {
-            $class = SchoolClass::create([
-                'class_name' => $request->class_name,
-                'session_id' => $request->session_id,
-            ]);
+            $sessionId = (int) $request->session_id;
+            $createdClasses = [];
+            $defaultSectionsStr = $request->input('initial_sections_str', 'A, B');
+            $defaultRoomNo = $request->input('default_room_no', '101');
 
-            // Auto-create initial sections if provided
-            if ($request->has('initial_sections_str') && !empty($request->initial_sections_str)) {
-                $sections = explode(',', $request->initial_sections_str);
-                foreach ($sections as $secName) {
-                    $secName = trim($secName);
-                    if (!empty($secName)) {
-                        \App\Models\Section::create([
-                            'section_name' => $secName,
-                            'room_no'      => $request->input('default_room_no', '101'),
-                            'class_id'     => $class->id,
-                            'session_id'   => $request->session_id,
-                        ]);
+            $globalRoomCounter = $defaultRoomNo;
+
+            // 1. Check if structured 'classes' array was submitted (Dynamic Rows Mode)
+            if ($request->has('classes') && is_array($request->classes) && count($request->classes) > 0) {
+                foreach ($request->classes as $clsData) {
+                    $className = trim($clsData['class_name'] ?? '');
+                    if (empty($className)) continue;
+
+                    $class = SchoolClass::firstOrCreate([
+                        'class_name' => $className,
+                        'session_id' => $sessionId,
+                    ]);
+                    $createdClasses[] = $class->class_name;
+
+                    // Sections for this row
+                    $secStr = !empty($clsData['initial_sections']) ? $clsData['initial_sections'] : $defaultSectionsStr;
+                    $rowRoomCounter = !empty($clsData['room_no']) ? $clsData['room_no'] : $globalRoomCounter;
+
+                    $this->createSectionsForClass($class->id, $sessionId, $secStr, $rowRoomCounter);
+                    if (empty($clsData['room_no'])) {
+                        $globalRoomCounter = $rowRoomCounter;
                     }
                 }
             }
+            // 2. Check if bulk comma/newline separated string was submitted (Bulk Text Mode)
+            elseif ($request->filled('bulk_class_names')) {
+                // Split by comma or newlines
+                $rawNames = preg_split('/[\r\n,]+/', $request->bulk_class_names);
+                $bulkRoomCounter = $defaultRoomNo;
 
-            return back()->with('status', 'Class "' . $class->class_name . '" created successfully!');
+                foreach ($rawNames as $rawName) {
+                    $className = trim($rawName);
+                    if (empty($className)) continue;
+
+                    $class = SchoolClass::firstOrCreate([
+                        'class_name' => $className,
+                        'session_id' => $sessionId,
+                    ]);
+                    $createdClasses[] = $class->class_name;
+
+                    $this->createSectionsForClass($class->id, $sessionId, $defaultSectionsStr, $bulkRoomCounter);
+                }
+            }
+            // 3. Fallback: Single Class creation
+            elseif ($request->filled('class_name')) {
+                $class = SchoolClass::firstOrCreate([
+                    'class_name' => trim($request->class_name),
+                    'session_id' => $sessionId,
+                ]);
+                $createdClasses[] = $class->class_name;
+                $singleRoomCounter = $defaultRoomNo;
+
+                $this->createSectionsForClass($class->id, $sessionId, $defaultSectionsStr, $singleRoomCounter);
+            }
+
+            $count = count($createdClasses);
+            if ($count === 0) {
+                return back()->with('error', 'No valid class names were provided.');
+            }
+
+            if ($count === 1) {
+                return back()->with('status', 'Class "' . $createdClasses[0] . '" created successfully with sections and rooms starting at ' . $defaultRoomNo . '!');
+            }
+
+            return back()->with('status', "Successfully created {$count} classes: " . implode(', ', array_slice($createdClasses, 0, 5)) . ($count > 5 ? " and " . ($count - 5) . " more." : ".") . " Rooms assigned sequentially starting from {$defaultRoomNo}.");
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to create class. ' . $e->getMessage());
+            return back()->with('error', 'Failed to create classes. ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Helper to create sections for a given class with sequential room numbers.
+     */
+    private function createSectionsForClass(int $classId, int $sessionId, ?string $sectionsStr, string &$roomCounter): void
+    {
+        if (empty($sectionsStr)) {
+            $sectionsStr = 'A, B';
+        }
+
+        $sections = explode(',', $sectionsStr);
+        foreach ($sections as $secName) {
+            $secName = trim($secName);
+            if (!empty($secName)) {
+                $assignedRoom = $this->incrementRoomNumber($roomCounter);
+                \App\Models\Section::firstOrCreate([
+                    'class_id'     => $classId,
+                    'section_name' => $secName,
+                    'session_id'   => $sessionId,
+                ], [
+                    'room_no'      => $assignedRoom,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Increment room number string (e.g. "103" -> "104", "Room-103" -> "Room-104")
+     */
+    private function incrementRoomNumber(string &$currentRoom): string
+    {
+        $trimmed = trim($currentRoom);
+        if (preg_match('/^(.*?)(\d+)(\D*)$/', $trimmed, $matches)) {
+            $prefix = $matches[1];
+            $numStr = $matches[2];
+            $suffix = $matches[3];
+            $padLen = strlen($numStr);
+            $num = (int)$numStr;
+
+            $assigned = $trimmed;
+            $nextNum = $num + 1;
+            $nextNumStr = str_pad((string)$nextNum, $padLen, '0', STR_PAD_LEFT);
+            $currentRoom = $prefix . $nextNumStr . $suffix;
+            return $assigned;
+        }
+
+        return $trimmed;
     }
 
     /**
@@ -141,9 +237,14 @@ class SchoolClassController extends Controller
             ->get()
             ->groupBy('section_id');
 
+        // All active teaching staff in the school for assignment dropdown
+        $allTeachers = \App\Models\User::role(['teacher', 'class-teacher'])
+            ->orderBy('first_name')
+            ->get();
+
         return view('classes.show', compact(
             'schoolClass', 'sections', 'promotions',
-            'assignedTeachers', 'classTeacher', 'timetableSlots', 'sessionId'
+            'assignedTeachers', 'classTeacher', 'timetableSlots', 'sessionId', 'allTeachers'
         ));
     }
 
@@ -203,6 +304,37 @@ class SchoolClassController extends Controller
             return back()->with('status', 'Class "' . $className . '" deleted successfully!');
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to delete class. ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Remove multiple classes and their sections from storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function bulkDestroy(Request $request)
+    {
+        try {
+            $classIds = $request->input('class_ids', []);
+            if (empty($classIds) || !is_array($classIds)) {
+                return back()->with('error', 'No classes were selected for deletion.');
+            }
+
+            $classes = SchoolClass::whereIn('id', $classIds)->get();
+            $count = $classes->count();
+            if ($count === 0) {
+                return back()->with('error', 'Selected classes were not found.');
+            }
+
+            // Delete related sections first
+            \App\Models\Section::whereIn('class_id', $classIds)->delete();
+            // Delete classes
+            SchoolClass::whereIn('id', $classIds)->delete();
+
+            return back()->with('status', "Successfully deleted {$count} selected class(es) and their sections!");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to delete selected classes: ' . $e->getMessage());
         }
     }
 }

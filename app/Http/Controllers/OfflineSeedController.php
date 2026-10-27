@@ -7,21 +7,28 @@ use App\Models\AssignedTeacher;
 use App\Models\Exam;
 use App\Models\FeeStructure;
 use App\Models\FeeType;
+use App\Models\Feedback;
+use App\Models\Homework;
 use App\Models\HostelRoom;
+use App\Models\Invoice;
+use App\Models\LeaveApplication;
+use App\Models\LeaveType;
 use App\Models\Mark;
 use App\Models\Notice;
 use App\Models\Promotion;
+use App\Models\Routine;
 use App\Models\SchoolClass;
 use App\Models\Staff;
 use App\Models\Subject;
 use App\Models\Syllabus;
 use App\Models\TransportRoute;
+use App\Models\Visitor;
 use App\Repositories\SchoolSessionRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * OfflineSeedController (v3)
+ * OfflineSeedController (v4 — Comprehensive Offline Architecture)
  *
  * Provides the full offline-first data payload for the PWA layer.
  * Called by public/js/offline-seed.js on login / page load (same-origin cookie auth).
@@ -29,6 +36,7 @@ use Illuminate\Http\Request;
  * V1: classes, students
  * V2: + staff, fee_structures, fee_types, subjects, hostels, transport, reference
  * V3: + syllabi, assignments, marks, notices, exams
+ * V4: + homework, routines, invoices, visitors, leave_applications, feedbacks
  *
  * GET /api/offline/seed-data
  */
@@ -274,20 +282,220 @@ class OfflineSeedController extends Controller
                 ])->values()->all();
         } catch (\Throwable) {}
 
-        // ── 14. Reference KV ──────────────────────────────────────────────
+        // ── 14. Homework & Assignments (V4) ──────────────────────────────
+        $homework = [];
+        try {
+            $hwQuery = Homework::where('session_id', $sessionId)
+                ->with(['course:id,course_name', 'teacher:id,first_name,last_name'])
+                ->latest()->limit(200);
+            if ($user && method_exists($user, 'isTeacher') && ($user->isTeacher() || $user->isClassTeacher())) {
+                $hwQuery->where('teacher_id', $user->id);
+            }
+            $homework = $hwQuery->get()->map(fn ($h) => [
+                'id'          => $h->id,
+                'title'       => $h->title,
+                'class_id'    => $h->class_id,
+                'section_id'  => $h->section_id ?? 0,
+                'course_id'   => $h->course_id,
+                'course_name' => $h->course?->course_name ?? 'General',
+                'teacher_name'=> $h->teacher ? ($h->teacher->first_name . ' ' . $h->teacher->last_name) : 'Teacher',
+                'due_date'    => optional($h->due_date)->toDateString(),
+                'description' => $h->description ?? '',
+                'total_marks' => (int) ($h->total_marks ?? 0),
+                'status'      => $h->status ?? 'active',
+            ])->values()->all();
+        } catch (\Throwable) {}
+
+        // ── 15. Routines / Class Timetables (V4) ─────────────────────────
+        $routines = [];
+        try {
+            $routines = Routine::where('session_id', $sessionId)
+                ->with(['schoolClass:id,class_name', 'teacher:id,first_name,last_name'])
+                ->get()->map(fn ($r) => [
+                    'id'          => $r->id,
+                    'class_id'    => $r->class_id,
+                    'section_id'  => $r->section_id ?? 0,
+                    'weekday'     => $r->weekday,
+                    'start'       => $r->start,
+                    'end'         => $r->end,
+                    'room'        => $r->room ?? '',
+                    'course_id'   => $r->course_id,
+                    'teacher_id'  => $r->teacher_id,
+                    'teacher_name'=> $r->teacher ? ($r->teacher->first_name . ' ' . $r->teacher->last_name) : '',
+                    'color'       => $r->color ?? '#6366f1',
+                ])->values()->all();
+        } catch (\Throwable) {}
+
+        // ── 16. Fee Invoices (V5) ─────────────────────────────────────────
+        $invoices = [];
+        try {
+            $invQuery = Invoice::with(['student:id,first_name,last_name,roll_no,admission_no', 'items.feeType'])
+                ->where('session_id', $sessionId)
+                ->latest()
+                ->limit(500);
+            if ($user && method_exists($user, 'isStudent') && $user->isStudent()) {
+                $invQuery->where('student_id', $user->id);
+            }
+            $invoices = $invQuery->get()->map(fn ($inv) => [
+                'id'             => $inv->id,
+                'student_id'     => $inv->student_id,
+                'student_name'   => $inv->student ? ($inv->student->first_name . ' ' . $inv->student->last_name) : 'Student #' . $inv->student_id,
+                'roll_no'        => $inv->student?->roll_no,
+                'admission_no'   => $inv->student?->admission_no,
+                'title'          => $inv->title ?? 'Tuition & Academic Fees',
+                'invoice_number' => $inv->invoice_number,
+                'total_payable'  => (float) ($inv->total_payable ?? $inv->amount ?? 0),
+                'paid_amount'    => (float) ($inv->paid_amount ?? 0),
+                'due_amount'     => (float) max(0, ($inv->total_payable ?? $inv->amount ?? 0) - ($inv->paid_amount ?? 0)),
+                'status'         => $inv->status ?? 'unpaid',
+                'due_date'       => optional($inv->due_date)->toDateString(),
+                'items'          => $inv->items->map(fn ($it) => [
+                    'id'          => $it->id,
+                    'name'        => $it->description ?? optional($it->feeType)->name ?? 'Fee Item',
+                    'amount'      => (float) ($it->total ?? $it->unit_price ?? 0),
+                ])->values()->all(),
+            ])->values()->all();
+        } catch (\Throwable) {}
+
+        // ── 17. Expenses (V5) ─────────────────────────────────────────────
+        $expenses = [];
+        try {
+            $expenses = \App\Models\Expense::latest('expense_date')->limit(200)->get()->map(fn ($e) => [
+                'id'             => $e->id,
+                'title'          => $e->title,
+                'category'       => $e->category ?? 'General',
+                'amount'         => (float) $e->amount,
+                'expense_date'   => optional($e->expense_date)->toDateString() ?? now()->toDateString(),
+                'payment_method' => $e->payment_method ?? 'cash',
+                'reference'      => $e->reference,
+                'notes'          => $e->notes,
+            ])->values()->all();
+        } catch (\Throwable) {}
+
+        // ── 18. Income Records (V5) ───────────────────────────────────────
+        $income = [];
+        try {
+            $income = \App\Models\IncomeRecord::latest('income_date')->limit(200)->get()->map(fn ($inc) => [
+                'id'             => $inc->id,
+                'title'          => $inc->title,
+                'category'       => $inc->category ?? 'General',
+                'amount'         => (float) $inc->amount,
+                'income_date'    => optional($inc->income_date)->toDateString() ?? now()->toDateString(),
+                'payment_method' => $inc->payment_method ?? 'cash',
+                'reference'      => $inc->reference,
+                'notes'          => $inc->notes,
+            ])->values()->all();
+        } catch (\Throwable) {}
+
+        // ── 19. Payments & Receipts (V5) ──────────────────────────────────
+        $payments = [];
+        try {
+            $payments = \App\Models\Payment::with(['invoice.student'])->latest('payment_date')->limit(200)->get()->map(fn ($p) => [
+                'id'             => $p->id,
+                'invoice_id'     => $p->invoice_id,
+                'invoice_number' => $p->invoice?->invoice_number,
+                'student_name'   => $p->invoice?->student ? ($p->invoice->student->first_name . ' ' . $p->invoice->student->last_name) : 'Student',
+                'amount'         => (float) $p->amount,
+                'payment_date'   => optional($p->payment_date)->toDateString() ?? now()->toDateString(),
+                'payment_method' => $p->payment_method ?? 'cash',
+                'receipt_number' => $p->receipt_number ?? ('REC-' . $p->id),
+                'notes'          => $p->notes,
+            ])->values()->all();
+        } catch (\Throwable) {}
+
+        // ── 20. Visitors Registry ─────────────────────────────────────────
+        $visitors = [];
+        try {
+            $visitors = Visitor::whereDate('check_in_time', today())->latest()->limit(50)->get()
+                ->map(fn ($v) => [
+                    'id'             => $v->id,
+                    'name'           => $v->name,
+                    'phone'          => $v->phone,
+                    'badge_number'   => $v->badge_number,
+                    'person_to_meet' => $v->person_to_meet,
+                    'purpose'        => $v->purpose,
+                    'check_in_time'  => optional($v->check_in_time)->toTimeString(),
+                    'status'         => $v->status ?? 'in_premises',
+                ])->values()->all();
+        } catch (\Throwable) {}
+
+        // ── 21. Leave Applications ────────────────────────────────────────
+        $leaveApplications = [];
+        try {
+            $leaveQuery = LeaveApplication::with('leaveType:id,name')->latest()->limit(50);
+            if ($user) {
+                $leaveQuery->where('user_id', $user->id);
+            }
+            $leaveApplications = $leaveQuery->get()->map(fn ($l) => [
+                'id'         => $l->id,
+                'user_id'    => $l->user_id,
+                'leave_type' => $l->leaveType?->name ?? 'General',
+                'from_date'  => optional($l->from_date)->toDateString(),
+                'to_date'    => optional($l->to_date)->toDateString(),
+                'total_days' => (int) ($l->total_days ?? 1),
+                'reason'     => $l->reason ?? '',
+                'status'     => $l->status ?? 'pending',
+            ])->values()->all();
+        } catch (\Throwable) {}
+
+        // ── 22. Feedbacks & Grievances ────────────────────────────────────
+        $feedbacks = [];
+        try {
+            $fbQuery = Feedback::latest()->limit(30);
+            if ($user && method_exists($user, 'hasRole') && !$user->hasRole(['admin', 'principal'])) {
+                $fbQuery->where('user_id', $user->id);
+            }
+            $feedbacks = $fbQuery->get()->map(fn ($f) => [
+                'id'          => $f->id,
+                'ticket_code' => $f->ticket_code,
+                'title'       => $f->title,
+                'category'    => $f->category,
+                'priority'    => $f->priority,
+                'status'      => $f->status,
+                'created_at'  => optional($f->created_at)->toDateString(),
+            ])->values()->all();
+        } catch (\Throwable) {}
+
+        // ── 23. Academic Calendar Events ──────────────────────────────
+        $events = [];
+        try {
+            $events = Event::where('session_id', $sessionId)->orderBy('start')->get()
+                ->map(fn ($ev) => [
+                    'id'            => $ev->id,
+                    'title'         => $ev->title,
+                    'category'      => $ev->category ?? 'academic',
+                    'is_holiday'    => (bool) $ev->is_holiday,
+                    'start'         => optional($ev->start)->toDateTimeString(),
+                    'end'           => optional($ev->end)->toDateTimeString(),
+                    'start_bs'      => $ev->start_bs,
+                    'end_bs'        => $ev->end_bs,
+                    'audience'      => $ev->audience ?? 'all',
+                    'academic_term' => $ev->academic_term,
+                    'venue'         => $ev->venue,
+                    'color'         => $ev->color,
+                    'description'   => $ev->description,
+                ])->values()->all();
+        } catch (\Throwable) {}
+
+        // ── 24. Reference KV ──────────────────────────────────────────────
         $reference = [
             ['key' => 'academic_sessions',  'value' => $this->listAcademicSessions()],
             ['key' => 'current_session_id', 'value' => $sessionId],
             ['key' => 'school_id',          'value' => $schoolId],
-            ['key' => 'seed_schema_version','value' => 3],
+            ['key' => 'seed_schema_version','value' => 5],
             ['key' => 'nepali_months',      'value' => [
                 'Baisakh','Jestha','Asar','Shrawan','Bhadra','Ashoj',
                 'Kartik','Mangsir','Poush','Magh','Falgun','Chaitra',
             ]],
+            ['key' => 'today_day_book',     'value' => [
+                'date'           => now()->toDateString(),
+                'today_income'   => (float) (\App\Models\Payment::whereDate('payment_date', today())->sum('amount') + \App\Models\IncomeRecord::whereDate('income_date', today())->sum('amount')),
+                'today_expenses' => (float) \App\Models\Expense::whereDate('expense_date', today())->sum('amount'),
+            ]],
         ];
 
         return response()->json([
-            'schema_version' => 3,
+            'schema_version' => 5,
             'session_id'     => $sessionId,
             'school_id'      => $schoolId,
             'seeded_at'      => now()->toIso8601String(),
@@ -303,12 +511,22 @@ class OfflineSeedController extends Controller
             'transport'      => $transport,
             'reference'      => $reference,
 
-            // ── Live data (V3) ──
+            // ── Live, Calendar & Finance data (V3 + V4 + V5) ──
             'syllabi'        => $syllabi,
             'assignments'    => $assignments,
             'marks'          => $marks,
             'notices'        => $notices,
             'exams'          => $exams,
+            'events'         => $events,
+            'homework'       => $homework,
+            'routines'       => $routines,
+            'invoices'       => $invoices,
+            'expenses'       => $expenses,
+            'income'         => $income,
+            'payments'       => $payments,
+            'visitors'       => $visitors,
+            'leave'          => $leaveApplications,
+            'feedback'       => $feedbacks,
 
             // Sizes for progress bar in offline-seed.js
             'sizes' => [
@@ -325,6 +543,15 @@ class OfflineSeedController extends Controller
                 'marks'          => count($marks),
                 'notices'        => count($notices),
                 'exams'          => count($exams),
+                'homework'       => count($homework),
+                'routines'       => count($routines),
+                'invoices'       => count($invoices),
+                'expenses'       => count($expenses),
+                'income'         => count($income),
+                'payments'       => count($payments),
+                'visitors'       => count($visitors),
+                'leave'          => count($leaveApplications),
+                'feedback'       => count($feedbacks),
             ],
         ]);
     }

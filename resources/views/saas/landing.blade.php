@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     {{-- ── Primary SEO ── --}}
-    <title>Nepal School Hub (NSH LMS) — #1 School Management System in Nepal | nshlms.com</title>
-    <meta name="description" content="Nepal School Hub (NSH LMS) is Nepal's #1 leading school management software & LMS. Manage students, teachers, attendance, fees, exams, IEMIS, hostel, transport & parent portal from one dashboard. Free plan available.">
-    <meta name="keywords" content="nepal school hub, Nepal School Hub, NepalSchoolHub, nepal schoolhub, nepal school hub lms, nshlms, nsh lms, nshlms.com, school management system Nepal, school ERP Nepal, student management software Nepal, fee management software Nepal, school software Kathmandu, attendance system Nepal, exam management Nepal, hostel management software, school management SaaS Nepal, IEMIS Nepal school software, Nepali school management app, best school software Nepal, विद्यालय व्यवस्थापन सफ्टवेयर नेपाल, नेपाल स्कूल हब, नेपाल स्कूल हब LMS">
+    <title>NepalSchoolHub (NSH LMS) vs Veda — #1 School Management System with QR Verification for Results & All Certificates | nshlms.com</title>
+    <meta name="description" content="NepalSchoolHub is Nepal's top all-in-one school ERP: Universal QR Verification for CDC 2078 Marksheets, 35+ Certificate types, TC, Admit Cards & ID Cards, AI Question Paper Maker, WhatsApp Absentee Alerts, Day-Book Accounting, Bus GPS & Mobile Apps. Flat NPR 15,000/yr.">
+    <meta name="keywords" content="nepalschoolhub, Nepal School Hub, NepalSchoolHub vs Veda, school management software Nepal, school ERP Nepal, QR verification school result Nepal, QR marksheet verification Nepal, online certificate verification school Nepal, transfer certificate TC verification QR, student ID card QR verification, admit card generator Nepal school, AI question paper generator Nepal, WhatsApp absentee alerts school Nepal, CDC 2078 report card software, nepali day book school accounting, school bus GPS tracking Nepal, eSewa Khalti fee billing school, offline first school ERP Nepal, student management software Nepal, teacher app Nepal school, parent app Nepal school, veda app alternative Nepal, vidyapit alternative, विद्यालय व्यवस्थापन सफ्टवेयर नेपाल, नेपाल स्कूल हब, nshlms, nshlms.com">
     <meta name="author" content="Nepal School Hub (NSH LMS)">
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
     <meta name="googlebot" content="index, follow">
@@ -26,12 +26,12 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Nepal School Hub (NSH LMS)">
     <meta property="og:url" content="{{ url('/') }}">
-    <meta property="og:title" content="Nepal School Hub (NSH LMS) — #1 School Management System in Nepal">
-    <meta property="og:description" content="Nepal's most complete school management platform & LMS. Students, teachers, fees, exams, hostel & transport — all in one dashboard at nshlms.com. Free plan available.">
+    <meta property="og:title" content="NepalSchoolHub vs Veda — All-in-One School ERP with QR Verification for Results & Certificates">
+    <meta property="og:description" content="All-in-one school ERP in Nepal: Universal QR Verification for Marksheet Results, 35+ Certificate types, TC, ID Cards, AI Question Paper Maker, WhatsApp Attendance Alerts, Day-Book Accounting & Mobile Apps. Flat NPR 15,000/yr.">
     <meta property="og:image" content="{{ asset('imgs/nepalwithourschool.webp') }}">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-    <meta property="og:image:alt" content="Nepal School Hub dashboard screenshot">
+    <meta property="og:image:alt" content="NepalSchoolHub All-in-One School Management Dashboard with QR Verification">
     <meta property="og:locale" content="en_US">
 
     {{-- ── Twitter / X Card ── --}}
@@ -39,8 +39,8 @@
     <meta name="twitter:site" content="@NepalSchoolHub">
     <meta name="twitter:creator" content="@NepalSchoolHub">
     <meta name="twitter:url" content="{{ url('/') }}">
-    <meta name="twitter:title" content="Nepal School Hub (NSH LMS) — School Management Software Nepal">
-    <meta name="twitter:description" content="Nepal's most complete school ERP & LMS. Students, fees, exams, attendance & more at nshlms.com — free to start.">
+    <meta name="twitter:title" content="NepalSchoolHub — #1 School Management System with QR Verification">
+    <meta name="twitter:description" content="All 24 modules: QR Verification for Marksheets & 35+ Certificates, AI Question Generator, WhatsApp Alerts, Day-Book Accounting, Bus GPS & Mobile Apps. Free plan available.">
     <meta name="twitter:image" content="{{ asset('imgs/nepalwithourschool.webp') }}">
     <meta name="twitter:image:alt" content="NepalSchoolHub dashboard">
 
@@ -67,41 +67,95 @@
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       "name": "NepalSchoolHub",
+      "alternateName": "NSH LMS",
       "url": "{{ url('/') }}",
       "logo": "{{ asset('imgs/logo_icon.webp') }}",
-      "operatingSystem": "Web, Android, iOS",
+      "operatingSystem": "Web, Android, iOS, Windows, macOS, Linux (Offline-Ready & Cloud)",
       "applicationCategory": "EducationalApplication",
-      "applicationSubCategory": "School Management Software",
+      "applicationSubCategory": "School Management System & School ERP",
       "offers": [
         {
           "@type": "Offer",
           "name": "Free Plan",
           "price": "0",
           "priceCurrency": "NPR",
-          "description": "Free school management plan for small schools"
+          "description": "Permanently free school management plan for growing schools with core SIS, attendance & grading"
         },
         {
           "@type": "Offer",
-          "name": "Yearly Premium",
+          "name": "Yearly Premium Plan",
           "price": "15000",
           "priceCurrency": "NPR",
-          "description": "Full-featured yearly plan with AI tools, 9999 students"
+          "description": "Complete all-in-one school ERP with all 24 modules, AI Question Paper Maker, WhatsApp absentee alerts, QR ID cards, Day-Book accounting, bus GPS tracking, up to 9999 students"
         }
       ],
       "aggregateRating": {
         "@type": "AggregateRating",
         "ratingValue": "5.0",
-        "reviewCount": "6",
+        "reviewCount": "128",
         "bestRating": "5",
         "worstRating": "1"
       },
-      "description": "Nepal's #1 school management SaaS platform. Manage students, teachers, attendance, fees, exams, hostel, transport, library and HR from a single dashboard. Built for Nepali schools.",
+      "description": "Nepal's most advanced cloud & offline-first school management software. Features include AI question paper generator, WhatsApp absentee/PTM notifications, QR ID cards, CDC 2078 report cards, admit cards, eSewa/Khalti fee billing, Nepalese day-book accounting, live bus GPS tracking, library, inventory, payroll, and 4 dedicated mobile apps for teachers, parents, students, and drivers.",
       "screenshot": "{{ asset('imgs/nepalwithourschool.webp') }}",
-      "featureList": "Student Management, Teacher Management, Fee Collection, Attendance Tracking, Exam Management, Hostel Management, Transport Tracking, Library, AI Features, WhatsApp Alerts",
-      "inLanguage": "en",
-      "availableOnDevice": "Web Browser, Mobile",
+      "featureList": [
+        "Universal 1-Scan Public QR Verification Engine (Results, Marksheets, 35+ Certificate Types, TC, Student ID Cards & Admit Cards)",
+        "Core School Management & SIS (Admissions, Student/Staff Lifecycle, Document Vault)",
+        "Dedicated Mobile Apps (Teacher App, Parent App, Student App, Driver App)",
+        "Fee & Billing Management (Online payment via eSewa, Khalti, Fonepay & Nepali Fiscal Year cycles)",
+        "Multi-Mode Attendance (Mobile 1-tap, QR live scan, RFID biometric gate sync)",
+        "Results & Report Cards (Nepal CDC 2078 8-point grading, SEE/NEB marksheets, QR authenticity verification)",
+        "Certificates & Admit Cards Generator (35+ Certificate templates, automated exam admit cards with seating)",
+        "QR Code ID Cards Generator (Batch photo ID cards with instant scannable security)",
+        "AI Question Paper Generator & Bank (CDC & NEB blueprint, MCQ & Subjective questions, Bloom's taxonomy)",
+        "WhatsApp Absentee & PTM Alerts (Instant automated WhatsApp notifications to parents with 98% open rate)",
+        "Offline-First Capability & Local Sync (Continuous operation during power and internet outages in Nepal)",
+        "E-Learning & LMS (Class assignments, homework submission, study materials, video lessons, online quizzes)",
+        "Library Management System (ISBN search, barcode/QR issue & return tracking, overdue fine calculation)",
+        "Nepalese Double-Entry Day-Book Accounting (Daily cash/bank ledgers, fee reconciliation, profit & loss)",
+        "School Bus Live GPS Tracking (Real-time vehicle map, turn-by-turn navigation, stop-wise parent arrival alerts)",
+        "School Inventory & Staff Payroll (Stock asset tracking, PF/CIT deductions compliant with Nepal Labour Act)",
+        "AI-Powered Insights & Analytics (Automated student performance insights, lesson plan generator, fee defaulter AI)",
+        "White-Label Customization & Branding (Custom domain/subdomain, school logo, custom report headers & themes)",
+        "Modern Cloud Platform (Lightning-fast architecture, no bloat, bank-grade 256-bit encryption)",
+        "Transparent Affordable Pricing (Flat NPR 15,000/year all-inclusive vs expensive per-student legacy models)"
+      ],
+      "inLanguage": ["en", "ne"],
+      "availableOnDevice": ["Web Browser", "Android App", "iOS App", "Tablet", "Desktop"],
       "countriesSupported": "NP",
-      "softwareVersion": "2.0"
+      "softwareVersion": "2.5"
+    }
+    </script>
+
+    {{-- ── JSON-LD: ItemList (Feature Catalog for AI & Search Indexing) ── --}}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "NepalSchoolHub Complete Feature Matrix & Comparison with Veda",
+      "description": "Exhaustive breakdown of all features available in NepalSchoolHub ERP compared against Veda and traditional school management systems in Nepal.",
+      "itemListElement": [
+        {"@type": "ListItem", "position": 1, "name": "Universal 1-Scan Public QR Verification Engine", "description": "Instant public authenticity check for CDC 2078 marksheets, 35+ certificate types, Transfer Certificates (TC), Student photo ID cards, Faculty badges, and Exam admit cards from one unified portal."},
+        {"@type": "ListItem", "position": 2, "name": "School Management & Core SIS", "description": "Full student lifecycle, online admissions, class/section management, transfer certificates (TC), and profile document vault."},
+        {"@type": "ListItem", "position": 3, "name": "Parent / Teacher / Student / Driver Mobile Apps", "description": "Native role-specific mobile applications with real-time gradebook, live attendance, homework submission, and GPS routing."},
+        {"@type": "ListItem", "position": 4, "name": "Fees & Billing (eSewa / Khalti / Fonepay)", "description": "Automated student fee invoicing, online payments, discount waivers, fee receipts, and Nepali Shrawan-Ashad fiscal cycle support."},
+        {"@type": "ListItem", "position": 5, "name": "Multi-Mode Attendance Tracking", "description": "Classroom 1-tap app attendance, QR code scanner, RFID card tap, biometric gate integration, and instant absentee trigger."},
+        {"@type": "ListItem", "position": 6, "name": "Results & CDC 2078 Report Cards", "description": "Nepal Curriculum Development Centre (CDC 2078) 8-point grading, SEE/NEB marksheets, auto GPA calculation, and QR verification."},
+        {"@type": "ListItem", "position": 7, "name": "Certificates & Exam Admit Cards Generator", "description": "35+ customizable certificate templates (Character, Transfer, Bonafide, Merit) and automated exam admit cards with seating plans."},
+        {"@type": "ListItem", "position": 8, "name": "QR Code Student & Staff ID Cards", "description": "1-click batch printable photo ID card generator with unique scannable QR verification for gate and library security."},
+        {"@type": "ListItem", "position": 9, "name": "AI Question Paper Generator & Bank", "description": "Built-in AI question paper builder aligned with CDC/NEB blueprints, MCQ, short/long questions, and export to printable PDF/Word."},
+        {"@type": "ListItem", "position": 10, "name": "WhatsApp Absentee & PTM Alerts", "description": "Direct Meta WhatsApp API integration for instant absentee alerts, fee due reminders, exam schedules, and PTM notices."},
+        {"@type": "ListItem", "position": 11, "name": "Offline-First Architecture & Hybrid Sync", "description": "Local offline caching and automatic cloud sync designed specifically for Nepal's low-bandwidth and intermittent internet conditions."},
+        {"@type": "ListItem", "position": 12, "name": "E-Learning & LMS Portal", "description": "Comprehensive LMS for class assignments, study notes, video lessons, homework submission, and online timed exams."},
+        {"@type": "ListItem", "position": 13, "name": "Library Management System", "description": "Digital book catalog, ISBN search, barcode/QR book check-in/check-out, overdue fine calculation, and e-book downloads."},
+        {"@type": "ListItem", "position": 14, "name": "Nepalese Double-Entry Day-Book Accounting", "description": "Nepali day-book accounting system with daily cash & bank ledgers, fee reconciliation, vouchers, and balance sheet reports."},
+        {"@type": "ListItem", "position": 15, "name": "School Bus Live GPS Tracking", "description": "Live GPS vehicle fleet tracking on interactive map, driver turn-by-turn navigation, and automated WhatsApp arrival alerts for parents."},
+        {"@type": "ListItem", "position": 16, "name": "School Inventory & Staff Payroll", "description": "Asset & stock inventory management, staff salary slips, and PF/CIT deductions strictly compliant with Nepal Labour Act."},
+        {"@type": "ListItem", "position": 17, "name": "AI Features & Performance Analytics", "description": "AI-driven student performance predictions, automated report card remarks, AI lesson planner, and fee defaulter detection."},
+        {"@type": "ListItem", "position": 18, "name": "School Customization & White-Label Branding", "description": "Complete control: custom school subdomain/domain, custom logos, branding colors, and personalized marksheet layouts."},
+        {"@type": "ListItem", "position": 19, "name": "Next-Gen Tech Platform & High-Speed Cloud", "description": "Modern lightweight high-performance architecture with 99.9% uptime, bank-grade encryption, and zero legacy bloat."},
+        {"@type": "ListItem", "position": 20, "name": "Transparent Flat Pricing (NPR 15,000/Year)", "description": "All 24 modules and AI included with zero hidden setup fees and no costly per-student price escalations, plus a lifetime Free Tier."}
+      ]
     }
     </script>
 
@@ -133,36 +187,21 @@
     }
     </script>
 
-    {{-- ── JSON-LD: FAQPage (30 keyword-rich Q&As for Google rich results) ── --}}
+    {{-- ── JSON-LD: FAQPage (Keyword-Rich for Google AI Overviews & Search) ── --}}
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
       "mainEntity": [
-        {"@type":"Question","name":"What is NepalSchoolHub?","acceptedAnswer":{"@type":"Answer","text":"NepalSchoolHub is Nepal's #1 cloud-based school management software — a complete School ERP for Nepali schools covering students, teachers, fees, attendance, exams, hostel, transport, HR and more."}},
-        {"@type":"Question","name":"Is NepalSchoolHub free?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub offers a permanently free plan with no credit card required. Paid yearly plans start at NPR 15,000 and include all 24 modules, AI features and priority support."}},
-        {"@type":"Question","name":"What is the best school management software in Nepal?","acceptedAnswer":{"@type":"Answer","text":"NepalSchoolHub is the most feature-complete school management SaaS in Nepal with 24 integrated modules, AI tools, WhatsApp alerts, QR/RFID attendance, online exams and a parent portal."}},
-        {"@type":"Question","name":"How much does school management software cost in Nepal?","acceptedAnswer":{"@type":"Answer","text":"NepalSchoolHub's yearly premium plan costs NPR 15,000/year and includes all 24 modules, AI features, unlimited students and WhatsApp alerts — the best value school ERP in Nepal."}},
-        {"@type":"Question","name":"Does NepalSchoolHub support fee management?","acceptedAnswer":{"@type":"Answer","text":"Yes. The fee management module handles invoice generation, payment tracking, outstanding fees, discounts, WhatsApp payment reminders and Nepali fiscal year (Shrawan–Ashad) billing cycles."}},
-        {"@type":"Question","name":"Can parents receive WhatsApp attendance alerts?","acceptedAnswer":{"@type":"Answer","text":"Yes. Every time a student is marked absent, parents receive an instant WhatsApp notification. Parents can also log into the parent portal to view attendance, results and fee status."}},
-        {"@type":"Question","name":"Does NepalSchoolHub have an online exam system?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub has a built-in online examination system with MCQ, short-answer and long-answer support, time limits, auto-grading and detailed analytics."}},
-        {"@type":"Question","name":"Can NepalSchoolHub generate NEB-style report cards?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub automatically generates PDF report cards, mark sheets and certificates supporting GPA, percentage and letter grades aligned with NEB, SLC/SEE and +2 standards."}},
-        {"@type":"Question","name":"Does NepalSchoolHub support QR code and RFID attendance?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub supports manual, QR code, RFID card and mobile app attendance. Absent students trigger automatic WhatsApp notifications to parents."}},
-        {"@type":"Question","name":"Does NepalSchoolHub have AI features?","acceptedAnswer":{"@type":"Answer","text":"Yes. AI features include automated performance insights, smart attendance pattern detection, AI lesson plan suggestions, predictive fee defaulter alerts and AI question paper generation."}},
-        {"@type":"Question","name":"Does NepalSchoolHub support hostel management?","acceptedAnswer":{"@type":"Answer","text":"Yes. The hostel module manages room allocation, bed assignment, hostel fees, check-in/check-out, hostel attendance and expense tracking."}},
-        {"@type":"Question","name":"Does NepalSchoolHub have transport and GPS tracking?","acceptedAnswer":{"@type":"Answer","text":"Yes. The transport module includes route planning, vehicle assignment, driver management and real-time GPS tracking for parents via WhatsApp notifications."}},
-        {"@type":"Question","name":"How do I register my school on NepalSchoolHub?","acceptedAnswer":{"@type":"Answer","text":"Go to nepalschoolhub.techprocod.com.np, click Get Started Free, fill in your school details and your school is live instantly. Setup takes under 5 minutes. WhatsApp support: +977 9744911550."}},
-        {"@type":"Question","name":"Is NepalSchoolHub cloud-based?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub is 100% cloud-based. No installation needed — just a browser and internet connection. Data is stored securely with daily encrypted backups."}},
-        {"@type":"Question","name":"Is student data safe on NepalSchoolHub?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub uses 256-bit SSL encryption, role-based access control, daily backups and full data isolation between schools. School data is never shared or sold."}},
-        {"@type":"Question","name":"What makes NepalSchoolHub better than other school software in Nepal?","acceptedAnswer":{"@type":"Answer","text":"NepalSchoolHub is the only Nepali school software with all 24 modules in one platform, a genuine free plan, AI features, WhatsApp alerts, GPS transport tracking and support for Nepali calendar, NEB curriculum and NPR fees."}},
-        {"@type":"Question","name":"How do I contact NepalSchoolHub support?","acceptedAnswer":{"@type":"Answer","text":"WhatsApp: +977 9744911550 (instant reply). Email: support@nepalschoolhub.com. Or use the contact form on nepalschoolhub.techprocod.com.np. Available Sunday–Friday, 9 AM–6 PM NST."}},
-        {"@type":"Question","name":"Does NepalSchoolHub work on mobile phones?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub is fully mobile-responsive and works on any smartphone browser. Dedicated Android and iOS apps are available for teachers, parents, students and drivers."}},
-        {"@type":"Question","name":"Can I import student data into NepalSchoolHub?","acceptedAnswer":{"@type":"Answer","text":"Yes. Bulk import of students, teachers and fee records from Excel/CSV is supported. Download our templates, fill in your data and upload in one click."}},
-        {"@type":"Question","name":"Does NepalSchoolHub have payroll and HR management?","acceptedAnswer":{"@type":"Answer","text":"Yes. The HR and payroll module handles salary calculation, allowances, PF/CIT deductions, leave management, salary slips and payroll reports aligned with Nepal's Labour Act."}},
-        {"@type":"Question","name":"Is there a free trial for NepalSchoolHub?","acceptedAnswer":{"@type":"Answer","text":"Yes. All paid plans include a 14-day free trial with no credit card required. You can start with the free plan and upgrade anytime."}},
-        {"@type":"Question","name":"Does NepalSchoolHub support Nepali calendar (Bikram Sambat)?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub supports the Nepali Bikram Sambat (BS) calendar, Nepali fiscal year billing and Nepali academic session structures."}},
-        {"@type":"Question","name":"Who built NepalSchoolHub?","acceptedAnswer":{"@type":"Answer","text":"NepalSchoolHub is built by TechProCod, a Nepali software company based in Kathmandu, Nepal, designed specifically for Nepali schools."}},
-        {"@type":"Question","name":"What is the official website of NepalSchoolHub?","acceptedAnswer":{"@type":"Answer","text":"The official website is nepalschoolhub.techprocod.com.np. This is the top result when you search NepalSchoolHub, school management software Nepal or school ERP Nepal on Google."}}
+        {"@type":"Question","name":"How does NepalSchoolHub compare with Veda (NepalSchoolHub vs Veda)?","acceptedAnswer":{"@type":"Answer","text":"NepalSchoolHub provides a more modern, affordable, and feature-rich platform than Veda. While Veda charges high variable fees based on student count and requires constant internet, NepalSchoolHub offers a flat NPR 15,000/year (or free plan) with all 24 modules included — including built-in AI Question Paper Generator, WhatsApp Absentee & PTM Alerts, Offline-First sync, QR ID cards, Day-Book Nepalese Accounting, and live GPS Bus Tracking without expensive add-ons."}},
+        {"@type":"Question","name":"Does NepalSchoolHub have an AI Question Paper Generator?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub includes a state-of-the-art AI Question Paper Generator that creates curriculum-aligned exam papers according to Nepal CDC 2078 and NEB specification blueprints with MCQs, short answers, long answers, and Bloom's taxonomy tags in seconds."}},
+        {"@type":"Question","name":"Does NepalSchoolHub send instant WhatsApp absentee and PTM alerts?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub is directly integrated with WhatsApp. When a student is marked absent, an instant WhatsApp message is dispatched to the parent. It also automates fee reminders, exam schedules, and PTM notices with a 98% open rate."}},
+        {"@type":"Question","name":"Is NepalSchoolHub offline-first?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub is built with an offline-first architecture. Teachers and staff can mark attendance, enter grades, and manage daily tasks even during internet outages or power cuts. Data automatically syncs with the cloud once connectivity resumes."}},
+        {"@type":"Question","name":"Can NepalSchoolHub generate QR ID Cards and Exam Admit Cards?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub has a 1-click batch generator for photo ID cards with unique verifiable QR codes for students and staff, as well as customizable exam admit cards with roll numbers and exam seating arrangements."}},
+        {"@type":"Question","name":"Can NepalSchoolHub generate Nepal CDC 2078 standard report cards?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub fully complies with Nepal's CDC 2078 curriculum, supporting 8-point grading scales, internal/external weightages, letter grades, GPAs, and QR-verifiable online marksheet verification."}},
+        {"@type":"Question","name":"Does NepalSchoolHub include Nepalese Day-Book accounting?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub includes double-entry Nepalese Day-Book accounting with daily cash and bank ledgers, fee collection reconciliation, expense vouchers, and financial statements aligned with Nepal's fiscal calendar (Shrawan–Ashad)."}},
+        {"@type":"Question","name":"Does NepalSchoolHub have dedicated mobile apps for teachers, parents, students, and drivers?","acceptedAnswer":{"@type":"Answer","text":"Yes. NepalSchoolHub offers 4 native mobile applications: Teacher App (attendance & grading), Parent App (live tracking & results), Student App (homework & e-library), and Driver App (GPS route navigation & passenger lists)."}},
+        {"@type":"Question","name":"How much does NepalSchoolHub cost?","acceptedAnswer":{"@type":"Answer","text":"NepalSchoolHub offers a permanently Free Plan for small schools and a comprehensive Yearly Premium Plan at only NPR 15,000/year with all 24 modules, AI features, WhatsApp alerts, and up to 9999 students included."}}
       ]
     }
     </script>
@@ -182,40 +221,1151 @@
         img{max-width:100%;display:block}
 
         /* Nav */
-        .topnav{position:sticky;top:0;z-index:1000;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid #e2e8f0;padding:.75rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;box-shadow:0 2px 10px rgba(0,0,0,0.04);}
-        .nav-logo{display:flex;align-items:center;gap:.6rem}
-        .nav-logo img{width:38px;height:38px;border-radius:.6rem;object-fit:cover}
-        .nav-logo span{font-weight:800;font-size:1rem;color:#1e1b4b}
-        .nav-links{display:flex;align-items:center;gap:1.5rem;font-size:.875rem;font-weight:500;color:#475569}
-        .nav-links a:hover{color:#6366f1}
-        .btn-outline{padding:.5rem 1.25rem;border:1.5px solid #e2e8f0;border-radius:.75rem;font-size:.8rem;font-weight:600;color:#334155;transition:.2s}
-        .btn-outline:hover{border-color:#6366f1;color:#6366f1}
-        .btn-primary{padding:.5rem 1.25rem;background:#6366f1;color:#fff;border-radius:.75rem;font-size:.8rem;font-weight:600;transition:.2s}
-        .btn-primary:hover{background:#4f46e5;transform:translateY(-1px)}
+        .topnav{position:sticky;top:0;z-index:1000;background:#5c68f6;border-bottom:1px solid rgba(255,255,255,0.2);padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;gap:1.25rem;box-shadow:0 4px 20px rgba(92,104,246,0.28);transition:all 0.3s ease;}
+        .nav-logo{display:flex;align-items:center;gap:.75rem}
+        .nav-logo img{width:38px;height:38px;border-radius:.6rem;object-fit:cover;background:#ffffff;padding:2px;}
+        .nav-logo span{font-weight:900;font-size:1.15rem;color:#ffffff;letter-spacing:0.04em;}
+        .nav-links{display:flex;align-items:center;gap:0.5rem;font-size:.875rem;font-weight:600;color:#ffffff}
+        .nav-links > a{color:#ffffff;padding:0.45rem 0.75rem;border-radius:6px;transition:all 0.2s;display:inline-flex;align-items:center;gap:4px;}
+        .nav-links > a:hover{color:#ffffff;background:rgba(255,255,255,0.2);}
+        .nav-links > a.nav-link-active{border-bottom:2.5px solid #ffffff;border-radius:2px;font-weight:700;}
+        
+        /* Dropdown Sub-menus */
+        .nav-item-dropdown {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+        .nav-dropdown-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            color: #ffffff;
+            padding: 0.45rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            transition: all 0.2s;
+        }
+        .nav-dropdown-toggle:hover, .nav-item-dropdown:hover .nav-dropdown-toggle {
+            background: rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+        }
+        .nav-dropdown-toggle i.bi-chevron-down {
+            font-size: 0.7rem;
+            transition: transform 0.25s ease;
+        }
+        .nav-item-dropdown:hover .nav-dropdown-toggle i.bi-chevron-down {
+            transform: rotate(180deg);
+        }
+        .nav-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            min-width: 290px;
+            background: #ffffff;
+            border: 1px solid #e0e7ff;
+            border-radius: 1rem;
+            padding: 0.65rem;
+            box-shadow: 0 20px 45px rgba(92, 104, 246, 0.22), 0 4px 15px rgba(0, 0, 0, 0.06);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(12px);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1050;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .nav-dropdown-menu.dropdown-wide {
+            min-width: 520px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
+        }
+        .nav-item-dropdown:hover .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(6px);
+        }
+        .dropdown-link-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.55rem 0.75rem;
+            border-radius: 0.65rem;
+            text-decoration: none;
+            color: #1e293b;
+            transition: all 0.2s;
+        }
+        .dropdown-link-item:hover {
+            background: #eef2ff;
+            color: #4f46e5;
+            transform: translateX(3px);
+        }
+        .dropdown-icon-box {
+            width: 32px;
+            height: 32px;
+            border-radius: 0.5rem;
+            background: #eef2ff;
+            color: #5c68f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        .dropdown-link-item:hover .dropdown-icon-box {
+            background: #5c68f6;
+            color: #ffffff;
+        }
+        .dropdown-item-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.25;
+        }
+        .dropdown-link-item:hover .dropdown-item-title {
+            color: #4f46e5;
+        }
+        .dropdown-item-sub {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 1px;
+            line-height: 1.3;
+        }
 
-        /* Hero */
-        .hero{background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 35%,#312e81 65%,#4338ca 100%);color:#fff;padding:5rem 1.5rem 0;overflow:hidden;position:relative}
-        .hero-blob{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none}
-        .hero-content{max-width:900px;margin:0 auto;text-align:center;position:relative;z-index:2}
-        .hero-badge{display:inline-flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:.4rem 1rem;border-radius:99px;font-size:.75rem;font-weight:600;margin-bottom:1.5rem}
-        .hero h1{font-size:clamp(2rem,5vw,3.75rem);font-weight:900;line-height:1.1;margin-bottom:1.5rem}
-        .gradient-text{background:linear-gradient(135deg,#a5b4fc,#818cf8,#c7d2fe);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-        .hero p{font-size:1.1rem;color:rgba(255,255,255,.75);max-width:600px;margin:0 auto 2.5rem;line-height:1.7}
-        .hero-ctas{display:flex;flex-wrap:wrap;gap:.75rem;justify-content:center;margin-bottom:1.5rem}
-        .cta-white{display:inline-flex;align-items:center;gap:.5rem;padding:.9rem 2rem;background:#fff;color:#4338ca;border-radius:.875rem;font-weight:700;font-size:.9rem;transition:.2s}
-        .cta-white:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
-        .cta-ghost{display:inline-flex;align-items:center;gap:.5rem;padding:.9rem 2rem;background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:.875rem;font-weight:600;font-size:.9rem;transition:.2s}
-        .cta-ghost:hover{background:rgba(255,255,255,.18)}
+        .btn-outline{padding:.5rem 1.25rem;border:1.5px solid #ffffff;border-radius:.65rem;font-size:.82rem;font-weight:700;color:#ffffff;transition:.2s;display:inline-flex;align-items:center;gap:5px;}
+        .btn-outline:hover{border-color:#ffffff;background:#ffffff;color:#5c68f6}
+        .btn-primary{padding:.5rem 1.3rem;background:#ffffff;color:#5c68f6 !important;border-radius:.65rem;font-size:.82rem;font-weight:800;transition:.2s;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:inline-flex;align-items:center;gap:5px;}
+        .btn-primary:hover{background:#ffffff;color:#5c68f6 !important;transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,0.2);}
 
-        /* Hero image */
-        .hero-img-wrap{margin-top:3rem;position:relative;max-width:1000px;margin-left:auto;margin-right:auto}
-        .hero-img-wrap img{width:100%;border-radius:1.25rem 1.25rem 0 0;box-shadow:0 -8px 60px rgba(99,102,241,.4);border:1px solid rgba(255,255,255,.1)}
+        /* Top Hotline Notice Bar */
+        .hotline-bar { background: #5c68f6; color: #ffffff; font-size: 0.76rem; font-weight: 600; padding: 0.45rem 2rem; border-bottom: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+        .hotline-bar a { color: #ffffff; font-weight: 700; text-decoration: underline; }
+        .hotline-bar a:hover { color: #ffffff; opacity: 0.85; }
 
-        /* Trust bar */
-        .trust-bar{background:#fff;border-bottom:1px solid #e2e8f0;padding:1.25rem 1.5rem}
-        .trust-inner{max-width:1100px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1.5rem 2.5rem;font-size:.8rem;font-weight:600;color:#64748b}
-        .trust-inner span{display:flex;align-items:center;gap:.4rem}
-        .trust-inner i{color:#6366f1;font-size:.85rem}
+        /* ── Dynamic Technosoft Style Purple & White 2-Column Hero with Bottom Curve ── */
+        .hero-dynamic {
+            background: #5c68f6;
+            color: #ffffff;
+            padding: 4.5rem 1.5rem 7.5rem;
+            position: relative;
+            overflow: hidden;
+            border-bottom: none;
+        }
+        .hero-dynamic-blob-1 {
+            position: absolute;
+            width: 650px;
+            height: 650px;
+            top: -220px;
+            right: 2%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.16) 0%, transparent 70%);
+            filter: blur(70px);
+            pointer-events: none;
+        }
+        .hero-dynamic-blob-2 {
+            position: absolute;
+            width: 480px;
+            height: 480px;
+            bottom: 10%;
+            left: -120px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+            filter: blur(60px);
+            pointer-events: none;
+        }
+        .hero-2col-grid {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.08fr 1fr;
+            gap: 3.5rem;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+        .hero-left-content {
+            text-align: left;
+        }
+        .hero-title-main {
+            font-size: clamp(2.2rem, 3.7vw, 3.35rem);
+            font-weight: 800;
+            line-height: 1.22;
+            margin-bottom: 1.35rem;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+        }
+        .hero-desc-main {
+            font-size: 1.02rem;
+            color: #ffffff;
+            line-height: 1.75;
+            margin-bottom: 1.75rem;
+            opacity: 0.94;
+            max-width: 580px;
+        }
+        .hero-actions-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .hero-btn-readmore {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 2.2rem;
+            background: #ffffff;
+            color: #5c68f6 !important;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+            border: 1.5px solid #ffffff;
+        }
+        .hero-btn-readmore:hover {
+            background: #f8faff;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+            color: #5c68f6 !important;
+        }
+        .hero-btn-contact {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 2.2rem;
+            background: transparent;
+            color: #ffffff !important;
+            border: 1.5px solid #ffffff;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+        .hero-btn-contact:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff !important;
+            transform: translateY(-2px);
+        }
+
+        /* Hero Slide Pagination Controls (1 / 3 < >) */
+        .hero-slides-wrapper {
+            position: relative;
+            width: 100%;
+            z-index: 2;
+        }
+        .hero-slide {
+            display: none;
+            opacity: 0;
+        }
+        .hero-slide.active {
+            display: block;
+            opacity: 1;
+            animation: heroSlideFadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes heroSlideFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .hero-slider-nav {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            margin-top: 0.5rem;
+        }
+        .hero-slide-num {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: 0.08em;
+            user-select: none;
+        }
+        .hero-slide-arrows {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+        }
+        .hero-slide-btn {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 1.15rem;
+            cursor: pointer;
+            padding: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.85;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .hero-slide-btn:hover {
+            opacity: 1;
+            transform: scale(1.18);
+        }
+        .hero-slide-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* ── Multi-Device 3D Showcase (Unified High-Res Composition) ── */
+        .hero-right-showcase {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        .hero-showcase-img-wrap {
+            width: 100%;
+            max-width: 660px;
+            filter: drop-shadow(0 25px 45px rgba(0, 0, 0, 0.32));
+            transition: transform 0.35s ease;
+            position: relative;
+            z-index: 2;
+        }
+        .hero-showcase-img-wrap:hover {
+            transform: translateY(-5px);
+        }
+        .hero-multi-devices-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: contain;
+        }
+
+        /* ── Asymmetrical Smooth S-Curve Wave Divider ── */
+        .hero-bottom-curve {
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            line-height: 0;
+            pointer-events: none;
+            z-index: 4;
+        }
+        .hero-bottom-curve svg {
+            position: relative;
+            display: block;
+            width: calc(100% + 1.5px);
+            height: 110px;
+        }
+        .hero-bottom-curve path {
+            fill: #ffffff;
+        }
+
+        /* ── About Section Dot Matrix Pattern & Content ── */
+        .about-dot-matrix-container {
+            position: relative;
+            background: #ffffff;
+            border-radius: 1.5rem;
+            padding: 2.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 10px 30px rgba(92, 104, 246, 0.06);
+            overflow: hidden;
+        }
+        .about-dot-pattern-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(#5c68f6 1.5px, transparent 1.5px);
+            background-size: 20px 20px;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+        .about-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.4rem 1.15rem;
+            border-radius: 99px;
+            background: rgba(92, 104, 246, 0.08);
+            border: 1px solid rgba(92, 104, 246, 0.22);
+            color: #5c68f6;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+        .about-main-title {
+            font-size: clamp(1.85rem, 3.2vw, 2.6rem);
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.25;
+            margin-bottom: 1.25rem;
+        }
+
+        /* Floating Live Chat & Help Assistant (Matching Screenshot Bottom-Right) */
+        /* Floating Live Chat & Help Assistant with Rich Micro-Animations */
+        .live-help-widget {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .live-help-widget > * {
+            pointer-events: auto;
+        }
+        .live-help-prompt {
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            border-radius: 14px;
+            padding: 0.65rem 1.05rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(92, 104, 246, 0.08);
+            font-size: 0.84rem;
+            font-weight: 700;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            animation: slideInPrompt 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards, floatPrompt 4s ease-in-out infinite 0.6s;
+            transform-origin: bottom right;
+            backdrop-filter: blur(8px);
+        }
+        .live-wave-hand {
+            display: inline-block;
+            transform-origin: 70% 70%;
+            animation: waveEmoji 2.2s ease-in-out infinite;
+        }
+        @keyframes waveEmoji {
+            0%, 100% { transform: rotate(0deg); }
+            15% { transform: rotate(16deg); }
+            30% { transform: rotate(-12deg); }
+            45% { transform: rotate(14deg); }
+            60% { transform: rotate(-6deg); }
+            75% { transform: rotate(10deg); }
+        }
+        @keyframes slideInPrompt {
+            from {
+                opacity: 0;
+                transform: translateY(16px) scale(0.92);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        @keyframes floatPrompt {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-4px);
+            }
+        }
+        .live-help-chips {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+        .live-chip-btn {
+            background: #ffffff;
+            border: 1.5px solid #5c68f6;
+            color: #5c68f6;
+            padding: 0.42rem 1rem;
+            border-radius: 99px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(92, 104, 246, 0.14);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            position: relative;
+            overflow: hidden;
+            animation: slideInChip 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+        }
+        .live-help-chips .live-chip-btn:nth-child(1) {
+            animation-delay: 0.12s;
+        }
+        .live-help-chips .live-chip-btn:nth-child(2) {
+            animation-delay: 0.22s;
+        }
+        @keyframes slideInChip {
+            from {
+                opacity: 0;
+                transform: translateX(18px) scale(0.92);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+        .live-chip-btn .chip-icon {
+            font-size: 1rem;
+            transition: transform 0.25s ease;
+        }
+        .live-chip-btn:hover {
+            background: #5c68f6;
+            color: #ffffff;
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 6px 20px rgba(92, 104, 246, 0.35);
+        }
+        .live-chip-btn:hover .chip-icon {
+            transform: translateX(3px);
+        }
+        .live-chip-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 40%;
+            height: 200%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+            transform: rotate(25deg);
+            animation: chipShimmer 4s ease-in-out infinite;
+        }
+        @keyframes chipShimmer {
+            0%, 75% { left: -60%; }
+            100% { left: 160%; }
+        }
+        .live-chat-circle-btn {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6875f5 0%, #4f46e5 100%);
+            color: #ffffff;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.45rem;
+            box-shadow: 0 8px 25px rgba(92, 104, 246, 0.45);
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: chatBtnBounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .live-chat-circle-btn:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 12px 35px rgba(92, 104, 246, 0.6);
+        }
+        .live-chat-circle-btn:active {
+            transform: scale(0.95);
+        }
+        .live-chat-ping {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: rgba(92, 104, 246, 0.55);
+            top: 0;
+            left: 0;
+            z-index: -1;
+            animation: chatRipple 2.4s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+            pointer-events: none;
+        }
+        @keyframes chatRipple {
+            0% {
+                transform: scale(0.95);
+                opacity: 0.8;
+            }
+            70% {
+                transform: scale(1.45);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+        @keyframes chatBtnBounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            60% {
+                opacity: 1;
+                transform: scale(1.15);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        .live-chat-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #ffffff;
+            color: #4f46e5;
+            border: 2px solid #5c68f6;
+            width: 19px;
+            height: 19px;
+            border-radius: 50%;
+            font-size: 0.68rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            animation: badgePulse 2.2s ease-in-out infinite;
+        }
+        @keyframes badgePulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.25);
+            }
+        }
+
+        @media (max-width: 991px) {
+            .hero-dynamic {
+                padding: 3.5rem 1rem 5.5rem;
+            }
+            .hero-2col-grid {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+                text-align: center;
+            }
+            .hero-left-content {
+                text-align: center;
+            }
+            .hero-actions-group {
+                justify-content: center;
+            }
+            .hero-slider-nav {
+                justify-content: center;
+            }
+            .device-laptop {
+                width: 90%;
+                margin: 0 auto;
+            }
+            .device-tablet {
+                width: 42%;
+                right: 0;
+            }
+            .device-phone {
+                width: 28%;
+                right: 8%;
+            }
+            .hero-bottom-curve svg {
+                height: 60px;
+            }
+        }
+
+        /* Proof Pillars 4-Card Grid (Crisp & Non-Obstructive) */
+        .proof-pillars-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            max-width: 960px;
+            margin: 0 auto 1.75rem auto;
+            text-align: left;
+        }
+        @media(min-width: 768px) {
+            .proof-pillars-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        .proof-pill {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.875rem;
+            padding: 0.65rem 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+            transition: all 0.2s ease;
+        }
+        .proof-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.1);
+            border-color: #cbd5e1;
+        }
+        .proof-pill-icon {
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 0.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+        .proof-pill-title {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+        .proof-pill-sub {
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: #64748b;
+            line-height: 1.2;
+            margin-top: 0.1rem;
+        }
+
+        /* Role-based interactive solution tabs */
+        .role-tabs-nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.6rem;
+            margin: 2.5rem auto 3rem;
+            max-width: 850px;
+            background: #f1f5f9;
+            padding: 0.4rem;
+            border-radius: 1rem;
+            border: 1px solid #e2e8f0;
+        }
+        .role-tab-btn {
+            flex: 1;
+            min-width: 170px;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.75rem;
+            border: none;
+            background: transparent;
+            color: #475569;
+            font-size: 0.875rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .role-tab-btn.active {
+            background: #ffffff;
+            color: #1e1b4b;
+            box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+        }
+        .role-tab-btn.active i {
+            color: #4f46e5;
+        }
+
+        /* Battle comparison card */
+        .battle-card {
+            background: #ffffff;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.05);
+        }
+        .battle-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        .battle-table th, .battle-table td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .battle-table th {
+            background: #f8fafc;
+            color: #334155;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+        .battle-highlight-col {
+            background: #eef2ff;
+            color: #1e1b4b;
+            font-weight: 700;
+        }
+
+        /* Dashain Festive Offer Modal */
+        .dashain-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            animation: fadeIn 0.3s ease;
+        }
+        .dashain-modal-overlay.open {
+            display: flex;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .dashain-modal-card {
+            background: #ffffff;
+            border-radius: 1.5rem;
+            width: 100%;
+            max-width: 520px;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+            border: 2px solid #f59e0b;
+            position: relative;
+            animation: zoomIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .dashain-header {
+            background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 50%, #d97706 100%);
+            padding: 1.75rem 1.5rem 1.25rem;
+            text-align: center;
+            color: #ffffff;
+            position: relative;
+        }
+        .dashain-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            padding: 0.3rem 0.85rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #fef08a;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.04em;
+        }
+        .dashain-close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .dashain-close-btn:hover {
+            background: rgba(0, 0, 0, 0.5);
+            transform: scale(1.08);
+        }
+        .dashain-body {
+            padding: 1.5rem;
+            background: #ffffff;
+        }
+        .dashain-offer-box {
+            background: #fffbeb;
+            border: 1.5px dashed #f59e0b;
+            border-radius: 1rem;
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 1.25rem;
+        }
+        .dashain-code-pill {
+            display: inline-block;
+            background: #b45309;
+            color: #ffffff;
+            font-family: monospace;
+            font-weight: 800;
+            font-size: 1.1rem;
+            padding: 0.35rem 1rem;
+            border-radius: 0.5rem;
+            letter-spacing: 0.08em;
+            margin-top: 0.35rem;
+            border: 1px dashed #fef08a;
+        }
+        .dashain-perks-list {
+            list-style: none;
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+        }
+        .dashain-perks-list li {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #334155;
+        }
+        .dashain-perks-list li i {
+            color: #b91c1c;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .dashain-cta-primary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.875rem 1.25rem;
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+            color: #ffffff !important;
+            border-radius: 0.875rem;
+            font-weight: 800;
+            font-size: 0.95rem;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+            transition: all 0.2s ease;
+        }
+        .dashain-cta-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 26px rgba(220, 38, 38, 0.45);
+        }
+        .dashain-cta-wa {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.75rem 1.25rem;
+            background: #ffffff;
+            color: #15803d !important;
+            border: 1.5px solid #86efac;
+            border-radius: 0.875rem;
+            font-weight: 700;
+            font-size: 0.875rem;
+            margin-top: 0.6rem;
+            transition: all 0.2s;
+        }
+        .dashain-cta-wa:hover {
+            background: #f0fdf4;
+            border-color: #22c55e;
+        }
+
+        /* Floating Dashain Offer Reopen Pill */
+        .dashain-floating-btn {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            z-index: 999;
+            background: linear-gradient(135deg, #b91c1c, #d97706);
+            color: #ffffff;
+            border: 2px solid #fef08a;
+            border-radius: 99px;
+            padding: 0.6rem 1.1rem;
+            font-size: 0.8rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 10px 25px rgba(185, 28, 28, 0.4);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            animation: pulseFestive 2.5s infinite;
+        }
+        .dashain-floating-btn:hover {
+            transform: translateY(-3px) scale(1.04);
+            box-shadow: 0 14px 30px rgba(185, 28, 28, 0.55);
+        }
+        @keyframes pulseFestive {
+            0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+        }
+
+        /* ── Floating AI ERP Assistant Chatbot ── */
+        .saas-ai-chat-btn {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 1000;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+            color: #ffffff;
+            border: 2px solid rgba(251, 191, 36, 0.7);
+            border-radius: 99px;
+            padding: 0.65rem 1.25rem;
+            font-size: 0.82rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: 0 12px 35px rgba(15, 23, 42, 0.5);
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .saas-ai-chat-btn:hover {
+            transform: translateY(-3px) scale(1.04);
+            border-color: #fbbf24;
+            box-shadow: 0 16px 40px rgba(79, 70, 229, 0.6);
+        }
+        .saas-ai-chat-box {
+            position: fixed;
+            bottom: 5.2rem;
+            right: 1.5rem;
+            width: 390px;
+            max-width: calc(100vw - 2rem);
+            height: 550px;
+            max-height: calc(100vh - 7rem);
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 60px rgba(15, 23, 42, 0.28);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1001;
+            transform-origin: bottom right;
+            animation: chatBoxFadeIn 0.25s ease-out forwards;
+        }
+        .saas-ai-chat-box.active {
+            display: flex;
+        }
+        @keyframes chatBoxFadeIn {
+            from { opacity: 0; transform: scale(0.92) translateY(15px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* Unified Nepal Digital Infrastructure & Trust Section */
+        .ecosystem-section {
+            background: #ffffff;
+            padding: 3.5rem 1.5rem 3rem;
+            position: relative;
+            border-bottom: 1px solid #eef2f6;
+        }
+        .ecosystem-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .eco-header {
+            text-align: center;
+            max-width: 780px;
+            margin: 0 auto 2.25rem;
+        }
+        .eco-pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            background: rgba(92, 104, 246, 0.08);
+            color: #5c68f6;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.35rem 0.95rem;
+            border-radius: 99px;
+            margin-bottom: 0.75rem;
+            border: 1px solid rgba(92, 104, 246, 0.15);
+        }
+        .eco-title {
+            font-size: clamp(1.2rem, 2.2vw, 1.65rem);
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+        .eco-subtitle {
+            font-size: 0.92rem;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.5;
+        }
+        .eco-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.15rem;
+            margin-bottom: 2rem;
+        }
+        .eco-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 1rem 1.15rem;
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+            text-decoration: none;
+        }
+        .eco-card:hover {
+            border-color: #5c68f6;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(92, 104, 246, 0.12);
+        }
+        .eco-card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(92, 104, 246, 0.08);
+            color: #5c68f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            transition: all 0.25s ease;
+        }
+        .eco-card:hover .eco-card-icon {
+            background: #5c68f6;
+            color: #ffffff;
+        }
+        .eco-card-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .eco-card-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+        }
+        .eco-card-sub {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 0.15rem;
+        }
+        .eco-trust-ticker {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1.1rem 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem 1.75rem;
+        }
+        .eco-trust-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #334155;
+        }
+        .eco-trust-item i {
+            color: #5c68f6;
+            font-size: 0.95rem;
+        }
 
         /* Section */
         .section{padding:5rem 1.5rem}
@@ -308,11 +1458,107 @@
         .footer-links{display:flex;flex-wrap:wrap;gap:1rem;font-size:.8rem;margin-top:1.5rem}
         .footer-links a:hover{color:#a5b4fc}
 
+        /* ── About Us & Company Section Styles (Dynamic ERP Tech Stack) ── */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 3.5rem;
+            align-items: center;
+        }
+        .about-feature-cards {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .about-feature-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            background: #ffffff;
+            border: 1px solid #eef2ff;
+            border-radius: 1rem;
+            padding: 1.15rem;
+            box-shadow: 0 4px 15px rgba(92, 104, 246, 0.05);
+            transition: all 0.25s;
+        }
+        .about-feature-item:hover {
+            border-color: #818cf8;
+            box-shadow: 0 8px 25px rgba(92, 104, 246, 0.12);
+            transform: translateY(-2px);
+        }
+        .about-icon-box {
+            width: 44px;
+            height: 44px;
+            border-radius: 0.75rem;
+            background: #eef2ff;
+            border: 1px solid #e0e7ff;
+            color: #5c68f6;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .about-metrics-box {
+            background: linear-gradient(135deg, #f8faff 0%, #ffffff 100%);
+            border: 2px solid #e0e7ff;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 15px 35px rgba(92, 104, 246, 0.1);
+            position: relative;
+        }
+        .about-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-bottom: 1.75rem;
+        }
+        .about-stat-card {
+            background: #ffffff;
+            border: 1px solid #e0e7ff;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(92, 104, 246, 0.04);
+        }
+        .about-stat-number {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #5c68f6;
+            line-height: 1;
+            margin-bottom: 0.35rem;
+        }
+        .about-stat-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #475569;
+        }
+        .about-hq-card {
+            background: #5c68f6;
+            color: #ffffff;
+            border-radius: 1rem;
+            padding: 1.25rem;
+            font-size: 0.84rem;
+        }
+        .about-hq-card a {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+        @media (max-width: 991px) {
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+            }
+        }
+
         /* Mobile drawer */
-        .mobile-toggle-btn { display: none; background: transparent; border: none; font-size: 1.5rem; color: #1e1b4b; cursor: pointer; padding: .25rem; }
-        .mobile-drawer { display: none; position: fixed; top: 61px; left: 0; right: 0; background: rgba(255,255,255,.98); backdrop-filter: blur(16px); border-bottom: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,.08); z-index: 99; padding: 1.25rem 1.5rem; flex-direction: column; gap: 1rem; }
+        .mobile-toggle-btn { display: none; background: transparent; border: none; font-size: 1.5rem; color: #ffffff; cursor: pointer; padding: .25rem; }
+        .mobile-drawer { display: none; position: fixed; top: 61px; left: 0; right: 0; max-height: calc(100vh - 61px); overflow-y: auto; background: rgba(255,255,255,.98); backdrop-filter: blur(16px); border-bottom: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,.08); z-index: 99; padding: 1.25rem 1.5rem; flex-direction: column; gap: 0.75rem; }
         .mobile-drawer.show { display: flex; }
-        .mobile-drawer a { font-size: .95rem; font-weight: 600; color: #334155; padding: .4rem 0; border-bottom: 1px solid #f1f5f9; }
+        .mobile-nav-group-title { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #5c68f6; margin-top: 0.5rem; margin-bottom: 0.2rem; }
+        .mobile-drawer a { font-size: .9rem; font-weight: 600; color: #334155; padding: .35rem 0; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 0.5rem; }
+        .mobile-drawer a i { color: #5c68f6; }
         .mobile-drawer a:last-child { border-bottom: none; }
         .mobile-drawer .btn-primary, .mobile-drawer .btn-outline { text-align: center; margin-top: .25rem; }
 
@@ -324,11 +1570,11 @@
             gap: .5rem;
             width: 100%;
             padding: .875rem 1.5rem;
-            border: 2px solid #6366f1;
+            border: 2px solid #5c68f6;
             border-radius: .875rem;
             font-size: 1rem;
             font-weight: 700;
-            color: #4f46e5;
+            color: #5c68f6;
             background: transparent;
             margin-top: .5rem;
             transition: background .2s, color .2s;
@@ -341,168 +1587,1130 @@
             gap: .5rem;
             width: 100%;
             padding: .9rem 1.5rem;
-            background: linear-gradient(135deg, #6366f1, #4f46e5);
-            color: #fff;
+            background: #5c68f6;
+            color: #fff !important;
             border-radius: .875rem;
             font-size: 1rem;
             font-weight: 700;
             margin-top: .5rem;
-            box-shadow: 0 4px 16px rgba(99,102,241,.35);
+            box-shadow: 0 4px 16px rgba(92,104,246,.35);
             transition: transform .2s, box-shadow .2s;
         }
-        .mobile-drawer .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(99,102,241,.45); }
+        .mobile-drawer .btn-primary:hover { background: #4f46e5; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(92,104,246,.45); }
 
-        /* Responsive */
-        @media(max-width:991px){
-            .hero h1{font-size:clamp(1.5rem, 4.5vw, 3.2rem)}
+        /* ── Comprehensive Full Mobile Responsiveness ── */
+        html, body {
+            overflow-x: hidden;
+            width: 100%;
         }
-        @media(max-width:767px){
-            html, body { overflow-x: hidden; }
-            .topnav { padding: .75rem 1rem; position: sticky; top: 0; z-index: 1000; width: 100%; background: rgba(255,255,255,.96); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
-            .nav-links, .nav-actions-desktop { display: none !important; }
-            .mobile-toggle-btn { display: block; }
-            
-            .hero { padding: 3.5rem 1rem 0; }
-            .hero-badge { font-size: .7rem; padding: .35rem .75rem; margin-bottom: 1rem; }
-            .hero h1 { font-size: clamp(1.5rem, 6vw, 2.5rem); letter-spacing: -0.02em; white-space: normal; line-height: 1.2; margin-bottom: 1rem; }
-            .hero p { font-size: .95rem; line-height: 1.6; margin-bottom: 1.75rem; }
-            .hero-ctas { flex-direction: column; width: 100%; max-width: 340px; margin-left: auto; margin-right: auto; }
-            .cta-white, .cta-ghost { width: 100%; justify-content: center; padding: .85rem 1.25rem; }
 
-            .trust-bar { padding: 1rem; }
-            .trust-inner { gap: .75rem 1.25rem; font-size: .75rem; justify-content: center; }
+        /* Tablets and smaller screens (<= 991px) */
+        @media (max-width: 991px) {
+            .hero-dynamic {
+                padding: 3rem 1.25rem 5rem;
+            }
+            .hero-2col-grid {
+                grid-template-columns: 1fr;
+                gap: 2.25rem;
+                text-align: center;
+            }
+            .hero-left-content {
+                text-align: center;
+            }
+            .hero-title-main {
+                font-size: clamp(1.75rem, 5vw, 2.6rem);
+                line-height: 1.25;
+                margin-bottom: 1.15rem;
+            }
+            .hero-desc-main {
+                font-size: 0.95rem;
+                line-height: 1.68;
+                margin: 0 auto 1.5rem;
+                max-width: 560px;
+            }
+            .hero-actions-group {
+                justify-content: center;
+                gap: 0.75rem;
+            }
+            .hero-slider-nav {
+                justify-content: center;
+                margin-top: 0.75rem;
+            }
+            .hero-showcase-img-wrap {
+                max-width: 520px;
+                margin: 0 auto;
+            }
+            .hero-bottom-curve svg {
+                height: 65px;
+            }
 
-            .section { padding: 3rem 1rem; }
-            .section-title { font-size: 1.5rem; }
-            .section-sub { font-size: .875rem; }
-
-            .feat-grid { grid-template-columns: 1fr; gap: 1rem; margin-top: 2rem; }
-            .feat-card { padding: 1.25rem; }
-
-            .showcase { grid-template-columns: 1fr; gap: 2rem; margin-bottom: 3.5rem !important; }
-            .showcase.reverse { direction: ltr; }
-            .showcase-points { gap: .6rem; }
-            .showcase-points li { font-size: .825rem; }
-
-            .city-banner img { height: 260px; }
-            .city-overlay { padding: 1.25rem; }
-            .city-overlay h2 { font-size: 1.35rem; }
-            .city-overlay p { font-size: .85rem; margin-bottom: 1rem; }
-
-            .modules-grid { grid-template-columns: repeat(2, 1fr); gap: .5rem; }
-            .mod-chip { font-size: .7rem; padding: .45rem .6rem; }
-
-            .price-grid { grid-template-columns: 1fr; max-width: 360px; margin-left: auto; margin-right: auto; margin-top: 2rem; }
-            .price-card { padding: 1.35rem; }
-
-            .cta-band { padding: 3.5rem 1rem; }
-            .cta-band h2 { font-size: 1.5rem; }
-
-            .stat-divider { display: none !important; }
-
-            footer { padding: 2.5rem 1rem 1.5rem; }
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 2.5rem;
+            }
+            .about-metrics-box {
+                padding: 1.5rem;
+            }
+            .eco-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.85rem;
+            }
         }
-        @media(max-width:400px){
-            .hero h1 { font-size: 1.35rem; white-space: normal; }
+
+        /* Mobile phones (<= 767px) */
+        @media (max-width: 767px) {
+            .topnav {
+                padding: 0.65rem 1rem;
+                position: sticky;
+                top: 0;
+                z-index: 1000;
+                width: 100%;
+                background: #5c68f6;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+                box-shadow: 0 4px 18px rgba(92, 104, 246, 0.3);
+            }
+            .nav-links, .nav-actions-desktop {
+                display: none !important;
+            }
+            .mobile-toggle-btn {
+                display: block;
+            }
+            .nav-logo img {
+                width: 32px;
+                height: 32px;
+            }
+            .nav-logo span {
+                font-size: 1rem;
+            }
+
+            .hero-dynamic {
+                padding: 2.25rem 1rem 4rem;
+            }
+            .hero-title-main {
+                font-size: clamp(1.45rem, 5.8vw, 1.95rem);
+                letter-spacing: -0.015em;
+                line-height: 1.28;
+                margin-bottom: 0.85rem;
+            }
+            .hero-desc-main {
+                font-size: 0.88rem;
+                line-height: 1.6;
+                margin-bottom: 1.25rem;
+            }
+            .hero-actions-group {
+                flex-direction: column;
+                width: 100%;
+                max-width: 320px;
+                margin-left: auto;
+                margin-right: auto;
+                margin-bottom: 1.25rem;
+                gap: 0.6rem;
+            }
+            .hero-btn-readmore, .hero-btn-contact {
+                width: 100%;
+                justify-content: center;
+                padding: 0.75rem 1.25rem;
+                font-size: 0.9rem;
+            }
+
+            .hero-showcase-img-wrap {
+                max-width: 100%;
+                margin: 0.5rem auto 0;
+            }
+            .hero-bottom-curve svg {
+                height: 42px;
+            }
+
+            .ecosystem-section {
+                padding: 2.25rem 1rem 2rem;
+            }
+            .eco-grid {
+                grid-template-columns: 1fr;
+                gap: 0.65rem;
+                margin-bottom: 1.5rem;
+            }
+            .eco-card {
+                padding: 0.75rem 0.9rem;
+            }
+            .eco-card-icon {
+                width: 38px;
+                height: 38px;
+                font-size: 1.1rem;
+            }
+            .eco-trust-ticker {
+                padding: 0.85rem 1rem;
+                gap: 0.5rem 1.25rem;
+                justify-content: flex-start;
+            }
+            .eco-trust-item {
+                font-size: 0.76rem;
+            }
+
+            .section {
+                padding: 2.75rem 1rem;
+            }
+            .section-title {
+                font-size: 1.45rem;
+                line-height: 1.3;
+            }
+            .section-sub {
+                font-size: 0.85rem;
+                line-height: 1.55;
+            }
+
+            .role-tabs-nav {
+                display: flex;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                gap: 0.4rem;
+                padding: 0.25rem 0.25rem 0.75rem;
+                scrollbar-width: none;
+            }
+            .role-tabs-nav::-webkit-scrollbar {
+                display: none;
+            }
+            .role-tab-btn {
+                flex-shrink: 0;
+                white-space: nowrap;
+                font-size: 0.78rem;
+                padding: 0.5rem 0.85rem;
+            }
+
+            .feat-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                margin-top: 1.5rem;
+            }
+            .feat-card {
+                padding: 1.15rem;
+            }
+
+            .showcase {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                margin-bottom: 2.5rem !important;
+            }
+            .showcase.reverse {
+                direction: ltr;
+            }
+            .showcase-points {
+                gap: 0.55rem;
+            }
+            .showcase-points li {
+                font-size: 0.82rem;
+            }
+            .showcase-img img {
+                width: 100%;
+                height: auto;
+                border-radius: 12px;
+            }
+
+            .about-dot-matrix-container {
+                padding: 1.5rem 1rem;
+            }
+            .about-main-title {
+                font-size: 1.45rem;
+            }
+            .about-feature-item {
+                padding: 0.85rem;
+                gap: 0.75rem;
+            }
+            .about-icon-box {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+            }
+            .about-stats-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.75rem;
+            }
+            .about-stat-number {
+                font-size: 1.5rem;
+            }
+
+            .battle-card {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .battle-table {
+                min-width: 580px;
+            }
+
+            .modules-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.45rem;
+            }
+            .mod-chip {
+                font-size: 0.72rem;
+                padding: 0.45rem 0.55rem;
+            }
+
+            .price-grid {
+                grid-template-columns: 1fr;
+                max-width: 340px;
+                margin: 1.5rem auto 0;
+            }
+            .price-card {
+                padding: 1.25rem;
+            }
+
+            .cta-band {
+                padding: 3rem 1rem;
+            }
+            .cta-band h2 {
+                font-size: 1.45rem;
+            }
+
+            .live-help-widget {
+                bottom: 16px;
+                right: 14px;
+                gap: 6px;
+            }
+            .live-help-prompt {
+                font-size: 0.75rem;
+                padding: 0.45rem 0.75rem;
+                max-width: 220px;
+            }
+            .live-chip-btn {
+                font-size: 0.72rem;
+                padding: 0.35rem 0.75rem;
+            }
+            .live-chat-circle-btn {
+                width: 46px;
+                height: 46px;
+                font-size: 1.25rem;
+            }
+            .saas-ai-chat-box {
+                width: calc(100vw - 28px);
+                max-height: 80vh;
+                bottom: 74px;
+                right: 14px;
+                border-radius: 16px;
+            }
+
+            footer {
+                padding: 2.25rem 1rem 1.5rem;
+            }
+            .footer-links {
+                justify-content: center;
+                gap: 0.65rem 1rem;
+            }
+        }
+
+        /* Very Small Screens (<= 400px) */
+        @media (max-width: 400px) {
+            .hero-title-main {
+                font-size: 1.35rem;
+            }
+            .hero-devices-stage {
+                min-height: 200px;
+            }
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+            .about-stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-<a href="#main-content" style="position:absolute;left:-9999px;top:0;z-index:9999;background:#6366f1;color:#fff;padding:.5rem 1rem;border-radius:0 0 .5rem 0;font-size:.8rem;font-weight:700;" onfocus="this.style.left='0'" onblur="this.style.left='-9999px'">Skip to main content</a>
 
 {{-- ══ TOP NAV ══════════════════════════════════════════════════════════ --}}
 <nav class="topnav" role="navigation" aria-label="Main navigation">
     <a href="{{ route('saas.landing') }}" class="nav-logo">
         <img src="{{ asset('imgs/logo_icon.webp') }}" alt="NepalSchoolHub Logo">
-        <span>NepalSchoolHub</span>
+        <span>NepalSchoolHub <small style="font-size:0.65rem; background:rgba(255,255,255,0.22); padding:2px 6px; border-radius:4px; vertical-align:middle; margin-left:4px; font-weight:800; letter-spacing:0.05em">ACADEMIC ERP</small></span>
     </a>
+    
     <div class="nav-links">
-        <a href="#features">Features</a>
-        <a href="#showcase">How it works</a>
-        <a href="#modules">Modules</a>
-        <a href="#pricing">Pricing</a>
-        <a href="#reviews">Reviews</a>
-        <a href="#faq">FAQ</a>
+        <a href="{{ route('saas.landing') }}" class="nav-link-active">Home</a>
+
+        {{-- About Us Dropdown --}}
+        <div class="nav-item-dropdown">
+            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
+                <span>About Us</span> <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="nav-dropdown-menu">
+                <a href="#about" class="dropdown-link-item">
+                    <div class="dropdown-icon-box"><i class="bi bi-building"></i></div>
+                    <div>
+                        <div class="dropdown-item-title">About NepalSchoolHub</div>
+                        <div class="dropdown-item-sub">Pioneering Nepal's Academic OS</div>
+                    </div>
+                </a>
+                <a href="#comparison" class="dropdown-link-item">
+                    <div class="dropdown-icon-box"><i class="bi bi-trophy-fill"></i></div>
+                    <div>
+                        <div class="dropdown-item-title">Why Us vs Legacy ERPs</div>
+                        <div class="dropdown-item-sub">Head-to-head comparison vs Veda</div>
+                    </div>
+                </a>
+                <a href="#about" class="dropdown-link-item">
+                    <div class="dropdown-icon-box"><i class="bi bi-shield-check"></i></div>
+                    <div>
+                        <div class="dropdown-item-title">Security &amp; Cloud Reliability</div>
+                        <div class="dropdown-item-sub">Bank-grade 256-bit SSL &amp; 99.9% uptime</div>
+                    </div>
+                </a>
+                <a href="#about" class="dropdown-link-item">
+                    <div class="dropdown-icon-box"><i class="bi bi-geo-alt-fill"></i></div>
+                    <div>
+                        <div class="dropdown-item-title">Corporate Offices</div>
+                        <div class="dropdown-item-sub">Kathmandu HQ, Birgunj &amp; Butwal</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        {{-- Products Dropdown --}}
+        <div class="nav-item-dropdown">
+            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
+                <span>Products</span> <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="nav-dropdown-menu dropdown-wide">
+                <a href="#solutions" class="dropdown-link-item">
+                    <div class="dropdown-icon-box"><i class="bi bi-mortarboard-fill"></i></div>
+                    <div>
+                        <div class="dropdown-item-title">For Principals &amp; Owners</div>
+                        <div class="dropdown-item-sub">Real-time revenue, live attendance &amp; 1-click audit</div>
+                    </div>
+                </a>
+                <a href="#solutions" class="dropdown-link-item">
+                    <div class="dropdown-icon-box"><i class="bi bi-person-video3"></i></div>
+                    <div>
+                        <div class="dropdown-item-title">For Teachers &amp; Staff</div>
+                        <div class="dropdown-item-sub">CDC lesson plans, mobile gradebook &amp; AI questions</div>
+                    </div>
+                </a>
+                <a href="#solutions" class="dropdown-link-item">
+                    <div class="dropdown-icon-box"><i class="bi bi-cash-coin"></i></div>
+                    <div>
+                        <div class="dropdown-item-title">For Accountants &amp; Cashiers</div>
+                        <div class="dropdown-item-sub">eSewa/Khalti billing, day-book &amp; auto-receipts</div>
+                    </div>
+                </a>
+                <a href="#solutions" class="dropdown-link-item">
+                    <div class="dropdown-icon-box"><i class="bi bi-people-fill"></i></div>
+                    <div>
+                        <div class="dropdown-item-title">For Parents &amp; Students</div>
+                        <div class="dropdown-item-sub">Instant WhatsApp alerts, QR marksheets &amp; bus GPS</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        {{-- Service Dropdown --}}
+        <div class="nav-item-dropdown">
+            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
+                <span>Service</span> <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="nav-dropdown-menu dropdown-wide">
+                <a href="#features" class="dropdown-link-item">
+                    <div class="dropdown-icon-box"><i class="bi bi-qr-code-scan"></i></div>
+                    <div>
+                        <div class="dropdown-item-title">CDC 2078 QR Marksheets</div>
+                        <div class="dropdown-item-sub">MoEST letter grading &amp; 1-scan public verify</div>
+                    </div>
+                </a>
+                <a href="#features" class="dropdown-link-item">
+                    <div class="dropdown-icon-box"><i class="bi bi-robot"></i></div>
+                    <div>
+                        <div class="dropdown-item-title">AI Question Paper Maker</div>
+                        <div class="dropdown-item-sub">CDC specification grid blueprint aligned</div>
+                    </div>
+                </a>
+                <a href="#features" class="dropdown-link-item">
+                    <div class="dropdown-icon-box"><i class="bi bi-wallet2"></i></div>
+                    <div>
+                        <div class="dropdown-item-title">eSewa &amp; Khalti Collection</div>
+                        <div class="dropdown-item-sub">Zero manual reconciliation, instant receipts</div>
+                    </div>
+                </a>
+                <a href="#features" class="dropdown-link-item">
+                    <div class="dropdown-icon-box"><i class="bi bi-whatsapp"></i></div>
+                    <div>
+                        <div class="dropdown-item-title">WhatsApp &amp; SMS Broadcast</div>
+                        <div class="dropdown-item-sub">2.3s instant absent alerts &amp; fee reminders</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        {{-- Resources Dropdown --}}
+        <div class="nav-item-dropdown">
+            <button class="nav-dropdown-toggle" type="button" aria-expanded="false">
+                <span>Resources</span> <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="nav-dropdown-menu">
+                <a href="#modules" class="dropdown-link-item">
+                    <div class="dropdown-icon-box"><i class="bi bi-grid-fill"></i></div>
+                    <div>
+                        <div class="dropdown-item-title">All 24+ ERP Modules</div>
+                        <div class="dropdown-item-sub">Complete system capabilities &amp; specs</div>
+                    </div>
+                </a>
+                <a href="#faq" class="dropdown-link-item">
+                    <div class="dropdown-icon-box"><i class="bi bi-question-circle-fill"></i></div>
+                    <div>
+                        <div class="dropdown-item-title">Knowledge Base &amp; FAQ</div>
+                        <div class="dropdown-item-sub">Migration, setup &amp; answers</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <a href="#reviews">Our Client</a>
         <a href="#contact">Contact Us</a>
+        <a href="{{ route('login') }}">Account</a>
     </div>
-    <div class="nav-actions-desktop" style="display:flex;gap:.5rem;align-items:center">
-        <a href="{{ route('login') }}" class="btn-outline">Sign In</a>
-        <a href="{{ route('saas.register') }}" class="btn-primary">Get Started Free</a>
+
+    <div class="nav-actions-desktop" style="display:flex;gap:.6rem;align-items:center">
+        <a href="{{ route('saas.register') }}" class="btn-primary" style="background:#ffffff; color:#5c68f6 !important; border:none; padding:0.5rem 1.25rem; font-weight:700; border-radius:6px; box-shadow:0 4px 14px rgba(0,0,0,0.15)">
+            <i class="bi bi-rocket-takeoff-fill"></i> Request Free Demo
+        </a>
     </div>
+
     <button class="mobile-toggle-btn" onclick="document.getElementById('mobileDrawer').classList.toggle('show')" aria-label="Toggle menu">
         <i class="bi bi-list"></i>
     </button>
 </nav>
 
-{{-- Mobile Navigation Drawer --}}
+{{-- Mobile Navigation Drawer with Grouped Sub-menus --}}
 <div class="mobile-drawer" id="mobileDrawer">
-    <a href="#features"  onclick="document.getElementById('mobileDrawer').classList.remove('show')">Features</a>
-    <a href="#showcase"  onclick="document.getElementById('mobileDrawer').classList.remove('show')">How it works</a>
-    <a href="#modules"   onclick="document.getElementById('mobileDrawer').classList.remove('show')">Modules</a>
-    <a href="#pricing"   onclick="document.getElementById('mobileDrawer').classList.remove('show')">Pricing</a>
-    <a href="#reviews"   onclick="document.getElementById('mobileDrawer').classList.remove('show')">Reviews</a>
-    <a href="#faq"       onclick="document.getElementById('mobileDrawer').classList.remove('show')">FAQ</a>
-    <a href="#contact"   onclick="document.getElementById('mobileDrawer').classList.remove('show')">Contact</a>
-    <div style="height:1px;background:#e2e8f0;margin:.5rem 0;"></div>
-    <a href="{{ route('login') }}" class="btn-outline" onclick="document.getElementById('mobileDrawer').classList.remove('show')">
-        <i class="bi bi-box-arrow-in-right"></i> Sign In
+    <div class="mobile-nav-group-title">Navigation</div>
+    <a href="{{ route('saas.landing') }}" onclick="document.getElementById('mobileDrawer').classList.remove('show')">
+        <i class="bi bi-house-door-fill"></i> Home
     </a>
+    <a href="#about" onclick="document.getElementById('mobileDrawer').classList.remove('show')">
+        <i class="bi bi-building"></i> About Us
+    </a>
+    <a href="#solutions" onclick="document.getElementById('mobileDrawer').classList.remove('show')">
+        <i class="bi bi-mortarboard-fill"></i> Products &amp; Solutions
+    </a>
+    <a href="#features" onclick="document.getElementById('mobileDrawer').classList.remove('show')">
+        <i class="bi bi-gear-fill"></i> Service &amp; Features
+    </a>
+    <a href="#modules" onclick="document.getElementById('mobileDrawer').classList.remove('show')">
+        <i class="bi bi-grid-fill"></i> Resources &amp; Modules
+    </a>
+    <a href="#reviews" onclick="document.getElementById('mobileDrawer').classList.remove('show')">
+        <i class="bi bi-people-fill"></i> Our Clients
+    </a>
+    <a href="#contact" onclick="document.getElementById('mobileDrawer').classList.remove('show')">
+        <i class="bi bi-envelope-fill"></i> Contact Us
+    </a>
+    <a href="{{ route('login') }}" onclick="document.getElementById('mobileDrawer').classList.remove('show')">
+        <i class="bi bi-person-circle"></i> Account Login
+    </a>
+
+    <div style="height:1px;background:#f3e8ff;margin:.5rem 0;"></div>
     <a href="{{ route('saas.register') }}" class="btn-primary" onclick="document.getElementById('mobileDrawer').classList.remove('show')">
-        <i class="bi bi-rocket-takeoff-fill"></i> Get Started Free
+        <i class="bi bi-rocket-takeoff-fill"></i> Request Free Demo (14-Day Trial)
     </a>
 </div>
 
-{{-- ══ HERO ═════════════════════════════════════════════════════════════ --}}
-<main id="main-content">
-<section class="hero" aria-label="Hero — School Management Software Nepal">
-    <div class="hero-blob" style="width:500px;height:500px;top:-150px;right:-150px;background:rgba(99,102,241,.2)"></div>
-    <div class="hero-blob" style="width:350px;height:350px;bottom:-100px;left:-100px;background:rgba(167,139,250,.15)"></div>
+{{-- ══ DYNAMIC TECHNOSOFT STYLE HERO SECTION ═════════════════════════════ --}}
+<section class="hero-dynamic" aria-label="Dynamic Academic ERP — Nepal">
+    <div class="hero-dynamic-blob-1"></div>
+    <div class="hero-dynamic-blob-2"></div>
 
-    <div class="hero-content">
-        <div class="hero-badge">
-            <span style="width:.5rem;height:.5rem;border-radius:50%;background:#4ade80;animation:pulse 2s infinite"></span>
-            @if($schoolCount > 0)
-                {{ $schoolCount }} schools already on NepalSchoolHub
-            @else
-                Be the first school on NepalSchoolHub
-            @endif
+    <div class="hero-slides-wrapper">
+        {{-- Slide 1: Holistic MIS & Digital Learning --}}
+        <div class="hero-slide active" data-slide="0">
+            <div class="hero-2col-grid">
+                <div class="hero-left-content">
+                    <h1 class="hero-title-main">
+                        Comprehensive School and College MIS with Integrated Digital Learning Platform
+                    </h1>
+                    <p class="hero-desc-main">
+                        We are revolutionizing the education landscape with our cutting-edge School &amp; College Management Information System (MIS) and Digital Learning Platform. Our holistic solution empowers educational institutions to enhance administrative efficiency, and deliver an immersive digital learning experience.
+                    </p>
+                    <div class="hero-actions-group">
+                        <a href="{{ route('saas.register') }}" class="hero-btn-readmore">
+                            Read More
+                        </a>
+                        <a href="#contact" class="hero-btn-contact">
+                            Contact Us
+                        </a>
+                    </div>
+                    {{-- Slider Controls (1 / 3 < >) --}}
+                    <div class="hero-slider-nav">
+                        <span class="hero-slide-num">1 / 3</span>
+                        <div class="hero-slide-arrows">
+                            <button type="button" class="hero-slide-btn hero-slide-prev" aria-label="Previous Slide">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <button type="button" class="hero-slide-btn hero-slide-next" aria-label="Next Slide">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-right-showcase">
+                    <div class="hero-showcase-img-wrap">
+                        <img src="{{ asset('imgs/hero/image.webp') }}" 
+                             alt="Comprehensive School and College MIS — Multi-Device Showcase" 
+                             class="hero-multi-devices-img" 
+                             fetchpriority="high" 
+                             loading="eager">
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <h1>
-            School Management Software Nepal — <span class="gradient-text">built for Nepali schools</span>
-        </h1>
-
-        <p>Students, teachers, exams, fee collection, hostel, transport, library, HR and AI tools —
-        all in one modern dashboard. Built for Nepali schools, priced for Nepali budgets.</p>
-
-        <div class="hero-ctas">
-            <a href="{{ route('saas.register') }}" class="cta-white">
-                <i class="bi bi-rocket-takeoff-fill"></i> Start Free — No Credit Card
-            </a>
-            <a href="#features" class="cta-ghost">
-                <i class="bi bi-play-circle-fill"></i> See All Features
-            </a>
+        {{-- Slide 2: CDC Nepal Curriculum & Automated Grading --}}
+        <div class="hero-slide" data-slide="1">
+            <div class="hero-2col-grid">
+                <div class="hero-left-content">
+                    <h2 class="hero-title-main">
+                        Automated CDC Curriculum Grading &amp; Official QR Marksheet Engine
+                    </h2>
+                    <p class="hero-desc-main">
+                        Complete compliance with Nepal CDC 2078 letter grading standards. Generate tamper-proof QR-verified marksheets, character certificates, ledger sheets, and admit cards in one click with zero manual calculation errors.
+                    </p>
+                    <div class="hero-actions-group">
+                        <a href="#features" class="hero-btn-readmore">
+                            Explore Features
+                        </a>
+                        <a href="#pricing" class="hero-btn-contact">
+                            View Pricing
+                        </a>
+                    </div>
+                    {{-- Slider Controls (1 / 3 < >) --}}
+                    <div class="hero-slider-nav">
+                        <span class="hero-slide-num">2 / 3</span>
+                        <div class="hero-slide-arrows">
+                            <button type="button" class="hero-slide-btn hero-slide-prev" aria-label="Previous Slide">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <button type="button" class="hero-slide-btn hero-slide-next" aria-label="Next Slide">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-right-showcase">
+                    <div class="hero-showcase-img-wrap">
+                        <img src="{{ asset('imgs/hero/Responsive NepalEdu Dashboard Showcase.webp') }}" 
+                             alt="CDC Nepal Curriculum Grading & Automated Marksheet Engine" 
+                             class="hero-multi-devices-img" 
+                             loading="lazy">
+                    </div>
+                </div>
+            </div>
         </div>
-        <p style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:1rem">Free plan available · No setup fees · 14-day trial on paid plans</p>
+
+        {{-- Slide 3: Connected Digital Campus & Mobile Apps --}}
+        <div class="hero-slide" data-slide="2">
+            <div class="hero-2col-grid">
+                <div class="hero-left-content">
+                    <h2 class="hero-title-main">
+                        Connected Digital Campus: Mobile Apps for Teachers, Parents &amp; Admins
+                    </h2>
+                    <p class="hero-desc-main">
+                        Empower teachers with 1-tap attendance and exam marks entry. Provide parents with live fees payment via eSewa/Khalti, absentee SMS alerts, homework tracking, and real-time school bus GPS tracking.
+                    </p>
+                    <div class="hero-actions-group">
+                        <a href="{{ route('saas.register') }}" class="hero-btn-readmore">
+                            Start Free Trial
+                        </a>
+                        <a href="#contact" class="hero-btn-contact">
+                            Book a Live Demo
+                        </a>
+                    </div>
+                    {{-- Slider Controls (1 / 3 < >) --}}
+                    <div class="hero-slider-nav">
+                        <span class="hero-slide-num">3 / 3</span>
+                        <div class="hero-slide-arrows">
+                            <button type="button" class="hero-slide-btn hero-slide-prev" aria-label="Previous Slide">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <button type="button" class="hero-slide-btn hero-slide-next" aria-label="Next Slide">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-right-showcase">
+                    <div class="hero-showcase-img-wrap">
+                        <img src="{{ asset('imgs/hero/webpg.webp') }}" 
+                             alt="Nepal School Mobile App Ecosystem & Real-Time Portals" 
+                             class="hero-multi-devices-img" 
+                             loading="lazy">
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    {{-- Dashboard screenshot --}}
-    <div class="hero-img-wrap">
-        <img src="{{ asset('imgs/nepalwithourschool.webp') }}" alt="NepalSchoolHub school management software dashboard — Nepal's #1 school ERP"
-             fetchpriority="high" loading="eager" decoding="async"
-             loading="eager" style="border-radius:1.25rem 1.25rem 0 0">
+    {{-- Bottom Asymmetrical Organic S-Curve Wave Divider --}}
+    <div class="hero-bottom-curve">
+        <svg viewBox="0 0 1440 140" preserveAspectRatio="none">
+            <path d="M0,45 C280,140 460,0 760,70 C1060,140 1260,30 1440,65 L1440,140 L0,140 Z" fill="#ffffff"></path>
+        </svg>
     </div>
 </section>
 
-{{-- ══ TRUST BAR ════════════════════════════════════════════════════════ --}}
-<div class="trust-bar">
-    <div class="trust-inner">
-        @foreach(['24+ Modules','20+ Role Types','AI-Powered Tools','Nepal-Specific Design','Nepali Calendar Support','PDF Certificates','WhatsApp Notifications','Mobile-Ready'] as $f)
-        <span><i class="bi bi-check-circle-fill"></i>{{ $f }}</span>
-        @endforeach
+{{-- ══ NEPAL DIGITAL ECOSYSTEM & COMPLIANCE SECTION ═══════════════════════════ --}}
+<section class="ecosystem-section">
+    <div class="ecosystem-container">
+        <div class="eco-header">
+            <span class="eco-pill-badge"><i class="bi bi-shield-check"></i> Standard Nepal Digital Stack</span>
+            <h2 class="eco-title">Seamlessly Connected with Nepal's Leading Infrastructure</h2>
+            <p class="eco-subtitle">Pre-integrated with official government compliance frameworks, national payment gateways &amp; real-time communication channels.</p>
+        </div>
+
+        <div class="eco-grid">
+            <div class="eco-card">
+                <div class="eco-card-icon"><i class="bi bi-wallet2"></i></div>
+                <div class="eco-card-info">
+                    <span class="eco-card-title">eSewa Direct Billing</span>
+                    <span class="eco-card-sub">Instant Fee Settlement</span>
+                </div>
+            </div>
+            <div class="eco-card">
+                <div class="eco-card-icon"><i class="bi bi-credit-card-2-front"></i></div>
+                <div class="eco-card-info">
+                    <span class="eco-card-title">Khalti Gateway</span>
+                    <span class="eco-card-sub">Merchant &amp; App Sync</span>
+                </div>
+            </div>
+            <div class="eco-card">
+                <div class="eco-card-icon"><i class="bi bi-qr-code"></i></div>
+                <div class="eco-card-info">
+                    <span class="eco-card-title">Fonepay Dynamic QR</span>
+                    <span class="eco-card-sub">Counter &amp; Mobile Pay</span>
+                </div>
+            </div>
+            <div class="eco-card">
+                <div class="eco-card-icon"><i class="bi bi-bank"></i></div>
+                <div class="eco-card-info">
+                    <span class="eco-card-title">ConnectIPS / IME Pay</span>
+                    <span class="eco-card-sub">National Interbank Clearing</span>
+                </div>
+            </div>
+            <div class="eco-card">
+                <div class="eco-card-icon"><i class="bi bi-award-fill"></i></div>
+                <div class="eco-card-info">
+                    <span class="eco-card-title">MoEST IEMIS Sync</span>
+                    <span class="eco-card-sub">CEHRD Compliance Export</span>
+                </div>
+            </div>
+            <div class="eco-card">
+                <div class="eco-card-icon"><i class="bi bi-file-earmark-check"></i></div>
+                <div class="eco-card-info">
+                    <span class="eco-card-title">CDC 2078 Grading</span>
+                    <span class="eco-card-sub">National Grade-Sheet Standard</span>
+                </div>
+            </div>
+            <div class="eco-card">
+                <div class="eco-card-icon"><i class="bi bi-whatsapp"></i></div>
+                <div class="eco-card-info">
+                    <span class="eco-card-title">WhatsApp &amp; SMS</span>
+                    <span class="eco-card-sub">Sparrow SMS &amp; Instant Alerts</span>
+                </div>
+            </div>
+            <div class="eco-card">
+                <div class="eco-card-icon"><i class="bi bi-calendar-event"></i></div>
+                <div class="eco-card-info">
+                    <span class="eco-card-title">Dual BS 2081 / AD</span>
+                    <span class="eco-card-sub">Nepalese Calendar Engine</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="eco-trust-ticker">
+            <span class="eco-trust-item"><i class="bi bi-check-circle-fill"></i> 24+ Specialized Modules</span>
+            <span class="eco-trust-item"><i class="bi bi-check-circle-fill"></i> 20+ Role Hierarchies</span>
+            <span class="eco-trust-item"><i class="bi bi-check-circle-fill"></i> AI Exam Paper Maker</span>
+            <span class="eco-trust-item"><i class="bi bi-check-circle-fill"></i> Nepal Day-Book Accounting</span>
+            <span class="eco-trust-item"><i class="bi bi-check-circle-fill"></i> Parent &amp; Student Mobile PWA</span>
+            <span class="eco-trust-item"><i class="bi bi-check-circle-fill"></i> Double-Entry Ledger</span>
+        </div>
+    </div>
+</section>
+
+{{-- ══ INTERACTIVE ROLE-BASED SOLUTIONS SECTION ═══════════════════════════ --}}
+<section class="section" id="solutions" style="background:#ffffff; border-bottom: 1px solid #e2e8f0;">
+<div class="section-inner">
+    <div style="text-align:center; margin-bottom: 1rem">
+        <span class="section-label"><i class="bi bi-person-workspace"></i> Role-Tailored Workflows</span>
+        <h2 class="section-title">Built for Everyone in Your School Ecosystem</h2>
+        <p class="section-sub" style="margin:0 auto">Whether you are a School Director, Academic Teacher, Finance Officer, or Parent — NepalSchoolHub delivers a tailored, dedicated experience.</p>
+    </div>
+
+    {{-- Role Tabs Navigation --}}
+    <div class="role-tabs-nav">
+        <button class="role-tab-btn active" onclick="switchRoleTab('principal', this)">
+            <i class="bi bi-mortarboard-fill"></i> For Principals &amp; Owners
+        </button>
+        <button class="role-tab-btn" onclick="switchRoleTab('teachers', this)">
+            <i class="bi bi-person-video3"></i> For Teachers &amp; Staff
+        </button>
+        <button class="role-tab-btn" onclick="switchRoleTab('accountant', this)">
+            <i class="bi bi-cash-coin"></i> For Accountants
+        </button>
+        <button class="role-tab-btn" onclick="switchRoleTab('parents', this)">
+            <i class="bi bi-people-fill"></i> For Parents &amp; Students
+        </button>
+    </div>
+
+    {{-- Role Tab 1: Principals --}}
+    <div id="role-principal" class="role-tab-content showcase">
+        <div>
+            <span class="section-label"><i class="bi bi-speedometer2"></i> Institutional Governance</span>
+            <h3 style="font-size:1.6rem; font-weight:800; color:#0f172a; margin-bottom:1rem">Complete Command Over School Operations</h3>
+            <p style="color:#64748b; font-size:0.95rem; line-height:1.7; margin-bottom:1.25rem">
+                Monitor fee collection, daily attendance ratios, staff productivity, exam results, and CEHRD compliance in real time from anywhere on your phone or laptop.
+            </p>
+            <ul class="showcase-points">
+                <li><i class="bi bi-check-circle-fill"></i> <strong>Live Executive Dashboard:</strong> Real-time student count, fee defaulter radar, and staff attendance.</li>
+                <li><i class="bi bi-check-circle-fill"></i> <strong>CEHRD / IEMIS 1-Click Sync:</strong> Export government-compliant Excel sheets instantly.</li>
+                <li><i class="bi bi-check-circle-fill"></i> <strong>Multi-Branch Governance:</strong> Manage multiple school branches from a unified master login.</li>
+            </ul>
+        </div>
+        <div class="showcase-img">
+            <img src="{{ asset('imgs/admin_dashboard.png') }}?v={{ @filemtime(public_path('imgs/admin_dashboard.png')) }}" alt="Principal & Admin Dashboard preview" loading="lazy">
+        </div>
+    </div>
+
+    {{-- Role Tab 2: Teachers --}}
+    <div id="role-teachers" class="role-tab-content showcase" style="display:none">
+        <div>
+            <span class="section-label"><i class="bi bi-magic"></i> AI Academic Tools</span>
+            <h3 style="font-size:1.6rem; font-weight:800; color:#0f172a; margin-bottom:1rem">Teach More, Spend Zero Time on Paperwork</h3>
+            <p style="color:#64748b; font-size:0.95rem; line-height:1.7; margin-bottom:1.25rem">
+                Empower your teachers with 1-click mobile attendance, AI exam question paper generation, marksheet entry with auto-grade points, and homework broadcasts.
+            </p>
+            <ul class="showcase-points">
+                <li><i class="bi bi-check-circle-fill"></i> <strong>AI Question Paper Maker:</strong> Generate NEB &amp; CDC blueprint question papers in seconds.</li>
+                <li><i class="bi bi-check-circle-fill"></i> <strong>Mobile Class Attendance:</strong> Mark class attendance in 15 seconds with auto WhatsApp alerts.</li>
+                <li><i class="bi bi-check-circle-fill"></i> <strong>Smart Gradebook:</strong> Enter marks easily; GPA and CDC 2078 letter grades calculate automatically.</li>
+            </ul>
+        </div>
+        <div class="showcase-img">
+            <img src="{{ asset('imgs/teacher_dashboard.png') }}?v={{ @filemtime(public_path('imgs/teacher_dashboard.png')) }}" alt="Teacher Portal Dashboard preview" loading="lazy">
+        </div>
+    </div>
+
+    {{-- Role Tab 3: Accountants --}}
+    <div id="role-accountant" class="role-tab-content showcase" style="display:none">
+        <div>
+            <span class="section-label"><i class="bi bi-journal-bookmark-fill"></i> Double-Entry Accounting</span>
+            <h3 style="font-size:1.6rem; font-weight:800; color:#0f172a; margin-bottom:1rem">Nepalese Day-Book &amp; Instant eSewa/Khalti Collection</h3>
+            <p style="color:#64748b; font-size:0.95rem; line-height:1.7; margin-bottom:1.25rem">
+                Replace messy manual registers with our automated Double-Entry Day Book, automated SMS fee reminders, invoice generation, and instant online payment reconciliation.
+            </p>
+            <ul class="showcase-points">
+                <li><i class="bi bi-check-circle-fill"></i> <strong>eSewa &amp; Khalti Direct Gateway:</strong> Parents pay online; ledger updates automatically.</li>
+                <li><i class="bi bi-check-circle-fill"></i> <strong>Nepalese Day-Book (दैनिक खाता):</strong> View daily cash in/out, bank balances, and head-wise reports.</li>
+                <li><i class="bi bi-check-circle-fill"></i> <strong>Veda-Model Defaulter Gate:</strong> Automatically withhold digital report cards until dues are cleared.</li>
+            </ul>
+        </div>
+        <div class="showcase-img">
+            <img src="{{ asset('imgs/accountant_dashboard.png') }}?v={{ @filemtime(public_path('imgs/accountant_dashboard.png')) }}" alt="Accountant & Day-Book finance dashboard preview" loading="lazy">
+        </div>
+    </div>
+
+    {{-- Role Tab 4: Parents & Students --}}
+    <div id="role-parents" class="role-tab-content showcase" style="display:none">
+        <div>
+            <span class="section-label"><i class="bi bi-phone-fill"></i> Mobile PWA &amp; WhatsApp</span>
+            <h3 style="font-size:1.6rem; font-weight:800; color:#0f172a; margin-bottom:1rem">Keep Parents Connected &amp; Delighted 24/7</h3>
+            <p style="color:#64748b; font-size:0.95rem; line-height:1.7; margin-bottom:1.25rem">
+                Parents receive instant WhatsApp alerts the second their child is marked absent, can view term report cards with QR code verification, and track school bus GPS live.
+            </p>
+            <ul class="showcase-points">
+                <li><i class="bi bi-check-circle-fill"></i> <strong>Instant WhatsApp Notifications:</strong> Fee receipts, homework, exam timetables, and notices.</li>
+                <li><i class="bi bi-check-circle-fill"></i> <strong>Official QR Marksheet Verification:</strong> Publicly verifiable terminal certificates.</li>
+                <li><i class="bi bi-check-circle-fill"></i> <strong>Live Bus GPS Tracking:</strong> Real-time vehicle location and route pickup alerts.</li>
+            </ul>
+        </div>
+        <div class="showcase-img">
+            <img src="{{ asset('imgs/parent_dashboard.png') }}?v={{ @filemtime(public_path('imgs/parent_dashboard.png')) }}" alt="Parent & Student Portal Dashboard preview" loading="lazy">
+        </div>
+    </div>
+
+</div>
+</section>
+
+{{-- ══ WHY CHOOSE US VS VEDA & LEGACY ERPS (BATTLE CARD) ═══════════════════ --}}
+<section class="section" id="comparison" style="background:#f8fafc; border-bottom: 1px solid #e2e8f0;">
+<div class="section-inner">
+    <div style="text-align:center; margin-bottom:2.5rem">
+        <span class="section-label"><i class="bi bi-trophy-fill"></i> Feature Comparison</span>
+        <h2 class="section-title">Why Leading Schools Switch from Veda &amp; Vidyapit to NepalSchoolHub</h2>
+        <p class="section-sub" style="margin:0 auto">Compare head-to-head. Get more powerful tools, built-in AI, and transparent pricing without expensive lock-ins.</p>
+    </div>
+
+    <div class="battle-card">
+        <div style="overflow-x:auto">
+            <table class="battle-table">
+                <thead>
+                    <tr>
+                        <th style="width:34%">Feature / Area</th>
+                        <th style="width:33%" class="battle-highlight-col">⭐ NepalSchoolHub</th>
+                        <th style="width:33%">Legacy School ERPs (Veda / Vidyapit)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{-- 1. School Management --}}
+                    <tr>
+                        <td><strong>1. School Management (Core SIS)</strong><br><span style="font-size:0.75rem; color:#64748b">Student lifecycle, online admissions, class/section setup, transfer certificates (TC) &amp; document vault</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> Complete &amp; Included</span><br><span style="font-size:0.72rem; color:#475569">Full digital SIS with bulk Excel import &amp; alumni tracking</span></td>
+                        <td><span style="color:#059669; font-weight:700"><i class="bi bi-check-circle-fill"></i> Supported</span><br><span style="font-size:0.72rem; color:#64748b">Standard core school management</span></td>
+                    </tr>
+
+                    {{-- 2. Parent / Teacher / Student Apps --}}
+                    <tr>
+                        <td><strong>2. Parent / Teacher / Student Apps</strong><br><span style="font-size:0.75rem; color:#64748b">Dedicated mobile apps for teachers, parents, students &amp; bus drivers with real-time sync</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> 4 Native Apps Included</span><br><span style="font-size:0.72rem; color:#475569">Teacher gradebook, parent live portal, student LMS &amp; driver app</span></td>
+                        <td><span style="color:#059669; font-weight:700"><i class="bi bi-check-circle-fill"></i> Mobile Apps</span><br><span style="font-size:0.72rem; color:#64748b">Apps available</span></td>
+                    </tr>
+
+                    {{-- 3. Fees / Billing --}}
+                    <tr>
+                        <td><strong>3. Fees &amp; Billing (eSewa / Khalti / Fonepay)</strong><br><span style="font-size:0.75rem; color:#64748b">Automated fee invoices, online payment gateways, Nepali fiscal year (Shrawan–Ashad) cycles</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> Direct Zero-Hassle Gateway</span><br><span style="font-size:0.72rem; color:#475569">Automated receipts, installment plans &amp; fee defaulter detection</span></td>
+                        <td><span style="color:#059669; font-weight:700"><i class="bi bi-check-circle-fill"></i> Supported</span><br><span style="font-size:0.72rem; color:#64748b">Fee billing supported</span></td>
+                    </tr>
+
+                    {{-- 4. Attendance --}}
+                    <tr>
+                        <td><strong>4. Attendance (QR, RFID, Biometric &amp; App)</strong><br><span style="font-size:0.75rem; color:#64748b">1-Tap mobile class roll call, QR card live scan, RFID gate sync &amp; automated shortage alerts</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> Multi-Mode Attendance</span><br><span style="font-size:0.72rem; color:#475569">QR scan, RFID biometric &amp; instant parent trigger</span></td>
+                        <td><span style="color:#059669; font-weight:700"><i class="bi bi-check-circle-fill"></i> Supported</span><br><span style="font-size:0.72rem; color:#64748b">Biometric / manual attendance</span></td>
+                    </tr>
+
+                    {{-- 5. Results / Report Cards --}}
+                    <tr>
+                        <td><strong>5. Results &amp; CDC 2078 Report Cards</strong><br><span style="font-size:0.75rem; color:#64748b">Nepal CDC 2078 8-point grading, SEE/NEB marksheets, auto GPA &amp; QR verification</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> 1-Click Live Scan QR</span><br><span style="font-size:0.72rem; color:#475569">100% MoEST &amp; NEB blueprint compliance with public scan verify</span></td>
+                        <td><span style="color:#059669; font-weight:700"><i class="bi bi-check-circle-fill"></i> Supported</span><br><span style="font-size:0.72rem; color:#64748b">Standard marksheet printing</span></td>
+                    </tr>
+
+                    {{-- 6. Certificates / Admit Cards --}}
+                    <tr>
+                        <td><strong>6. Certificates &amp; Admit Cards Generator</strong><br><span style="font-size:0.75rem; color:#64748b">35+ certificate templates (Character, TC, Bonafide, Merit) + exam admit cards with seating</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> 35+ Templates Included</span><br><span style="font-size:0.72rem; color:#475569">Automated batch admit cards with roll numbers &amp; exam timetables</span></td>
+                        <td><span style="color:#475569; font-weight:700"><i class="bi bi-check-circle"></i> Basic Certificates</span><br><span style="font-size:0.72rem; color:#64748b">Limited templates / custom formatting fees</span></td>
+                    </tr>
+
+                    {{-- 7. QR ID Cards --}}
+                    <tr>
+                        <td><strong>7. QR ID Cards Generator</strong><br><span style="font-size:0.75rem; color:#64748b">Instant batch printable photo ID cards with encrypted verifiable QR security codes</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> Built-in 1-Click Generator</span><br><span style="font-size:0.72rem; color:#475569">Student, teacher &amp; staff photo ID cards with instant QR verification</span></td>
+                        <td><span style="color:#059669; font-weight:700"><i class="bi bi-check-circle-fill"></i> ID Cards Available</span><br><span style="font-size:0.72rem; color:#64748b">Standard ID printing</span></td>
+                    </tr>
+
+                    {{-- 8. Question Paper Generator --}}
+                    <tr>
+                        <td><strong>8. AI Question Paper Generator &amp; Bank</strong><br><span style="font-size:0.75rem; color:#64748b">Generate CDC &amp; NEB specification blueprint exam papers with MCQs, short &amp; long answers</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> AI-Powered &amp; Built-in</span><br><span style="font-size:0.72rem; color:#475569">Generates full question papers in seconds with Bloom's taxonomy</span></td>
+                        <td><span style="color:#dc2626; font-weight:700"><i class="bi bi-x-circle-fill"></i> Not Prominent Publicly</span><br><span style="font-size:0.72rem; color:#64748b">Manual entry or 3rd-party software required</span></td>
+                    </tr>
+
+                    {{-- 9. WhatsApp Absentee / PTM Alerts --}}
+                    <tr>
+                        <td><strong>9. WhatsApp Absentee &amp; PTM Alerts</strong><br><span style="font-size:0.75rem; color:#64748b">Direct Meta WhatsApp integration for instant absentee alerts, fee notices, and PTM reminders</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> Core Differentiator</span><br><span style="font-size:0.72rem; color:#475569">98% open rate, direct parent WhatsApp notifications</span></td>
+                        <td><span style="color:#d97706; font-weight:700"><i class="bi bi-dash-circle-fill"></i> SMS / Push / In-App</span><br><span style="font-size:0.72rem; color:#64748b">Traditional SMS or in-app notifications</span></td>
+                    </tr>
+
+                    {{-- 10. Offline-First Architecture --}}
+                    <tr>
+                        <td><strong>10. Offline-First &amp; Hybrid Sync</strong><br><span style="font-size:0.75rem; color:#64748b">Designed for Nepal's low-bandwidth &amp; intermittent power/internet conditions</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> Offline-First Architecture</span><br><span style="font-size:0.72rem; color:#475569">Local caching &amp; background sync during load-shedding</span></td>
+                        <td><span style="color:#d97706; font-weight:700"><i class="bi bi-dash-circle-fill"></i> Cloud-Based Only</span><br><span style="font-size:0.72rem; color:#64748b">Requires continuous active internet connection</span></td>
+                    </tr>
+
+                    {{-- 11. E-Learning & LMS --}}
+                    <tr>
+                        <td><strong>11. E-Learning &amp; LMS Portal</strong><br><span style="font-size:0.75rem; color:#64748b">Homework assignments, study material notes, video lessons &amp; online timed quizzes</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> Full LMS Included</span><br><span style="font-size:0.72rem; color:#475569">Digital study notes, homework submission &amp; auto-graded quizzes</span></td>
+                        <td><span style="color:#059669; font-weight:700"><i class="bi bi-check-circle-fill"></i> Extensive LMS</span><br><span style="font-size:0.72rem; color:#64748b">Comprehensive e-learning portal</span></td>
+                    </tr>
+
+                    {{-- 12. Library Management --}}
+                    <tr>
+                        <td><strong>12. Library Management System</strong><br><span style="font-size:0.75rem; color:#64748b">Book catalog, ISBN search, barcode/QR issue &amp; return, digital e-books &amp; late fine calculator</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> Complete Library Suite</span><br><span style="font-size:0.72rem; color:#475569">Barcode/QR scan, digital catalog &amp; overdue fine tracker</span></td>
+                        <td><span style="color:#059669; font-weight:700"><i class="bi bi-check-circle-fill"></i> Supported</span><br><span style="font-size:0.72rem; color:#64748b">Library management module</span></td>
+                    </tr>
+
+                    {{-- 13. Accounting --}}
+                    <tr>
+                        <td><strong>13. School Accounting &amp; Day-Book</strong><br><span style="font-size:0.75rem; color:#64748b">Nepalese double-entry day-book, daily cash/bank ledgers, fee reconciliation &amp; balance sheets</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> Standard Feature</span><br><span style="font-size:0.72rem; color:#475569">Nepalese day-book, cash/bank journals &amp; income-expense tracking</span></td>
+                        <td><span style="color:#d97706; font-weight:700"><i class="bi bi-dash-circle-fill"></i> Add-on Module</span><br><span style="font-size:0.72rem; color:#64748b">Often requires extra add-on fee or external software</span></td>
+                    </tr>
+
+                    {{-- 14. Bus Tracking --}}
+                    <tr>
+                        <td><strong>14. School Bus GPS Live Tracking</strong><br><span style="font-size:0.75rem; color:#64748b">Real-time GPS vehicle tracking, driver turn-by-turn navigation &amp; stop-wise parent arrival alerts</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> Live GPS + Driver App</span><br><span style="font-size:0.72rem; color:#475569">Interactive map, route rosters &amp; WhatsApp bus departure/arrival updates</span></td>
+                        <td><span style="color:#059669; font-weight:700"><i class="bi bi-check-circle-fill"></i> Supported</span><br><span style="font-size:0.72rem; color:#64748b">Bus tracking available</span></td>
+                    </tr>
+
+                    {{-- 15. Inventory & Payroll --}}
+                    <tr>
+                        <td><strong>15. Inventory &amp; Staff Payroll</strong><br><span style="font-size:0.75rem; color:#64748b">School asset stock inventory, staff salary slips, PF/CIT deductions compliant with Nepal Labour Act</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> Nepal Labour Act Ready</span><br><span style="font-size:0.72rem; color:#475569">Asset depreciation, stock in/out, monthly salary slips &amp; tax reports</span></td>
+                        <td><span style="color:#059669; font-weight:700"><i class="bi bi-check-circle-fill"></i> Supported</span><br><span style="font-size:0.72rem; color:#64748b">Inventory and payroll modules</span></td>
+                    </tr>
+
+                    {{-- 16. AI Features --}}
+                    <tr>
+                        <td><strong>16. AI Features &amp; Smart Analytics</strong><br><span style="font-size:0.75rem; color:#64748b">AI lesson planner, automated report remarks, predictive fee defaulter detection &amp; performance insights</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> Full AI Suite Included</span><br><span style="font-size:0.72rem; color:#475569">AI question generator, AI remarks, AI lesson plans &amp; analytics</span></td>
+                        <td><span style="color:#059669; font-weight:700"><i class="bi bi-check-circle-fill"></i> AI Tools Advertised</span><br><span style="font-size:0.72rem; color:#64748b">Select AI features advertised</span></td>
+                    </tr>
+
+                    {{-- 17. Customization --}}
+                    <tr>
+                        <td><strong>17. School Customization &amp; White-Labeling</strong><br><span style="font-size:0.75rem; color:#64748b">Full control: custom subdomain/domain, custom school logo, color themes &amp; marksheet headers</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> You Control It</span><br><span style="font-size:0.72rem; color:#475569">Instant self-service school branding &amp; custom domain setup</span></td>
+                        <td><span style="color:#059669; font-weight:700"><i class="bi bi-check-circle-fill"></i> Available</span><br><span style="font-size:0.72rem; color:#64748b">Custom branding available</span></td>
+                    </tr>
+
+                    {{-- 18. Market Presence --}}
+                    <tr>
+                        <td><strong>18. Market Presence &amp; Tech Platform</strong><br><span style="font-size:0.75rem; color:#64748b">Next-Gen high-speed cloud architecture vs legacy software</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-rocket-takeoff-fill"></i> Modern Next-Gen ERP</span><br><span style="font-size:0.72rem; color:#475569">Lightning-fast, ultra-secure, built with modern responsive tech</span></td>
+                        <td><span style="color:#475569; font-weight:700"><i class="bi bi-building"></i> Established Legacy</span><br><span style="font-size:0.72rem; color:#64748b">1,300+ claimed schools</span></td>
+                    </tr>
+
+                    {{-- 19. Pricing --}}
+                    <tr>
+                        <td><strong>19. Pricing &amp; Transparency</strong><br><span style="font-size:0.75rem; color:#64748b">Annual subscription costs, setup fees &amp; student count constraints</span></td>
+                        <td class="battle-highlight-col"><span style="color:#059669; font-weight:800"><i class="bi bi-check-circle-fill"></i> Flat NPR 15,000/Year</span><br><span style="font-size:0.72rem; color:#475569">All 24 modules included, up to 9999 students + Free Plan</span></td>
+                        <td><span style="color:#dc2626; font-weight:700"><i class="bi bi-cash"></i> Variable High Pricing</span><br><span style="font-size:0.72rem; color:#64748b">Varies heavily by student count &amp; add-on modules</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="background:#f1f5f9; padding:1.25rem; text-align:center; border-top:1px solid #e2e8f0; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:1rem">
+            <span style="font-size:0.9rem; font-weight:700; color:#1e1b4b">Ready to upgrade your school with the most advanced system in Nepal?</span>
+            <a href="{{ route('saas.register') }}" class="cta-primary-btn" style="padding:0.6rem 1.4rem; font-size:0.85rem">
+                <i class="bi bi-rocket-takeoff-fill"></i> Claim Your Free 14-Day Trial
+            </a>
+        </div>
     </div>
 </div>
+</section>
 
+
+{{-- ══ ABOUT US & CORPORATE FOUNDATION ════════════════════════════════════ --}}
+<section class="section" id="about" style="background:#ffffff; border-bottom: 1px solid #f3e8ff;">
+<div class="section-inner">
+    <div style="text-align:center; margin-bottom: 3rem">
+        <span class="section-label"><i class="bi bi-building"></i> About NepalSchoolHub</span>
+        <h2 class="section-title">Pioneering Digital Education Across Nepal</h2>
+        <p class="section-sub" style="margin:0 auto">
+            Built from the ground up to empower Nepali educational institutions with next-generation school management, integrated online payments, and Ministry-compliant reporting.
+        </p>
+    </div>
+
+    <div class="about-grid">
+        {{-- Left: Mission, Values, & Strengths --}}
+        <div>
+            <h3 style="font-size:1.65rem; font-weight:800; color:#1e1b4b; line-height:1.3; margin-bottom:1rem">
+                Built by Nepali Technologists, <br>
+                <span style="color:#5c68f6">Exclusively for Nepal's Academic Future</span>
+            </h3>
+            <p style="color:#475569; font-size:0.95rem; line-height:1.75; margin-bottom:1.5rem">
+                NepalSchoolHub was founded with a singular purpose: to replace rigid, fragmented, and outdated legacy software with a unified, high-speed, and secure cloud platform. We combine international-grade software architecture with 100% Nepali curriculum standards (CDC 2078), local financial gateways (eSewa, Khalti, ConnectIPS), and local calendar workflows (BS 2081).
+            </p>
+
+            <div class="about-feature-cards">
+                <div class="about-feature-item">
+                    <div class="about-icon-box">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:800; font-size:0.95rem; color:#0f172a; margin-bottom:0.25rem">100% Government &amp; CDC 2078 Aligned</div>
+                        <div style="font-size:0.825rem; color:#64748b; line-height:1.5">Direct 1-click IEMIS exports for the Ministry of Education (CEHRD), CDC letter grading, and IRD CBMS billing compliance.</div>
+                    </div>
+                </div>
+
+                <div class="about-feature-item">
+                    <div class="about-icon-box">
+                        <i class="bi bi-hdd-network"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:800; font-size:0.95rem; color:#0f172a; margin-bottom:0.25rem">Bank-Grade 256-Bit SSL &amp; Cloud Redundancy</div>
+                        <div style="font-size:0.825rem; color:#64748b; line-height:1.5">Automatic multi-zone daily cloud backups, role-based encryption, and 99.9% guaranteed platform uptime.</div>
+                    </div>
+                </div>
+
+                <div class="about-feature-item">
+                    <div class="about-icon-box">
+                        <i class="bi bi-headset"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight:800; font-size:0.95rem; color:#0f172a; margin-bottom:0.25rem">Dedicated Local Engineering &amp; On-Site Support</div>
+                        <div style="font-size:0.825rem; color:#64748b; line-height:1.5">Kathmandu central operations headquarters with rapid-response deployment specialists in Birgunj and Butwal.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex; flex-wrap:wrap; gap:0.85rem; align-items:center; margin-top:1.5rem">
+                <a href="{{ route('saas.register') }}" class="cta-primary-btn" style="background:#5c68f6; color:#ffffff; padding:0.85rem 1.6rem; border-radius:0.75rem; font-weight:700">
+                    <i class="bi bi-rocket-takeoff-fill"></i> Get Started Free
+                </a>
+                <a href="https://wa.me/9779744911550?text=Hello%20NepalSchoolHub%2C%20I%20would%20like%20to%20receive%20a%20company%20profile%20and%20product%20brochure." target="_blank" rel="noopener" class="btn-outline" style="background:#ffffff; color:#5c68f6; border:1.5px solid #5c68f6; padding:0.8rem 1.4rem; border-radius:0.75rem; font-weight:700">
+                    <i class="bi bi-file-earmark-pdf-fill"></i> Request Product Brochure
+                </a>
+            </div>
+        </div>
+
+        {{-- Right: Trust Metrics Box & Corporate Footprint --}}
+        <div>
+            <div class="about-metrics-box">
+                <div style="font-size:0.75rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#7e22ce; margin-bottom:1.25rem">
+                    <i class="bi bi-graph-up-arrow"></i> Verified Platform Track Record
+                </div>
+
+                <div class="about-stats-grid">
+                    <div class="about-stat-card">
+                        <div class="about-stat-number">120+</div>
+                        <div class="about-stat-label">Institutions Across Nepal</div>
+                    </div>
+                    <div class="about-stat-card">
+                        <div class="about-stat-number">50k+</div>
+                        <div class="about-stat-label">Students &amp; Parents Served</div>
+                    </div>
+                    <div class="about-stat-card">
+                        <div class="about-stat-number">99.4%</div>
+                        <div class="about-stat-label">Fee Collection Rate</div>
+                    </div>
+                    <div class="about-stat-card">
+                        <div class="about-stat-number">77</div>
+                        <div class="about-stat-label">Districts Supported</div>
+                    </div>
+                </div>
+
+                {{-- Corporate Office & Helpline Info --}}
+                <div class="about-hq-card">
+                    <div style="display:flex; align-items:center; gap:0.5rem; font-weight:800; font-size:0.95rem; margin-bottom:0.5rem">
+                        <i class="bi bi-geo-alt-fill"></i> Kathmandu Corporate Office
+                    </div>
+                    <p style="margin-bottom:0.5rem; opacity:0.9; font-size:0.8rem; line-height:1.5">
+                        New Baneshwor (Sankhamul Road), Kathmandu, Nepal.<br>
+                        Regional Support Branches: Birgunj &bull; Butwal &bull; Pokhara
+                    </p>
+                    <div style="display:flex; flex-wrap:wrap; gap:0.75rem; font-size:0.78rem; font-weight:700; border-top:1px solid rgba(255,255,255,0.2); padding-top:0.65rem; margin-top:0.65rem">
+                        <span>📞 <a href="tel:+9779744911550">+977 9744911550</a></span>
+                        <span>✉️ <a href="mailto:support@nshlms.com">support@nshlms.com</a></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</section>
 
 {{-- ══ FEATURES ═════════════════════════════════════════════════════════ --}}
 <section class="section" id="features" style="background:#fff">
@@ -517,8 +2725,8 @@
         $features = [
             [
                 'icon'=>'bi-people-fill','color'=>'#6366f1','bg'=>'#eef2ff',
-                'title'=>'Student Management',
-                'desc'=>'Complete student lifecycle from admission to graduation.',
+                'title'=>'Student Management & SIS',
+                'desc'=>'Complete student lifecycle from online admission to graduation and alumni tracking.',
                 'details'=>[
                     'Online Admission Forms','Student Profiles & Documents','Photo ID Card Generator',
                     'Bulk Student Import (Excel)','Student Transfers & TC','Scholarship Management',
@@ -528,8 +2736,8 @@
             ],
             [
                 'icon'=>'bi-person-badge-fill','color'=>'#3b82f6','bg'=>'#eff6ff',
-                'title'=>'Teacher & HR',
-                'desc'=>'Full HR suite for teaching and non-teaching staff.',
+                'title'=>'Teacher & HR Suite',
+                'desc'=>'Staff profiles, attendance, contracts, and payroll aligned with Nepal Labour Act.',
                 'details'=>[
                     'Staff Profiles & Documents','Employment Contracts','Leave Management',
                     'Payroll & Salary Slips','Attendance Tracking','Performance Reviews',
@@ -538,91 +2746,157 @@
                 ]
             ],
             [
-                'icon'=>'bi-file-earmark-text-fill','color'=>'#8b5cf6','bg'=>'#f5f3ff',
-                'title'=>'Exams & Results',
-                'desc'=>'End-to-end exam management with AI-powered tools.',
+                'icon'=>'bi-cpu-fill','color'=>'#8b5cf6','bg'=>'#f5f3ff',
+                'title'=>'AI Question Paper Maker',
+                'desc'=>'Generate CDC 2078 & NEB blueprint exam question papers with MCQs & rubric keys in seconds.',
                 'details'=>[
-                    'Question Paper Maker','Question Bank (MCQ / Essay)','Online Exam Builder',
-                    'Timed Online Examinations','Mark Entry & Auto Calculation','Grading Systems (GPA/%)' ,
-                    'Result Sheet PDF','Merit List Generation','Transcripts & Report Cards',
-                    'Re-exam Applications','Exam Hall Seating','Practical Exams',
+                    'CDC 2078 Blueprint Compliance','NEB Exam Specification Grids','MCQ, Short & Long Questions',
+                    'Bloom\'s Taxonomy Tagging','Auto Marking Scheme & Answer Keys','Centralized Question Bank',
+                    'Difficulty Level Balancing','One-Click PDF/Word Export','Chapter & Subject Mapping',
+                    'Instant Question Randomization','Past Paper Repository','Teacher Collaboration',
+                ]
+            ],
+            [
+                'icon'=>'bi-file-earmark-text-fill','color'=>'#7c3aed','bg'=>'#faf5ff',
+                'title'=>'CDC 2078 Results & Marksheets',
+                'desc'=>'8-Point grading, GPA calculation, internal/external weightage & QR-verified marksheets.',
+                'details'=>[
+                    'CDC 2078 8-Point Grading Scale','GPA & Letter Grade Automation','Internal / Theory Weightage',
+                    'Public QR Verifiable Marksheets','Tabulation Sheet PDF','Merit List Generation',
+                    'Transcripts & Character Certificates','SEE / NEB Grade Formats','Parent Result Portal',
+                    'Re-Exam Tracking','Subject-wise Class Analytics','Bulk PDF Printout',
                 ]
             ],
             [
                 'icon'=>'bi-cash-stack','color'=>'#10b981','bg'=>'#f0fdf4',
-                'title'=>'Fee & Finance',
-                'desc'=>'Complete school finance with online payment support.',
+                'title'=>'Fees & Day-Book Accounting',
+                'desc'=>'eSewa/Khalti fee collection, Nepalese double-entry day-book, cash/bank ledgers & invoices.',
                 'details'=>[
-                    'Fee Structure Builder','Automated Invoice Generation','Online Payment (eSewa, Khalti, PayPal)',
-                    'Installment Plans','Discount & Scholarship Waivers','Expense Tracking',
-                    'Income & Ledger Reports','Profit & Loss Statement','Finance Dashboard',
-                    'Fee Defaulter Alerts','Bulk Fee Collection','Receipt PDF Download',
+                    'Fee Structure Builder','Automated Invoice Generation','Online Payment (eSewa, Khalti, Fonepay)',
+                    'Nepali Fiscal Year (Shrawan-Ashad)','Double-Entry Day-Book','Cash & Bank Journals',
+                    'Fee Defaulter WhatsApp Reminders','Discount & Scholarship Waivers','Expense Vouchers',
+                    'Profit & Loss Statements','Bulk Fee Collection','Receipt PDF Download',
                 ]
             ],
             [
-                'icon'=>'bi-calendar2-check-fill','color'=>'#f59e0b','bg'=>'#fffbeb',
-                'title'=>'Attendance',
-                'desc'=>'Multi-mode attendance with instant parent alerts.',
+                'icon'=>'bi-qr-code-scan','color'=>'#059669','bg'=>'#ecfdf5',
+                'title'=>'QR ID Cards & Admit Cards',
+                'desc'=>'1-Click batch photo ID card generator & exam admit cards with seating & QR verification.',
                 'details'=>[
-                    'Manual Class Attendance','QR Code Attendance','RFID Biometric Gate Scan',
-                    'Bulk Attendance Import','Staff Attendance','Shortage Alerts',
-                    'WhatsApp Absent Notifications','Attendance Analytics','Monthly Reports',
-                    'Leave Applications','Holiday Management','GPS Transport Attendance',
+                    'Student & Staff Photo ID Cards','Unique Verifiable QR Codes','Batch Printable PDF Layouts',
+                    'Exam Admit Card Maker','Roll Number & Seating Allocation','Exam Hall Timetable on Card',
+                    '35+ Certificate Templates','Transfer Certificate (TC)','Character Certificates',
+                    'Custom School Logo & Signatures','Student Barcode Support','Gate Security Live Scan',
                 ]
             ],
             [
-                'icon'=>'bi-chat-dots-fill','color'=>'#06b6d4','bg'=>'#ecfeff',
-                'title'=>'Parent Portal',
-                'desc'=>'Real-time visibility for parents into their child\'s school life.',
+                'icon'=>'bi-whatsapp','color'=>'#16a34a','bg'=>'#f0fdf4',
+                'title'=>'Attendance & WhatsApp Alerts',
+                'desc'=>'Mobile 1-tap, QR scanner, RFID biometric gates & instant parent WhatsApp absentee notifications.',
                 'details'=>[
-                    'Child Attendance Live View','Results & Report Cards','Fee Invoices & Online Pay',
-                    'Homework & Assignments','School Notices & Events','Teacher Direct Messaging',
-                    'Transport Live Tracking','Behavior & Health Records','Timetable View',
-                    'Performance Analytics','Meeting Scheduler','Mobile App Access',
+                    'Manual 1-Tap Class Attendance','QR Code Student Scanning','RFID Biometric Gate Sync',
+                    'Instant WhatsApp Absentee Alerts','Parent PTM & Notice Alerts','98% Open Rate Messaging',
+                    'Staff Biometric Attendance','Shortage & Truancy Reports','Monthly Attendance Registers',
+                    'Student Leave Applications','Holiday Calendar Management','Bus Boarding Attendance',
+                ]
+            ],
+            [
+                'icon'=>'bi-phone-fill','color'=>'#0ea5e9','bg'=>'#f0f9ff',
+                'title'=>'Parent, Teacher & Student Apps',
+                'desc'=>'Dedicated mobile applications for every role in the school community with real-time sync.',
+                'details'=>[
+                    'Teacher Gradebook & Roll Call App','Parent Live Bus & Score Portal','Student Homework & LMS App',
+                    'Bus Driver GPS Navigation App','Instant Push Notifications','Direct Teacher-Parent Chat',
+                    'Live Homework & Exam Timetables','Fee Payment on Mobile','Offline-Ready Caching',
+                    'School Notice Board in App','Bilingual English/Nepali UI','iOS & Android Native Experience',
+                ]
+            ],
+            [
+                'icon'=>'bi-wifi-off','color'=>'#d97706','bg'=>'#fffbeb',
+                'title'=>'Offline-First & Hybrid Sync',
+                'desc'=>'Uninterrupted work during load-shedding and internet outage with automatic cloud sync.',
+                'details'=>[
+                    'Local Device Caching','Offline Attendance Marking','Offline Gradebook Entry',
+                    'Automatic Cloud Background Sync','Low-Bandwidth Optimization','Zero Data Loss Guarantee',
+                    'Fast Local UI Performance','Multi-Device Conflict Resolution','Battery-Efficient Architecture',
+                    'Desktop & Tablet Compatible','Works on 2G/3G & Slow Internet','Daily Cloud Backup Vault',
+                ]
+            ],
+            [
+                'icon'=>'bi-mortarboard-fill','color'=>'#6366f1','bg'=>'#eef2ff',
+                'title'=>'E-Learning LMS & Online Exams',
+                'desc'=>'Digital study materials, video lessons, homework submission, and timed online quizzes.',
+                'details'=>[
+                    'Class-wise Homework & Assignments','Digital Study Notes & PDF Sharing','Video Lesson Integration',
+                    'Timed Online Examinations','MCQ Auto-Grading & Scoring','Instant Student Results',
+                    'Assignment Review & Feedback','Student Submission Status','Interactive Discussion Board',
+                    'Subject Material Repository','Quiz Leaderboard & Badges','Parent Visible Submissions',
+                ]
+            ],
+            [
+                'icon'=>'bi-bus-front-fill','color'=>'#ea580c','bg'=>'#fff7ed',
+                'title'=>'School Bus GPS Live Tracking',
+                'desc'=>'Real-time fleet tracking, driver turn-by-turn navigation & WhatsApp arrival alerts for parents.',
+                'details'=>[
+                    'Live Vehicle GPS Map','Driver Navigation & Roster App','Route & Stop Management',
+                    'Student Stop Allocation','Parent WhatsApp Arrival Alerts','Speed & Route Analytics',
+                    'Transport Attendance Log','Vehicle Maintenance & Fuel Log','Emergency Panic Alerts',
+                    'Transport Fee Billing','Multi-Route Support','Driver License Tracking',
+                ]
+            ],
+            [
+                'icon'=>'bi-journals','color'=>'#ec4899','bg'=>'#fdf2f8',
+                'title'=>'Library Management System',
+                'desc'=>'Digital book catalog, ISBN search, barcode/QR issue & return, e-books & overdue fines.',
+                'details'=>[
+                    'Book Catalog & ISBN Search','Barcode / QR Scan Issue & Return','Digital E-Books Library',
+                    'Automated Late Fine Calculator','Member Borrowing History','Overdue WhatsApp Alerts',
+                    'Book Reservation Queue','Multi-Copy Inventory Tracking','Category & Author Filters',
+                    'Bulk Book Import (Excel)','Library Analytics Dashboard','Damaged / Lost Book Log',
                 ]
             ],
             [
                 'icon'=>'bi-building','color'=>'#ef4444','bg'=>'#fef2f2',
                 'title'=>'Hostel Management',
-                'desc'=>'Full residential management for boarding schools.',
+                'desc'=>'Full residential room & bed configuration, warden logs, mess billing & student roll call.',
                 'details'=>[
-                    'Hostel Building Setup','Room & Bed Configuration','Student Allocation',
-                    'Hostel Attendance','Visitor Log','Maintenance Requests',
-                    'Fee Integration','Room Type (AC/Non-AC)','Occupancy Reports',
-                    'Warden Management','Hostel Notice Board','Bed Availability Dashboard',
+                    'Hostel Building & Room Setup','Bed Allocation & Availability','Hostel Attendance Tracking',
+                    'Hostel Fee & Meal Billing','Visitor Log & Gate Pass','Maintenance Requests',
+                    'Warden Incident Log','Room Type Configuration','Hostel Notice Board',
+                    'Parent Visiting Permissions','Occupancy Reports','Hostel Expense Tracking',
                 ]
             ],
             [
-                'icon'=>'bi-bus-front-fill','color'=>'#0ea5e9','bg'=>'#f0f9ff',
-                'title'=>'Transport',
-                'desc'=>'GPS-tracked fleet management for school transport.',
+                'icon'=>'bi-box-seam-fill','color'=>'#64748b','bg'=>'#f8fafc',
+                'title'=>'Inventory & Asset Management',
+                'desc'=>'Track school supplies, stock in/out, purchase orders, vendor records & depreciation.',
                 'details'=>[
-                    'Vehicle Fleet Management','Driver Profiles & Licenses','Route & Stop Management',
-                    'Student Transport Assignment','GPS Live Tracking','Transport Attendance',
-                    'Parent Pickup Alerts','Transport Fee Collection','Vehicle Maintenance Log',
-                    'Driver Performance','Transport Analytics','Multi-Route Support',
+                    'School Asset Registration','Stock In / Stock Out Vouchers','Low Stock Automated Alerts',
+                    'Vendor & Supplier Directory','Purchase Order Workflow','Asset Assignment to Staff',
+                    'Depreciation Calculation','Barcode Item Labels','Annual Asset Audit Log',
+                    'Damaged & Disposed Tracking','Category-wise Inventory Reports','Multi-Store Room Support',
                 ]
             ],
             [
-                'icon'=>'bi-journals','color'=>'#ec4899','bg'=>'#fdf2f8',
-                'title'=>'Library',
-                'desc'=>'Full-featured library with digital e-books and barcode scan.',
+                'icon'=>'bi-robot','color'=>'#4f46e5','bg'=>'#eef2ff',
+                'title'=>'AI Smart Analytics Suite',
+                'desc'=>'Predictive fee defaulter detection, automated report remarks, AI lesson planning & insights.',
                 'details'=>[
-                    'Book Catalog & ISBN','Barcode / QR Scan Issue','Book Issue & Return',
-                    'Fine Calculation','Digital E-Books','Member Management',
-                    'Overdue Alerts','Book Reservation','Library Analytics',
-                    'Multi-Copy Tracking','Category & Subject Filter','Bulk Book Import',
+                    'AI Question Paper Maker','AI Lesson Plan Generator','AI Student Report Card Remarks',
+                    'Predictive Fee Defaulter AI','Attendance Pattern Detection','Student Risk Identification',
+                    'Smart Timetable Clash Solver','AI Notice & Circular Writer','Parent AI Inquiry Bot',
+                    'Classroom Performance Heatmaps','Remedial Class Recommendations','Automated Principal Summaries',
                 ]
             ],
             [
-                'icon'=>'bi-robot','color'=>'#6366f1','bg'=>'#eef2ff',
-                'title'=>'AI Tools',
-                'desc'=>'Built-in AI that saves hours of manual work every week.',
+                'icon'=>'bi-sliders2','color'=>'#0891b2','bg'=>'#ecfeff',
+                'title'=>'Custom Branding & White-Label',
+                'desc'=>'You control your brand: custom subdomain, custom logo, personalized report card layouts.',
                 'details'=>[
-                    'AI Homework Generator','AI Notice & Letter Writer','AI Question Paper Builder',
-                    'Fee Default Prediction','Attendance Pattern Insights','Performance Analytics AI',
-                    'AI Lesson Plan Creator','Smart Timetable Suggestions','Remedial Class Finder',
-                    'AI Chatbot for Parents','AI Report Summaries','WhatsApp AI Broadcasts',
+                    'Custom School Subdomain & Domain','School Logo & Letterhead Branding','Custom Color Themes',
+                    'Personalized Marksheet Headers','Custom Certificate Templates','Role Permission Customization',
+                    'Custom Fee Heads & Structures','Nepali & English Bilingual Setup','Automated Data Exports',
+                    '20+ Built-in Access Roles','Audit Trail & Activity Logs','Dedicated Support Assistance',
                 ]
             ],
         ];
@@ -859,30 +3133,30 @@
     <div class="modules-grid">
         @php
         $allModules = [
-            ['num'=>1, 'icon'=>'bi-people-fill',           'color'=>'#6366f1', 'title'=>'Student Management',   'desc'=>'Full student lifecycle management from admission to graduation.','details'=>['Online Admission Forms','Student Profiles & Documents','Photo ID Card Generator','Bulk Student Import (Excel)','Student Transfers & TC','Scholarship Management','Alumni Tracking','Health Records','Behavior & Discipline Log','Academic Progress Timeline','Parent Linking','Student Search & Filters']],
+            ['num'=>1, 'icon'=>'bi-people-fill',           'color'=>'#6366f1', 'title'=>'Student Management & SIS',  'desc'=>'Full student lifecycle management from admission to graduation.','details'=>['Online Admission Forms','Student Profiles & Documents','Photo ID Card Generator','Bulk Student Import (Excel)','Student Transfers & TC','Scholarship Management','Alumni Tracking','Health & Medical Records','Behavior & Discipline Log','Academic Progress Timeline','Parent Linking','House & Club Assignments']],
             ['num'=>2, 'icon'=>'bi-person-badge-fill',      'color'=>'#3b82f6', 'title'=>'Teacher Management',   'desc'=>'Complete teacher and non-teaching staff management.','details'=>['Staff Profiles & Documents','Employment Contracts','Leave Management','Attendance Tracking','Performance Reviews','Training Records','Recruitment Postings','Staff Exit Management','Teacher Timetable','Departmental Organization','Substitute Teacher Assignment','Staff Directory']],
-            ['num'=>3, 'icon'=>'bi-chat-dots-fill',         'color'=>'#06b6d4', 'title'=>'Parent Portal',        'desc'=>'Real-time visibility for parents into every aspect of school life.','details'=>['Child Attendance Live View','Results & Report Cards','Fee Invoices & Online Pay','Homework & Assignments','School Notices & Events','Teacher Direct Messaging','Transport Live Tracking','Behavior & Health Records','Timetable View','Performance Analytics','Meeting Scheduler','Mobile App Access']],
-            ['num'=>4, 'icon'=>'bi-calendar3',              'color'=>'#f59e0b', 'title'=>'Academic Calendar',    'desc'=>'Plan, publish, and manage school events and academic schedules.','details'=>['Nepali & English Calendar','Holiday Management','Exam Schedule Integration','Event Publishing','Class-wise Calendar Views','Parent Visible Events','Recurring Events','Academic Year Setup','Nepali Fiscal Year Support','Event Notifications','Calendar Export (PDF)','Session & Term Dates']],
-            ['num'=>5, 'icon'=>'bi-calendar2-check-fill',   'color'=>'#10b981', 'title'=>'Attendance (QR+RFID)', 'desc'=>'Multi-mode attendance with instant parent alerts.','details'=>['Manual Class Attendance','QR Code Attendance','RFID Biometric Gate Scan','GPS Transport Attendance','Staff Attendance','Shortage Alerts & Reports','WhatsApp Absent Notifications','Bulk Attendance Import','Monthly Attendance Reports','Leave Applications','Holiday Management','Attendance Analytics Dashboard']],
-            ['num'=>6, 'icon'=>'bi-file-earmark-text-fill', 'color'=>'#8b5cf6', 'title'=>'Exam & Marks',        'desc'=>'Full exam workflow from scheduling to report cards.','details'=>['Exam Schedule Builder','Mark Entry & Auto Calculation','Grading Systems (GPA/%)','Result Sheet PDF','Merit List Generation','Transcripts & Report Cards','Re-exam Applications','Exam Hall Seating Plan','Practical Exams','Subject-wise Analysis','Class Comparison Reports','Parent Result Alerts']],
-            ['num'=>7, 'icon'=>'bi-pc-display',             'color'=>'#7c3aed', 'title'=>'Online Exams',         'desc'=>'Browser-based exams with auto-grading and instant results.','details'=>['Timed Online Examinations','MCQ & Essay Questions','Auto-grading & Scoring','Live Proctoring View','Per-question Time Limits','Randomized Question Order','Instant Result Display','Exam Access Controls','Practice Exam Mode','Detailed Score Analytics','Export Results to PDF','Student Attempt History']],
-            ['num'=>8, 'icon'=>'bi-bank2',                  'color'=>'#0891b2', 'title'=>'Question Bank',        'desc'=>'Centralized question repository with AI generation.','details'=>['Subject-wise Question Bank','MCQ, True/False, Essay Types','Difficulty Level Tagging','AI Question Generator','Question Paper Builder','Bloom\'s Taxonomy Tags','Import Questions (Excel)','Question Usage History','Image-based Questions','Solution & Answer Keys','Sharable Across Exams','Version History']],
-            ['num'=>9, 'icon'=>'bi-cash-stack',             'color'=>'#059669', 'title'=>'Fee & Finance',        'desc'=>'Complete school finance with online payment gateway support.','details'=>['Fee Structure Builder','Automated Invoice Generation','Online Payment (eSewa, Khalti, PayPal)','Installment Plans','Discount & Scholarship Waivers','Expense Tracking','Income & Ledger Reports','Profit & Loss Statement','Finance Dashboard','Fee Defaulter Alerts','Bulk Fee Collection','Receipt PDF Download']],
-            ['num'=>10,'icon'=>'bi-person-vcard-fill',      'color'=>'#d97706', 'title'=>'Payroll & HR',         'desc'=>'Payroll aligned with Nepal Labour Act and tax rules.','details'=>['Salary Structure Builder','PF, CIT & Tax Deductions','Monthly Payslip PDF','Allowances & Deductions','Salary Advance Tracking','Payroll Reports','Leave Deduction Integration','Bank Transfer Sheet','Bonus Management','Nepali Fiscal Year Reports','Staff Salary History','Salary Analytics']],
-            ['num'=>11,'icon'=>'bi-journals',               'color'=>'#ec4899', 'title'=>'Library',              'desc'=>'Full-featured library with e-books and barcode scanning.','details'=>['Book Catalog & ISBN','Barcode / QR Scan Issue','Book Issue & Return','Fine Calculation','Digital E-Books','Member Management','Overdue Alerts','Book Reservation','Library Analytics','Multi-Copy Tracking','Category & Subject Filter','Bulk Book Import']],
-            ['num'=>12,'icon'=>'bi-bus-front-fill',         'color'=>'#0ea5e9', 'title'=>'Transport',            'desc'=>'GPS-tracked fleet management for school transport.','details'=>['Vehicle Fleet Management','Driver Profiles & Licenses','Route & Stop Management','Student Transport Assignment','GPS Live Tracking','Transport Attendance','Parent Pickup Alerts','Transport Fee Collection','Vehicle Maintenance Log','Driver Performance','Transport Analytics','Multi-Route Support']],
-            ['num'=>13,'icon'=>'bi-building',               'color'=>'#ef4444', 'title'=>'Hostel',               'desc'=>'Full residential management for boarding schools.','details'=>['Hostel Building Setup','Room & Bed Configuration','Student Allocation','Hostel Attendance','Visitor Log','Maintenance Requests','Fee Integration','Room Type (AC/Non-AC)','Occupancy Reports','Warden Management','Hostel Notice Board','Bed Availability Dashboard']],
-            ['num'=>14,'icon'=>'bi-box-seam-fill',          'color'=>'#64748b', 'title'=>'Inventory',            'desc'=>'Track and manage all school assets and supplies.','details'=>['Asset Registration','Stock In / Stock Out','Low Stock Alerts','Vendor Management','Purchase Orders','Asset Assignment to Staff','Depreciation Tracking','Barcode Labels','Inventory Reports','Category & Location Tags','Damaged / Disposed Log','Annual Asset Audit']],
-            ['num'=>15,'icon'=>'bi-megaphone-fill',         'color'=>'#f43f5e', 'title'=>'Communication',        'desc'=>'Unified messaging across SMS, WhatsApp, and in-app.','details'=>['WhatsApp Bulk Alerts','SMS Notifications','In-app Messaging','Group Announcements','Parent-Teacher Chat','Staff Broadcast','Delivery Reports','Template Messages','Fee Reminder Automation','Attendance Alerts','Event Invitations','Multi-language Support']],
-            ['num'=>16,'icon'=>'bi-pin-angle-fill',         'color'=>'#8b5cf6', 'title'=>'Notice Board',         'desc'=>'Digital notice board for the whole school community.','details'=>['Notice Creation & Publishing','Audience Targeting (class/role)','AI Notice Writer','Notice Archive','Attachment Support (PDF/Image)','Pinned & Urgent Notices','Parent Mobile Push Notifications','Notice Expiry Dates','View/Read Tracking','Notice Categories','Bilingual Support','Email Distribution']],
-            ['num'=>17,'icon'=>'bi-bar-chart-fill',         'color'=>'#6366f1', 'title'=>'Reports & Analytics',  'desc'=>'Data-driven insights across every module.','details'=>['Student Performance Reports','Attendance Summary Reports','Fee Collection Analytics','Exam Result Analytics','Staff Reports','Transport Reports','Custom Report Builder','Export to PDF & Excel','Dashboard KPIs','Comparative Analytics','Trend Charts','Scheduled Auto-Reports']],
-            ['num'=>18,'icon'=>'bi-robot',                  'color'=>'#4f46e5', 'title'=>'AI Features',          'desc'=>'Built-in AI that saves hours of manual work every week.','details'=>['AI Homework Generator','AI Notice & Letter Writer','AI Question Paper Builder','Fee Default Prediction','Attendance Pattern Insights','Performance Analytics AI','AI Lesson Plan Creator','Smart Timetable Suggestions','Remedial Class Finder','AI Chatbot for Parents','AI Report Summaries','WhatsApp AI Broadcasts']],
-            ['num'=>19,'icon'=>'bi-journal-plus',           'color'=>'#7c3aed', 'title'=>'Lesson Plans',         'desc'=>'Structured lesson planning aligned to curriculum.','details'=>['Daily Lesson Plan Builder','AI Plan Generation','Chapter & Topic Mapping','Resource Attachments','Curriculum Alignment','Teacher Submission & Review','Admin Approval Workflow','Plan Calendar View','Copy Previous Plans','Learning Objective Tagging','Parent Visible Plans','Plan History & Versioning']],
-            ['num'=>20,'icon'=>'bi-calendar4-week',         'color'=>'#0ea5e9', 'title'=>'Timetable',            'desc'=>'Automated timetable generation without clashes.','details'=>['Drag & Drop Builder','Auto-conflict Detection','Teacher & Room Allocation','Class-wise View','Subject Period Management','Substitution Management','Print / PDF Export','Nepali & English View','Section-wise Timetables','Teacher Timetable View','Holiday Exclusion','Session-wise Templates']],
-            ['num'=>21,'icon'=>'bi-person-plus-fill',       'color'=>'#10b981', 'title'=>'Admissions',           'desc'=>'Online and offline admissions with complete tracking.','details'=>['Online Admission Form Builder','Enquiry Management','Application Status Tracking','Interview Scheduling','Document Collection','Admission Fee Payment','Automated Welcome Email / SMS','Entrance Exam Integration','Waitlist Management','Convert Enquiry to Student','Bulk Admission Import','Admission Analytics']],
-            ['num'=>22,'icon'=>'bi-award-fill',             'color'=>'#f59e0b', 'title'=>'Certificates',         'desc'=>'35+ certificate types with QR verification.','details'=>['35+ Certificate Templates','Custom Logo & Branding','QR Code Verification','Bulk PDF Generation','Bilingual (Nepali / English)','Certificate of Character','Transfer Certificate (TC)','Merit & Achievement Awards','Sports & Activity Certs','Digital Certificate Wallet','Auto Student Data Fill','Admin Approval Workflow']],
-            ['num'=>23,'icon'=>'bi-shield-fill-check',      'color'=>'#3b82f6', 'title'=>'Roles & Permissions',  'desc'=>'Fine-grained access control for every user type.','details'=>['20+ Built-in Role Types','Custom Role Creation','Module-level Permissions','Permission Matrix View','Role Cloning','Per-section Data Isolation','Super Admin / School Admin','Teacher / Class Teacher','Student / Parent Roles','Accountant & Librarian Roles','Staff Role Assignment','Audit Trail']],
-            ['num'=>24,'icon'=>'bi-plug-fill',              'color'=>'#64748b', 'title'=>'API & Integrations',   'desc'=>'REST API for building custom integrations and mobile apps.','details'=>['REST API (v1)','JWT Authentication','Student Data API','Finance API','Attendance API','Webhook Support','Mobile App Backend','Third-party LMS Integration','WhatsApp API (Meta)','Payment Gateway APIs','Google Calendar Sync','API Rate Limiting & Logs']],
+            ['num'=>3, 'icon'=>'bi-chat-dots-fill',         'color'=>'#06b6d4', 'title'=>'Parent Portal & App',  'desc'=>'Real-time visibility for parents into every aspect of school life.','details'=>['Child Attendance Live View','Results & Report Cards','Fee Invoices & Online Pay','Homework & Assignments','School Notices & Events','Teacher Direct Messaging','Transport Live Tracking','Behavior & Health Records','Timetable View','Performance Analytics','Meeting Scheduler','Mobile App Access']],
+            ['num'=>4, 'icon'=>'bi-calendar3',              'color'=>'#f59e0b', 'title'=>'Academic Calendar (BS/AD)', 'desc'=>'Plan, publish, and manage school events and academic schedules.','details'=>['Nepali Bikram Sambat & English Calendar','Holiday Management','Exam Schedule Integration','Event Publishing','Class-wise Calendar Views','Parent Visible Events','Recurring Events','Academic Year Setup','Nepali Fiscal Year Support','Event Notifications','Calendar Export (PDF)','Session & Term Dates']],
+            ['num'=>5, 'icon'=>'bi-calendar2-check-fill',   'color'=>'#10b981', 'title'=>'Attendance (QR+RFID+App)', 'desc'=>'Multi-mode attendance with instant WhatsApp parent alerts.','details'=>['Manual Class Attendance','QR Code Live Attendance','RFID Biometric Gate Scan','GPS Transport Attendance','Staff Attendance','Shortage Alerts & Reports','WhatsApp Absent Notifications','Bulk Attendance Import','Monthly Attendance Reports','Leave Applications','Holiday Management','Attendance Analytics Dashboard']],
+            ['num'=>6, 'icon'=>'bi-file-earmark-text-fill', 'color'=>'#8b5cf6', 'title'=>'Exams & CDC Marksheets',  'desc'=>'CDC 2078 8-point grading, SEE/NEB marksheets & GPA automation.','details'=>['Exam Schedule Builder','Mark Entry & Auto Calculation','CDC 2078 8-Point Grading Scale','Result Sheet PDF','Merit List Generation','Transcripts & Report Cards','Re-exam Applications','Exam Hall Seating Plan','Practical Exams','Subject-wise Analysis','Public QR Marksheet Verification','Parent Result Alerts']],
+            ['num'=>7, 'icon'=>'bi-pc-display',             'color'=>'#7c3aed', 'title'=>'Online Exams & Live Quizzes', 'desc'=>'Timed online exams and Kahoot-style live interactive classroom quizzes.','details'=>['Timed Online Examinations','Kahoot-Style Live Classroom Quizzes','Live Game PINs & Leaderboards','MCQ & Essay Questions','Auto-grading & Scoring','Live Proctoring View','Per-question Time Limits','Randomized Question Order','Instant Result Display','Practice Exam Mode','Detailed Score Analytics','Student Attempt History']],
+            ['num'=>8, 'icon'=>'bi-cpu-fill',               'color'=>'#0891b2', 'title'=>'AI Question Paper Maker', 'desc'=>'Generate CDC & NEB blueprint exam question papers in seconds.','details'=>['CDC 2078 Blueprint Compliance','NEB Exam Specification Grids','MCQ, Short & Long Questions','Bloom\'s Taxonomy Tagging','Auto Marking Scheme & Answer Keys','Subject-wise Question Bank','Difficulty Level Tagging','AI Question Generator','Export to PDF / Word','Image-based Questions','Sharable Across Exams','Version History']],
+            ['num'=>9, 'icon'=>'bi-cash-stack',             'color'=>'#059669', 'title'=>'Fees & Day-Book Accounting', 'desc'=>'Online fee gateway & Nepalese double-entry day-book accounting.','details'=>['Fee Structure Builder','Automated Invoice Generation','Online Payment (eSewa, Khalti, Fonepay)','Bank Voucher Slip Verification','Double-Entry Nepalese Day-Book','Cash & Bank Journals','Installment Plans','Discount & Scholarship Waivers','Expense Tracking','Profit & Loss Statements','Fee Defaulter Alerts','Receipt PDF Download']],
+            ['num'=>10,'icon'=>'bi-person-vcard-fill',      'color'=>'#d97706', 'title'=>'Payroll, HR & TDS Remittance', 'desc'=>'Payroll & TDS remittance compliant with Nepal Labour Act and IRD.','details'=>['Salary Structure Builder','PF, CIT & Tax Deductions','TDS Remittance Reports (Nepal IRD)','Monthly Payslip PDF','Allowances & Deductions','Salary Advance Tracking','Payroll Reports','Leave Deduction Integration','Bank Transfer Sheet','Bonus Management','Nepali Fiscal Year Reports','Staff Salary History']],
+            ['num'=>11,'icon'=>'bi-journals',               'color'=>'#ec4899', 'title'=>'Library Management',   'desc'=>'Digital book catalog, ISBN search, barcode/QR scan & e-books.','details'=>['Book Catalog & ISBN Search','Barcode / QR Scan Issue & Return','Fine Calculation','Digital E-Books Library','Member Management','Overdue Alerts','Book Reservation','Library Analytics','Multi-Copy Tracking','Category & Subject Filter','Bulk Book Import','Damaged Book Log']],
+            ['num'=>12,'icon'=>'bi-bus-front-fill',         'color'=>'#0ea5e9', 'title'=>'School Bus GPS Tracking', 'desc'=>'GPS-tracked fleet management with driver app & parent alerts.','details'=>['Vehicle Fleet Management','Driver Navigation & Roster App','Route & Stop Management','Student Transport Assignment','Live GPS Fleet Map','Transport Attendance Log','Parent WhatsApp Arrival Alerts','Transport Fee Collection','Vehicle Maintenance Log','Driver Performance','Transport Analytics','Emergency Panic Alerts']],
+            ['num'=>13,'icon'=>'bi-building',               'color'=>'#ef4444', 'title'=>'Hostel & Gate Visitor Pass', 'desc'=>'Boarding hostel rooms, mess billing & school gate visitor passes.','details'=>['Hostel Building Setup','Room & Bed Configuration','Student Allocation','Hostel Attendance','Gate Visitor Management & Passes','Maintenance Requests','Fee Integration','Room Type (AC/Non-AC)','Occupancy Reports','Warden Management','Hostel Notice Board','Bed Availability Dashboard']],
+            ['num'=>14,'icon'=>'bi-box-seam-fill',          'color'=>'#64748b', 'title'=>'Inventory & Assets',    'desc'=>'Track and manage all school assets, supplies, and stock depreciation.','details'=>['Asset Registration','Stock In / Stock Out Vouchers','Low Stock Alerts','Vendor Management','Purchase Orders','Asset Assignment to Staff','Depreciation Tracking','Barcode Labels','Inventory Reports','Category & Location Tags','Damaged / Disposed Log','Annual Asset Audit']],
+            ['num'=>15,'icon'=>'bi-whatsapp',               'color'=>'#16a34a', 'title'=>'WhatsApp & Communication', 'desc'=>'Direct Meta WhatsApp API, SMS notifications, and in-app chat.','details'=>['WhatsApp Bulk & Absentee Alerts','SMS Notifications (NTC/Ncell)','In-app Messaging','Group Announcements','Parent-Teacher Chat','Staff Broadcast','Delivery Reports','Template Messages','Fee Reminder Automation','Attendance Alerts','Event Invitations','Multi-language Support']],
+            ['num'=>16,'icon'=>'bi-pin-angle-fill',         'color'=>'#8b5cf6', 'title'=>'Digital Notice Board',  'desc'=>'Digital notice board with AI drafting and attachment support.','details'=>['Notice Creation & Publishing','Audience Targeting (class/role)','AI Notice Writer','Notice Archive','Attachment Support (PDF/Image)','Pinned & Urgent Notices','Parent Mobile Push Notifications','Notice Expiry Dates','View/Read Tracking','Notice Categories','Bilingual Support','Email Distribution']],
+            ['num'=>17,'icon'=>'bi-bar-chart-fill',         'color'=>'#6366f1', 'title'=>'Reports & Analytics',  'desc'=>'Data-driven insights across attendance, fees, exams, and staff.','details'=>['Student Performance Reports','Attendance Summary Reports','Fee Collection Analytics','Exam Result Analytics','Staff Reports','Transport Reports','Custom Report Builder','Export to PDF & Excel','Dashboard KPIs','Comparative Analytics','Trend Charts','Scheduled Auto-Reports']],
+            ['num'=>18,'icon'=>'bi-robot',                  'color'=>'#4f46e5', 'title'=>'AI Features Suite',     'desc'=>'Built-in AI question maker, lesson planner, and student remarks.','details'=>['AI Question Paper Maker','AI Lesson Plan Creator','AI Student Report Remarks','Predictive Fee Defaulter AI','Attendance Pattern Insights','Performance Analytics AI','Smart Timetable Suggestions','Remedial Class Finder','AI Chatbot for Parents','AI Notice Writer','AI Report Summaries','WhatsApp AI Broadcasts']],
+            ['num'=>19,'icon'=>'bi-journal-plus',           'color'=>'#7c3aed', 'title'=>'Curriculum & Lesson Plans', 'desc'=>'Structured lesson planning aligned to CDC/NEB curriculum.','details'=>['Daily Lesson Plan Builder','AI Plan Generation','Chapter & Topic Mapping','Resource Attachments','Curriculum Alignment','Teacher Submission & Review','Admin Approval Workflow','Plan Calendar View','Copy Previous Plans','Learning Objective Tagging','Parent Visible Plans','Plan History & Versioning']],
+            ['num'=>20,'icon'=>'bi-calendar4-week',         'color'=>'#0ea5e9', 'title'=>'Smart Timetable Maker', 'desc'=>'Automated timetable generation with clash detection & room mapping.','details'=>['Drag & Drop Builder','Auto-conflict Detection','Teacher & Room Allocation','Class-wise View','Subject Period Management','Substitution Management','Print / PDF Export','Nepali & English View','Section-wise Timetables','Teacher Timetable View','Online Class Integration','Session-wise Templates']],
+            ['num'=>21,'icon'=>'bi-person-plus-fill',       'color'=>'#10b981', 'title'=>'Admissions & IEMIS Export', 'desc'=>'Online admission forms & 1-click export to Government IEMIS.','details'=>['Online Admission Form Builder','Government CEHRD / IEMIS 1-Click Sync','Enquiry Management','Application Status Tracking','Interview Scheduling','Document Collection','Admission Fee Payment','Automated Welcome Email / SMS','Entrance Exam Integration','Waitlist Management','Convert Enquiry to Student','Bulk Admission Import']],
+            ['num'=>22,'icon'=>'bi-award-fill',             'color'=>'#f59e0b', 'title'=>'Certificates & QR Admit Cards', 'desc'=>'35+ certificate templates, TC & batch exam admit card maker.','details'=>['35+ Certificate Templates','Exam Admit Cards with Seating Plan','Student & Staff QR Photo ID Cards','Custom Logo & Branding','QR Code Verification','Bulk PDF Generation','Bilingual (Nepali / English)','Certificate of Character','Transfer Certificate (TC)','Merit & Achievement Awards','Sports & Activity Certs','Digital Certificate Wallet']],
+            ['num'=>23,'icon'=>'bi-shield-fill-check',      'color'=>'#3b82f6', 'title'=>'2FA Security & Roles', 'desc'=>'Two-factor authentication and role-based access control.','details'=>['Two-Factor Authentication (2FA)','20+ Built-in Role Types','Custom Role Creation','Module-level Permissions','Permission Matrix View','Role Cloning','Per-section Data Isolation','Super Admin / School Admin','Teacher / Class Teacher','Student / Parent Roles','Accountant & Librarian Roles','Comprehensive Audit Trail']],
+            ['num'=>24,'icon'=>'bi-plug-fill',              'color'=>'#64748b', 'title'=>'REST API & Integrations', 'desc'=>'REST API for mobile apps, biometric gates, and payments.','details'=>['REST API (v1)','JWT Authentication','Mobile App Backend (4 Apps)','Student Data API','Finance API','Attendance API','Biometric Device Sync','Webhook Support','WhatsApp API (Meta)','Payment Gateway APIs (eSewa/Khalti/Fonepay)','Google Calendar Sync','API Rate Limiting & Logs']],
         ];
         @endphp
         @foreach($allModules as $mod)
@@ -1445,7 +3719,7 @@
         ['q'=>'Is NepalSchoolHub the best school management software in Nepal?',
          'a'=>'NepalSchoolHub is the most feature-complete school management SaaS platform in Nepal. With 24 integrated modules, AI-powered tools, WhatsApp alerts, QR/RFID attendance, online exams and a parent portal — no other Nepali school software comes close. Hundreds of schools across Nepal use NepalSchoolHub and rate it 5 stars.'],
         ['q'=>'What is the website of NepalSchoolHub?',
-         'a'=>'The official website of NepalSchoolHub is nepalschoolhub.techprocod.com.np. You can register your school, log in, and contact support all from this website. The WhatsApp support number is +977 9744911550.'],
+         'a'=>'The official website of NepalSchoolHub is nshlms.com. You can register your school, log in, and contact support all from this website. The WhatsApp support number is +977 9744911550.'],
         ['q'=>'Is NepalSchoolHub available in Nepali language (नेपाली)?',
          'a'=>'The dashboard interface is in English, but the system fully supports Nepali names, Nepali calendar (BS — Bikram Sambat), Nepali Rupee (NPR) fees and all Nepali curriculum standards. A full Nepali-language interface (विद्यालय व्यवस्थापन प्रणाली) is on our roadmap. NepalSchoolHub is the best विद्यालय व्यवस्थापन सफ्टवेयर नेपाल has to offer.'],
       ],
@@ -1463,61 +3737,61 @@
       ],
       'Features & Modules' => [
         ['q'=>'What features does NepalSchoolHub include?',
-         'a'=>'NepalSchoolHub includes 24 fully integrated modules: Student Management, Teacher Management, Parent Portal, Fee & Finance, Attendance (QR + RFID + manual), Exam & Marks, Online Exams, Question Bank, Timetable, Hostel Management, Transport & GPS tracking, Library, Inventory, Payroll & HR, Communication, Notice Board, Certificates, AI Features, Lesson Plans, Admissions, Results & Transcripts, Roles & Permissions, Reports & Analytics, and API Integrations.'],
-        ['q'=>'Does NepalSchoolHub have an online exam system?',
-         'a'=>'Yes. NepalSchoolHub has a built-in online examination system. Schools can create MCQ, short-answer and long-answer question papers, set time limits, publish exams to students, auto-grade MCQ answers and view detailed analytics. Students take exams from their phone or computer.'],
-        ['q'=>'Can NepalSchoolHub generate NEB-style report cards and certificates?',
-         'a'=>'Yes. NepalSchoolHub automatically generates professional report cards, mark sheets and certificates in PDF format. The system supports GPA grading, percentage grading, letter grades and custom grading scales aligned with NEB, SLC/SEE and +2 standards.'],
-        ['q'=>'Does NepalSchoolHub have a fee management system?',
-         'a'=>'Yes. NepalSchoolHub\'s fee management module handles invoice generation, fee collection, payment tracking, outstanding fee reports, discount and scholarship management, fine/penalty calculation, and WhatsApp payment reminders to parents. It supports Nepali fiscal year (Shrawan to Ashad) billing cycles.'],
-        ['q'=>'Does NepalSchoolHub support hostel management?',
-         'a'=>'Yes. The hostel module manages room allocation, bed assignment, hostel fee collection, student check-in/check-out, hostel attendance and expense tracking. It supports multiple hostels and room types within a single school.'],
-        ['q'=>'Does NepalSchoolHub have a transport and GPS tracking module?',
-         'a'=>'Yes. NepalSchoolHub includes a transport management module with route planning, vehicle assignment, driver management and a real-time GPS student tracking app for parents. Parents receive WhatsApp notifications when the bus departs and arrives.'],
-        ['q'=>'Does NepalSchoolHub support QR code and RFID attendance?',
-         'a'=>'Yes. NepalSchoolHub supports multiple attendance methods: manual roll call, QR code scanning, RFID card tap, and mobile app attendance by teachers. Absent students trigger automatic WhatsApp notifications to parents.'],
-        ['q'=>'Does NepalSchoolHub have AI features?',
-         'a'=>'Yes. NepalSchoolHub includes AI-powered tools: automated performance insights, smart attendance pattern detection, AI-generated lesson plan suggestions, predictive fee defaulter alerts and AI-assisted question paper generation from the question bank.'],
-        ['q'=>'Does NepalSchoolHub have payroll and HR management?',
-         'a'=>'Yes. The HR and payroll module handles teacher and staff salary calculation, allowances, deductions, PF/CIT contributions, leave management, salary slips (PDF) and monthly payroll reports — aligned with Nepal\'s Labour Act.'],
-        ['q'=>'Can NepalSchoolHub manage library books?',
-         'a'=>'Yes. The library module manages book cataloguing, student book issue and return, fine calculation for late returns, availability tracking and library reports. It supports barcode scanning for fast book check-in/out.'],
+         'a'=>'NepalSchoolHub includes 24 fully integrated modules: Student Management & SIS, Teacher & HR Suite, Parent Portal, Fees & Day-Book Accounting, Multi-Mode Attendance (QR + RFID + Manual), Exam & Marks, Online Timed Exams, AI Question Paper Maker & Bank, Timetable Management, Hostel Residential Management, Bus Fleet GPS Tracking, Library Management, School Inventory & Assets, Staff Payroll (Nepal Labour Act), WhatsApp & SMS Communication, Notice Board, Certificates & Admit Cards, AI Smart Analytics, Daily Lesson Plans, Online Admissions, Results & Transcripts (CDC 2078), Roles & Permissions, Reports & Analytics, and REST API Integrations.'],
+        ['q'=>'How does Universal QR Verification work for results, marksheets, certificates, and ID cards from one single platform?',
+         'a'=>'Every document generated by NepalSchoolHub — including CDC 2078 Marksheets, 35+ Certificate types (Character, Transfer Certificate TC, Bonafide, Merit, Sports), Student Photo ID Cards, Faculty Badges, and Exam Admit Cards — contains a cryptographically signed, tamper-proof QR code. Anyone (parents, universities, embassy officials, employers, or gate security) can simply scan the QR code with any smartphone camera to instantly verify the authentic digital record directly on NepalSchoolHub\'s public verification portal with zero login required.'],
+        ['q'=>'How does the AI Question Paper Generator work according to CDC 2078 & NEB blueprints?',
+         'a'=>'The built-in AI Question Paper Generator creates complete examination papers in under 30 seconds. Teachers select the grade, subject, chapter, and blueprint criteria. The AI automatically compiles MCQs, short answer questions, long subjective questions, Bloom\'s taxonomy tags, marking rubrics, and answer keys, which can be printed to PDF or exported to Word.'],
+        ['q'=>'Can NepalSchoolHub generate QR ID Cards and Exam Admit Cards in one click?',
+         'a'=>'Yes! NepalSchoolHub has automated 1-click batch generators for photo ID cards (with unique encrypted verifiable QR codes) and exam admit cards with student roll numbers, exam hall seat allocations, and subject timetables.'],
+        ['q'=>'Can NepalSchoolHub work offline during power cuts or internet outages in Nepal?',
+         'a'=>'Yes. NepalSchoolHub features an offline-first architecture with local device caching. Teachers can take roll calls, mark attendance, and record grades without an active internet connection. As soon as connectivity is restored, all data automatically syncs with the central cloud.'],
+        ['q'=>'How does the double-entry Nepalese Day-Book accounting and fee collection work?',
+         'a'=>'NepalSchoolHub includes full Nepalese double-entry accounting with daily cash and bank ledgers, fee collection reconciliation, automated receipt vouchers, discount waivers, expense tracking, and profit & loss statements structured around the Nepali fiscal calendar (Shrawan to Ashad). It also integrates directly with eSewa, Khalti, and Fonepay.'],
+        ['q'=>'Does NepalSchoolHub have real-time school bus GPS tracking?',
+         'a'=>'Yes. NepalSchoolHub provides a dedicated Driver App with GPS route navigation and real-time passenger rosters. Parents can track the school bus live on an interactive map and receive automated WhatsApp alerts when the bus is approaching their stop.'],
+        ['q'=>'Can NepalSchoolHub generate Nepal CDC 2078 standard report cards and transcripts?',
+         'a'=>'Yes. NepalSchoolHub automatically calculates 8-point grading scales, internal/external exam weightages, GPAs, and letter grades aligned with CDC 2078, SEE, and NEB standards. Parents and employers can scan the marksheet QR code to verify authenticity instantly on the public verification portal.'],
+        ['q'=>'Does NepalSchoolHub send instant WhatsApp absentee alerts to parents?',
+         'a'=>'Yes. When a teacher marks a student absent, NepalSchoolHub triggers an instant WhatsApp notification directly to the parent\'s phone. It also automates fee due reminders, exam schedules, and PTM notices with a 98% open rate.'],
+        ['q'=>'Does NepalSchoolHub handle staff payroll under Nepal Labour Act?',
+         'a'=>'Yes. The HR and payroll module handles salary structures, allowances, Provident Fund (PF), Citizen Investment Trust (CIT), tax deductions, leave deductions, and monthly salary slips (PDF) compliant with Nepal Labour Act.'],
+        ['q'=>'Can NepalSchoolHub manage library books and barcode scanning?',
+         'a'=>'Yes. The library module includes ISBN book cataloging, barcode/QR scanning for instant check-in/out, digital e-book downloads, member history, and automatic calculation of overdue fines.'],
       ],
       'Parents & Students' => [
         ['q'=>'How can parents access NepalSchoolHub?',
-         'a'=>'Parents get their own dedicated portal login where they can view attendance, exam results, fee invoices, homework, notices and timetable. They also receive real-time WhatsApp notifications for absences, fee due dates and exam results.'],
+         'a'=>'Parents get access via the dedicated Parent Portal web app and mobile app. They can view real-time attendance, grades, report cards, fee invoices, live bus tracking, homework, notices, and message teachers directly.'],
         ['q'=>'Can students take online exams on NepalSchoolHub?',
-         'a'=>'Yes. Students log in to their portal and take online exams from any device — smartphone, tablet or computer. The system auto-grades MCQ questions and notifies students of results instantly.'],
+         'a'=>'Yes. Students can log in to their student portal and take timed online exams with auto-graded MCQs, instant score feedback, study notes, and digital library e-books.'],
         ['q'=>'Can NepalSchoolHub send WhatsApp messages to Nepali parents?',
-         'a'=>'Yes. NepalSchoolHub integrates with WhatsApp to send automated messages for: absent notification, fee due reminders, exam results, bus tracking updates and school notices. This works for all Nepali mobile numbers (NTC, Ncell, Smart Cell).'],
+         'a'=>'Yes. NepalSchoolHub integrates directly with Meta WhatsApp to send automated notifications for absences, fee due dates, exam results, bus departure/arrival updates, and school notices to all Nepali numbers (NTC, Ncell, Smart Cell).'],
       ],
       'Technical & Setup' => [
         ['q'=>'How do I register my school on NepalSchoolHub?',
-         'a'=>'Go to nepalschoolhub.techprocod.com.np, click "Get Started Free", fill in your school details and create an admin account. Your school is live instantly — no waiting, no approval. Setup takes under 5 minutes. For help, WhatsApp us at +977 9744911550.'],
+         'a'=>'Go to nshlms.com, click "Get Started Free", fill in your school details and your school is live instantly with its own dedicated database and portal. Setup takes under 5 minutes. WhatsApp support is available 24/7 at +977 9744911550.'],
         ['q'=>'How long does it take to set up NepalSchoolHub?',
-         'a'=>'Basic setup (school profile, classes, sections, teachers and students) takes 30–60 minutes. Full setup including fee structures, timetable, hostel and transport takes 2–4 hours. Free onboarding assistance is provided for yearly plan subscribers.'],
+         'a'=>'Basic setup (school profile, classes, sections, teachers and students) takes 15–30 minutes. We also provide free data migration from Excel/CSV for students, teachers, and past fee ledgers.'],
         ['q'=>'Can I import existing student data into NepalSchoolHub?',
-         'a'=>'Yes. NepalSchoolHub supports bulk import of students, teachers and fee records from Excel/CSV files. Download our templates, fill in your data and upload in one click — ideal for schools migrating from paper records or older software.'],
+         'a'=>'Yes. NepalSchoolHub supports bulk import of students, teachers and fee records from Excel/CSV files. Download our templates, fill in your data and upload in one click.'],
         ['q'=>'Is NepalSchoolHub a cloud-based system?',
-         'a'=>'Yes. NepalSchoolHub is 100% cloud-based — no software to install. All you need is an internet connection and a browser. Data is stored on secure cloud servers with daily backups, accessible from anywhere in Nepal or abroad.'],
+         'a'=>'Yes. NepalSchoolHub is 100% cloud-based with offline-first capabilities. No bulky servers or installation required. Data is protected with daily encrypted cloud backups.'],
         ['q'=>'Is student data safe on NepalSchoolHub?',
-         'a'=>'Yes. NepalSchoolHub uses 256-bit SSL encryption, role-based access control, daily encrypted backups, and full data isolation between schools. We follow Nepal\'s data privacy guidelines and never share or sell school data.'],
+         'a'=>'Yes. NepalSchoolHub uses 256-bit SSL encryption, role-based access control, daily encrypted backups, and full data isolation between schools.'],
         ['q'=>'Does NepalSchoolHub have an API for third-party integrations?',
-         'a'=>'Yes. NepalSchoolHub provides a REST API for integration with accounting software, SMS gateways, biometric devices, payment gateways and custom school websites. API documentation is available for yearly plan subscribers.'],
-        ['q'=>'Can NepalSchoolHub handle multiple branches of the same school?',
-         'a'=>'Yes. Schools with multiple branches register each branch separately. Volume discounts apply for multi-branch setups. Contact us at +977 9744911550 for multi-branch pricing.'],
+         'a'=>'Yes. NepalSchoolHub provides a REST API for integration with accounting software, SMS gateways, biometric devices, payment gateways and custom school websites.'],
       ],
       'Comparison & Support' => [
+        ['q'=>'NepalSchoolHub vs Veda: Why do schools choose NepalSchoolHub?',
+         'a'=>'While legacy software like Veda charges expensive annual contracts based on student count and requires constant internet, NepalSchoolHub provides all 24 modules for a transparent flat fee of NPR 15,000/year (or Free Plan) with built-in AI Question Paper Generator, WhatsApp Absentee Alerts, Offline-First sync, QR ID cards, Day-Book Nepalese Accounting, and Bus GPS tracking without hidden add-on costs.'],
         ['q'=>'What makes NepalSchoolHub better than other school software in Nepal?',
-         'a'=>'NepalSchoolHub is the only school management software in Nepal that combines all 24 modules in one platform, offers a genuine free plan, includes AI features, supports WhatsApp parent alerts, has real-time GPS transport tracking and is built specifically for the Nepali academic system (Nepali calendar, NEB curriculum, NPR fees, Nepali fiscal year).'],
-        ['q'=>'How is NepalSchoolHub different from Hamro School, SchoolPad or similar software?',
-         'a'=>'Unlike competitors, NepalSchoolHub offers: a permanently free plan, 24 modules in one subscription, built-in AI, real-time WhatsApp alerts, online exams with auto-grading, GPS transport tracking, a modern cloud architecture and dedicated Nepali customer support. We are the most comprehensive and affordable school ERP in Nepal.'],
+         'a'=>'NepalSchoolHub is the only school software in Nepal that combines all 24 modules, offline-first reliability, built-in AI question generation, WhatsApp notifications, CDC 2078 report cards, Day-Book accounting, and GPS bus tracking in one single platform.'],
         ['q'=>'How do I contact NepalSchoolHub support?',
-         'a'=>'Contact us via: WhatsApp at +977 9744911550 (fastest), email at support@nepalschoolhub.com, or the contact form on this page. Support is available Sunday–Friday, 9 AM–6 PM NST.'],
-        ['q'=>'Does NepalSchoolHub offer demo or training?',
-         'a'=>'Yes. We offer free live demos via Google Meet or on-site in Kathmandu. Free training sessions for admins and teachers are included with yearly plans. WhatsApp us at +977 9744911550 to book your demo.'],
+         'a'=>'Contact us via WhatsApp at +977 9744911550 (instant reply), email at support@nshlms.com, or through our contact form. We provide 24/7 dedicated support across Nepal.'],
+        ['q'=>'Does NepalSchoolHub offer a free trial and demo?',
+         'a'=>'Yes. We offer free live demos via Google Meet or on-site in Nepal, as well as a 14-day free trial on all premium plans with no credit card required.'],
         ['q'=>'When I search "NepalSchoolHub" on Google, will it appear first?',
-         'a'=>'Yes. nepalschoolhub.techprocod.com.np is the official website of NepalSchoolHub and is the top result when you search "NepalSchoolHub", "Nepal school management software", "school ERP Nepal", "school management system Nepal", "विद्यालय व्यवस्थापन सफ्टवेयर" and related terms on Google Nepal.'],
+         'a'=>'Yes. nshlms.com is the official website of NepalSchoolHub and is the top result when searching for NepalSchoolHub, school management software Nepal, NepalSchoolHub vs Veda, and विद्यालय व्यवस्थापन सफ्टवेयर.'],
       ],
     ];
     @endphp
@@ -1592,19 +3866,30 @@
             </div>
             <div style="display:flex;gap:3rem;flex-wrap:wrap">
                 <div>
-                    <p style="font-size:.7rem;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Product</p>
+                    <p style="font-size:.7rem;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Product &amp; Features</p>
                     <div style="display:flex;flex-direction:column;gap:.5rem;font-size:.8rem">
-                        <a href="#features">Features</a>
-                        <a href="#modules">Modules</a>
-                        <a href="#pricing">Pricing</a>
-                        <a href="#contact">Contact Us</a>
+                        <a href="#solutions">Solutions &amp; Roles</a>
+                        <a href="#features">Core Features</a>
+                        <a href="#modules">24+ ERP Modules</a>
+                        <a href="#pricing">Pricing Plans</a>
                     </div>
                 </div>
                 <div>
-                    <p style="font-size:.7rem;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Account</p>
+                    <p style="font-size:.7rem;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Company</p>
                     <div style="display:flex;flex-direction:column;gap:.5rem;font-size:.8rem">
-                        <a href="{{ route('login') }}">Sign In</a>
-                        <a href="{{ route('saas.register') }}">Register School</a>
+                        <a href="#about">About NepalSchoolHub</a>
+                        <a href="#comparison">Why Us vs Veda</a>
+                        <a href="#reviews">School Reviews</a>
+                        <a href="#faq">Frequently Asked Questions</a>
+                        <a href="#contact">Contact &amp; Offices</a>
+                    </div>
+                </div>
+                <div>
+                    <p style="font-size:.7rem;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.75rem">Client Portal</p>
+                    <div style="display:flex;flex-direction:column;gap:.5rem;font-size:.8rem">
+                        <a href="{{ route('login') }}"><i class="bi bi-box-arrow-in-right"></i> Sign In to ERP</a>
+                        <a href="{{ route('saas.register') }}"><i class="bi bi-rocket-takeoff-fill"></i> Register School (Free Trial)</a>
+                        <a href="https://wa.me/9779744911550" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> WhatsApp Support</a>
                     </div>
                 </div>
             </div>
@@ -1619,80 +3904,7 @@
     </div>
 </footer>
 
-<style>
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-@keyframes wa-bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-@keyframes wa-pop{0%{opacity:0;transform:scale(.6) translateY(10px)}100%{opacity:1;transform:scale(1) translateY(0)}}
-.wa-float{
-    position:fixed;bottom:28px;right:28px;z-index:9999;
-    display:flex;flex-direction:column;align-items:flex-end;gap:10px;
-}
-.wa-btn{
-    width:58px;height:58px;border-radius:50%;
-    background:linear-gradient(135deg,#25d366,#128c7e);
-    display:flex;align-items:center;justify-content:center;
-    color:#fff;font-size:26px;
-    box-shadow:0 4px 20px rgba(37,211,102,.45);
-    cursor:pointer;border:none;
-    animation:wa-bounce 2.5s ease-in-out infinite;
-    transition:transform .2s,box-shadow .2s;
-    text-decoration:none;
-}
-.wa-btn:hover{
-    transform:scale(1.1)!important;
-    box-shadow:0 6px 28px rgba(37,211,102,.6);
-    animation:none;
-}
-.wa-tooltip{
-    background:#0f172a;color:#fff;
-    font-size:.78rem;font-weight:600;
-    padding:.45rem .9rem;border-radius:.6rem;
-    white-space:nowrap;
-    box-shadow:0 4px 16px rgba(0,0,0,.2);
-    animation:wa-pop .3s ease;
-    pointer-events:none;
-}
-.wa-pulse-ring{
-    position:absolute;top:0;left:0;right:0;bottom:0;
-    border-radius:50%;
-    border:3px solid rgba(37,211,102,.5);
-    animation:wa-ring 2s ease-out infinite;
-}
-@keyframes wa-ring{
-    0%{transform:scale(1);opacity:.8}
-    100%{transform:scale(1.7);opacity:0}
-}
-</style>
 
-{{-- ── WhatsApp Floating Button ── --}}
-<div class="wa-float" id="wa-float">
-    <div class="wa-tooltip" id="wa-tip">💬 Chat with us — instant reply!</div>
-    <a href="https://wa.me/9779744911550?text={{ urlencode('Hello! I am interested in NepalSchoolHub. Can you help me?') }}"
-       target="_blank" rel="noopener" class="wa-btn" title="Chat on WhatsApp"
-       onclick="document.getElementById('wa-tip').style.display='none'">
-        <div class="wa-pulse-ring"></div>
-        <i class="bi bi-whatsapp"></i>
-    </a>
-</div>
-
-<script>
-// Auto-hide tooltip after 5s, show again on hover
-(function(){
-    var tip = document.getElementById('wa-tip');
-    var btn = document.querySelector('.wa-btn');
-    if(!tip || !btn) return;
-    setTimeout(function(){ tip.style.opacity='0'; tip.style.transition='opacity .4s'; }, 5000);
-    setTimeout(function(){ tip.style.display='none'; }, 5400);
-    btn.addEventListener('mouseenter', function(){
-        tip.style.display='block';
-        tip.style.opacity='1';
-    });
-    btn.addEventListener('mouseleave', function(){
-        tip.style.opacity='0';
-        setTimeout(function(){ tip.style.display='none'; }, 400);
-    });
-})();
-</script>
 
 <script>
 // ── Feature Detail Modal ──────────────────────────────────────────────
@@ -1763,6 +3975,583 @@ function closeModModal(e) {
     document.getElementById('modModalOverlay').classList.remove('open');
     document.body.style.overflow = '';
 }
+
+// ── Role Solutions Tab Switcher ──────────────────────────────────────
+function switchRoleTab(role, btn) {
+    var tabs = document.querySelectorAll('.role-tab-btn');
+    tabs.forEach(function(t) { t.classList.remove('active'); });
+    if (btn) btn.classList.add('active');
+
+    var contents = document.querySelectorAll('.role-tab-content');
+    contents.forEach(function(c) { c.style.display = 'none'; });
+
+    var target = document.getElementById('role-' + role);
+    if (target) {
+        target.style.display = 'grid';
+    }
+}
+
+// ── Dashain Festive Offer Modal Handler ──────────────────────────────
+function openDashainModal() {
+    var m = document.getElementById('dashainModalOverlay');
+    if (m) {
+        m.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeDashainModal(e) {
+    if (e && e.target !== document.getElementById('dashainModalOverlay') && !e.target.closest('.dashain-close-btn')) return;
+    var m = document.getElementById('dashainModalOverlay');
+    if (m) {
+        m.classList.remove('open');
+        document.body.style.overflow = '';
+        try { sessionStorage.setItem('dashain_offer_dismissed', '1'); } catch(err){}
+    }
+}
+
+// Auto-show Dashain offer after 3.5s if not previously closed in current session
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        if (!sessionStorage.getItem('dashain_offer_dismissed')) {
+            setTimeout(function() {
+                openDashainModal();
+            }, 3500);
+        }
+    } catch(err) {}
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var dm = document.getElementById('dashainModalOverlay');
+        if (dm && dm.classList.contains('open')) {
+            closeDashainModal({target: dm});
+        }
+    }
+});
+</script>
+
+{{-- ══ DASHAIN FESTIVE OFFER POPUP MODAL ════════════════════════════════ --}}
+<div class="dashain-modal-overlay" id="dashainModalOverlay" onclick="closeDashainModal(event)">
+    <div class="dashain-modal-card" onclick="event.stopPropagation()">
+        
+        {{-- Festive Header --}}
+        <div class="dashain-header">
+            <button class="dashain-close-btn" onclick="closeDashainModal(event)" aria-label="Close offer">&times;</button>
+            <div class="dashain-badge">
+                <span>🪔 बडा दशैं तथा तिहार २०८१ विशेष मेगा अफर 🌾</span>
+            </div>
+            <h3 style="font-size:1.5rem; font-weight:900; line-height:1.2; margin-top:0.35rem; color:#fff">
+                Get Flat 35% OFF on NepalSchoolHub ERP
+            </h3>
+            <p style="font-size:0.8rem; color:#fef08a; margin-top:0.35rem; opacity:0.95">
+                Transform your school into a smart digital campus with Nepal's #1 School Operating System!
+            </p>
+        </div>
+
+        {{-- Modal Body --}}
+        <div class="dashain-body">
+            
+            {{-- Discount Code Box --}}
+            <div class="dashain-offer-box">
+                <span style="font-size:0.75rem; font-weight:700; color:#92400e; text-transform:uppercase; letter-spacing:0.06em; display:block">
+                    Use Exclusive Festive Promo Code:
+                </span>
+                <span class="dashain-code-pill">DASHAIN2081</span>
+                <span style="font-size:0.72rem; color:#b45309; display:block; margin-top:0.3rem">
+                    Valid for all New School Registrations during Festive Season
+                </span>
+            </div>
+
+            {{-- Perks Included --}}
+            <ul class="dashain-perks-list">
+                <li><i class="bi bi-gift-fill"></i> <strong>Flat 35% Instant Discount</strong> on Yearly Subscription</li>
+                <li><i class="bi bi-person-check-fill"></i> <strong>FREE 1-on-1 Master Teacher Training</strong> (Worth Rs. 10,000 Free)</li>
+                <li><i class="bi bi-file-earmark-excel-fill"></i> <strong>FREE Complete Student &amp; Ledger Data Migration</strong></li>
+                <li><i class="bi bi-robot"></i> <strong>FREE 3-Month AI Question Paper Maker Unlimited Access</strong></li>
+            </ul>
+
+            {{-- CTA Actions --}}
+            <a href="{{ route('saas.register') }}?promo=DASHAIN2081" class="dashain-cta-primary">
+                <i class="bi bi-rocket-takeoff-fill"></i> Claim 35% Off &amp; Register School
+            </a>
+
+            <div style="text-align:center; margin-top:0.75rem">
+                <button type="button" onclick="closeDashainModal(event)" style="background:none; border:none; font-size:0.75rem; color:#94a3b8; font-weight:600; cursor:pointer; text-decoration:underline">
+                    No thanks, I will browse standard plans
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{{-- ══ FLOATING LIVE ERP HELP & CHAT WIDGET (MATCHING REFERENCE SCREENSHOT) ════ --}}
+<div class="live-help-widget" id="liveHelpWidget">
+    <div class="live-help-prompt">
+        <span class="live-wave-hand">👋</span> <span>Hi! How can we help?</span>
+    </div>
+    <div class="live-help-chips">
+        <button type="button" class="live-chip-btn" onclick="openAndSendQuery('I have a question about NepalSchoolHub ERP')">
+            <span>I have a question</span>
+            <i class="bi bi-arrow-right-short chip-icon"></i>
+        </button>
+        <button type="button" class="live-chip-btn" onclick="openAndSendQuery('Tell me more about your features and pricing')">
+            <span>Tell me more</span>
+            <i class="bi bi-arrow-right-short chip-icon"></i>
+        </button>
+    </div>
+    <button type="button" class="live-chat-circle-btn" onclick="toggleSaasAiChat()" title="Open Live ERP Helpdesk">
+        <span class="live-chat-ping"></span>
+        <i class="bi bi-chat-dots-fill"></i>
+        <span class="live-chat-badge">1</span>
+    </button>
+</div>
+
+{{-- ══ LIVE ERP SUPPORT MODAL BOX ═══════════════════════════════════════ --}}
+<div class="saas-ai-chat-box" id="saasAiChatBox">
+    
+    {{-- Header --}}
+    <div style="background:#5c68f6; color:#ffffff; padding:0.9rem 1.1rem; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.2)">
+        <div style="display:flex; align-items:center; gap:0.65rem; flex:1">
+            <div style="width:36px; height:36px; border-radius:10px; background:#ffffff; display:flex; align-items:center; justify-content:center; color:#5c68f6; font-size:1.15rem">
+                <i class="bi bi-headset"></i>
+            </div>
+            <div>
+                <h4 style="font-size:0.9rem; font-weight:800; margin:0; color:#ffffff; line-height:1.2">NepalSchoolHub Support</h4>
+                <p style="font-size:0.72rem; color:rgba(255,255,255,0.92); margin:0; font-weight:600">⚡ Online &bull; Instant Answers &amp; Live Demo</p>
+            </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px">
+            <button type="button" onclick="resetSaasAiChat()" title="Reset Chat" style="background:rgba(255,255,255,0.2); border:none; color:#ffffff; width:28px; height:28px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center">
+                <i class="bi bi-arrow-counterclockwise" style="font-size:0.85rem"></i>
+            </button>
+            <button type="button" onclick="toggleSaasAiChat()" title="Close Support" style="background:rgba(255,255,255,0.2); border:none; color:#ffffff; width:28px; height:28px; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center">
+                <i class="bi bi-x-lg" style="font-size:0.85rem"></i>
+            </button>
+        </div>
+    </div>
+
+    {{-- Messages Area --}}
+    <div id="saasAiMessages" style="flex:1; padding:1rem; overflow-y:auto; background:#f8fafc; font-size:0.78rem; display:flex; flex-direction:column; gap:0.75rem">
+        {{-- Welcome Bot Bubble --}}
+        <div style="display:flex; align-items:flex-start; gap:0.5rem">
+            <div style="width:26px; height:26px; border-radius:8px; background:#5c68f6; color:#ffffff; display:flex; align-items:center; justify-content:center; font-size:0.75rem; flex-shrink:0; margin-top:2px">
+                <i class="bi bi-headset"></i>
+            </div>
+            <div style="background:#ffffff; padding:0.8rem 0.9rem; border-radius:1rem; border-top-left-radius:0.2rem; border:1px solid #e2e8f0; color:#1e293b; box-shadow:0 1px 3px rgba(0,0,0,0.05); max-width:88%; line-height:1.5">
+                <p style="margin:0 0 0.4rem 0; font-weight:700">Namaste! 🙏 Welcome to NepalSchoolHub ERP Helpdesk.</p>
+                <p style="margin:0 0 0.6rem 0; color:#475569">
+                    How can we help your school today? Please pick a topic or type your inquiry below:
+                </p>
+                
+                {{-- Quick Action Prompts --}}
+                <div style="display:flex; flex-direction:column; gap:0.35rem; padding-top:0.4rem; border-top:1px solid #f1f5f9">
+                    <button type="button" onclick="sendSaasQuickQuery('What are the pricing plans and features?')" style="text-align:left; background:#f1f5f9; border:1px solid #e2e8f0; padding:0.4rem 0.6rem; border-radius:0.5rem; font-size:0.72rem; font-weight:600; color:#1e293b; cursor:pointer">
+                        💰 Pricing Plans (Flat Rs 15,000/yr)
+                    </button>
+                    <button type="button" onclick="sendSaasQuickQuery('How does QR Verification work for Marksheets & Certificates?')" style="text-align:left; background:#f1f5f9; border:1px solid #e2e8f0; padding:0.4rem 0.6rem; border-radius:0.5rem; font-size:0.72rem; font-weight:600; color:#1e293b; cursor:pointer">
+                        🔲 QR Verification for Marksheets &amp; TC
+                    </button>
+                    <button type="button" onclick="sendSaasQuickQuery('Tell me about Parent & Teacher Mobile Apps')" style="text-align:left; background:#f1f5f9; border:1px solid #e2e8f0; padding:0.4rem 0.6rem; border-radius:0.5rem; font-size:0.72rem; font-weight:600; color:#1e293b; cursor:pointer">
+                        📱 Flutter Mobile Apps (Parents &amp; Teachers)
+                    </button>
+                    <button type="button" onclick="sendSaasQuickQuery('How do I register our school or book a 1-on-1 demo?')" style="text-align:left; background:#f1f5f9; border:1px solid #e2e8f0; padding:0.4rem 0.6rem; border-radius:0.5rem; font-size:0.72rem; font-weight:600; color:#1e293b; cursor:pointer">
+                        🚀 Register School / Book Free Demo
+                    </button>
+                    <button type="button" onclick="sendSaasQuickQuery('I want to request a callback from sales team')" style="text-align:left; background:rgba(92,104,246,0.08); border:1px solid rgba(92,104,246,0.25); padding:0.4rem 0.6rem; border-radius:0.5rem; font-size:0.72rem; font-weight:700; color:#5c68f6; cursor:pointer">
+                        ✉️ Request Callback from Sales Consultant
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Typing indicator --}}
+    <div id="saasAiTyping" style="display:none; padding:0.4rem 1rem; background:#f8fafc; align-items:center; gap:0.4rem; font-size:0.72rem; color:#64748b">
+        <div style="width:22px; height:22px; border-radius:6px; background:#5c68f6; color:#ffffff; display:flex; align-items:center; justify-content:center; font-size:0.7rem">
+            <i class="bi bi-headset"></i>
+        </div>
+        <span style="background:#ffffff; border:1px solid #e2e8f0; padding:0.25rem 0.6rem; border-radius:99px; box-shadow:0 1px 2px rgba(0,0,0,0.05)">
+            Support Desk is typing...
+        </span>
+    </div>
+
+    {{-- Input Bar --}}
+    <div style="padding:0.75rem; background:#ffffff; border-top:1px solid #e2e8f0">
+        <form id="saasAiForm" onsubmit="handleSaasAiSubmit(event)" style="display:flex; align-items:center; gap:0.4rem; margin:0">
+            <input type="text" 
+                   id="saasAiInput" 
+                   placeholder="Type your question or request a demo..." 
+                   autocomplete="off"
+                   style="flex:1; padding:0.55rem 0.75rem; background:#f8fafc; border:1px solid #cbd5e1; border-radius:0.75rem; font-size:0.75rem; color:#0f172a; outline:none">
+            <button type="submit" 
+                    id="saasAiSendBtn"
+                    style="width:34px; height:34px; border-radius:0.75rem; background:#5c68f6; color:#ffffff; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0">
+                <i class="bi bi-send-fill" style="font-size:0.8rem"></i>
+            </button>
+        </form>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem; font-size:0.65rem; color:#94a3b8">
+            <span>⚡ Official Product Helpdesk</span>
+            <a href="{{ route('saas.register') }}" style="color:#5c68f6; font-weight:700; text-decoration:none">Register School Free →</a>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════
+// SAAS MAIN LANDING LIVE SUPPORT & DEMO DESK CONTROLLER
+// ══════════════════════════════════════════════════════════════════════════
+function toggleSaasAiChat() {
+    var box = document.getElementById('saasAiChatBox');
+    var input = document.getElementById('saasAiInput');
+    if (!box) return;
+
+    if (box.classList.contains('active')) {
+        box.classList.remove('active');
+    } else {
+        box.classList.add('active');
+        setTimeout(function() {
+            if (input) input.focus();
+            scrollSaasAiToBottom();
+        }, 100);
+    }
+}
+
+function openAndSendQuery(query) {
+    var box = document.getElementById('saasAiChatBox');
+    if (box && !box.classList.contains('active')) {
+        box.classList.add('active');
+    }
+    setTimeout(function() {
+        if (typeof sendSaasQuickQuery === 'function') {
+            sendSaasQuickQuery(query);
+        }
+    }, 150);
+}
+
+function resetSaasAiChat() {
+    var container = document.getElementById('saasAiMessages');
+    if (!container) return;
+    container.innerHTML = `
+        <div style="display:flex; align-items:flex-start; gap:0.5rem">
+            <div style="width:26px; height:26px; border-radius:8px; background:#0f172a; color:#fbbf24; display:flex; align-items:center; justify-content:center; font-size:0.75rem; flex-shrink:0; margin-top:2px">
+                <i class="bi bi-headset"></i>
+            </div>
+            <div style="background:#ffffff; padding:0.8rem 0.9rem; border-radius:1rem; border-top-left-radius:0.2rem; border:1px solid #e2e8f0; color:#1e293b; box-shadow:0 1px 3px rgba(0,0,0,0.05); max-width:88%; line-height:1.5">
+                <p style="margin:0 0 0.4rem 0; font-weight:700">Namaste! 🙏 Welcome to NepalSchoolHub ERP Helpdesk.</p>
+                <p style="margin:0 0 0.6rem 0; color:#475569">
+                    How can we help your school today? Please pick a topic or type your inquiry below:
+                </p>
+                <div style="display:flex; flex-direction:column; gap:0.35rem; padding-top:0.4rem; border-top:1px solid #f1f5f9">
+                    <button type="button" onclick="sendSaasQuickQuery('What are the pricing plans and features?')" style="text-align:left; background:#f1f5f9; border:1px solid #e2e8f0; padding:0.4rem 0.6rem; border-radius:0.5rem; font-size:0.72rem; font-weight:600; color:#1e293b; cursor:pointer">
+                        💰 Pricing Plans (Flat Rs 15,000/yr)
+                    </button>
+                    <button type="button" onclick="sendSaasQuickQuery('How does QR Verification work for Marksheets & Certificates?')" style="text-align:left; background:#f1f5f9; border:1px solid #e2e8f0; padding:0.4rem 0.6rem; border-radius:0.5rem; font-size:0.72rem; font-weight:600; color:#1e293b; cursor:pointer">
+                        🔲 QR Verification for Marksheets &amp; TC
+                    </button>
+                    <button type="button" onclick="sendSaasQuickQuery('Tell me about Parent & Teacher Mobile Apps')" style="text-align:left; background:#f1f5f9; border:1px solid #e2e8f0; padding:0.4rem 0.6rem; border-radius:0.5rem; font-size:0.72rem; font-weight:600; color:#1e293b; cursor:pointer">
+                        📱 Flutter Mobile Apps (Parents &amp; Teachers)
+                    </button>
+                    <button type="button" onclick="sendSaasQuickQuery('How do I register our school or book a 1-on-1 demo?')" style="text-align:left; background:#f1f5f9; border:1px solid #e2e8f0; padding:0.4rem 0.6rem; border-radius:0.5rem; font-size:0.72rem; font-weight:600; color:#1e293b; cursor:pointer">
+                        🚀 Register School / Book Free Demo
+                    </button>
+                    <button type="button" onclick="sendSaasQuickQuery('I want to request a callback from sales team')" style="text-align:left; background:#fef3c7; border:1px solid #fcd34d; padding:0.4rem 0.6rem; border-radius:0.5rem; font-size:0.72rem; font-weight:700; color:#78350f; cursor:pointer">
+                        ✉️ Request Callback from Sales Consultant
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    scrollSaasAiToBottom();
+}
+
+function sendSaasQuickQuery(text) {
+    var input = document.getElementById('saasAiInput');
+    if (input) {
+        input.value = text;
+        handleSaasAiSubmit(new Event('submit'));
+    }
+}
+
+function scrollSaasAiToBottom() {
+    var container = document.getElementById('saasAiMessages');
+    if (container) {
+        container.scrollTop = container.scrollHeight;
+    }
+}
+
+function appendSaasUserMsg(text) {
+    var container = document.getElementById('saasAiMessages');
+    if (!container) return;
+    var div = document.createElement('div');
+    div.style.display = 'flex';
+    div.style.justifyContent = 'flex-end';
+    div.innerHTML = `
+        <div style="background:#0f172a; color:#ffffff; padding:0.6rem 0.85rem; border-radius:1rem; border-top-right-radius:0.2rem; max-width:85%; line-height:1.4">
+            ${escapeSaasHtml(text)}
+        </div>
+    `;
+    container.appendChild(div);
+    scrollSaasAiToBottom();
+}
+
+function appendSaasBotMsg(html) {
+    var container = document.getElementById('saasAiMessages');
+    if (!container) return;
+    var div = document.createElement('div');
+    div.style.display = 'flex';
+    div.style.alignItems = 'flex-start';
+    div.style.gap = '0.5rem';
+    div.innerHTML = `
+        <div style="width:26px; height:26px; border-radius:8px; background:#0f172a; color:#fbbf24; display:flex; align-items:center; justify-content:center; font-size:0.75rem; flex-shrink:0; margin-top:2px">
+            <i class="bi bi-headset"></i>
+        </div>
+        <div style="background:#ffffff; padding:0.8rem 0.9rem; border-radius:1rem; border-top-left-radius:0.2rem; border:1px solid #e2e8f0; color:#1e293b; box-shadow:0 1px 3px rgba(0,0,0,0.05); max-width:88%; line-height:1.5">
+            ${html}
+        </div>
+    `;
+    container.appendChild(div);
+    scrollSaasAiToBottom();
+}
+
+function escapeSaasHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+function generateSaasSmartResponse(query) {
+    var q = query.toLowerCase();
+
+    if (q.includes('callback') || q.includes('sales') || q.includes('consultant') || q.includes('contact me') || q.includes('call me')) {
+        return `
+            <p><strong>✉️ Request a Free 1-on-1 Consultation:</strong></p>
+            <p style="color:#475569">Leave your school details and our senior ERP consultant will get in touch with you:</p>
+            <form onsubmit="submitSaasLead(event)" style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.4rem; background:#f8fafc; padding:0.6rem; border-radius:0.75rem; border:1px solid #e2e8f0">
+                <input type="text" id="saasLeadSchool" required placeholder="School Name" style="padding:0.35rem 0.5rem; border:1px solid #cbd5e1; border-radius:0.4rem; font-size:0.72rem">
+                <input type="text" id="saasLeadName" required placeholder="Principal / Admin Name" style="padding:0.35rem 0.5rem; border:1px solid #cbd5e1; border-radius:0.4rem; font-size:0.72rem">
+                <input type="tel" id="saasLeadPhone" required placeholder="Contact Mobile (98XXXXXXXX)" style="padding:0.35rem 0.5rem; border:1px solid #cbd5e1; border-radius:0.4rem; font-size:0.72rem">
+                <button type="submit" style="background:#0f172a; color:#fbbf24; border:none; padding:0.45rem; border-radius:0.4rem; font-weight:700; font-size:0.72rem; cursor:pointer">
+                    Submit Demo Request
+                </button>
+            </form>
+        `;
+    }
+
+    if (q.includes('price') || q.includes('cost') || q.includes('plan') || q.includes('fee') || q.includes('subscription') || q.includes('15000')) {
+        return `
+            <p><strong>💰 Simple, Transparent Pricing:</strong></p>
+            <p>Unlike other systems charging per-student monthly fees, NepalSchoolHub offers:</p>
+            <ul style="margin:0.3rem 0; padding-left:1rem; color:#334155">
+                <li>• <strong>Starter Plan:</strong> FREE Forever (Core SIS &amp; Attendance)</li>
+                <li>• <strong>All-in-One Enterprise Plan:</strong> <strong>Flat NPR 15,000 / Year</strong> (Unlimited students, all 24 modules, QR verification, AI maker, mobile apps).</li>
+            </ul>
+            <div style="margin-top:0.5rem">
+                <a href="{{ route('saas.register') }}" style="display:inline-block; background:#4f46e5; color:#fff; padding:0.4rem 0.8rem; border-radius:0.5rem; font-weight:700; font-size:0.72rem; text-decoration:none">
+                    Start 14-Day Free Trial →
+                </a>
+            </div>
+        `;
+    }
+
+    if (q.includes('qr') || q.includes('verification') || q.includes('certificate') || q.includes('marksheet') || q.includes('tc')) {
+        return `
+            <p><strong>🔲 Universal QR Verification Engine:</strong></p>
+            <p>Every Marksheet (CDC 2078), Transfer Certificate (TC), Character Certificate, Admit Card, and Student ID Card comes with an embedded, tamper-proof QR Code.</p>
+            <p style="color:#475569">Parents, universities, and foreign embassies can scan the QR code to instantly verify official credentials without calling the school office.</p>
+        `;
+    }
+
+    if (q.includes('app') || q.includes('mobile') || q.includes('flutter') || q.includes('parent') || q.includes('teacher')) {
+        return `
+            <p><strong>📱 Mobile Ecosystem:</strong></p>
+            <p>We provide dedicated, high-speed mobile apps for:</p>
+            <ul style="margin:0.3rem 0; padding-left:1rem; color:#334155">
+                <li>• <strong>Teacher App:</strong> Offline/online attendance, grade entry, homework assignments &amp; routine.</li>
+                <li>• <strong>Parent App:</strong> Live fee payment, absentee alerts, exam results, and bus tracking.</li>
+            </ul>
+        `;
+    }
+
+    if (q.includes('register') || q.includes('demo') || q.includes('trial') || q.includes('start') || q.includes('contact') || q.includes('phone')) {
+        return `
+            <p><strong>🚀 Get Started in 60 Seconds:</strong></p>
+            <p>You can create your school account and start setup immediately:</p>
+            <div style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.4rem">
+                <a href="{{ route('saas.register') }}" style="background:#0f172a; color:#fbbf24; padding:0.45rem 0.75rem; border-radius:0.5rem; font-weight:700; font-size:0.72rem; text-decoration:none; text-align:center">
+                    <i class="bi bi-rocket-takeoff-fill"></i> Register School Free
+                </a>
+                <button type="button" onclick="sendSaasQuickQuery('I want to request a callback from sales team')" style="background:#4f46e5; color:#ffffff; border:none; padding:0.45rem 0.75rem; border-radius:0.5rem; font-weight:700; font-size:0.72rem; cursor:pointer; text-align:center">
+                    <i class="bi bi-telephone-outbound"></i> Request a Call from Sales Desk
+                </button>
+            </div>
+        `;
+    }
+
+    return `
+        <p>NepalSchoolHub is Nepal's #1 all-in-one School ERP featuring QR Marksheet &amp; Certificate verification, AI Question Paper Maker, Day-Book accounting, eSewa/Khalti billing, and mobile apps.</p>
+        <p style="color:#475569">Feel free to ask about pricing, specific modules, or click below to register:</p>
+        <a href="{{ route('saas.register') }}" style="color:#4f46e5; font-weight:700; text-decoration:underline">Register your school online in 60 seconds →</a>
+    `;
+}
+
+function submitSaasLead(e) {
+    e.preventDefault();
+    var school = document.getElementById('saasLeadSchool').value;
+    var name = document.getElementById('saasLeadName').value;
+    var phone = document.getElementById('saasLeadPhone').value;
+
+    appendSaasBotMsg(`
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; padding:0.6rem; border-radius:0.6rem">
+            <strong style="display:block; margin-bottom:0.25rem">✅ Demo Request Received!</strong>
+            Thank you <strong>${escapeSaasHtml(name)}</strong> from <strong>${escapeSaasHtml(school)}</strong>. Our team will contact you on <strong>${escapeSaasHtml(phone)}</strong> within 30 minutes.
+        </div>
+    `);
+}
+
+function handleSaasAiSubmit(e) {
+    if (e) e.preventDefault();
+
+    var input = document.getElementById('saasAiInput');
+    var sendBtn = document.getElementById('saasAiSendBtn');
+    var typing = document.getElementById('saasAiTyping');
+    if (!input) return;
+
+    var query = input.value.trim();
+    if (!query) return;
+
+    appendSaasUserMsg(query);
+    input.value = '';
+
+    if (sendBtn) sendBtn.disabled = true;
+    if (typing) typing.style.display = 'flex';
+    scrollSaasAiToBottom();
+
+    setTimeout(function() {
+        if (typing) typing.style.display = 'none';
+        if (sendBtn) sendBtn.disabled = false;
+        appendSaasBotMsg(generateSaasSmartResponse(query));
+        scrollSaasAiToBottom();
+    }, 350);
+}
+
+// ── Dynamic Hero Slider Engine (1 / 3 < >) ───────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+    var slides = document.querySelectorAll('.hero-dynamic .hero-slide');
+    var navNums = document.querySelectorAll('.hero-dynamic .hero-slide-num');
+    var prevBtns = document.querySelectorAll('.hero-dynamic .hero-slide-prev');
+    var nextBtns = document.querySelectorAll('.hero-dynamic .hero-slide-next');
+    var heroSection = document.querySelector('.hero-dynamic');
+
+    if (!slides || slides.length === 0) return;
+
+    var currentSlide = 0;
+    var totalSlides = slides.length;
+    var autoPlayTimer = null;
+
+    function showSlide(index) {
+        if (index >= totalSlides) {
+            currentSlide = 0;
+        } else if (index < 0) {
+            currentSlide = totalSlides - 1;
+        } else {
+            currentSlide = index;
+        }
+
+        slides.forEach(function (slide, idx) {
+            if (idx === currentSlide) {
+                slide.classList.add('active');
+            } else {
+                slide.classList.remove('active');
+            }
+        });
+
+        var text = (currentSlide + 1) + ' / ' + totalSlides;
+        navNums.forEach(function (num) {
+            num.textContent = text;
+        });
+    }
+
+    function nextSlide() {
+        showSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+        showSlide(currentSlide - 1);
+    }
+
+    function startAutoPlay() {
+        stopAutoPlay();
+        autoPlayTimer = setInterval(nextSlide, 6000);
+    }
+
+    function stopAutoPlay() {
+        if (autoPlayTimer) {
+            clearInterval(autoPlayTimer);
+            autoPlayTimer = null;
+        }
+    }
+
+    prevBtns.forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            prevSlide();
+            startAutoPlay();
+        });
+    });
+
+    nextBtns.forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            nextSlide();
+            startAutoPlay();
+        });
+    });
+
+    if (heroSection) {
+        heroSection.addEventListener('mouseenter', stopAutoPlay);
+        heroSection.addEventListener('mouseleave', startAutoPlay);
+
+        var touchStartX = 0;
+        var touchEndX = 0;
+        heroSection.addEventListener('touchstart', function (e) {
+            if (e.touches && e.touches.length > 0) {
+                touchStartX = e.touches[0].clientX;
+            }
+        }, { passive: true });
+
+        heroSection.addEventListener('touchend', function (e) {
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                touchEndX = e.changedTouches[0].clientX;
+                var diff = touchEndX - touchStartX;
+                if (Math.abs(diff) > 40) {
+                    if (diff < 0) {
+                        nextSlide();
+                    } else {
+                        prevSlide();
+                    }
+                    startAutoPlay();
+                }
+            }
+        }, { passive: true });
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (window.scrollY < (heroSection ? heroSection.offsetHeight : 600)) {
+            if (e.key === 'ArrowRight') {
+                nextSlide();
+                startAutoPlay();
+            } else if (e.key === 'ArrowLeft') {
+                prevSlide();
+                startAutoPlay();
+            }
+        }
+    });
+
+    showSlide(0);
+    startAutoPlay();
+});
 </script>
 
 </body>

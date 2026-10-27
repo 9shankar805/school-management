@@ -1,148 +1,222 @@
 @extends('layouts.app')
+@section('title', 'Finance & Accounts Dashboard - NepalSchoolHub')
+
+@push('head-scripts')
+<style>
+.iemis-stat-card {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    padding: 14px 16px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 14px !important;
+    text-decoration: none !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+.iemis-stat-card:hover {
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08) !important;
+    transform: translateY(-2px) !important;
+    border-color: #cbd5e1 !important;
+}
+[data-theme="dark"] .iemis-stat-card,
+html.dark .iemis-stat-card {
+    background: #111927 !important;
+    border-color: #223049 !important;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4) !important;
+}
+[data-theme="dark"] .iemis-stat-card:hover,
+html.dark .iemis-stat-card:hover {
+    border-color: #3b82f6 !important;
+}
+.iemis-icon-wrapper {
+    font-size: 2.25rem !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.iemis-card-details {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+}
+.iemis-title {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.03em !important;
+    line-height: 1.1 !important;
+    margin-bottom: 2px !important;
+}
+[data-theme="dark"] .iemis-title,
+html.dark .iemis-title {
+    color: #94a3b8 !important;
+}
+.iemis-num-group {
+    display: flex !important;
+    align-items: baseline !important;
+    gap: 6px !important;
+}
+.iemis-value {
+    font-size: 20px !important;
+    font-weight: 800 !important;
+    color: #0f172a !important;
+    line-height: 1.1 !important;
+}
+[data-theme="dark"] .iemis-value,
+html.dark .iemis-value {
+    color: #f8fafc !important;
+}
+.iemis-badge-green { font-size: 10px !important; font-weight: 700 !important; color: #10b981 !important; }
+.iemis-badge-amber { font-size: 10px !important; font-weight: 700 !important; color: #f59e0b !important; }
+.iemis-badge-rose  { font-size: 10px !important; font-weight: 700 !important; color: #ef4444 !important; }
+.iemis-badge-indigo{ font-size: 10px !important; font-weight: 700 !important; color: #6366f1 !important; }
+.iemis-badge-blue  { font-size: 10px !important; font-weight: 700 !important; color: #3b82f6 !important; }
+</style>
+@endpush
 
 @section('content')
 
-<div class="flex-1 p-6 lg:p-8 overflow-auto">
+<div class="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto bg-slate-50/60 dark:bg-slate-950 min-h-screen space-y-6">
 
     {{-- ── Page Header & Quick Action Row ────────────────────────────────── --}}
-    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-4 pb-6 border-b border-slate-200 dark:border-slate-700">
+    <div class="flex flex-wrap justify-between items-center gap-4">
         <div>
-            <div class="flex items-center gap-2 mb-1">
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 flex items-center gap-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Finance Command Center
-                </span>
-                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                    BS 2081–82
-                </span>
-            </div>
-            <h1 class="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
-                Finance Dashboard
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                Good {{ now()->hour < 12 ? 'Morning' : (now()->hour < 18 ? 'Afternoon' : 'Evening') }}, {{ auth()->user()->first_name }}! 👋
             </h1>
-            <p class="text-slate-400 text-xs mt-0.5">{{ now()->format('l, F j, Y') }} &middot; Real-time billing & ledger operations</p>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                {{ now()->format('l, F j, Y') }} &bull; {{ now()->format('g:i A') }}
+                &bull; <span class="text-indigo-600 dark:text-indigo-400 font-bold">आ.व. {{ \App\Services\NepaliDateService::currentFiscalYear() }}</span>
+                &bull; <span class="font-semibold text-slate-600 dark:text-slate-300">Finance & Billing Command</span>
+            </p>
         </div>
 
         {{-- ── Action Row Buttons ────────────────────────────────────────── --}}
-        <div class="flex flex-wrap items-center gap-2.5 w-full xl:w-auto">
+        <div class="flex flex-wrap items-center gap-2">
             @can('create invoices')
             <a href="{{ route('payments.create') }}"
-               style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #ffffff !important;"
-               class="inline-flex items-center gap-2 px-4 py-2.5 text-white text-xs font-black rounded-xl shadow-sm transition-all transform hover:-translate-y-0.5 cursor-pointer">
-                <i class="bi bi-plus-circle-fill text-sm"></i> New Invoice
+               class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-95">
+                <i class="bi bi-plus-circle-fill text-xs"></i> New Invoice
             </a>
 
             <button type="button" onclick="document.getElementById('collectFeeModal').classList.remove('hidden')"
-               style="background: linear-gradient(135deg, #059669 0%, #0d9488 100%); color: #ffffff !important;"
-               class="inline-flex items-center gap-2 px-4 py-2.5 text-white text-xs font-black rounded-xl shadow-sm transition-all transform hover:-translate-y-0.5 cursor-pointer">
-                <i class="bi bi-currency-dollar text-sm"></i> Quick Collect Fee
+               class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-95 cursor-pointer">
+                <i class="bi bi-currency-dollar text-xs"></i> Quick Collect
             </button>
 
             <button type="button" onclick="document.getElementById('bulkGenerateModal').classList.remove('hidden')"
-               style="background: linear-gradient(135deg, #d97706 0%, #ea580c 100%); color: #ffffff !important;"
-               class="inline-flex items-center gap-2 px-4 py-2.5 text-white text-xs font-black rounded-xl shadow-sm transition-all transform hover:-translate-y-0.5 cursor-pointer">
-                <i class="bi bi-lightning-charge-fill text-sm"></i> Bulk Generate Fees
+               class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-xl shadow-sm transition active:scale-95 cursor-pointer">
+                <i class="bi bi-lightning-charge-fill text-xs"></i> Bulk Generate
             </button>
             @endcan
 
             @if(Route::has('fee-types.index'))
             <a href="{{ route('fee-types.index') }}"
-               style="background: #ffffff; border: 1.5px solid #e2e8f0; color: #1e293b !important;"
-               class="inline-flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold rounded-xl shadow-xs transition hover:bg-slate-50">
-                <i class="bi bi-tags-fill text-sky-500"></i> Fee Categories
+               class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition active:scale-95">
+                <i class="bi bi-tags-fill text-sky-500 text-xs"></i> Categories
             </a>
             @endif
 
             <a href="{{ route('payments.index') }}"
-               style="background: #ffffff; border: 1.5px solid #e2e8f0; color: #1e293b !important;"
-               class="inline-flex items-center gap-2 px-3.5 py-2.5 text-xs font-bold rounded-xl shadow-xs transition hover:bg-slate-50">
-                <i class="bi bi-receipt text-indigo-500"></i> All Invoices
-            </a>
-
-            <a href="{{ route('payments.index') }}"
-               style="background: #1e293b; color: #ffffff !important;"
-               class="inline-flex items-center gap-2 px-3.5 py-2.5 text-white text-xs font-bold rounded-xl shadow-xs transition hover:bg-slate-900">
-                <i class="bi bi-credit-card-fill text-emerald-400"></i> All Payments
+               class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition active:scale-95">
+                <i class="bi bi-receipt text-indigo-500 text-xs"></i> Ledger
             </a>
         </div>
     </div>
 
     @if(session('status'))
-    <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs font-semibold text-emerald-800 flex items-center gap-2 shadow-xs">
+    <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs font-semibold text-emerald-800 flex items-center gap-2 shadow-xs">
         <i class="bi bi-check-circle-fill text-emerald-600 text-base"></i> {{ session('status') }}
     </div>
     @endif
     @if(session('error'))
-    <div class="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs font-semibold text-rose-800 flex items-center gap-2 shadow-xs">
+    <div class="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs font-semibold text-rose-800 flex items-center gap-2 shadow-xs">
         <i class="bi bi-exclamation-circle-fill text-rose-600 text-base"></i> {{ session('error') }}
     </div>
     @endif
 
-    {{-- ── KPI Financial Stat Cards ──────────────────────────────────────── --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+    {{-- ── 6 CEHRD IEMIS 3D Financial Stat Cards ────────────────────────── --}}
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-4">
 
-        {{-- Total Invoices --}}
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-xs flex flex-col justify-between hover:shadow-md transition">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Total Invoices</span>
-                <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-lg">
-                    <i class="bi bi-file-earmark-text-fill"></i>
+        {{-- Card 1: Total Invoices --}}
+        <a href="{{ route('payments.index') }}" class="iemis-stat-card">
+            <div class="iemis-icon-wrapper">🧾</div>
+            <div class="iemis-card-details">
+                <div class="iemis-title">Invoices</div>
+                <div class="iemis-num-group">
+                    <span class="iemis-value">{{ number_format($totalInvoices) }}</span>
+                    <span class="iemis-badge-indigo">Billed</span>
                 </div>
             </div>
-            <div class="mt-4">
-                <p class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">{{ number_format($totalInvoices) }}</p>
-                <div class="flex items-center justify-between mt-2 text-xs text-slate-400">
-                    <span>Total Billed:</span>
-                    <span class="font-bold text-slate-700 dark:text-slate-200">Rs. {{ number_format($totalBilled) }}</span>
+        </a>
+
+        {{-- Card 2: This Month Collected --}}
+        <div class="iemis-stat-card">
+            <div class="iemis-icon-wrapper">💰</div>
+            <div class="iemis-card-details">
+                <div class="iemis-title">This Month</div>
+                <div class="iemis-num-group">
+                    <span class="iemis-value text-emerald-600 dark:text-emerald-400">Rs. {{ number_format($monthRevenue) }}</span>
+                    <span class="iemis-badge-green">Recv</span>
                 </div>
             </div>
         </div>
 
-        {{-- Pending Collection / Unpaid --}}
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-rose-100 dark:border-rose-900/40 shadow-xs flex flex-col justify-between hover:shadow-md transition">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-rose-500 dark:text-rose-400 uppercase tracking-wider">Pending Collection</span>
-                <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400 text-lg">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-                </div>
-            </div>
-            <div class="mt-4">
-                <p class="text-3xl font-black text-rose-600 dark:text-rose-400 tracking-tight">{{ number_format($unpaidInvoices) }} <span class="text-xs font-normal text-rose-400">Invoices</span></p>
-                <div class="flex items-center justify-between mt-2 text-xs text-rose-500">
-                    <span>Outstanding Dues:</span>
-                    <span class="font-bold text-rose-700 dark:text-rose-300">Rs. {{ number_format($totalOutstanding) }}</span>
+        {{-- Card 3: Outstanding Dues --}}
+        <div class="iemis-stat-card">
+            <div class="iemis-icon-wrapper">⚠️</div>
+            <div class="iemis-card-details">
+                <div class="iemis-title">Outstanding</div>
+                <div class="iemis-num-group">
+                    <span class="iemis-value text-rose-600 dark:text-rose-400">{{ number_format($unpaidInvoices) }}</span>
+                    <span class="iemis-badge-rose">Unpaid</span>
                 </div>
             </div>
         </div>
 
-        {{-- This Month Collection --}}
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-emerald-100 dark:border-emerald-900/40 shadow-xs flex flex-col justify-between hover:shadow-md transition">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">This Month Collected</span>
-                <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-lg">
-                    <i class="bi bi-calendar-check-fill"></i>
-                </div>
-            </div>
-            <div class="mt-4">
-                <p class="text-3xl font-black text-emerald-600 dark:text-emerald-400 tracking-tight">Rs. {{ number_format($monthRevenue) }}</p>
-                <div class="flex items-center justify-between mt-2 text-xs text-emerald-600">
-                    <span>Month: {{ now()->format('F Y') }}</span>
-                    <span class="font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded text-[10px]">Active</span>
+        {{-- Card 4: Collection Rate / Efficiency --}}
+        <div class="iemis-stat-card">
+            <div class="iemis-icon-wrapper">📈</div>
+            <div class="iemis-card-details">
+                <div class="iemis-title">Efficiency</div>
+                <div class="iemis-num-group">
+                    <span class="iemis-value">{{ $collectionRate }}%</span>
+                    <span class="iemis-badge-blue">Rate</span>
                 </div>
             </div>
         </div>
 
-        {{-- Yearly Collection & Efficiency Rate --}}
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-100 dark:border-slate-700 shadow-xs flex flex-col justify-between hover:shadow-md transition">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Yearly Collection</span>
-                <div class="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 text-lg">
-                    <i class="bi bi-graph-up-arrow"></i>
+        {{-- Card 5: Paid Invoices --}}
+        <div class="iemis-stat-card">
+            <div class="iemis-icon-wrapper">✅</div>
+            <div class="iemis-card-details">
+                <div class="iemis-title">Settled</div>
+                <div class="iemis-num-group">
+                    <span class="iemis-value">{{ number_format($paidInvoices) }}</span>
+                    <span class="iemis-badge-green">Paid</span>
                 </div>
             </div>
-            <div class="mt-4">
-                <p class="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">Rs. {{ number_format($yearRevenue) }}</p>
-                <div class="flex items-center justify-between mt-2 text-xs text-slate-400">
-                    <span>Collection Efficiency:</span>
-                    <span class="font-bold text-sky-600 dark:text-sky-400">{{ $collectionRate }}%</span>
+        </div>
+
+        {{-- Card 6: Yearly Revenue --}}
+        <div class="iemis-stat-card">
+            <div class="iemis-icon-wrapper">🏦</div>
+            <div class="iemis-card-details">
+                <div class="iemis-title">Year Total</div>
+                <div class="iemis-num-group">
+                    <span class="iemis-value text-sky-600 dark:text-sky-400">Rs. {{ number_format($yearRevenue) }}</span>
+                    <span class="iemis-badge-amber">YTD</span>
                 </div>
             </div>
         </div>
@@ -341,8 +415,17 @@
 @push('scripts')
 <script>
 (function () {
-    var months = @json($monthlyRevenue->pluck('month')->map(fn($m) => \Carbon\Carbon::create()->month((int)$m)->format('M')));
-    var totals = @json($monthlyRevenue->pluck('total')->map(fn($v) => (float)$v));
+    @php
+        $mRevCol = collect($monthlyRevenue ?? []);
+        $monthsArr = $mRevCol->pluck('month')->map(fn($m) => $m ? \Carbon\Carbon::create()->month((int)$m)->format('M') : '')->values()->toArray();
+        $totalsArr = $mRevCol->pluck('total')->map(fn($v) => (float)$v)->values()->toArray();
+        if (empty($monthsArr)) {
+            $monthsArr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            $totalsArr = [0, 0, 0, 0, 0, 0];
+        }
+    @endphp
+    var months = @json($monthsArr);
+    var totals = @json($totalsArr);
 
     if (document.getElementById('chart-monthly-revenue')) {
         new ApexCharts(document.getElementById('chart-monthly-revenue'), {

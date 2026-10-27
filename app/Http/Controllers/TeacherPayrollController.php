@@ -21,6 +21,10 @@ class TeacherPayrollController extends Controller
     public function index(Request $request)
     {
         $user  = auth()->user();
+        if (!$user || $user->isStudent() || $user->isParent() || !$user->isStaff()) {
+            abort(403, 'Unauthorized to access payroll.');
+        }
+
         $month = (int) $request->query('month', now()->month);
         $year  = (int) $request->query('year',  now()->year);
 
@@ -28,12 +32,12 @@ class TeacherPayrollController extends Controller
             ->where('month', $month)
             ->where('year', $year);
 
-        if ($user && $user->hasAnyRole(['teacher', 'class-teacher']) && ! $user->can('view teachers')) {
+        if ($user->hasAnyRole(['teacher', 'class-teacher']) && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'hr-manager', 'hr'])) {
             $query->where('teacher_id', $user->id);
         }
 
         $payrolls  = $query->get();
-        $teachers  = $user->can('view teachers')
+        $teachers  = $user->hasAnyRole(['super-admin', 'admin', 'principal', 'hr-manager', 'hr'])
             ? User::role(['teacher', 'class-teacher'])->orderBy('first_name')->get()
             : collect([$user]);
         $totalPaid = $payrolls->where('status', 'paid')->sum('net_salary');
@@ -186,11 +190,15 @@ class TeacherPayrollController extends Controller
     public function slip(int $id)
     {
         $user    = auth()->user();
+        if (!$user || $user->isStudent() || $user->isParent() || !$user->isStaff()) {
+            abort(403, 'Unauthorized.');
+        }
+
         $payroll = TeacherPayroll::with('teacher', 'processor')->findOrFail($id);
 
-        if ($user && $user->hasAnyRole(['teacher', 'class-teacher']) && ! $user->can('view teachers')
+        if ($user->hasAnyRole(['teacher', 'class-teacher']) && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'hr-manager', 'hr'])
             && $payroll->teacher_id !== $user->id) {
-            abort(403);
+            abort(403, 'Unauthorized to view other staff salary slips.');
         }
 
         $pdf = Pdf::loadView('teachers.payroll.slip', compact('payroll'))

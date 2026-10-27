@@ -81,18 +81,26 @@
                     <input type="hidden" name="session_id" value="{{ $current_school_session_id }}">
                     <input type="hidden" name="class_id" value="{{ $class_id }}">
                     
-                    <p class="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3"><i class="bi bi-plus-circle me-1 text-emerald-500"></i> Add New Section to {{ $schoolClass->class_name }}</p>
+                    <p class="text-xs font-bold text-slate-700 dark:text-slate-200 mb-3"><i class="bi bi-plus-circle me-1 text-emerald-500"></i> Add New Section(s) to {{ $schoolClass->class_name }}</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <input type="text" name="section_name" placeholder="Section Name (e.g. A, B, Red)" required class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500/20 outline-none">
+                            <input type="text" id="edit_sec_name" name="section_name" placeholder="Section(s) e.g. A, B or Red, Blue" value="A, B" required class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500/20 outline-none font-bold text-emerald-700">
+                            <div class="flex flex-wrap gap-1 mt-1.5 text-[10px]">
+                                <button type="button" onclick="document.getElementById('edit_sec_name').value='A, B'" class="px-2 py-0.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg border border-emerald-200 font-bold">
+                                    + A, B
+                                </button>
+                                <button type="button" onclick="document.getElementById('edit_sec_name').value='A, B, C'" class="px-2 py-0.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg border border-emerald-200 font-bold">
+                                    + A, B, C
+                                </button>
+                            </div>
                         </div>
                         <div>
-                            <input type="text" name="room_no" placeholder="Room Number (e.g. 102)" required class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500/20 outline-none">
+                            <input type="text" name="room_no" placeholder="Room Number (e.g. 101)" value="101" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500/20 outline-none">
                         </div>
                     </div>
                     <div class="mt-3 text-right">
                         <button type="submit" class="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition">
-                            + Add Section
+                            + Add Section(s)
                         </button>
                     </div>
                 </form>

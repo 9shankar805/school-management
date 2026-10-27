@@ -36,7 +36,7 @@ class LiveQuizPlayerController extends Controller
         ]);
 
         $pin = trim($validated['pin_code']);
-        $session = LiveQuizSession::where('pin_code', $pin)->first();
+        $session = LiveQuizSession::withoutGlobalScopes()->where('pin_code', $pin)->first();
 
         if (!$session) {
             return response()->json(['error' => 'Quiz session not found with PIN: ' . $pin], 404);
@@ -58,7 +58,7 @@ class LiveQuizPlayerController extends Controller
 
         $token = (string) Str::uuid();
 
-        $team = LiveQuizTeam::create([
+        $team = LiveQuizTeam::withoutGlobalScopes()->create([
             'school_id'            => $session->school_id,
             'live_quiz_session_id' => $session->id,
             'team_name'            => $validated['team_name'],
@@ -87,7 +87,7 @@ class LiveQuizPlayerController extends Controller
      */
     public function playerGameView(Request $request, $pin)
     {
-        $session = LiveQuizSession::where('pin_code', $pin)->firstOrFail();
+        $session = LiveQuizSession::withoutGlobalScopes()->where('pin_code', $pin)->firstOrFail();
         $token = $request->query('token', '');
 
         return view('live-quiz.player.play', compact('session', 'pin', 'token'));
@@ -101,10 +101,10 @@ class LiveQuizPlayerController extends Controller
         $validated = $request->validate([
             'captain_token' => 'required|string|size:36',
             'pin_code'      => 'required|string|size:6',
-            'option'        => 'required|string|max:10',
+            'option'        => 'required|string|max:255',
         ]);
 
-        $session = LiveQuizSession::where('pin_code', $validated['pin_code'])->first();
+        $session = LiveQuizSession::withoutGlobalScopes()->where('pin_code', $validated['pin_code'])->first();
         if (!$session) {
             return response()->json(['error' => 'Invalid session PIN.'], 404);
         }
@@ -113,7 +113,7 @@ class LiveQuizPlayerController extends Controller
             return response()->json(['error' => 'Submissions are not active at this time.'], 422);
         }
 
-        $team = LiveQuizTeam::where('captain_token', $validated['captain_token'])
+        $team = LiveQuizTeam::withoutGlobalScopes()->where('captain_token', $validated['captain_token'])
             ->where('live_quiz_session_id', $session->id)
             ->first();
 
@@ -175,12 +175,12 @@ class LiveQuizPlayerController extends Controller
             'pin_code'      => 'required|string|size:6',
         ]);
 
-        $session = LiveQuizSession::where('pin_code', $validated['pin_code'])->first();
+        $session = LiveQuizSession::withoutGlobalScopes()->where('pin_code', $validated['pin_code'])->first();
         if (!$session || $session->status !== 'question_active') {
             return response()->json(['error' => 'Buzzer is not active.'], 422);
         }
 
-        $team = LiveQuizTeam::where('captain_token', $validated['captain_token'])
+        $team = LiveQuizTeam::withoutGlobalScopes()->where('captain_token', $validated['captain_token'])
             ->where('live_quiz_session_id', $session->id)
             ->first();
 
@@ -191,7 +191,7 @@ class LiveQuizPlayerController extends Controller
         $wasFirst = false;
 
         DB::transaction(function () use ($session, $team, &$wasFirst) {
-            $lockedSession = LiveQuizSession::where('id', $session->id)->lockForUpdate()->first();
+            $lockedSession = LiveQuizSession::withoutGlobalScopes()->where('id', $session->id)->lockForUpdate()->first();
             if (empty($lockedSession->fast_buzzer_team_id)) {
                 $lockedSession->update([
                     'fast_buzzer_team_id' => $team->id,
@@ -212,12 +212,12 @@ class LiveQuizPlayerController extends Controller
      */
     public function getPlayerLiveState(Request $request, $pin)
     {
-        $session = LiveQuizSession::where('pin_code', $pin)->firstOrFail();
+        $session = LiveQuizSession::withoutGlobalScopes()->where('pin_code', $pin)->firstOrFail();
         $token = $request->query('token');
 
         $team = null;
         if ($token) {
-            $team = LiveQuizTeam::where('captain_token', $token)
+            $team = LiveQuizTeam::withoutGlobalScopes()->where('captain_token', $token)
                 ->where('live_quiz_session_id', $session->id)
                 ->first();
         }
@@ -317,12 +317,12 @@ class LiveQuizPlayerController extends Controller
             'pin_code'      => 'required|string|size:6',
         ]);
 
-        $session = LiveQuizSession::where('pin_code', $validated['pin_code'])->first();
+        $session = LiveQuizSession::withoutGlobalScopes()->where('pin_code', $validated['pin_code'])->first();
         if (!$session) {
             return response()->json(['error' => 'Invalid session'], 404);
         }
 
-        $team = LiveQuizTeam::where('captain_token', $validated['captain_token'])
+        $team = LiveQuizTeam::withoutGlobalScopes()->where('captain_token', $validated['captain_token'])
             ->where('live_quiz_session_id', $session->id)
             ->first();
 
@@ -332,7 +332,7 @@ class LiveQuizPlayerController extends Controller
 
         // Delegate to host pass method
         $hostCtrl = new LiveQuizHostController();
-        return $hostCtrl->passQuestion($request, $session->id);
+        return $hostCtrl->processPass($session);
     }
 
     /**
@@ -346,12 +346,12 @@ class LiveQuizPlayerController extends Controller
             'event_type'    => 'nullable|string|max:50',
         ]);
 
-        $session = LiveQuizSession::where('pin_code', $validated['pin_code'])->first();
+        $session = LiveQuizSession::withoutGlobalScopes()->where('pin_code', $validated['pin_code'])->first();
         if (!$session) {
             return response()->json(['error' => 'Invalid session'], 404);
         }
 
-        $team = LiveQuizTeam::where('captain_token', $validated['captain_token'])
+        $team = LiveQuizTeam::withoutGlobalScopes()->where('captain_token', $validated['captain_token'])
             ->where('live_quiz_session_id', $session->id)
             ->first();
 

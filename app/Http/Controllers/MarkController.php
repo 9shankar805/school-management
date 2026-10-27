@@ -176,7 +176,7 @@ class MarkController extends Controller
             }
 
             $examRepository = new ExamRepository();
-            $exams = $examRepository->getAll($current_school_session_id, $semester_id, $class_id);
+            $exams = $examRepository->getAll($current_school_session_id, $semester_id, $class_id, $course_id);
             $examRulesByExamId = ExamRule::where('session_id', $current_school_session_id)
                                             ->whereIn('exam_id', $exams->pluck('id')->toArray())
                                             ->pluck('total_marks', 'exam_id');

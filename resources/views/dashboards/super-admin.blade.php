@@ -115,15 +115,15 @@
             </div>
         </a>
 
-        {{-- System Settings --}}
-        <a href="{{ url('academics/settings') }}"
+        {{-- School Setup --}}
+        <a href="{{ route('school.setup') }}"
            class="group bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 flex items-center gap-3.5 hover:border-sky-500 hover:shadow-md transition-all">
             <div class="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-105 transition-transform">
-                <i class="bi bi-gear-fill"></i>
+                <i class="bi bi-gear-wide-connected"></i>
             </div>
             <div>
-                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-sky-600 whitespace-nowrap">System Settings</h4>
-                <p class="text-[10px] text-slate-400 whitespace-nowrap">Manage platform settings</p>
+                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-sky-600 whitespace-nowrap">School Setup</h4>
+                <p class="text-[10px] text-slate-400 whitespace-nowrap">Academic terms, classes & rules</p>
             </div>
         </a>
     </div>

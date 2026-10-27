@@ -53,13 +53,43 @@ class QrAttendanceController extends Controller
     {
         $this->authorize('take attendances');
 
-        $sessionId        = $this->getSchoolCurrentSession();
-        $classesAndSections = \App\Models\SchoolClass::with('sections')
-            ->whereHas('promotions', fn($q) => $q->where('session_id', $sessionId))
+        $sessionId = $this->getSchoolCurrentSession();
+        $user = auth()->user();
+        $isRestrictedTeacher = $user && ($user->hasRole('teacher') || $user->hasRole('class-teacher'))
+                             && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'attendance-officer']);
+
+        if ($isRestrictedTeacher) {
+            $assignedClassIds = \App\Models\AssignedTeacher::where('session_id', $sessionId)
+                ->where('teacher_id', $user->id)
+                ->where('is_class_teacher', true)
+                ->pluck('class_id')
+                ->unique()
+                ->filter()
+                ->all();
+
+            $classesAndSections = \App\Models\SchoolClass::with(['sections' => function($q) use ($sessionId, $user) {
+                $assignedSectionIds = \App\Models\AssignedTeacher::where('session_id', $sessionId)
+                    ->where('teacher_id', $user->id)
+                    ->where('is_class_teacher', true)
+                    ->pluck('section_id')
+                    ->unique()
+                    ->filter()
+                    ->all();
+                $q->whereIn('id', $assignedSectionIds);
+            }])
+            ->whereIn('id', $assignedClassIds)
             ->orderBy('class_name')
             ->get();
 
-        $courses = \App\Models\Course::where('session_id', $sessionId)->orderBy('course_name')->get();
+            $courses = collect();
+        } else {
+            $classesAndSections = \App\Models\SchoolClass::with('sections')
+                ->whereHas('promotions', fn($q) => $q->where('session_id', $sessionId))
+                ->orderBy('class_name')
+                ->get();
+
+            $courses = \App\Models\Course::where('session_id', $sessionId)->orderBy('course_name')->get();
+        }
 
         return view('attendances.qr.create', compact('classesAndSections', 'courses', 'sessionId'));
     }
@@ -81,6 +111,22 @@ class QrAttendanceController extends Controller
         ]);
 
         $sessionId = $this->getSchoolCurrentSession();
+        $user = auth()->user();
+        $isRestrictedTeacher = $user && ($user->hasRole('teacher') || $user->hasRole('class-teacher'))
+                             && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'attendance-officer']);
+
+        if ($isRestrictedTeacher) {
+            $isAssigned = \App\Models\AssignedTeacher::where('session_id', $sessionId)
+                ->where('teacher_id', $user->id)
+                ->where('class_id', $validated['class_id'])
+                ->when(!empty($validated['section_id']), fn($q) => $q->where('section_id', $validated['section_id']))
+                ->where('is_class_teacher', true)
+                ->exists();
+
+            if (!$isAssigned) {
+                return back()->with('error', 'Unauthorized: Only the designated Class In-Charge (Class Teacher) can generate QR attendance for this class/section.');
+            }
+        }
 
         $token = QrAttendanceToken::create([
             'teacher_id'    => auth()->id(),

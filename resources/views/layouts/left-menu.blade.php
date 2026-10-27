@@ -11,6 +11,10 @@
         <span class="sidebar-link-icon"><i class="bi bi-grid-fill"></i></span>
         <span class="sidebar-link-text">Dashboard</span>
     </a>
+    <a href="{{ route('school.setup') }}" class="sidebar-link {{ (request()->is('school/setup*') || request()->is('academics/settings*')) ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-gear-wide-connected text-amber-500"></i></span>
+        <span class="sidebar-link-text">School Setup</span>
+    </a>
     <a href="{{ route('central_analytics.index') }}" class="sidebar-link {{ request()->is('analytics*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-pie-chart-fill"></i></span>
         <span class="sidebar-link-text">Analytics</span>
@@ -18,6 +22,11 @@
     <a href="{{ route('live-quiz.index') }}" class="sidebar-link {{ request()->is('live-quiz*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-trophy-fill text-warning"></i></span>
         <span class="sidebar-link-text">Live Quiz Arena</span>
+    </a>
+    <a href="{{ route('events.show') }}" class="sidebar-link {{ request()->is('calendar-event*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar2-heart-fill text-rose-500"></i></span>
+        <span class="sidebar-link-text">Academic Calendar (पात्रो)</span>
+        <span class="sidebar-badge" style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;">BS &amp; AD</span>
     </a>
     <a href="{{ route('notifications.index') }}" class="sidebar-link {{ request()->is('notifications*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-bell-fill"></i></span>
@@ -71,6 +80,10 @@
     </a>
 
     <p class="sidebar-section-label">System</p>
+    <a href="{{ route('profile.edit') }}" class="sidebar-link {{ request()->is('profile*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-gear"></i></span>
+        <span class="sidebar-link-text">My Profile</span>
+    </a>
     <a href="{{ route('roles.index') }}" class="sidebar-link {{ request()->is('roles') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-shield-fill-check"></i></span>
         <span class="sidebar-link-text">Roles & Permissions</span>
@@ -79,9 +92,9 @@
         <span class="sidebar-link-icon"><i class="bi bi-shield-lock-fill"></i></span>
         <span class="sidebar-link-text">Security (2FA)</span>
     </a>
-    <a href="{{ url('academics/settings') }}" class="sidebar-link {{ request()->is('academics/settings') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-gear-fill"></i></span>
-        <span class="sidebar-link-text">Settings</span>
+    <a href="{{ route('school.setup') }}" class="sidebar-link {{ (request()->is('academics/settings*') || request()->is('school/setup*')) ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-gear-wide-connected"></i></span>
+        <span class="sidebar-link-text">School Setup</span>
     </a>
     @if(class_exists(\Laravel\Horizon\Horizon::class))
     <a href="{{ url(config('horizon.path', 'horizon')) }}" target="_blank" class="sidebar-link {{ request()->is('horizon*') ? 'active' : '' }}">
@@ -108,6 +121,10 @@
     <a href="{{ url('home') }}" class="sidebar-link {{ request()->is('home') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-grid-fill"></i></span>
         <span class="sidebar-link-text">Dashboard</span>
+    </a>
+    <a href="{{ route('school.setup') }}" class="sidebar-link {{ (request()->is('school/setup*') || request()->is('academics/settings*')) ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-gear-wide-connected text-amber-500"></i></span>
+        <span class="sidebar-link-text">School Setup</span>
     </a>
     @role('admin|principal')
     <a href="{{ route('school.profile.edit') }}" class="sidebar-link {{ request()->is('school/profile') ? 'active' : '' }}">
@@ -144,15 +161,15 @@
         @endif
     </a>
 
-    {{-- Students --}}
-    @unlessrole('student|parent')
+    {{-- Students (Admin / Admissions only) --}}
+    @unlessrole('student|parent|teacher|class-teacher')
     @canany(['view students','create students'])
     <p class="sidebar-section-label">Students & Admissions</p>
     <a href="{{ route('student.list.show') }}" class="sidebar-link {{ request()->is('students/view*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-people-fill"></i></span>
         <span class="sidebar-link-text">All Students</span>
     </a>
-    <a href="{{ route('student.id-cards.bulk') }}" target="_blank" class="sidebar-link {{ request()->is('students/id-cards*') ? 'active' : '' }}">
+    <a href="{{ route('student.id-cards.bulk') }}" class="sidebar-link {{ request()->is('students/id-cards*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-person-vcard-fill text-indigo-400"></i></span>
         <span class="sidebar-link-text">Student ID Cards</span>
     </a>
@@ -161,6 +178,10 @@
     <a href="{{ route('student.create.show') }}" class="sidebar-link {{ request()->is('students/add') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-person-plus-fill"></i></span>
         <span class="sidebar-link-text">Add Student</span>
+    </a>
+    <a href="{{ route('students.import.index') }}" class="sidebar-link {{ request()->is('students/bulk-import*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-spreadsheet-fill text-emerald-500"></i></span>
+        <span class="sidebar-link-text">Bulk Import</span>
     </a>
     @endunless
     @endcan
@@ -171,6 +192,18 @@
     <a href="{{ route('student.transfers.index') }}" class="sidebar-link {{ request()->is('transfers*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-arrow-left-right"></i></span>
         <span class="sidebar-link-text">Student Transfers</span>
+    </a>
+    <a href="{{ route('students.graduation.index') }}" class="sidebar-link {{ request()->is('graduation*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-mortarboard-fill"></i></span>
+        <span class="sidebar-link-text">Graduation & Promotion</span>
+    </a>
+    <a href="{{ route('students.alumni') }}" class="sidebar-link {{ request()->is('alumni*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-check-fill"></i></span>
+        <span class="sidebar-link-text">Alumni Directory</span>
+    </a>
+    <a href="{{ route('achievements.leaderboard') }}" class="sidebar-link {{ request()->is('achievements/leaderboard*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-trophy-fill text-amber-500"></i></span>
+        <span class="sidebar-link-text">Student Leaderboard</span>
     </a>
     @endcanany
     @endunlessrole
@@ -237,9 +270,18 @@
         <span class="sidebar-link-icon"><i class="bi bi-camera-video-fill"></i></span>
         <span class="sidebar-link-text">Online Classes</span>
     </a>
+    <a href="{{ route('forum.index') }}" class="sidebar-link {{ request()->is('forum*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-chat-square-text-fill text-info"></i></span>
+        <span class="sidebar-link-text">Discussion Forum</span>
+    </a>
     <a href="{{ route('section.routine.show') }}" class="sidebar-link {{ request()->is('routine/view*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-calendar4-week"></i></span>
         <span class="sidebar-link-text">My Timetable</span>
+    </a>
+    <a href="{{ route('events.show') }}" class="sidebar-link {{ request()->is('calendar-event*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar2-heart-fill text-rose-500"></i></span>
+        <span class="sidebar-link-text">School Calendar (पात्रो)</span>
+        <span class="sidebar-badge" style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;">BS &amp; AD</span>
     </a>
     <a href="{{ route('library.index') }}" class="sidebar-link {{ request()->is('library*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-journals"></i></span>
@@ -272,6 +314,10 @@
         @if($myStudentPendingLeaves > 0)
         <span class="sidebar-badge">{{ $myStudentPendingLeaves }}</span>
         @endif
+    </a>
+    <a href="{{ route('feedback.my') }}" class="sidebar-link {{ request()->is('feedback*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-chat-heart-fill"></i></span>
+        <span class="sidebar-link-text">Feedback & Help</span>
     </a>
     @endrole
 
@@ -339,6 +385,10 @@
             <span class="sidebar-link-icon"><i class="bi bi-calendar4-week"></i></span>
             <span class="sidebar-link-text">Timetable</span>
         </a>
+        <a href="{{ route('parent.online-classes', $activeChildId) }}" class="sidebar-link {{ request()->is('parent/'.$activeChildId.'/online-classes*') ? 'active' : '' }}">
+            <span class="sidebar-link-icon"><i class="bi bi-camera-video-fill text-danger"></i></span>
+            <span class="sidebar-link-text">Live Classes (Zoom)</span>
+        </a>
         <a href="{{ route('parent.fees',        $activeChildId) }}" class="sidebar-link {{ request()->is('parent/'.$activeChildId.'/fees*') ? 'active' : '' }}">
             <span class="sidebar-link-icon"><i class="bi bi-receipt-cutoff"></i></span>
             <span class="sidebar-link-text">Fees</span>
@@ -367,9 +417,18 @@
             <span class="sidebar-link-icon"><i class="bi bi-calendar-star"></i></span>
             <span class="sidebar-link-text">Events</span>
         </a>
+        <a href="{{ route('events.show') }}" class="sidebar-link {{ request()->is('calendar-event*') ? 'active' : '' }}">
+            <span class="sidebar-link-icon"><i class="bi bi-calendar2-heart-fill text-rose-500"></i></span>
+            <span class="sidebar-link-text">School Calendar (पात्रो)</span>
+            <span class="sidebar-badge" style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;">BS &amp; AD</span>
+        </a>
         <a href="{{ route('parent.health',      $activeChildId) }}" class="sidebar-link {{ request()->is('parent/'.$activeChildId.'/health*') ? 'active' : '' }}">
             <span class="sidebar-link-icon"><i class="bi bi-heart-pulse"></i></span>
             <span class="sidebar-link-text">Health</span>
+        </a>
+        <a href="{{ route('parent.notices',     $activeChildId) }}" class="sidebar-link {{ request()->is('parent/'.$activeChildId.'/notices*') ? 'active' : '' }}">
+            <span class="sidebar-link-icon"><i class="bi bi-megaphone-fill"></i></span>
+            <span class="sidebar-link-text">Notice Board</span>
         </a>
         <a href="{{ route('parent.behavior',    $activeChildId) }}" class="sidebar-link {{ request()->is('parent/'.$activeChildId.'/behavior*') ? 'active' : '' }}">
             <span class="sidebar-link-icon"><i class="bi bi-shield-exclamation"></i></span>
@@ -401,17 +460,21 @@
         <span class="sidebar-link-icon"><i class="bi bi-calendar-event-fill"></i></span>
         <span class="sidebar-link-text">School Calendar</span>
     </a>
+    <a href="{{ route('feedback.my') }}" class="sidebar-link {{ request()->is('feedback*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-chat-heart-fill"></i></span>
+        <span class="sidebar-link-text">Feedback & Grievance</span>
+    </a>
     @endrole
 
-    {{-- Teachers --}}
-    @unlessrole('student|parent')
+    {{-- Teachers (Admin / HR only) --}}
+    @unlessrole('student|parent|teacher|class-teacher')
     @canany(['view teachers','create teachers'])
     <p class="sidebar-section-label">Teachers</p>
     <a href="{{ route('teacher.list.show') }}" class="sidebar-link {{ request()->is('teachers/view/list') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-person-badge-fill"></i></span>
         <span class="sidebar-link-text">All Teachers</span>
     </a>
-    <a href="{{ route('teacher.id-cards.bulk') }}" target="_blank" class="sidebar-link {{ request()->is('teachers/id-cards*') ? 'active' : '' }}">
+    <a href="{{ route('teacher.id-cards.bulk') }}" class="sidebar-link {{ request()->is('teachers/id-cards*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-person-vcard text-blue-400"></i></span>
         <span class="sidebar-link-text">Teacher ID Cards</span>
     </a>
@@ -421,6 +484,10 @@
         <span class="sidebar-link-icon"><i class="bi bi-person-plus-fill"></i></span>
         <span class="sidebar-link-text">Add Teacher</span>
     </a>
+    <a href="{{ route('teachers.import.index') }}" class="sidebar-link {{ request()->is('teachers/bulk-import*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-person-fill text-emerald-500"></i></span>
+        <span class="sidebar-link-text">Bulk Import</span>
+    </a>
     @endunless
     @endcan
     @endcanany
@@ -428,47 +495,79 @@
 
     {{-- Teacher self --}}
     @role('teacher|class-teacher')
-    <p class="sidebar-section-label">Teaching</p>
+    <p class="sidebar-section-label">Teaching & Classes</p>
+    @if(auth()->user()->isClassTeacher() || auth()->user()->hasRole(['super-admin', 'admin', 'principal']))
+    <a href="{{ route('class-incharge.dashboard') }}" class="sidebar-link {{ request()->is('class-incharge*') ? 'active' : '' }}" style="background: rgba(245, 158, 11, 0.12); border-left: 3px solid #f59e0b;">
+        <span class="sidebar-link-icon text-amber-500"><i class="bi bi-star-fill"></i></span>
+        <span class="sidebar-link-text font-bold text-amber-700 dark:text-amber-400">Class In-Charge</span>
+    </a>
+    @endif
     <a href="{{ route('course.teacher.list.show', ['teacher_id' => auth()->id()]) }}" class="sidebar-link {{ request()->is('courses/teacher*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-journal-richtext"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-journal-richtext text-indigo-500"></i></span>
         <span class="sidebar-link-text">My Courses</span>
     </a>
     <a href="{{ route('routine.teacher-timetable') }}" class="sidebar-link {{ request()->is('routine/teacher-timetable*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-calendar4-week"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-calendar4-week text-sky-500"></i></span>
         <span class="sidebar-link-text">My Timetable</span>
     </a>
     <a href="{{ route('lesson-plans.index') }}" class="sidebar-link {{ request()->is('lesson-plans*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-journal-plus"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-journal-plus text-emerald-500"></i></span>
         <span class="sidebar-link-text">Lesson Plans</span>
     </a>
     <a href="{{ route('homework.index') }}" class="sidebar-link {{ request()->is('homework*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-pencil-fill"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-pencil-fill text-amber-500"></i></span>
         <span class="sidebar-link-text">Homework</span>
     </a>
     <a href="{{ route('assignment.teacher.index') }}" class="sidebar-link {{ request()->is('assignments*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-check-fill"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-check-fill text-teal-500"></i></span>
         <span class="sidebar-link-text">Assignments</span>
     </a>
     <a href="{{ route('projects.index') }}" class="sidebar-link {{ request()->is('projects*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-folder-fill"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-folder-fill text-purple-500"></i></span>
         <span class="sidebar-link-text">Projects</span>
     </a>
     <a href="{{ route('study-notes.index') }}" class="sidebar-link {{ request()->is('study-notes*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-text-fill"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-text-fill text-blue-500"></i></span>
         <span class="sidebar-link-text">Study Materials</span>
     </a>
+    <a href="{{ route('question-papers.index') }}" class="sidebar-link {{ request()->is('question-papers*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-richtext-fill text-amber-500"></i></span>
+        <span class="sidebar-link-text">Question Studio (AI)</span>
+    </a>
     <a href="{{ route('class.syllabus.create') }}" class="sidebar-link {{ request()->is('syllabus*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-journal-bookmark-fill"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-journal-bookmark-fill text-pink-500"></i></span>
         <span class="sidebar-link-text">Syllabus</span>
     </a>
     <a href="{{ route('online-classes.index') }}" class="sidebar-link {{ request()->is('online-classes*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-camera-video-fill"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-camera-video-fill text-rose-500"></i></span>
         <span class="sidebar-link-text">Online Classes</span>
     </a>
+    <a href="{{ route('forum.index') }}" class="sidebar-link {{ request()->is('forum*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-chat-square-text-fill text-info"></i></span>
+        <span class="sidebar-link-text">Discussion Forum</span>
+    </a>
 
-    <p class="sidebar-section-label">Assessments</p>
+    <p class="sidebar-section-label">Attendance</p>
+    <a href="{{ route('attendance.create.show') }}" class="sidebar-link {{ request()->is('attendances/take') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-check2-square text-emerald-500"></i></span>
+        <span class="sidebar-link-text">Take Attendance</span>
+    </a>
+    <a href="{{ route('attendance.list.show') }}" class="sidebar-link {{ request()->is('attendances/view') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-week-fill text-indigo-500"></i></span>
+        <span class="sidebar-link-text">View Attendance</span>
+    </a>
+    <a href="{{ route('attendance.qr.index') }}" class="sidebar-link {{ request()->is('attendance/qr*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-qr-code text-violet-500"></i></span>
+        <span class="sidebar-link-text">QR Attendance</span>
+    </a>
+
+    <p class="sidebar-section-label">Assessments & Marks</p>
+    <a href="{{ route('course.mark.create') }}" class="sidebar-link {{ request()->is('marks/create*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-pencil-square text-indigo-500"></i></span>
+        <span class="sidebar-link-text">Enter Marks</span>
+    </a>
     <a href="{{ route('online-exams.index') }}" class="sidebar-link {{ request()->is('online-exams*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-laptop-fill"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-laptop-fill text-blue-500"></i></span>
         <span class="sidebar-link-text">Online Exams</span>
     </a>
     <a href="{{ route('live-quiz.index') }}" class="sidebar-link {{ request()->is('live-quiz*') ? 'active' : '' }}">
@@ -476,46 +575,21 @@
         <span class="sidebar-link-text">Live Quiz Arena</span>
     </a>
     <a href="{{ route('practical-exams.index') }}" class="sidebar-link {{ request()->is('practical-exams*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-nut-fill"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-nut-fill text-orange-500"></i></span>
         <span class="sidebar-link-text">Practical Exams</span>
     </a>
     <a href="{{ route('exam.schedule.index') }}" class="sidebar-link {{ request()->is('exam/schedule*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-calendar2-week-fill"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-calendar2-week-fill text-slate-500"></i></span>
         <span class="sidebar-link-text">Exam Schedule</span>
     </a>
-    <a href="{{ route('attendance.qr.index') }}" class="sidebar-link {{ request()->is('attendance/qr*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-qr-code"></i></span>
-        <span class="sidebar-link-text">QR Attendance</span>
-    </a>
-
-    <p class="sidebar-section-label">Resources</p>
     <a href="{{ route('gradebook.index') }}" class="sidebar-link {{ request()->is('gradebook*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-table"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-table text-cyan-500"></i></span>
         <span class="sidebar-link-text">Gradebook</span>
     </a>
-    <a href="{{ route('student.discipline.index') }}" class="sidebar-link {{ request()->is('discipline*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-shield-exclamation"></i></span>
-        <span class="sidebar-link-text">Conduct Log</span>
-    </a>
-    <a href="{{ route('library.ebooks.index') }}" class="sidebar-link {{ request()->is('library/ebooks*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-book-half"></i></span>
-        <span class="sidebar-link-text">E-books</span>
-    </a>
-    <a href="{{ route('events.show') }}" class="sidebar-link {{ request()->is('calendar-event*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-calendar-event-fill"></i></span>
-        <span class="sidebar-link-text">School Calendar</span>
-    </a>
-    @role('admin|principal|teacher|class-teacher')
-    <a href="{{ route('ai_features.web.index') }}" class="sidebar-link {{ request()->is('ai-features') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-robot"></i></span>
-        <span class="sidebar-link-text">AI Tools</span>
-        <span class="ml-1 text-[9px] bg-indigo-500 text-white px-1.5 py-0.5 rounded-full">Beta</span>
-    </a>
-    @endrole
 
-    <p class="sidebar-section-label">My Work</p>
+    <p class="sidebar-section-label">My Work & Resources</p>
     <a href="{{ route('teacher.messages') }}" class="sidebar-link {{ request()->is('teacher/messages*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-chat-dots-fill"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-chat-dots-fill text-blue-500"></i></span>
         <span class="sidebar-link-text">Parent Messages</span>
         @php
             try {
@@ -528,14 +602,12 @@
         <span class="sidebar-badge">{{ $teacherUnreadMsgs > 99 ? '99+' : $teacherUnreadMsgs }}</span>
         @endif
     </a>
-    @can('create notices')
-    <a href="{{ route('notice.create') }}" class="sidebar-link {{ request()->is('notice*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-megaphone-fill"></i></span>
-        <span class="sidebar-link-text">Post Notice</span>
+    <a href="{{ route('teacher.payroll.index') }}" class="sidebar-link {{ request()->is('teacher/payroll*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-cash-stack text-emerald-500"></i></span>
+        <span class="sidebar-link-text">My Payslips</span>
     </a>
-    @endcan
     <a href="{{ route('leave.index') }}" class="sidebar-link {{ request()->is('leave*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-calendar-x-fill"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-x-fill text-rose-500"></i></span>
         <span class="sidebar-link-text">Leave Requests</span>
         @php
             try {
@@ -546,13 +618,30 @@
         <span class="sidebar-badge">{{ $myPendingLeaves }}</span>
         @endif
     </a>
-    <a href="{{ route('teacher.payroll.index') }}" class="sidebar-link {{ request()->is('teacher/payroll*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-cash-stack"></i></span>
-        <span class="sidebar-link-text">My Payslips</span>
+    <a href="{{ route('student.discipline.index') }}" class="sidebar-link {{ request()->is('discipline*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-shield-exclamation text-amber-500"></i></span>
+        <span class="sidebar-link-text">Conduct Log</span>
+    </a>
+    <a href="{{ route('library.ebooks.index') }}" class="sidebar-link {{ request()->is('library/ebooks*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-book-half text-teal-500"></i></span>
+        <span class="sidebar-link-text">E-books</span>
+    </a>
+    <a href="{{ route('events.show') }}" class="sidebar-link {{ request()->is('calendar-event*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar-event-fill text-red-500"></i></span>
+        <span class="sidebar-link-text">School Calendar</span>
+    </a>
+    <a href="{{ route('ai_features.web.index') }}" class="sidebar-link {{ request()->is('ai-features') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-robot text-purple-500"></i></span>
+        <span class="sidebar-link-text">AI Tools</span>
+        <span class="ml-1 text-[9px] bg-indigo-500 text-white px-1.5 py-0.5 rounded-full font-bold">Free</span>
     </a>
     <a href="{{ route('teacher.profile.show', auth()->id()) }}" class="sidebar-link {{ request()->is('teachers/view/profile/'.auth()->id()) ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-person-circle"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-person-circle text-slate-500"></i></span>
         <span class="sidebar-link-text">My Profile</span>
+    </a>
+    <a href="{{ route('feedback.my') }}" class="sidebar-link {{ request()->is('feedback*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-chat-heart-fill text-rose-400"></i></span>
+        <span class="sidebar-link-text">Feedback & Grievance</span>
     </a>
     @endrole
 
@@ -560,6 +649,11 @@
     @unlessrole('teacher|class-teacher|student|parent')
     @canany(['view classes','view courses','view routines','view syllabi','view academic settings'])
     <p class="sidebar-section-label">Academic</p>
+    <a href="{{ route('events.show') }}" class="sidebar-link {{ request()->is('calendar-event*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-calendar2-heart-fill text-rose-500"></i></span>
+        <span class="sidebar-link-text">Academic Calendar (पात्रो)</span>
+        <span class="sidebar-badge" style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;">BS &amp; AD</span>
+    </a>
     @can('view classes')
     <a href="{{ url('classes') }}" class="sidebar-link {{ request()->is('classes') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-diagram-3-fill"></i></span>
@@ -707,13 +801,21 @@
     @endunlessrole
 
     {{-- Finance --}}
-    @unlessrole('student|parent')
+    @unlessrole('student|parent|teacher|class-teacher')
     @canany(['manage finance','view invoices','create invoices','view payments','view own invoices'])
     <p class="sidebar-section-label">Finance</p>
     @can('manage finance')
-    <a href="{{ route('finance.overview') }}" class="sidebar-link {{ request()->is('finance') ? 'active' : '' }}">
+    <a href="{{ route('finance.overview') }}" class="sidebar-link {{ request()->is('finance') && !request()->is('finance/pos*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-graph-up-arrow"></i></span>
         <span class="sidebar-link-text">Overview</span>
+    </a>
+    <a href="{{ route('finance.pos') }}" class="sidebar-link {{ request()->is('finance/pos*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-terminal"></i></span>
+        <span class="sidebar-link-text font-bold text-emerald-600 dark:text-emerald-400">⚡ Fee POS (Counter)</span>
+    </a>
+    <a href="{{ route('finance.fee-profiles') }}" class="sidebar-link {{ request()->is('finance/fee-profiles*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-vcard"></i></span>
+        <span class="sidebar-link-text">Fee Profiles</span>
     </a>
     <a href="{{ route('finance.fee-types.index') }}" class="sidebar-link {{ request()->is('finance/fee-types*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-list-ul"></i></span>
@@ -779,6 +881,10 @@
         <span class="sidebar-link-icon"><i class="bi bi-journal-bookmark-fill"></i></span>
         <span class="sidebar-link-text">Accounting Ledger</span>
     </a>
+    <a href="{{ route('finance.day-book') }}" class="sidebar-link {{ request()->is('finance/day-book*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-book-half"></i></span>
+        <span class="sidebar-link-text">Day Book (रोजनाम्चा)</span>
+    </a>
     <a href="{{ route('finance.profit-loss') }}" class="sidebar-link {{ request()->is('finance/profit-loss*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-bar-chart-fill"></i></span>
         <span class="sidebar-link-text">Profit & Loss</span>
@@ -796,7 +902,7 @@
     @endunlessrole
 
     {{-- Library --}}
-    @unlessrole('student|parent')
+    @unlessrole('student|parent|teacher|class-teacher')
     @canany(['view books','create books','issue books','return books'])
     <p class="sidebar-section-label">Library</p>
     <a href="{{ route('library.index') }}" class="sidebar-link {{ request()->is('library') ? 'active' : '' }}">
@@ -819,7 +925,7 @@
     @endunlessrole
 
     {{-- Hostel --}}
-    @unlessrole('student|parent')
+    @unlessrole('student|parent|teacher|class-teacher')
     <p class="sidebar-section-label">Hostel Management</p>
     <a href="{{ route('hostel.hostels.index') }}" class="sidebar-link {{ request()->is('hostel/hostels*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-building-fill"></i></span>
@@ -852,7 +958,7 @@
     @endunlessrole
 
     {{-- Transport --}}
-    @unlessrole('student|parent')
+    @unlessrole('student|parent|teacher|class-teacher')
     <p class="sidebar-section-label">Transport Management</p>
     <a href="{{ route('transport.index') }}" class="sidebar-link {{ request()->is('transport') && !request()->is('transport/*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-speedometer2"></i></span>
@@ -889,7 +995,7 @@
     @endunlessrole
 
     {{-- Certificates --}}
-    @unlessrole('student|parent')
+    @unlessrole('student|parent|teacher|class-teacher')
     @canany(['view students','create students'])
     <p class="sidebar-section-label">Certificates &amp; ID Cards</p>
     <a href="{{ route('certificates.index') }}" class="sidebar-link {{ request()->is('certificates') ? 'active' : '' }}">
@@ -918,9 +1024,19 @@
     @canany(['view staff','create staff'])
     <p class="sidebar-section-label">HR & Staff</p>
     <a href="{{ route('hr.dashboard') }}" class="sidebar-link {{ request()->is('hr') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-people-fill"></i></span>
+        <span class="sidebar-link-icon"><i class="bi bi-speedometer2"></i></span>
         <span class="sidebar-link-text">HR Dashboard</span>
     </a>
+    <a href="{{ route('staff.index') }}" class="sidebar-link {{ request()->is('staff') || (request()->is('staff/*') && !request()->is('staff/attendance*') && !request()->is('staff/contracts*') && !request()->is('staff/training*') && !request()->is('staff/exit*') && !request()->is('staff/recruitment*') && !request()->is('staff/create')) ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-people-fill"></i></span>
+        <span class="sidebar-link-text">Staff Directory</span>
+    </a>
+    @can('create staff')
+    <a href="{{ route('staff.create') }}" class="sidebar-link {{ request()->is('staff/create') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-plus-fill"></i></span>
+        <span class="sidebar-link-text">Add Staff / User</span>
+    </a>
+    @endcan
     <a href="{{ route('staff.attendance.index') }}" class="sidebar-link {{ request()->is('staff/attendance*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-calendar-check-fill"></i></span>
         <span class="sidebar-link-text">Staff Attendance</span>
@@ -952,23 +1068,50 @@
     @endcanany
     @endunlessrole
 
+    {{-- Reception & Front Desk --}}
+    @unlessrole('student|parent|teacher|class-teacher')
+    @canany(['view staff','create staff','view academic settings'])
+    <p class="sidebar-section-label">Reception & Front Desk</p>
+    <a href="{{ route('visitors.index') }}" class="sidebar-link {{ request()->is('visitors*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-badge-fill"></i></span>
+        <span class="sidebar-link-text">Visitor Log & Passes</span>
+    </a>
+    @endcanany
+    @endunlessrole
+
     {{-- Inventory --}}
     @unlessrole('student|parent|teacher|class-teacher')
     @canany(['view inventory','manage inventory'])
-    <p class="sidebar-section-label">Inventory</p>
+    <p class="sidebar-section-label">Inventory & Assets</p>
     <a href="{{ route('inventory.dashboard') }}" class="sidebar-link {{ request()->is('inventory') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-speedometer2"></i></span>
+        <span class="sidebar-link-text">Inventory Overview</span>
+    </a>
+    <a href="{{ route('inventory.items') }}" class="sidebar-link {{ request()->is('inventory/items*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-boxes"></i></span>
-        <span class="sidebar-link-text">Inventory</span>
+        <span class="sidebar-link-text">Stock Items</span>
+    </a>
+    <a href="{{ route('inventory.assets') }}" class="sidebar-link {{ request()->is('inventory/assets*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-laptop"></i></span>
+        <span class="sidebar-link-text">Fixed Assets</span>
+    </a>
+    <a href="{{ route('inventory.suppliers') }}" class="sidebar-link {{ request()->is('inventory/suppliers*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-truck"></i></span>
+        <span class="sidebar-link-text">Suppliers</span>
+    </a>
+    <a href="{{ route('inventory.purchase-orders') }}" class="sidebar-link {{ request()->is('inventory/purchase-orders*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-cart-check"></i></span>
+        <span class="sidebar-link-text">Purchase Orders</span>
     </a>
     @endcanany
     @endunlessrole
 
     {{-- Communication --}}
-    @unlessrole('student|parent')
+    @unlessrole('student|parent|teacher|class-teacher')
     @canany(['view notices','create notices','view events'])
     <p class="sidebar-section-label">Communication</p>
     @can('create notices')
-    <a href="{{ route('notice.create') }}" class="sidebar-link {{ request()->is('notice*') ? 'active' : '' }}">
+    <a href="{{ route('notice.index') }}" class="sidebar-link {{ request()->is('notice*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-megaphone-fill"></i></span>
         <span class="sidebar-link-text">Notices</span>
     </a>
@@ -988,6 +1131,14 @@
         <span class="sidebar-link-icon"><i class="bi bi-sliders"></i></span>
         <span class="sidebar-link-text">Gateway Settings</span>
     </a>
+    <a href="{{ route('forum.index') }}" class="sidebar-link {{ request()->is('forum*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-chat-square-text-fill text-info"></i></span>
+        <span class="sidebar-link-text">Discussion Forum</span>
+    </a>
+    <a href="{{ route('feedback.index') }}" class="sidebar-link {{ request()->is('feedback*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-chat-heart-fill text-warning"></i></span>
+        <span class="sidebar-link-text">Feedback & Grievances</span>
+    </a>
     @endcan
     @endcanany
     @endunlessrole
@@ -1006,9 +1157,9 @@
     @canany(['view academic settings','manage roles','promote students'])
     <p class="sidebar-section-label">Administration</p>
     @can('view academic settings')
-    <a href="{{ url('academics/settings') }}" class="sidebar-link {{ request()->is('academics/settings') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-gear-fill"></i></span>
-        <span class="sidebar-link-text">Settings</span>
+    <a href="{{ route('school.setup') }}" class="sidebar-link {{ (request()->is('academics/settings*') || request()->is('school/setup*')) ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-gear-wide-connected"></i></span>
+        <span class="sidebar-link-text">School Setup</span>
     </a>
     @endcan
     @can('manage roles')
@@ -1034,6 +1185,10 @@
 
 {{-- Sidebar footer --}}
 <div class="sidebar-footer">
+    <a href="{{ route('profile.edit') }}" class="sidebar-link {{ request()->is('profile*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-gear"></i></span>
+        <span class="sidebar-link-text">My Profile</span>
+    </a>
     <a href="{{ route('two-factor.setup') }}" class="sidebar-link {{ request()->is('two-factor*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-shield-lock-fill"></i></span>
         <span class="sidebar-link-text">Security (2FA)</span>

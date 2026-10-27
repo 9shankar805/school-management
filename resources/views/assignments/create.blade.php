@@ -19,8 +19,8 @@
                     @include('session-messages')
 
                     <div class="row mt-4">
-                        <div class="col-5">
-                            <div class="p-3 border bg-light shadow-sm">
+                        <div class="col-12 col-md-8 col-lg-6">
+                            <div class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
                                 <form action="{{route('assignment.store')}}" method="POST"  enctype="multipart/form-data">
                                     @csrf
                                     <input type="hidden" name="session_id" value="{{$current_school_session_id}}">

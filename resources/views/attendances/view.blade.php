@@ -108,6 +108,8 @@
                         <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-semibold bg-slate-50/50 dark:bg-slate-800/20">
                             <th class="py-3 px-4">Student Name</th>
                             <th class="py-3 px-4">Today's Status</th>
+                            <th class="py-3 px-4">Taken Time & Clock</th>
+                            <th class="py-3 px-4">Recorded By (In-Charge)</th>
                             <th class="py-3 px-4 text-right">Total Days Attended</th>
                         </tr>
                     </thead>
@@ -133,6 +135,18 @@
                                             ABSENT
                                         </span>
                                     @endif
+                                </td>
+                                <td class="py-3 px-4 font-mono text-slate-600 dark:text-slate-300">
+                                    <span class="inline-flex items-center gap-1">
+                                        <i class="bi bi-clock text-indigo-500"></i>
+                                        {{ $attendance->taken_time ?? ($attendance->submitted_at ? $attendance->submitted_at->format('h:i A') : ($attendance->created_at ? $attendance->created_at->format('h:i A') : '—')) }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-slate-600 dark:text-slate-300">
+                                    <span class="inline-flex items-center gap-1 font-medium">
+                                        <i class="bi bi-person-badge text-emerald-600"></i>
+                                        {{ $attendance->recordedBy?->name ?? 'Class In-Charge' }}
+                                    </span>
                                 </td>
                                 <td class="py-3 px-4 text-right font-mono font-bold text-slate-700 dark:text-slate-300">
                                     {{ $total_attended }} Days
@@ -164,19 +178,22 @@ function loadSectionsForClass(classId) {
         return;
     }
 
-    fetch('{{ route("get.sections.courses.by.classId") }}?class_id=' + classId)
+    fetch('{{ route("get.sections.courses.by.classId") }}?class_id=' + classId + '&for_attendance=1')
         .then(res => res.json())
         .then(data => {
-            let html = '<option value="0">-- All Sections / Select Section --</option>';
+            let html = '';
             if (data.sections && data.sections.length > 0) {
-                data.sections.forEach(sec => {
-                    html += `<option value="${sec.id}">${sec.section_name} (Room ${sec.room_no || 'N/A'})</option>`;
+                data.sections.forEach((sec, idx) => {
+                    const selected = idx === 0 ? 'selected' : '';
+                    html += `<option value="${sec.id}" ${selected}>Section ${sec.section_name} (Room ${sec.room_no || 'N/A'})</option>`;
                 });
+            } else {
+                html = '<option value="0">-- No In-Charge Section Found --</option>';
             }
             selectSection.innerHTML = html;
         })
         .catch(err => {
-            selectSection.innerHTML = '<option value="0">-- All Sections --</option>';
+            selectSection.innerHTML = '<option value="0">-- Error loading sections --</option>';
         });
 }
 </script>

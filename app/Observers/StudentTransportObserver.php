@@ -34,8 +34,7 @@ class StudentTransportObserver
     private function generateTransportInvoice(StudentTransport $transport): void
     {
         try {
-            $session = SchoolSession::where('is_current', true)->first()
-                ?? SchoolSession::latest()->first();
+            $session = SchoolSession::current() ?? SchoolSession::latest('id')->first();
 
             $month = now()->month;
             $year  = now()->year;

@@ -24,8 +24,11 @@ class SchoolClassStoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'class_name' => 'required',
-            'session_id' => 'required|integer|gt:0',
+            'class_name'          => 'required_without_all:classes,bulk_class_names|nullable|string',
+            'classes'             => 'required_without_all:class_name,bulk_class_names|nullable|array',
+            'classes.*.class_name'=> 'required_with:classes|string|max:100',
+            'bulk_class_names'    => 'required_without_all:class_name,classes|nullable|string',
+            'session_id'          => 'required|integer|gt:0',
         ];
     }
 }

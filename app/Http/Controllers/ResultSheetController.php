@@ -32,7 +32,7 @@ class ResultSheetController extends Controller
         $this->schoolSessionRepository = $schoolSessionRepository;
         $this->schoolClassRepository   = $schoolClassRepository;
         $this->semesterRepository      = $semesterRepository;
-        $this->middleware(['auth', 'can:view marks']);
+        $this->middleware(['auth', 'can:view marks'])->except(['verifyMarksheet']);
     }
 
     // ── Selector form ─────────────────────────────────────────────────────────
@@ -47,6 +47,20 @@ class ResultSheetController extends Controller
         $sessionId = $this->getSchoolCurrentSession();
 
         if ($user && $user->hasRole('student')) {
+            // Veda Model: Defaulter Gate (withhold mark sheet if student has outstanding dues)
+            $dueBalance = round(max((float) \App\Models\StudentLedger::currentBalance($user->id, $sessionId), (float) \App\Models\StudentLedger::currentBalance($user->id)), 2);
+            if ($dueBalance > 0) {
+                $semesters = $this->semesterRepository->getAll($sessionId);
+                $semesterId = (int) $request->query('semester_id', $semesters->first()?->id ?? 0);
+                $latestInvoice = \App\Models\Invoice::where('student_id', $user->id)
+                    ->where('session_id', $sessionId)
+                    ->whereIn('status', ['unpaid', 'partial'])
+                    ->latest()
+                    ->first();
+
+                return view('results.fee-restricted', compact('dueBalance', 'user', 'semesters', 'semesterId', 'sessionId', 'latestInvoice'));
+            }
+
             $promotionRepo = new \App\Repositories\PromotionRepository();
             $classInfo     = $promotionRepo->getStudentCurrentClass($user->id, $sessionId);
 
@@ -193,6 +207,9 @@ class ResultSheetController extends Controller
         $sectionId  = (int) $request->section_id;
         $semesterId = (int) $request->semester_id;
 
+        $school     = config('tenant.school') ?? \App\Models\School::first();
+        $logoSrc    = $this->getSchoolLogoBase64($school);
+
         $repo     = new ResultRepository();
         $results  = $repo->getClassResults($semesterId, $classId, $sectionId, $sessionId);
         $class    = SchoolClass::find($classId);
@@ -201,12 +218,15 @@ class ResultSheetController extends Controller
         $courses  = collect($results->first()['courses'] ?? [])->pluck('course');
 
         $pdf = Pdf::loadView('results.pdf.class-sheet', compact(
-            'results', 'class', 'section', 'semester', 'courses'
+            'results', 'class', 'section', 'semester', 'courses', 'school', 'logoSrc'
         ))
         ->setPaper('A4', 'landscape')
-        ->setOptions(['defaultFont' => 'sans-serif', 'dpi' => 96]);
+        ->setOptions(['defaultFont' => 'sans-serif', 'dpi' => 96, 'isRemoteEnabled' => true]);
 
-        return $pdf->stream("result-sheet-{$class->class_name}-{$semester->semester_name}.pdf");
+        if ($request->query('stream') == '1') {
+            return $pdf->stream("result-sheet-{$class->class_name}-{$semester->semester_name}.pdf");
+        }
+        return $pdf->download("result-sheet-{$class->class_name}-{$semester->semester_name}.pdf");
     }
 
     /**
@@ -221,25 +241,160 @@ class ResultSheetController extends Controller
             'semester_id' => 'required|integer',
         ]);
 
-        if (auth()->user()->hasRole('student') && auth()->id() !== $studentId) {
-            abort(403);
+        if (auth()->user()->hasRole('student')) {
+            if (auth()->id() !== $studentId) {
+                abort(403);
+            }
+            $dueBalance = round(max((float) \App\Models\StudentLedger::currentBalance($studentId, $this->getSchoolCurrentSession()), (float) \App\Models\StudentLedger::currentBalance($studentId)), 2);
+            if ($dueBalance > 0) {
+                return redirect()->route('results.index')
+                    ->with('error', '⚠️ Report Card Download Locked: Please clear your outstanding fee dues (Rs. ' . number_format($dueBalance, 2) . ') to download your official mark sheet.');
+            }
         }
 
         $sessionId  = $this->getSchoolCurrentSession();
+        $classId    = (int) $request->class_id;
+        $sectionId  = (int) $request->section_id;
+        $semesterId = (int) $request->semester_id;
+
+        $studentUser = \App\Models\User::find($studentId);
+        $school      = config('tenant.school') ?? ($studentUser ? \App\Models\School::find($studentUser->school_id) : null) ?? \App\Models\School::first();
+        $logoSrc     = $this->getSchoolLogoBase64($school);
+
+        $verifyToken = $this->generateMarksheetToken($studentId, $semesterId, $classId, $sessionId);
+        $verifyUrl   = route('results.verify', ['token' => $verifyToken]);
+        $qrSrc       = $this->getQrCodeSrc('https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' . urlencode($verifyUrl));
+
         $repo       = new ResultRepository();
         $result     = $repo->getStudentResult(
             $studentId,
-            (int) $request->semester_id,
-            (int) $request->class_id,
-            (int) $request->section_id,
+            $semesterId,
+            $classId,
+            $sectionId,
             $sessionId
         );
 
-        $pdf = Pdf::loadView('results.pdf.report-card', compact('result'))
+        $pdf = Pdf::loadView('results.pdf.report-card', compact('result', 'verifyUrl', 'qrSrc', 'verifyToken', 'school', 'logoSrc'))
             ->setPaper('A4', 'portrait')
-            ->setOptions(['defaultFont' => 'sans-serif', 'dpi' => 120, 'isRemoteEnabled' => true]);
+            ->setOptions(['defaultFont' => 'sans-serif', 'dpi' => 120, 'isRemoteEnabled' => true, 'chroot' => public_path()]);
 
-        return $pdf->stream("report-card-{$result['student']->full_name}.pdf");
+        if ($request->query('stream') == '1') {
+            return $pdf->stream("report-card-{$result['student']->full_name}.pdf");
+        }
+        return $pdf->download("report-card-{$result['student']->full_name}.pdf");
+    }
+
+    public function getSchoolLogoBase64($school = null): string
+    {
+        $filePath = $this->getSchoolLogoPath($school);
+        if ($filePath && file_exists($filePath)) {
+            $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+            
+            // GD WebP to PNG conversion if GD is present
+            if ($ext === 'webp' && function_exists('imagecreatefromwebp')) {
+                $im = @imagecreatefromwebp($filePath);
+                if ($im) {
+                    ob_start();
+                    imagepng($im);
+                    $pngData = ob_get_clean();
+                    imagedestroy($im);
+                    if ($pngData) {
+                        return 'data:image/png;base64,' . base64_encode($pngData);
+                    }
+                }
+            }
+
+            $data = @file_get_contents($filePath);
+            if ($data) {
+                $mime = ($ext === 'png') ? 'image/png' : (($ext === 'svg') ? 'image/svg+xml' : 'image/jpeg');
+                return 'data:' . $mime . ';base64,' . base64_encode($data);
+            }
+        }
+
+        return '';
+    }
+
+    public function getSchoolLogoPath($school = null): ?string
+    {
+        $school = $school ?? config('tenant.school') ?? \App\Models\School::first();
+        if ($school && $school->logo) {
+            $clean = ltrim(str_replace('storage/', '', $school->logo), '/');
+            if (file_exists(storage_path('app/public/' . $clean))) return storage_path('app/public/' . $clean);
+            if (file_exists(public_path('storage/' . $clean))) return public_path('storage/' . $clean);
+            if (file_exists(public_path($clean))) return public_path($clean);
+        }
+        if (file_exists(public_path('imgs/logo_icon_192.webp'))) return public_path('imgs/logo_icon_192.webp');
+        if (file_exists(public_path('imgs/logo_icon.webp'))) return public_path('imgs/logo_icon.webp');
+        return null;
+    }
+
+    private function getQrCodeSrc(string $dataUrl): string
+    {
+        try {
+            $ctx = stream_context_create(['http' => ['timeout' => 2, 'user_agent' => 'SchoolHub/1.0']]);
+            $img = @file_get_contents($dataUrl, false, $ctx);
+            if ($img && strlen($img) > 100) {
+                return 'data:image/png;base64,' . base64_encode($img);
+            }
+        } catch (\Exception $e) {}
+
+        return $dataUrl;
+    }
+
+    public function generateMarksheetToken(int $studentId, int $semesterId, int $classId, int $sessionId): string
+    {
+        $payload = "{$studentId}:{$semesterId}:{$classId}:{$sessionId}";
+        $hash    = substr(hash_hmac('sha256', $payload, config('app.key', 'school-hub-salt')), 0, 16);
+        $token   = base64_encode("{$payload}:{$hash}");
+        return str_replace(['+', '/', '='], ['-', '_', ''], $token);
+    }
+
+    /**
+     * Public endpoint: Live scan & verify authenticity of an official Marksheet / Grade Sheet
+     * GET /results/verify/{token}
+     */
+    public function verifyMarksheet(string $token)
+    {
+        $padded = str_pad(str_replace(['-', '_'], ['+', '/'], $token), strlen($token) % 4 === 0 ? strlen($token) : strlen($token) + (4 - strlen($token) % 4), '=', STR_PAD_RIGHT);
+        $decoded = base64_decode($padded);
+
+        if (!$decoded) {
+            abort(404, 'Invalid Marksheet Verification Token.');
+        }
+
+        $parts = explode(':', $decoded);
+        if (count($parts) !== 5) {
+            abort(404, 'Malformed Marksheet Verification Token.');
+        }
+
+        [$studentId, $semesterId, $classId, $sessionId, $hash] = $parts;
+        $expectedHash = substr(hash_hmac('sha256', "{$studentId}:{$semesterId}:{$classId}:{$sessionId}", config('app.key', 'school-hub-salt')), 0, 16);
+
+        if (!hash_equals($expectedHash, $hash)) {
+            abort(403, 'Verification failed: Marksheet signature mismatch or tampered QR code.');
+        }
+
+        $repo = new ResultRepository();
+        $result = $repo->getStudentResult(
+            (int)$studentId,
+            (int)$semesterId,
+            (int)$classId,
+            0,
+            (int)$sessionId
+        );
+
+        if (!$result || !isset($result['student'])) {
+            abort(404, 'Official result record not found in institutional archives.');
+        }
+
+        $student  = $result['student'];
+        $school   = \App\Models\School::find($student->school_id) ?? \App\Models\School::first();
+        $class    = \App\Models\SchoolClass::find((int)$classId);
+        $semester = \App\Models\Semester::find((int)$semesterId);
+        $session  = \App\Models\SchoolSession::find((int)$sessionId);
+        $section  = \App\Models\Section::find($student->academic_info?->section_id) ?? \App\Models\Section::find((int)($result['section_id'] ?? 0));
+
+        return view('results.verify', compact('result', 'student', 'school', 'class', 'semester', 'session', 'section', 'token', 'studentId', 'semesterId', 'classId', 'sessionId'));
     }
 
     /**

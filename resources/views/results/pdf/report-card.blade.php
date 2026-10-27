@@ -2,90 +2,250 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Report Card — {{ $result['student']?->full_name }}</title>
+<title>Official Academic Marksheet — {{ $result['student']?->full_name }}</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:sans-serif; font-size:11px; color:#1e293b; padding:28px; max-width:600px; margin:0 auto; }
-.header { text-align:center; margin-bottom:20px; padding-bottom:12px; border-bottom:3px solid #4f46e5; }
-.header h1 { font-size:18px; color:#4f46e5; font-weight:800; letter-spacing:.03em; }
-.header p  { font-size:10px; color:#64748b; margin-top:3px; }
-.student-info { background:#f8fafc; border-radius:10px; padding:12px 16px; margin-bottom:16px; display:grid; grid-template-columns:1fr 1fr; gap:6px; }
-.student-info .field p:first-child { font-size:9px; color:#94a3b8; }
-.student-info .field p:last-child  { font-weight:600; color:#1e293b; }
-table { width:100%; border-collapse:collapse; margin-bottom:16px; }
-thead tr { background:#4f46e5; color:#fff; }
-thead th { padding:7px 10px; font-size:9px; font-weight:600; text-align:left; }
-thead th:not(:first-child) { text-align:center; }
-tbody tr:nth-child(even) { background:#f8fafc; }
-tbody td { padding:6px 10px; border-bottom:1px solid #e2e8f0; font-size:10px; }
-tbody td:not(:first-child) { text-align:center; }
-.summary { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; background:#f0f4ff; border-radius:10px; padding:12px 16px; margin-bottom:20px; text-align:center; }
-.summary .val { font-size:20px; font-weight:800; color:#4f46e5; }
-.summary .lbl { font-size:9px; color:#94a3b8; margin-top:2px; }
-.sig { margin-top:30px; display:flex; justify-content:space-between; }
-.sig .box { text-align:center; }
-.sig .box .line { border-top:1px solid #94a3b8; width:120px; margin:0 auto 4px; }
-.sig .box p { font-size:9px; color:#64748b; }
-.footer { text-align:center; font-size:8px; color:#94a3b8; margin-top:20px; padding-top:8px; border-top:1px solid #e2e8f0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #1e293b; padding: 24px; max-width: 750px; margin: 0 auto; background: #fff; }
+    
+    /* Institutional Header */
+    .header { text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 12px; margin-bottom: 14px; position: relative; }
+    .header h1 { font-size: 18px; color: #1e3a8a; font-weight: bold; text-transform: uppercase; margin-bottom: 2px; }
+    .header .sub { font-size: 9.5px; color: #475569; margin-bottom: 3px; }
+    .header .iemis { font-size: 8.5px; color: #64748b; font-style: italic; }
+
+    /* Title Badge */
+    .title-badge { text-align: center; margin-bottom: 14px; }
+    .title-badge span { background: #1e3a8a; color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1.5px; padding: 4px 18px; border-radius: 4px; text-transform: uppercase; }
+
+    /* Student Information Grid */
+    .student-info { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; width: 100%; border-collapse: collapse; }
+    .student-info td { padding: 4px 6px; font-size: 9px; vertical-align: top; }
+    .lbl { color: #64748b; font-weight: 600; width: 18%; }
+    .val { color: #0f172a; font-weight: bold; width: 32%; }
+
+    /* Academic Marks Table */
+    table.marks-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+    table.marks-table th { background: #1e3a8a; color: #fff; padding: 6px 8px; font-size: 8.5px; font-weight: bold; text-align: center; border: 1px solid #1e3a8a; }
+    table.marks-table th:first-child { text-align: left; }
+    table.marks-table td { padding: 5px 8px; border: 1px solid #cbd5e1; font-size: 9px; text-align: center; }
+    table.marks-table td:first-child { text-align: left; }
+    table.marks-table tr:nth-child(even) { background: #f8fafc; }
+
+    /* Summary Bar */
+    .summary-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 10px 14px; margin-bottom: 14px; display: table; width: 100%; }
+    .summary-cell { display: table-cell; text-align: center; width: 25%; vertical-align: middle; }
+    .summary-val { font-size: 16px; font-weight: bold; color: #1e3a8a; }
+    .summary-lbl { font-size: 8.5px; color: #64748b; text-transform: uppercase; margin-top: 2px; }
+
+    /* Nepal CDC Grading Scale Key */
+    .grading-key { width: 100%; border-collapse: collapse; margin-bottom: 16px; background: #fff; }
+    .grading-key th { background: #f1f5f9; color: #334155; font-size: 7.5px; font-weight: bold; border: 1px solid #e2e8f0; padding: 3px 4px; text-align: center; }
+    .grading-key td { border: 1px solid #e2e8f0; font-size: 7.5px; padding: 3px 4px; text-align: center; }
+
+    /* Signatures */
+    .sig-table { width: 100%; border-collapse: collapse; margin-top: 26px; }
+    .sig-table td { width: 33.33%; text-align: center; vertical-align: bottom; font-size: 8.5px; color: #475569; }
+    .sig-line { border-top: 1px solid #64748b; width: 75%; margin: 0 auto 4px; }
+    
+    .footer { text-align: center; font-size: 8px; color: #94a3b8; margin-top: 14px; padding-top: 6px; border-top: 1px solid #e2e8f0; }
 </style>
 </head>
 <body>
-<div class="header">
-    <h1>{{ config('app.name') }}</h1>
-    <p>Academic Report Card &mdash; {{ $result['semester']?->semester_name }}</p>
+
+@php
+    $student = $result['student'] ?? null;
+    $school = $currentSchool ?? ($student ? \App\Models\School::find($student->school_id) : null) ?? \App\Models\School::first();
+    $semester = $result['semester'] ?? null;
+@endphp
+
+{{-- Institutional Header with Verification QR --}}
+<table style="width: 100%; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 12px; border-collapse: collapse;">
+    <tr>
+        <td style="width: 18%; vertical-align: middle; text-align: left;">
+            @if(!empty($logoSrc))
+                <img src="{{ $logoSrc }}" style="max-height: 55px; max-width: 85px;" alt="Logo">
+            @else
+                <div style="font-size: 11px; font-weight: bold; color: #1e3a8a; border: 1.5px solid #1e3a8a; border-radius: 4px; padding: 6px 8px; text-align: center; display: inline-block;">
+                    {{ strtoupper(substr($school?->name ?? config('app.name'), 0, 8)) }}
+                </div>
+            @endif
+        </td>
+        <td style="width: 62%; text-align: center; vertical-align: middle;">
+            <h1 style="font-size: 16px; color: #1e3a8a; font-weight: bold; text-transform: uppercase; margin: 0 0 2px 0;">{{ $school?->name ?? config('app.name') }}</h1>
+            <p style="font-size: 8.5px; color: #475569; margin: 0 0 2px 0;">{{ $school?->address ?? 'Kathmandu, Bagmati Province, Nepal' }} &bull; Tel: {{ $school?->phone ?? '+977-1-4412345' }}</p>
+            @if($school?->iemis_code)
+            <p style="font-size: 8px; color: #64748b; font-style: italic; margin: 0;">Ministry of Education, CEHRD EMIS Code: {{ $school->iemis_code }}</p>
+            @endif
+        </td>
+        <td style="width: 20%; text-align: right; vertical-align: middle;">
+            @if(isset($qrSrc))
+            <div style="display: inline-block; text-align: center;">
+                <img src="{{ $qrSrc }}" style="width: 56px; height: 56px; border: 1px solid #cbd5e1; padding: 2px; background: #fff;" alt="Verify QR">
+                <div style="font-size: 6.5px; color: #1e3a8a; font-weight: bold; margin-top: 2px; letter-spacing: 0.5px;">SCAN TO VERIFY</div>
+            </div>
+            @endif
+        </td>
+    </tr>
+</table>
+
+{{-- Title Badge --}}
+<div class="title-badge">
+    <span>Academic Achievement Marksheet / Grade Sheet</span>
 </div>
 
-<div class="student-info">
-    <div class="field"><p>Student Name</p><p>{{ $result['student']?->full_name }}</p></div>
-    <div class="field"><p>Semester</p><p>{{ $result['semester']?->semester_name }}</p></div>
-    <div class="field"><p>Class Rank</p><p>#{{ $result['rank'] ?? '—' }}</p></div>
-    <div class="field"><p>Generated</p><p>{{ now()->format('d M Y') }}</p></div>
-</div>
+{{-- Student Details --}}
+<table class="student-info">
+    <tr>
+        <td class="lbl">Student Name:</td>
+        <td class="val">{{ $student?->full_name }}</td>
+        <td class="lbl">Academic Term:</td>
+        <td class="val">{{ $semester?->semester_name ?? 'First Term 2026' }}</td>
+    </tr>
+    <tr>
+        <td class="lbl">Roll Number:</td>
+        <td class="val">{{ $result['promotion']?->roll_no ?? $student?->academic_info?->roll_number ?? '—' }}</td>
+        <td class="lbl">Class & Section:</td>
+        <td class="val">{{ $result['class']?->class_name ?? 'Secondary Grade' }} &bull; Sec {{ $result['section']?->section_name ?? 'A' }}</td>
+    </tr>
+    <tr>
+        <td class="lbl">Class Rank:</td>
+        <td class="val">{{ $result['rank'] ? '#' . $result['rank'] : '—' }}</td>
+        <td class="lbl">Issue Date:</td>
+        <td class="val">{{ now()->format('d M Y') }} (@bsDateEn(now()->toDateString()))</td>
+    </tr>
+</table>
 
-<table>
+{{-- Academic Marks Table --}}
+<table class="marks-table">
     <thead>
         <tr>
-            <th>Course</th>
-            <th>Marks Obtained</th>
-            <th>Grade</th>
-            <th>Grade Points</th>
-            <th>Result</th>
-            <th>Notes</th>
+            <th style="width: 34%;">Subject / Course Name</th>
+            <th style="width: 14%;">Credit / Full</th>
+            <th style="width: 14%;">Obtained</th>
+            <th style="width: 12%;">Grade</th>
+            <th style="width: 13%;">Grade Point</th>
+            <th style="width: 13%;">Remarks</th>
         </tr>
     </thead>
     <tbody>
         @foreach($result['courses'] as $c)
         <tr>
-            <td><b>{{ $c['course']?->course_name ?? '—' }}</b></td>
-            <td>{{ $c['final_marks'] }}</td>
-            <td style="font-weight:700; color:{{ $c['passed'] ? '#059669' : '#dc2626' }}">{{ $c['grade'] }}</td>
-            <td style="color:#4f46e5; font-weight:600">{{ $c['point'] }}</td>
+            <td><b>{{ $c['course']?->course_name ?? 'Course' }}</b></td>
+            <td>100</td>
+            <td>{{ round($c['final_marks'], 1) }}</td>
+            <td style="font-weight: bold; color: {{ $c['passed'] ? '#059669' : '#dc2626' }};">
+                {{ $c['grade'] }}
+            </td>
+            <td style="font-weight: bold; color: #1e3a8a;">{{ number_format((float)$c['point'], 2) }}</td>
             <td>
                 @if($c['passed'])
-                <span style="background:#d1fae5;color:#065f46;padding:1px 7px;border-radius:999px;font-weight:700;font-size:8px;">PASS</span>
+                <span style="color:#059669; font-weight: bold;">PASSED</span>
                 @else
-                <span style="background:#fee2e2;color:#991b1b;padding:1px 7px;border-radius:999px;font-weight:700;font-size:8px;">FAIL</span>
+                <span style="color:#dc2626; font-weight: bold;">NEEDS RETEST</span>
                 @endif
             </td>
-            <td style="color:#94a3b8;font-size:9px">{{ $c['note'] ?? '' }}</td>
         </tr>
         @endforeach
     </tbody>
 </table>
 
-<div class="summary">
-    <div><p class="val">{{ $result['gpa'] }}</p><p class="lbl">GPA</p></div>
-    <div><p class="val">{{ round($result['totalMarks'], 1) }}</p><p class="lbl">Total Marks</p></div>
-    <div><p class="val" style="color:#059669">{{ $result['passed'] }}</p><p class="lbl">Passed</p></div>
-    <div><p class="val" style="color:#dc2626">{{ $result['failed'] }}</p><p class="lbl">Failed</p></div>
+{{-- Result Summary Box --}}
+<div class="summary-box">
+    <div class="summary-cell">
+        <div class="summary-val">{{ $result['gpa'] }}</div>
+        <div class="summary-lbl">Grade Point Average (GPA)</div>
+    </div>
+    <div class="summary-cell">
+        <div class="summary-val">{{ round($result['totalMarks'], 1) }}</div>
+        <div class="summary-lbl">Total Aggregate Marks</div>
+    </div>
+    <div class="summary-cell">
+        <div class="summary-val" style="color: #059669;">{{ $result['passed'] }}</div>
+        <div class="summary-lbl">Courses Passed</div>
+    </div>
+    <div class="summary-cell">
+        <div class="summary-val" style="color: {{ $result['failed'] > 0 ? '#dc2626' : '#64748b' }};">
+            {{ $result['failed'] }}
+        </div>
+        <div class="summary-lbl">Courses Below Pass</div>
+    </div>
 </div>
 
-<div class="sig">
-    <div class="box"><div class="line"></div><p>Class Teacher</p></div>
-    <div class="box"><div class="line"></div><p>Principal</p></div>
-    <div class="box"><div class="line"></div><p>Parent / Guardian</p></div>
+{{-- Nepal CDC 8-Point Grading Key --}}
+<p style="font-size: 8px; font-weight: bold; color: #475569; margin-bottom: 4px; text-transform: uppercase;">
+    Government of Nepal — CDC Grading System Key:
+</p>
+<table class="grading-key">
+    <tr>
+        <th>Interval</th>
+        <td>90% - 100%</td>
+        <td>80% - 89%</td>
+        <td>70% - 79%</td>
+        <td>60% - 69%</td>
+        <td>50% - 59%</td>
+        <td>40% - 49%</td>
+        <td>35% - 39%</td>
+        <td>Below 35%</td>
+    </tr>
+    <tr>
+        <th>Grade</th>
+        <td><b>A+</b></td>
+        <td><b>A</b></td>
+        <td><b>B+</b></td>
+        <td><b>B</b></td>
+        <td><b>C+</b></td>
+        <td><b>C</b></td>
+        <td><b>D</b></td>
+        <td><b>NG</b></td>
+    </tr>
+    <tr>
+        <th>Grade Point</th>
+        <td>4.0</td>
+        <td>3.6</td>
+        <td>3.2</td>
+        <td>2.8</td>
+        <td>2.4</td>
+        <td>2.0</td>
+        <td>1.6</td>
+        <td>0.0</td>
+    </tr>
+    <tr>
+        <th>Description</th>
+        <td>Outstanding</td>
+        <td>Excellent</td>
+        <td>Very Good</td>
+        <td>Good</td>
+        <td>Satisfactory</td>
+        <td>Acceptable</td>
+        <td>Basic</td>
+        <td>Non-Graded</td>
+    </tr>
+</table>
+
+{{-- Institutional Signatures --}}
+<table class="sig-table">
+    <tr>
+        <td>
+            <div class="sig-line"></div>
+            Class Teacher
+        </td>
+        <td>
+            <div class="sig-line"></div>
+            Controller of Examinations
+        </td>
+        <td>
+            <div class="sig-line"></div>
+            <b>Principal / Head of Institution</b>
+        </td>
+    </tr>
+</table>
+
+<div class="footer">
+    This document is an authentic certified statement of academic achievement generated by {{ $school?->name ?? config('app.name') }}.
+    @if(isset($verifyToken))
+    <br><span style="font-family: monospace; font-size: 7.5px; color: #64748b;">Verification Code: {{ $verifyToken }} &bull; Scan QR Code or visit {{ route('results.verify', ['token' => $verifyToken]) }}</span>
+    @endif
 </div>
 
-<div class="footer">{{ config('app.name') }} &bull; Report Card generated {{ now()->format('d M Y') }} &bull; Confidential</div>
 </body>
 </html>

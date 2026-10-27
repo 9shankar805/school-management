@@ -51,8 +51,23 @@ class SyllabusController extends Controller
     public function create()
     {
         $current_school_session_id = $this->getSchoolCurrentSession();
+        $user = auth()->user();
+        $isRestrictedTeacher = $user && ($user->hasRole('teacher') || $user->hasRole('class-teacher'))
+                             && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator']);
 
-        $school_classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
+        if ($isRestrictedTeacher) {
+            $assignedClassIds = \App\Models\AssignedTeacher::where('session_id', $current_school_session_id)
+                ->where('teacher_id', $user->id)
+                ->pluck('class_id')
+                ->unique()
+                ->filter()
+                ->all();
+            $school_classes = \App\Models\SchoolClass::where('session_id', $current_school_session_id)
+                ->whereIn('id', $assignedClassIds)
+                ->get();
+        } else {
+            $school_classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
+        }
 
         $data = [
             'current_school_session_id' => $current_school_session_id,

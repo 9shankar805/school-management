@@ -11,12 +11,42 @@
   $phone      = $school?->phone ?? '+91 97110 00560';
 
   // Logo base64
-  $logoSrc = '';
-  if ($school?->logo) {
-      $p = storage_path('app/public/' . ltrim($school->logo, '/'));
-      if (file_exists($p)) {
-          $m = mime_content_type($p) ?: 'image/png';
-          $logoSrc = 'data:' . $m . ';base64,' . base64_encode(file_get_contents($p));
+  if (!isset($logoSrc) || !$logoSrc) {
+      $logoSrc = '';
+      $logoCandidates = [];
+      if ($school?->logo) {
+          $clean = ltrim(str_replace('storage/', '', $school->logo), '/');
+          $logoCandidates[] = storage_path('app/public/' . $clean);
+          $logoCandidates[] = public_path('storage/' . $clean);
+          $logoCandidates[] = public_path($clean);
+      }
+      $logoCandidates[] = public_path('imgs/logo_icon_192.webp');
+      $logoCandidates[] = public_path('imgs/logo_icon.webp');
+      $logoCandidates[] = public_path('imgs/schools.webp');
+
+      foreach ($logoCandidates as $cand) {
+          if ($cand && file_exists($cand) && is_file($cand)) {
+              $ext = strtolower(pathinfo($cand, PATHINFO_EXTENSION));
+              if ($ext === 'webp' && function_exists('imagecreatefromwebp')) {
+                  $im = @imagecreatefromwebp($cand);
+                  if ($im) {
+                      ob_start();
+                      imagepng($im);
+                      $pngData = ob_get_clean();
+                      imagedestroy($im);
+                      if ($pngData) {
+                          $logoSrc = 'data:image/png;base64,' . base64_encode($pngData);
+                          break;
+                      }
+                  }
+              }
+              $raw = @file_get_contents($cand);
+              if ($raw) {
+                  $mime = ($ext === 'png') ? 'image/png' : (($ext === 'svg') ? 'image/svg+xml' : 'image/jpeg');
+                  $logoSrc = 'data:' . $mime . ';base64,' . base64_encode($raw);
+                  break;
+              }
+          }
       }
   }
 
@@ -42,22 +72,24 @@
   $bloodType   = $student->blood_type                   ?? 'A+';
   $session     = $schoolSession?->session_name          ?? (date('Y') . '-' . (date('Y')+1));
 
-  // Public QR Code verification URL
-  $qrToken    = $student->qr_token ?? $student->id;
-  $verifyUrl  = route('student.verify', ['token' => $qrToken]);
-  $qrApiUrl   = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($verifyUrl);
+  // Instant QR Code Quick Login URL
+  $qrToken   = $student->qr_token ?? $student->id;
+  $loginUrl  = route('student.qr-login', ['token' => $qrToken]);
+  $qrApiUrl  = 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=' . urlencode($loginUrl);
 
-  // Load QR code as base64 or fallback
-  $qrSrc = '';
-  try {
-      $qrData = @file_get_contents($qrApiUrl);
-      if ($qrData) {
-          $qrSrc = 'data:image/png;base64,' . base64_encode($qrData);
+  // Load QR code as base64 or fallback to direct URL
+  if (!isset($qrSrc) || empty($qrSrc) || strpos($qrSrc, 'iVBORw0KGgo') !== false) {
+      try {
+          $ctx = stream_context_create(['http' => ['timeout' => 2]]);
+          $qrData = @file_get_contents($qrApiUrl, false, $ctx);
+          if ($qrData && strlen($qrData) > 100) {
+              $qrSrc = 'data:image/png;base64,' . base64_encode($qrData);
+          } else {
+              $qrSrc = $qrApiUrl;
+          }
+      } catch (\Exception $e) {
+          $qrSrc = $qrApiUrl;
       }
-  } catch (\Exception $e) {}
-
-  if (!$qrSrc) {
-      $qrSrc = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
   }
 
   // ── Fetch Father & Mother Name ──
@@ -322,8 +354,8 @@ html, body { width: 153pt; height: 243pt; margin: 0; padding: 0; font-family: De
     <div class="qr-frame">
       <img src="{{ $qrSrc }}" alt="Scan QR">
     </div>
-    <div class="scan-title">DIGITAL VERIFICATION & QUICK LOGIN</div>
-    <div class="scan-sub">📷 Scan with Camera to Verify Details</div>
+    <div class="scan-title">INSTANT QR LOGIN &amp; VERIFICATION</div>
+    <div class="scan-sub">📷 Scan with Phone Camera to Login Directly</div>
   </div>
 
   <div class="instructions-box">

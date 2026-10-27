@@ -17,7 +17,7 @@ class FreeAiService
      */
     public function generate(string $prompt): string
     {
-        $apiKey = config('services.groq.key') ?: env('GROQ_API_KEY', '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');
+        $apiKey = config('services.groq.key') ?: env('GROQ_API_KEY');
         
         $configuredModel = config('services.groq.model');
 
@@ -134,7 +134,7 @@ class FreeAiService
      */
     public function generateVision(string $prompt, string $imageBase64, string $mimeType = 'image/jpeg'): string
     {
-        $apiKey = config('services.groq.key') ?: env('GROQ_API_KEY', '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');
+        $apiKey = config('services.groq.key') ?: env('GROQ_API_KEY');
         
         $visionModels = [
             'openai/gpt-oss-120b',

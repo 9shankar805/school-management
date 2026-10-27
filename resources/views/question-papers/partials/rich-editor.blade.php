@@ -36,6 +36,7 @@
 .re-area table{border-collapse:collapse;width:100%;margin:6px 0;}
 .re-area td,.re-area th{border:1px solid #cbd5e1;padding:4px 8px;}
 .re-area .math-inline{background:#f0f4ff;border-radius:4px;padding:1px 5px;font-family:monospace;color:#3730a3;}
+.re-area img{max-width:100% !important;height:auto !important;max-height:none !important;border-radius:8px;display:block;margin:8px auto;object-fit:contain;}
 .re-math-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
 .re-math-modal{background:#fff;border-radius:18px;padding:22px;width:100%;max-width:520px;box-shadow:0 16px 50px rgba(0,0,0,.2);}
 </style>

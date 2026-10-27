@@ -14,12 +14,17 @@
 
         {{-- Filters --}}
         <form method="GET" action="{{ route('students.alumni') }}" class="flex flex-wrap gap-3 mb-6">
-            <input type="text" name="search" value="{{ $search }}" placeholder="Search alumni…" class="flex-1 min-w-48 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+            <div class="relative flex-1 min-w-48">
+                <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" name="search" value="{{ $search }}" placeholder="Search alumni…" class="w-full border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+            </div>
             <select name="batch" class="border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
                 <option value="">All Batches</option>
                 @foreach($batches as $b)<option value="{{ $b }}" {{ $batch === $b ? 'selected' : '' }}>{{ $b }}</option>@endforeach
             </select>
-            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition">Filter</button>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition flex items-center gap-1.5">
+                <i class="bi bi-funnel"></i> Filter
+            </button>
         </form>
 
         @if($alumni->count())

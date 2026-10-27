@@ -34,31 +34,58 @@ class AttendanceController extends Controller
     /**
      * GET /classes
      * Returns classes (+ sections) assigned to the authenticated teacher.
-     * Falls back to all active classes if no assignments found.
+    /**
+     * GET /classes
+     * Returns classes (+ sections) where the authenticated teacher is designated as Class In-Charge.
+     * Administrators / principals receive all active classes.
      */
     public function classes(Request $request): JsonResponse
     {
         $teacher   = auth()->user();
         $sessionId = $this->currentSessionId();
+        $isAdmin   = $teacher && $teacher->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'attendance-officer']);
 
-        // Classes assigned to this teacher via assigned_teachers table
-        $classIds = AssignedTeacher::where('teacher_id', $teacher->id)
+        if ($isAdmin) {
+            $classes = SchoolClass::with('sections')
+                ->when($teacher->school_id, fn($q) => $q->where('school_id', $teacher->school_id))
+                ->orderBy('class_name')
+                ->get()
+                ->map(fn($c) => [
+                    'id'              => $c->id,
+                    'name'            => $c->class_name,
+                    'is_class_teacher'=> true,
+                    'sections'        => $c->sections->map(fn($s) => [
+                        'id'              => $s->id,
+                        'name'            => $s->section_name,
+                        'is_class_teacher'=> true,
+                    ]),
+                ]);
+
+            return response()->json(['classes' => $classes]);
+        }
+
+        // Classes & sections assigned to this teacher as Class In-Charge (is_class_teacher = true)
+        $inChargeAssignments = AssignedTeacher::where('teacher_id', $teacher->id)
+            ->where('is_class_teacher', true)
             ->when($sessionId, fn($q) => $q->where('session_id', $sessionId))
-            ->pluck('class_id')
-            ->unique()
-            ->values();
+            ->get();
 
-        $classes = SchoolClass::with('sections')
-            ->when($classIds->isNotEmpty(), fn($q) => $q->whereIn('id', $classIds))
+        $classIds   = $inChargeAssignments->pluck('class_id')->unique()->values();
+        $sectionIds = $inChargeAssignments->pluck('section_id')->unique()->values();
+
+        $classes = SchoolClass::with(['sections' => fn($q) => $q->whereIn('id', $sectionIds)])
+            ->whereIn('id', $classIds)
             ->when($teacher->school_id, fn($q) => $q->where('school_id', $teacher->school_id))
             ->orderBy('class_name')
             ->get()
             ->map(fn($c) => [
-                'id'         => $c->id,
-                'name'       => $c->class_name,
-                'sections'   => $c->sections->map(fn($s) => [
-                    'id'   => $s->id,
-                    'name' => $s->section_name,
+                'id'              => $c->id,
+                'name'            => $c->class_name,
+                'is_class_teacher'=> true,
+                'sections'        => $c->sections->map(fn($s) => [
+                    'id'              => $s->id,
+                    'name'            => $s->section_name,
+                    'is_class_teacher'=> true,
                 ]),
             ]);
 
@@ -72,9 +99,44 @@ class AttendanceController extends Controller
      */
     public function students(Request $request, int $classId): JsonResponse
     {
-        $sectionId = (int) $request->query('section_id', 0);
+        $teacher   = auth()->user();
         $sessionId = $this->currentSessionId();
+        $sectionId = (int) $request->query('section_id', 0);
         $today     = Carbon::today()->toDateString();
+        $isAdmin   = $teacher && $teacher->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'attendance-officer']);
+
+        // Enforce Class In-Charge restriction
+        if (!$isAdmin) {
+            $inChargeSectionIds = AssignedTeacher::where('teacher_id', $teacher->id)
+                ->where('class_id', $classId)
+                ->when($sessionId, fn($q) => $q->where('session_id', $sessionId))
+                ->where('is_class_teacher', true)
+                ->pluck('section_id')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            $classHasSections = Section::where('class_id', $classId)->exists();
+
+            if ($classHasSections) {
+                if (empty($inChargeSectionIds)) {
+                    return response()->json([
+                        'error' => 'Unauthorized: You are not assigned as Class In-Charge for this class.'
+                    ], 403);
+                }
+
+                if ($sectionId === 0 && count($inChargeSectionIds) === 1) {
+                    $sectionId = (int) $inChargeSectionIds[0];
+                }
+
+                if (!in_array($sectionId, $inChargeSectionIds, true)) {
+                    return response()->json([
+                        'error' => 'Unauthorized: You are only the Class In-Charge for your designated section. You cannot take attendance for other sections.'
+                    ], 403);
+                }
+            }
+        }
 
         // Fetch students promoted to this class/section in the current session
         $query = Promotion::where('class_id', $classId)
@@ -84,19 +146,21 @@ class AttendanceController extends Controller
 
         $promotions = $query->get();
 
-        // Fetch today's attendance in bulk (one query)
-        $todayAttendance = Attendance::where('class_id', $classId)
+        // Fetch today's attendance in bulk with submission info
+        $todayAttendance = Attendance::with('recordedBy')
+            ->where('class_id', $classId)
             ->where('session_id', $sessionId)
             ->whereDate('date', $today)
             ->when($sectionId, fn($q) => $q->where('section_id', $sectionId))
-            ->pluck('status', 'student_id');  // keyed by student_id
+            ->get()
+            ->keyBy('student_id');
 
         $students = $promotions->map(function ($promo) use ($todayAttendance) {
             $s = $promo->student;
             if (! $s) return null;
 
-            $dbStatus    = $todayAttendance->get($s->id);
-            // Normalise stored 'on'/'off' to friendly 'present'/'absent' for the app UI
+            $att         = $todayAttendance->get($s->id);
+            $dbStatus    = $att?->status;
             $displayStatus = match ($dbStatus) {
                 'on'    => 'present',
                 'off'   => 'absent',
@@ -112,14 +176,21 @@ class AttendanceController extends Controller
                 'section_id'    => $promo->section_id,
                 'status'        => $displayStatus,
                 'already_saved' => $dbStatus !== null,
+                'taken_time'    => $att?->taken_time ?? ($att?->submitted_at?->format('h:i A')),
+                'recorded_by'   => $att?->recordedBy?->name,
             ];
         })->filter()->values();
 
+        $firstAtt = $todayAttendance->first();
+
         return response()->json([
-            'students'    => $students,
-            'date'        => $today,
-            'class_id'    => $classId,
-            'section_id'  => $sectionId ?: null,
+            'students'     => $students,
+            'date'         => $today,
+            'class_id'     => $classId,
+            'section_id'   => $sectionId ?: null,
+            'taken_time'   => $firstAtt?->taken_time ?? ($firstAtt?->submitted_at?->format('h:i A')),
+            'recorded_by'  => $firstAtt?->recordedBy?->name,
+            'submitted_at' => $firstAtt?->submitted_at?->toIso8601String(),
         ]);
     }
 
@@ -136,46 +207,66 @@ class AttendanceController extends Controller
             return response()->json(['error' => 'Invalid date format. Use YYYY-MM-DD.'], 422);
         }
 
+        $teacher   = auth()->user();
         $sessionId = $this->currentSessionId();
         $sectionId = (int) $request->query('section_id', 0);
+        $isAdmin   = $teacher && $teacher->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'attendance-officer']);
 
-        $records = Attendance::where('class_id', $classId)
+        if (!$isAdmin) {
+            $inChargeSectionIds = AssignedTeacher::where('teacher_id', $teacher->id)
+                ->where('class_id', $classId)
+                ->when($sessionId, fn($q) => $q->where('session_id', $sessionId))
+                ->where('is_class_teacher', true)
+                ->pluck('section_id')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            $classHasSections = Section::where('class_id', $classId)->exists();
+
+            if ($classHasSections) {
+                if ($sectionId === 0 && count($inChargeSectionIds) === 1) {
+                    $sectionId = (int) $inChargeSectionIds[0];
+                }
+
+                if (!in_array($sectionId, $inChargeSectionIds, true)) {
+                    return response()->json([
+                        'error' => 'Unauthorized: Only the designated Class In-Charge (Class Teacher) can view attendance for this section.'
+                    ], 403);
+                }
+            }
+        }
+
+        $records = Attendance::with('recordedBy')
+            ->where('class_id', $classId)
             ->where('session_id', $sessionId)
             ->whereDate('date', $parsedDate)
             ->when($sectionId, fn($q) => $q->where('section_id', $sectionId))
-            ->get()
-            ->map(fn($a) => [
+            ->get();
+
+        $firstRecord = $records->first();
+
+        return response()->json([
+            'attendance'   => $records->map(fn($a) => [
                 'student_id'   => $a->student_id,
-                // Return friendly names to the app UI
                 'status'       => $a->status === 'on' ? 'present' : 'absent',
                 'late_minutes' => $a->late_minutes ?? 0,
                 'remarks'      => $a->notes ?? '',
-            ]);
-
-        return response()->json([
-            'attendance' => $records,
-            'date'       => $parsedDate,
-            'class_id'   => $classId,
+                'taken_time'   => $a->taken_time ?? ($a->submitted_at?->format('h:i A')),
+            ]),
+            'date'         => $parsedDate,
+            'class_id'     => $classId,
+            'taken_time'   => $firstRecord?->taken_time ?? ($firstRecord?->submitted_at?->format('h:i A')),
+            'recorded_by'  => $firstRecord?->recordedBy?->name,
+            'submitted_at' => $firstRecord?->submitted_at?->toIso8601String(),
         ]);
     }
 
     /**
      * POST /{classId}
      * Save (upsert) attendance for a class on a given date.
-     *
-     * The app sends status as 'present'/'absent'/'late'/'excused'.
-     * We normalise to 'on'/'off' before writing — matching the canonical DB values.
-     *
-     * Request body:
-     * {
-     *   "date": "2026-08-29",
-     *   "section_id": 3,          // optional
-     *   "course_id": 5,           // optional — for course-based attendance
-     *   "attendance": [
-     *     { "student_id": 1, "status": "present", "late_minutes": 0, "remarks": "" },
-     *     { "student_id": 2, "status": "absent",  "late_minutes": 0, "remarks": "Sick" }
-     *   ]
-     * }
+     * Only the designated Class In-Charge (Class Teacher) can submit attendance.
      */
     public function store(Request $request, int $classId): JsonResponse
     {
@@ -192,20 +283,53 @@ class AttendanceController extends Controller
 
         $sessionId = $this->currentSessionId();
         $teacher   = auth()->user();
-        $date      = Carbon::parse($validated['date'])->toDateString();
-        $sectionId = $validated['section_id'] ?? null;
+        $sectionId = (int) ($validated['section_id'] ?? 0);
         $courseId  = $validated['course_id']  ?? null;
+        $isAdmin   = $teacher && $teacher->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'attendance-officer']);
+
+        // Enforce Class In-Charge restriction
+        if (!$isAdmin) {
+            $inChargeSectionIds = AssignedTeacher::where('teacher_id', $teacher->id)
+                ->where('class_id', $classId)
+                ->when($sessionId, fn($q) => $q->where('session_id', $sessionId))
+                ->where('is_class_teacher', true)
+                ->pluck('section_id')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            $classHasSections = Section::where('class_id', $classId)->exists();
+
+            if ($classHasSections) {
+                if (empty($inChargeSectionIds)) {
+                    return response()->json([
+                        'error' => 'Unauthorized: You are not assigned as Class In-Charge for this class.'
+                    ], 403);
+                }
+
+                if ($sectionId === 0 && count($inChargeSectionIds) === 1) {
+                    $sectionId = (int) $inChargeSectionIds[0];
+                }
+
+                if (!in_array($sectionId, $inChargeSectionIds, true)) {
+                    return response()->json([
+                        'error' => 'Unauthorized: Only the designated Class In-Charge for this section can submit attendance.'
+                    ], 403);
+                }
+            }
+        }
+
+        $date      = Carbon::parse($validated['date'])->toDateString();
         $schoolId  = $teacher->school_id ?? config('tenant.school_id');
         $now       = now()->toDateTimeString();
+        $takenTime = Carbon::now()->format('h:i A');
 
         $saved   = 0;
         $errors  = [];
 
         foreach ($validated['attendance'] as $row) {
             try {
-                // Normalise app-friendly status → canonical DB values
-                // 'late' is stored as 'on' with late_minutes > 0
-                // 'excused' is stored as 'off' (absent but excused — notes carry the reason)
                 $dbStatus    = in_array($row['status'], ['present', 'late']) ? 'on' : 'off';
                 $lateMinutes = ($row['status'] === 'late') ? max(1, (int)($row['late_minutes'] ?? 5)) : 0;
 
@@ -215,19 +339,20 @@ class AttendanceController extends Controller
                         'class_id'   => $classId,
                         'session_id' => $sessionId,
                         'date'       => $date,
-                        // Include course_id in the unique key only when present
-                        // (course-based attendance mode)
                         ...($courseId ? ['course_id' => $courseId] : []),
                         ...($sectionId ? ['section_id' => $sectionId] : []),
                     ],
                     [
                         'status'       => $dbStatus,
                         'late_minutes' => $lateMinutes,
+                        'recorded_by'  => $teacher->id,
+                        'submitted_at' => $now,
+                        'taken_time'   => $takenTime,
                         'school_id'    => $schoolId,
                         'section_id'   => $sectionId,
                         'course_id'    => $courseId,
                         'updated_at'   => $now,
-                        'created_at'   => $now,   // ignored on update by updateOrCreate
+                        'created_at'   => $now,
                     ]
                 );
 
@@ -243,11 +368,14 @@ class AttendanceController extends Controller
         }
 
         return response()->json([
-            'status'  => $errors ? 'partial' : 'success',
-            'message' => "Attendance saved: {$saved} records" . ($errors ? ' (' . count($errors) . ' failed)' : '.'),
-            'saved'   => $saved,
-            'errors'  => $errors,
-            'date'    => $date,
+            'status'       => $errors ? 'partial' : 'success',
+            'message'      => "Attendance recorded at {$takenTime} by {$teacher->name} ({$saved} students synced).",
+            'saved'        => $saved,
+            'errors'       => $errors,
+            'date'         => $date,
+            'taken_time'   => $takenTime,
+            'recorded_by'  => $teacher->name,
+            'submitted_at' => $now,
         ], $errors && $saved === 0 ? 422 : 200);
     }
 
@@ -292,9 +420,7 @@ class AttendanceController extends Controller
     private function currentSessionId(): int
     {
         return (int) (
-            SchoolSession::where('is_current', true)
-                ->when(config('tenant.school_id'), fn($q) => $q->where('school_id', config('tenant.school_id')))
-                ->value('id')
+            SchoolSession::current()?->id
             ?? SchoolSession::latest('id')->value('id')
             ?? 0
         );

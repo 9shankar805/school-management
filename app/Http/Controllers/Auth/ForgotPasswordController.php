@@ -19,4 +19,15 @@ class ForgotPasswordController extends Controller
     */
 
     use SendsPasswordResetEmails;
+
+    /**
+     * Validate the email for the given request.
+     * Blocks fake, disposable, and non-existent email domains.
+     */
+    protected function validateEmail(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email', new \App\Rules\ValidEmailDomain],
+        ]);
+    }
 }

@@ -36,31 +36,37 @@ class ExamController extends Controller
     public function index(Request $request)
     {
         try {
-            $class_id = $request->query('class_id', 0);
-            $semester_id = $request->query('semester_id', 0);
+            $class_id = (int) $request->query('class_id', 0);
+            $semester_id = (int) $request->query('semester_id', 0);
 
             $current_school_session_id = $this->getSchoolCurrentSession();
 
             $semesters = $this->semesterRepository->getAll($current_school_session_id);
-
             $school_classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
 
             $examRepository = new ExamRepository();
-
             $exams = $examRepository->getAll($current_school_session_id, $semester_id, $class_id);
 
-            $assignedTeacherRepository = new AssignedTeacherRepository();
+            $user = auth()->user();
+            $isRestrictedTeacher = $user && $user->hasAnyRole(['teacher', 'class-teacher'])
+                                 && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'exam-controller']);
 
-            $teacher_id = (auth()->user()->role == "teacher")?auth()->user()->id : 0;
-
-            $teacherCourses = $assignedTeacherRepository->getTeacherCourses($current_school_session_id, $teacher_id, $semester_id);
+            if ($isRestrictedTeacher) {
+                $assignedTeacherRepository = new AssignedTeacherRepository();
+                $teacherCourses = $assignedTeacherRepository->getTeacherCourses($current_school_session_id, $user->id, $semester_id);
+                $courseIds = $teacherCourses->pluck('course_id')->filter()->unique()->toArray();
+                $exams = $exams->filter(function($exam) use ($courseIds) {
+                    return in_array($exam->course_id, $courseIds);
+                })->values();
+            }
 
             $data = [
                 'current_school_session_id' => $current_school_session_id,
                 'semesters'                 => $semesters,
                 'classes'                   => $school_classes,
                 'exams'                     => $exams,
-                'teacher_courses'           => $teacherCourses,
+                'class_id'                  => $class_id,
+                'semester_id'               => $semester_id,
             ];
 
             return view('exams.index', $data);
@@ -70,7 +76,8 @@ class ExamController extends Controller
                 'semesters' => collect(),
                 'classes' => collect(),
                 'exams' => collect(),
-                'teacher_courses' => collect(),
+                'class_id' => 0,
+                'semester_id' => 0,
                 'error' => 'Unable to load exam data: ' . $e->getMessage()
             ]);
         }
@@ -88,17 +95,14 @@ class ExamController extends Controller
 
             $semesters = $this->semesterRepository->getAll($current_school_session_id);
 
-            if(auth()->user()->role == "teacher") {
-                $teacher_id = auth()->user()->id;
+            $user = auth()->user();
+            $isRestrictedTeacher = $user && $user->hasAnyRole(['teacher', 'class-teacher'])
+                                 && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'exam-controller']);
+
+            if ($isRestrictedTeacher) {
+                $teacher_id = $user->id;
                 $assigned_classes = $this->schoolClassRepository->getAllBySessionAndTeacher($current_school_session_id, $teacher_id);
-
-                $school_classes = [];
-                $i = 0;
-
-                foreach($assigned_classes as $assigned_class) {
-                    $school_classes[$i] = $assigned_class->schoolClass;
-                    $i++;
-                }
+                $school_classes = $assigned_classes->pluck('schoolClass')->filter()->unique('id')->values();
             } else {
                 $school_classes = $this->schoolClassRepository->getAllBySession($current_school_session_id);
             }
@@ -136,7 +140,7 @@ class ExamController extends Controller
             $data['school_id'] = auth()->user()->school_id ?? null;
             $examRepository->create($data);
 
-            return back()->with('status', 'Exam creation was successful!');
+            return redirect()->route('exam.list.show')->with('status', 'Exam creation was successful!');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }

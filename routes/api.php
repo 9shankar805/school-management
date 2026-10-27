@@ -294,13 +294,14 @@ Route::name('parents.')->group(function () {
 
     // Bus Tracking Module
     Route::prefix('bus')->name('bus.')->group(function () {
-        Route::get('location', [ParentBusTrackingController::class, 'location']);
-        Route::get('stops', [ParentBusTrackingController::class, 'stops']);
-        Route::get('status', [ParentBusTrackingController::class, 'status']);
-        Route::get('child/{childId}', [ParentBusTrackingController::class, 'byChild']);
-        Route::get('route/{routeId}', [ParentBusTrackingController::class, 'byRoute']);
-        Route::get('driver/{driverId}', [ParentBusTrackingController::class, 'byDriver']);
-        Route::get('eta/{stopId}', [ParentBusTrackingController::class, 'eta']);
+        Route::get('location',           [ParentBusTrackingController::class, 'location']);
+        Route::get('stops',              [ParentBusTrackingController::class, 'stops']);
+        Route::get('status',             [ParentBusTrackingController::class, 'status']);
+        Route::get('child/{childId}',    [ParentBusTrackingController::class, 'byChild']);
+        Route::get('route/{routeId}',    [ParentBusTrackingController::class, 'byRoute']);
+        Route::get('driver/{driverId}',  [ParentBusTrackingController::class, 'byDriver']);
+        Route::get('eta/{stopId}',       [ParentBusTrackingController::class, 'eta']);
+        Route::get('trail/{vehicleId}',  [ParentBusTrackingController::class, 'trail']);  // today's breadcrumb trail
     });
 
     // Schedule Module
@@ -455,6 +456,8 @@ use App\Http\Controllers\Api\TeacherApp\SettingController as TeacherSettingContr
 use App\Http\Controllers\Api\TeacherApp\SecurityController as TeacherSecurityController;
 use App\Http\Controllers\Api\TeacherApp\AppInfoController as TeacherAppInfoController;
 use App\Http\Controllers\Api\TeacherApp\SupportController as TeacherSupportController;
+use App\Http\Controllers\Api\TeacherApp\QuestionPaperController as TeacherQuestionPaperController;
+use App\Http\Controllers\Api\TeacherApp\ClassTeacherController as TeacherClassTeacherController;
 
 Route::prefix('teacher-app')->name('teacher_app.')->group(function () {
     
@@ -474,7 +477,8 @@ Route::prefix('teacher-app')->name('teacher_app.')->group(function () {
     });
 
     Route::middleware('auth:sanctum')->group(function () {
-        // 12. Profile
+        // Auth me & Profile
+        Route::get('auth/me', [TeacherProfileController::class, 'show']);
         Route::get('teacher/profile', [TeacherProfileController::class, 'show']);
         Route::put('teacher/profile', [TeacherProfileController::class, 'update']);
         Route::put('teacher/settings', [TeacherProfileController::class, 'updateSettings']);
@@ -505,6 +509,16 @@ Route::prefix('teacher-app')->name('teacher_app.')->group(function () {
             Route::get('summary', [TeacherClassController::class, 'summary']);
             Route::get('{id}', [TeacherClassController::class, 'show']);
             Route::get('{id}/top-students', [TeacherClassController::class, 'topStudents']);
+            Route::post('{id}/sections/{sectionId}/class-teacher', [TeacherClassController::class, 'assignClassTeacher']);
+        });
+
+        // Class In-Charge (कक्षा शिक्षक) Special Powers
+        Route::prefix('class-teacher')->name('class_teacher.')->group(function () {
+            Route::get('overview',            [TeacherClassTeacherController::class, 'overview']);
+            Route::get('students',            [TeacherClassTeacherController::class, 'students']);
+            Route::get('leaves',              [TeacherClassTeacherController::class, 'leaves']);
+            Route::post('leaves/{id}/action', [TeacherClassTeacherController::class, 'handleLeave']);
+            Route::post('diary',              [TeacherClassTeacherController::class, 'postDiary']);
         });
 
         // 4. Students
@@ -580,6 +594,26 @@ Route::prefix('teacher-app')->name('teacher_app.')->group(function () {
             Route::put('{id}/marks', [TeacherExamController::class, 'submitMarks']);
         });
 
+        // Question Papers & AI Auto Creation
+        Route::prefix('question-papers')->name('question_papers.')->group(function () {
+            Route::get('/',                                [TeacherQuestionPaperController::class, 'index']);
+            Route::get('meta',                             [TeacherQuestionPaperController::class, 'meta']);
+            Route::post('/',                               [TeacherQuestionPaperController::class, 'store']);
+            Route::post('auto-create',                     [TeacherQuestionPaperController::class, 'autoCreate']);
+            Route::get('{id}',                             [TeacherQuestionPaperController::class, 'show']);
+            Route::put('{id}',                             [TeacherQuestionPaperController::class, 'update']);
+            Route::delete('{id}',                          [TeacherQuestionPaperController::class, 'destroy']);
+            Route::post('{id}/ai-generate',                [TeacherQuestionPaperController::class, 'aiGenerate']);
+            Route::get('{id}/bank-search',                 [TeacherQuestionPaperController::class, 'bankSearch']);
+            Route::post('{id}/sections',                   [TeacherQuestionPaperController::class, 'addSection']);
+            Route::put('sections/{sectionId}',             [TeacherQuestionPaperController::class, 'updateSection']);
+            Route::delete('sections/{sectionId}',          [TeacherQuestionPaperController::class, 'deleteSection']);
+            Route::post('sections/{sectionId}/questions',  [TeacherQuestionPaperController::class, 'addQuestion']);
+            Route::post('sections/{sectionId}/import-bank',[TeacherQuestionPaperController::class, 'importFromBank']);
+            Route::put('questions/{questionId}',           [TeacherQuestionPaperController::class, 'updateQuestion']);
+            Route::delete('questions/{questionId}',        [TeacherQuestionPaperController::class, 'deleteQuestion']);
+        });
+
         // 13. Lesson Planner
         Route::prefix('lesson-plans')->group(function () {
             Route::get('/', [TeacherLessonPlanController::class, 'index']);
@@ -647,4 +681,228 @@ Route::prefix('teacher-app')->name('teacher_app.')->group(function () {
             Route::get('tickets/{id}', [TeacherSupportController::class, 'showTicket']);
         });
     });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Student App API Routes
+|--------------------------------------------------------------------------
+| Base URL: /student-app/
+| Auth:     Laravel Sanctum (token-based)
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\Api\StudentApp\AuthController as StudentAuthController;
+use App\Http\Controllers\Api\StudentApp\DashboardController as StudentDashboardController;
+use App\Http\Controllers\Api\StudentApp\AttendanceController as StudentAttendanceController;
+use App\Http\Controllers\Api\StudentApp\ExamController as StudentExamController;
+use App\Http\Controllers\Api\StudentApp\ResultController as StudentResultController;
+use App\Http\Controllers\Api\StudentApp\AssignmentController as StudentAssignmentController;
+use App\Http\Controllers\Api\StudentApp\OnlineExamController as StudentOnlineExamController;
+use App\Http\Controllers\Api\StudentApp\TimetableController as StudentTimetableController;
+use App\Http\Controllers\Api\StudentApp\FeeController as StudentFeeController;
+use App\Http\Controllers\Api\StudentApp\NotificationController as StudentNotificationController;
+use App\Http\Controllers\Api\StudentApp\MessageController as StudentMessageController;
+use App\Http\Controllers\Api\StudentApp\LeaveController as StudentLeaveController;
+use App\Http\Controllers\Api\StudentApp\LibraryController as StudentLibraryController;
+use App\Http\Controllers\Api\StudentApp\ProfileController as StudentProfileController;
+
+Route::prefix('student-app')->name('student_app.')->group(function () {
+
+    // ── Public ──────────────────────────────────────────────────────────────
+    Route::prefix('auth')->name('auth.')->group(function () {
+        Route::post('login',          [StudentAuthController::class, 'login'])->name('login');
+        Route::post('forgot-password',[StudentAuthController::class, 'forgotPassword'])->name('forgot-password');
+        Route::post('reset-password', [StudentAuthController::class, 'resetPassword'])->name('reset-password');
+    });
+
+    // ── Authenticated ────────────────────────────────────────────────────────
+    Route::middleware('auth:sanctum')->group(function () {
+
+        // Auth
+        Route::prefix('auth')->name('auth.')->group(function () {
+            Route::post('logout',       [StudentAuthController::class, 'logout'])->name('logout');
+            Route::post('refresh-token',[StudentAuthController::class, 'refreshToken'])->name('refresh');
+            Route::get('me',            [StudentAuthController::class, 'me'])->name('me');
+            Route::put('profile',       [StudentAuthController::class, 'updateProfile'])->name('profile.update');
+        });
+
+        // Dashboard
+        Route::prefix('dashboard')->name('dashboard.')->group(function () {
+            Route::get('/',             [StudentDashboardController::class, 'index'])->name('index');
+            Route::get('quick-stats',   [StudentDashboardController::class, 'quickStats'])->name('quick-stats');
+            Route::get('today-schedule',[StudentDashboardController::class, 'todaySchedule'])->name('today-schedule');
+            Route::get('upcoming-exams',[StudentDashboardController::class, 'upcomingExams'])->name('upcoming-exams');
+        });
+
+        // Attendance
+        Route::prefix('attendance')->name('attendance.')->group(function () {
+            Route::get('/',                    [StudentAttendanceController::class, 'index'])->name('index');
+            Route::get('summary',              [StudentAttendanceController::class, 'summary'])->name('summary');
+            Route::get('subject/{subjectId}',  [StudentAttendanceController::class, 'bySubject'])->name('by-subject');
+            Route::get('calendar/{month}',     [StudentAttendanceController::class, 'calendar'])->name('calendar');
+        });
+
+        // Exams
+        Route::prefix('exams')->name('exams.')->group(function () {
+            Route::get('/',             [StudentExamController::class, 'index'])->name('index');
+            Route::get('upcoming',      [StudentExamController::class, 'upcoming'])->name('upcoming');
+            Route::get('past',          [StudentExamController::class, 'past'])->name('past');
+            Route::get('{id}',          [StudentExamController::class, 'show'])->name('show');
+            Route::get('{id}/admit-card',[StudentExamController::class, 'admitCard'])->name('admit-card');
+        });
+
+        // Results & Gradebook
+        Route::prefix('results')->name('results.')->group(function () {
+            Route::get('/',                        [StudentResultController::class, 'index'])->name('index');
+            Route::get('exam/{examId}',            [StudentResultController::class, 'byExam'])->name('by-exam');
+            Route::get('report-cards',             [StudentResultController::class, 'reportCards'])->name('report-cards');
+            Route::get('report-cards/{sessionId}', [StudentResultController::class, 'reportCardBySession'])->name('report-card-session');
+            Route::get('gradebook',                [StudentResultController::class, 'gradebook'])->name('gradebook');
+        });
+
+        // Assignments / Homework
+        Route::prefix('assignments')->name('assignments.')->group(function () {
+            Route::get('/',           [StudentAssignmentController::class, 'index'])->name('index');
+            Route::get('pending',     [StudentAssignmentController::class, 'pending'])->name('pending');
+            Route::get('completed',   [StudentAssignmentController::class, 'completed'])->name('completed');
+            Route::get('{id}',        [StudentAssignmentController::class, 'show'])->name('show');
+            Route::post('{id}/submit',[StudentAssignmentController::class, 'submit'])->name('submit');
+        });
+
+        // Online Exams
+        Route::prefix('online-exams')->name('online-exams.')->group(function () {
+            Route::get('/',         [StudentOnlineExamController::class, 'index'])->name('index');
+            Route::get('{id}',      [StudentOnlineExamController::class, 'show'])->name('show');
+            Route::post('{id}/start', [StudentOnlineExamController::class, 'start'])->name('start');
+            Route::post('{id}/submit',[StudentOnlineExamController::class, 'submit'])->name('submit');
+            Route::get('{id}/result', [StudentOnlineExamController::class, 'result'])->name('result');
+        });
+
+        // Timetable
+        Route::prefix('timetable')->name('timetable.')->group(function () {
+            Route::get('/',         [StudentTimetableController::class, 'index'])->name('index');
+            Route::get('today',     [StudentTimetableController::class, 'today'])->name('today');
+            Route::get('day/{weekday}', [StudentTimetableController::class, 'byDay'])->name('by-day');
+        });
+
+        // Fees
+        Route::prefix('fees')->name('fees.')->group(function () {
+            Route::get('/',               [StudentFeeController::class, 'index'])->name('index');
+            Route::get('summary',         [StudentFeeController::class, 'summary'])->name('summary');
+            Route::get('status/{status}', [StudentFeeController::class, 'byStatus'])->name('by-status');
+            Route::get('{id}',            [StudentFeeController::class, 'show'])->name('show');
+            Route::get('{id}/receipt',    [StudentFeeController::class, 'receipt'])->name('receipt');
+        });
+
+        // Notifications
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/',                    [StudentNotificationController::class, 'index'])->name('index');
+            Route::get('unread',               [StudentNotificationController::class, 'unread'])->name('unread');
+            Route::put('mark-all-read',        [StudentNotificationController::class, 'markAllRead'])->name('mark-all-read');
+            Route::put('{id}/read',            [StudentNotificationController::class, 'markRead'])->name('mark-read');
+            Route::delete('{id}',              [StudentNotificationController::class, 'destroy'])->name('destroy');
+            Route::post('device-token',        [StudentNotificationController::class, 'registerDeviceToken'])->name('device-token');
+        });
+
+        // Messages / Chat
+        Route::prefix('messages')->name('messages.')->group(function () {
+            Route::get('conversations',               [StudentMessageController::class, 'conversations'])->name('conversations');
+            Route::post('conversations',              [StudentMessageController::class, 'startConversation'])->name('start-conversation');
+            Route::get('conversations/{id}/messages', [StudentMessageController::class, 'conversationMessages'])->name('conversation-messages');
+            Route::post('conversations/{id}/messages',[StudentMessageController::class, 'sendMessage'])->name('send-message');
+        });
+
+        // Leave
+        Route::prefix('leaves')->name('leaves.')->group(function () {
+            Route::get('/',          [StudentLeaveController::class, 'index'])->name('index');
+            Route::get('types',      [StudentLeaveController::class, 'types'])->name('types');
+            Route::post('/',         [StudentLeaveController::class, 'store'])->name('store');
+            Route::get('{id}',       [StudentLeaveController::class, 'show'])->name('show');
+            Route::put('{id}/cancel',[StudentLeaveController::class, 'cancel'])->name('cancel');
+        });
+
+        // Library
+        Route::prefix('library')->name('library.')->group(function () {
+            Route::get('issued',        [StudentLibraryController::class, 'issued'])->name('issued');
+            Route::get('history',       [StudentLibraryController::class, 'history'])->name('history');
+            Route::get('catalog',       [StudentLibraryController::class, 'catalog'])->name('catalog');
+            Route::get('ebooks',        [StudentLibraryController::class, 'ebooks'])->name('ebooks');
+            Route::get('ebooks/{id}',   [StudentLibraryController::class, 'ebookShow'])->name('ebook-show');
+        });
+
+        // Profile
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/',              [StudentProfileController::class, 'show'])->name('show');
+            Route::post('avatar',        [StudentProfileController::class, 'updateAvatar'])->name('avatar');
+            Route::get('documents',      [StudentProfileController::class, 'documents'])->name('documents');
+            Route::get('achievements',   [StudentProfileController::class, 'achievements'])->name('achievements');
+        });
+
+    }); // end auth:sanctum
+});
+
+/*
+|--------------------------------------------------------------------------
+| Driver App API Routes
+|--------------------------------------------------------------------------
+| Base URL: /driver-app/
+| Auth:     Laravel Sanctum
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\Api\DriverApp\AuthController as DriverAuthController;
+use App\Http\Controllers\Api\DriverApp\RouteController as DriverRouteController;
+use App\Http\Controllers\Api\DriverApp\AttendanceController as DriverAttendanceController;
+use App\Http\Controllers\Api\DriverApp\LocationController as DriverLocationController;
+use App\Http\Controllers\Api\DriverApp\NotificationController as DriverNotificationController;
+
+Route::prefix('driver-app')->name('driver_app.')->group(function () {
+
+    // ── Public ──────────────────────────────────────────────────────────────
+    Route::prefix('auth')->name('auth.')->group(function () {
+        Route::post('login',          [DriverAuthController::class, 'login'])->name('login');
+        Route::post('forgot-password',[DriverAuthController::class, 'forgotPassword'])->name('forgot-password');
+    });
+
+    // ── Authenticated ────────────────────────────────────────────────────────
+    Route::middleware('auth:sanctum')->group(function () {
+
+        // Auth
+        Route::prefix('auth')->name('auth.')->group(function () {
+            Route::post('logout',       [DriverAuthController::class, 'logout'])->name('logout');
+            Route::get('me',            [DriverAuthController::class, 'me'])->name('me');
+        });
+
+        // Route & Stops
+        Route::prefix('route')->name('route.')->group(function () {
+            Route::get('/',       [DriverRouteController::class, 'index'])->name('index');
+            Route::get('{id}',    [DriverRouteController::class, 'show'])->name('show');
+            Route::get('{id}/students', [DriverRouteController::class, 'students'])->name('students');
+            Route::get('{id}/stops',    [DriverRouteController::class, 'stops'])->name('stops');
+        });
+
+        // Transport Attendance (boarding/alighting)
+        Route::prefix('attendance')->name('attendance.')->group(function () {
+            Route::get('today',          [DriverAttendanceController::class, 'today'])->name('today');
+            Route::post('mark',          [DriverAttendanceController::class, 'mark'])->name('mark');
+            Route::post('bulk-mark',     [DriverAttendanceController::class, 'bulkMark'])->name('bulk-mark');
+            Route::get('history',        [DriverAttendanceController::class, 'history'])->name('history');
+            Route::get('summary/{date}', [DriverAttendanceController::class, 'summary'])->name('summary');
+        });
+
+        // GPS Location (driver pushes position)
+        Route::prefix('location')->name('location.')->group(function () {
+            Route::post('update',  [DriverLocationController::class, 'update'])->name('update');
+            Route::get('current',  [DriverLocationController::class, 'current'])->name('current');
+            Route::get('history',  [DriverLocationController::class, 'history'])->name('history');
+        });
+
+        // Notifications
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/',               [DriverNotificationController::class, 'index'])->name('index');
+            Route::put('{id}/read',       [DriverNotificationController::class, 'markRead'])->name('mark-read');
+            Route::put('mark-all-read',   [DriverNotificationController::class, 'markAllRead'])->name('mark-all-read');
+            Route::post('device-token',   [DriverNotificationController::class, 'registerDeviceToken'])->name('device-token');
+        });
+
+    }); // end auth:sanctum
 });

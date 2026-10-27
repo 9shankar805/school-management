@@ -21,18 +21,20 @@ class UpdatePasswordController extends Controller
     }
 
     public function update(PasswordChangeRequest $request) {
-        $request = $request->validated();
-        if (Hash::check($request['old_password'], auth()->user()->password)) {
-            // The passwords match...
-            try{
-                $this->userRepository->changePassword($request['new_password']);
+        $user = auth()->user();
+        $currentPassword = $request->input('current_password', $request->input('old_password'));
+        $newPassword = $request->input('password', $request->input('new_password'));
 
-                return back()->with('status', 'Changing password was successful!');
-            } catch (\Exception $e) {
-                return back()->with('error', $e->getMessage());
-            }
-        } else {
-            return back()->with('error', 'Password mismatched!');
+        if (!Hash::check($currentPassword, $user->password)) {
+            return back()->with('error', 'The provided current password does not match your account password.');
+        }
+
+        try {
+            $this->userRepository->changePassword($newPassword);
+
+            return back()->with('status', 'Password changed successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
     }
 }

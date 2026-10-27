@@ -52,23 +52,28 @@
 
             <div class="p-4 flex-1 space-y-3">
                 @forelse($daySlots as $slot)
-                <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100 hover:border-indigo-200 transition">
-                    <div class="flex items-center justify-between mb-1.5">
-                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
-                            <i class="bi bi-clock me-1"></i>{{ $slot->start }} – {{ $slot->end }}
+                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-100 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500/50 transition">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded-md font-mono">
+                            <i class="bi bi-clock me-1 text-[10px]"></i>{{ $slot->start }} – {{ $slot->end }}
                         </span>
-                        <span class="text-xs font-semibold text-slate-600">
-                            {{ $slot->schoolClass?->class_name }} {{ $slot->section ? '('.$slot->section->section_name.')' : '' }}
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200 dark:border-slate-600">
+                            {{ $slot->schoolClass?->class_name }} {{ $slot->section ? '- '.$slot->section->section_name : '' }}
                         </span>
                     </div>
-                    <p class="font-bold text-sm text-slate-800 mt-1">
-                        {{ $slot->course?->course_name ?? 'Scheduled Class' }}
-                    </p>
-                    @if($slot->room_number)
-                    <p class="text-xs text-slate-400 mt-1">
-                        <i class="bi bi-geo-alt me-1"></i>Room: {{ $slot->room_number }}
-                    </p>
-                    @endif
+                    <div class="flex items-center gap-2.5 mt-1">
+                        <x-timetable-badge :subject="$slot->course?->course_name ?? 'Subject'" />
+                        <div>
+                            <p class="font-bold text-xs text-slate-800 dark:text-slate-100 uppercase tracking-tight">
+                                {{ $slot->course?->course_name ?? 'Scheduled Class' }}
+                            </p>
+                            @if($slot->room || $slot->room_number)
+                            <p class="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 flex items-center gap-1">
+                                <i class="bi bi-geo-alt"></i>Room: {{ $slot->room ?? $slot->room_number }}
+                            </p>
+                            @endif
+                        </div>
+                    </div>
                 </div>
                 @empty
                 <div class="py-8 text-center text-slate-400 text-xs">

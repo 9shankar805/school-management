@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('content')
-<div class="px-4 lg:px-8 py-6 max-w-5xl mx-auto">
+<div class="px-4 lg:px-8 py-6 w-full mx-auto">
 
     <div class="mb-6 flex items-center justify-between gap-4">
         <div>
@@ -18,7 +18,7 @@
 
         {{-- Add form --}}
         <div>
-            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
                 <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4">Add Fee Type</h3>
                 <form method="POST" action="{{ route('finance.fee-types.store') }}" class="space-y-3">
                     @csrf
@@ -79,13 +79,16 @@
             </div>
 
             {{-- Nepal legal heads reference --}}
-            <div class="mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl border border-blue-200 dark:border-blue-800 p-4">
-                <div class="text-xs font-bold text-blue-700 dark:text-blue-300 mb-2">
-                    <i class="bi bi-info-circle mr-1"></i> Nepal's 11 Legal Fee Heads
+            <div class="mt-4 bg-blue-50/80 dark:bg-blue-950/40 rounded-2xl border border-blue-200/80 dark:border-blue-900/60 p-4 shadow-sm">
+                <div class="text-xs font-bold text-blue-700 dark:text-blue-300 mb-2 flex items-center gap-1.5">
+                    <i class="bi bi-info-circle"></i> Nepal's 11 Legal Fee Heads
                 </div>
-                <div class="text-xs text-blue-600 dark:text-blue-400 space-y-0.5">
+                <div class="text-xs text-blue-600 dark:text-blue-300/90 space-y-1">
                     @foreach(\App\Models\FeeType::LEGAL_HEADS as $head)
-                    <div>· {{ $head }}</div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400 flex-shrink-0"></span>
+                        <span>{{ $head }}</span>
+                    </div>
                     @endforeach
                 </div>
             </div>
@@ -93,56 +96,58 @@
 
         {{-- Fee type list --}}
         <div class="lg:col-span-2">
-            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+            <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-500 dark:text-slate-400">
                             <tr>
-                                <th class="text-left px-4 py-3">Name</th>
-                                <th class="text-left px-4 py-3">Code</th>
-                                <th class="text-left px-4 py-3">Frequency</th>
-                                <th class="text-left px-4 py-3">Trigger</th>
-                                <th class="text-center px-4 py-3">VAT</th>
-                                <th class="text-center px-4 py-3">Status</th>
-                                <th class="px-4 py-3"></th>
+                                <th class="text-left px-4 py-3 whitespace-nowrap">Name</th>
+                                <th class="text-left px-4 py-3 whitespace-nowrap">Code</th>
+                                <th class="text-left px-4 py-3 whitespace-nowrap">Frequency</th>
+                                <th class="text-left px-4 py-3 whitespace-nowrap">Trigger</th>
+                                <th class="text-center px-4 py-3 whitespace-nowrap">VAT</th>
+                                <th class="text-center px-4 py-3 whitespace-nowrap">Status</th>
+                                <th class="px-4 py-3 whitespace-nowrap text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($feeTypes as $ft)
-                            <tr class="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                                <td class="px-4 py-3 font-medium text-slate-700 dark:text-slate-200">{{ $ft->name }}</td>
-                                <td class="px-4 py-3"><code class="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">{{ $ft->code ?? '—' }}</code></td>
-                                <td class="px-4 py-3 text-slate-500 text-xs">{{ $ft->frequency_label }}</td>
-                                <td class="px-4 py-3">
-                                    <span class="px-2 py-0.5 rounded-full text-xs font-medium
+                            <tr class="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                                <td class="px-4 py-3 font-medium text-slate-800 dark:text-slate-100 whitespace-nowrap">{{ $ft->name }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap"><code class="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-700 dark:text-slate-300">{{ $ft->code ?? '—' }}</code></td>
+                                <td class="px-4 py-3 text-slate-500 dark:text-slate-400 text-xs whitespace-nowrap">{{ $ft->frequency_label }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold
                                         {{ match($ft->trigger) {
-                                            'monthly'      => 'bg-blue-100 text-blue-700',
-                                            'admission'    => 'bg-emerald-100 text-emerald-700',
-                                            'exam_publish' => 'bg-purple-100 text-purple-700',
-                                            'annual'       => 'bg-amber-100 text-amber-700',
-                                            default        => 'bg-slate-100 text-slate-600',
+                                            'monthly'      => 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50',
+                                            'admission'    => 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50',
+                                            'exam_publish' => 'bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50',
+                                            'annual'       => 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50',
+                                            default        => 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700',
                                         } }}">
                                         {{ $ft->trigger_label }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-center text-xs">
+                                <td class="px-4 py-3 text-center text-xs text-slate-600 dark:text-slate-300 whitespace-nowrap">
                                     {{ $ft->is_taxable ? $ft->tax_rate.'%' : '—' }}
                                 </td>
-                                <td class="px-4 py-3 text-center">
-                                    <span class="px-2 py-0.5 rounded-full text-xs {{ $ft->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500' }}">
+                                <td class="px-4 py-3 text-center whitespace-nowrap">
+                                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold {{ $ft->is_active ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700' }}">
                                         {{ $ft->is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-right">
-                                    <div class="flex items-center gap-1.5 justify-end">
-                                        <button class="text-slate-400 hover:text-indigo-600 transition text-xs"
-                                                onclick="openEditFT({{ $ft->id }}, '{{ addslashes($ft->name) }}', '{{ $ft->frequency }}', '{{ $ft->trigger }}', {{ $ft->is_taxable ? 1 : 0 }}, {{ $ft->tax_rate }}, {{ $ft->is_active ? 1 : 0 }})">
+                                <td class="px-4 py-3 text-right whitespace-nowrap">
+                                    <div class="flex items-center gap-1 justify-end">
+                                        <button type="button" class="w-7 h-7 rounded-lg inline-flex items-center justify-center text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-xs cursor-pointer border-0 bg-transparent shadow-none"
+                                                onclick="openEditFT({{ $ft->id }}, '{{ addslashes($ft->name) }}', '{{ $ft->frequency }}', '{{ $ft->trigger }}', {{ $ft->is_taxable ? 1 : 0 }}, {{ $ft->tax_rate }}, {{ $ft->is_active ? 1 : 0 }})"
+                                                title="Edit">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                         <form method="POST" action="{{ route('finance.fee-types.destroy', $ft->id) }}" class="inline"
                                               onsubmit="return confirm('Delete this fee type?')">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="text-slate-400 hover:text-rose-600 transition text-xs">
+                                            <button type="submit" class="w-7 h-7 rounded-lg inline-flex items-center justify-center text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-xs cursor-pointer border-0 bg-transparent shadow-none"
+                                                    title="Delete">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
@@ -164,8 +169,8 @@
 </div>
 
 {{-- Edit modal --}}
-<div id="editFTModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+<div id="editFTModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-slate-200 dark:border-slate-800">
         <h2 class="text-base font-bold text-slate-800 dark:text-slate-100 mb-4">Edit Fee Type</h2>
         <form id="editFTForm" method="POST" class="space-y-3">
             @csrf @method('PUT')

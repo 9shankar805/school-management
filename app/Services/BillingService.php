@@ -4,12 +4,14 @@ namespace App\Services;
 
 use App\Models\FeeStructure;
 use App\Models\FeeType;
+use App\Models\HostelAllocation;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Promotion;
 use App\Models\SchoolSession;
 use App\Models\StudentFeeDiscount;
 use App\Models\StudentLedger;
+use App\Models\StudentTransport;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -75,6 +77,10 @@ class BillingService
 
     /**
      * Generate monthly fee invoices for a single student.
+    /**
+     * Generate monthly fee invoices for a single student.
+     * Implements cumulative billing (Veda model) with arrears roll-over,
+     * dynamic transport and hostel fees, and late fine calculation.
      * Returns number of invoices created.
      */
     public function generateMonthlyForStudent(
@@ -86,7 +92,19 @@ class BillingService
     ): int {
         $student = $student instanceof User ? $student : User::findOrFail($student);
 
-        // Get applicable fee structures for this class/session with monthly/quarterly/etc. trigger
+        // Filter out already-generated invoices for this student in this billing month/year
+        $existing = Invoice::where('student_id', $student->id)
+            ->where('session_id', $sessionId)
+            ->where('billing_month', $month)
+            ->where('billing_year', $year)
+            ->where('is_auto_generated', true)
+            ->exists();
+
+        if ($existing) {
+            return 0;
+        }
+
+        // 1. Get applicable fee structures for this class/session
         $structures = FeeStructure::with(['feeType', 'category'])
             ->where('is_active', true)
             ->where(function ($q) use ($sessionId) {
@@ -101,38 +119,80 @@ class BillingService
             ->whereIn('frequency', $this->frequenciesForMonth($month))
             ->get();
 
-        if ($structures->isEmpty()) {
+        // 2. Check for active transport route enrollment
+        $transport = StudentTransport::with(['route', 'stop'])
+            ->where('student_id', $student->id)
+            ->where('status', 'active')
+            ->first();
+
+        // 3. Check for active hostel allocation
+        $hostel = HostelAllocation::with(['hostel', 'room', 'bed'])
+            ->where('student_id', $student->id)
+            ->where('status', 'active')
+            ->first();
+
+        // If no class structures, no transport, and no hostel, check if there's any unpaid arrears to bill
+        $ledgerBalance = max(0, (float) StudentLedger::currentBalance($student->id, $sessionId));
+        if ($structures->isEmpty() && ! $transport && ! $hostel && $ledgerBalance <= 0) {
             return 0;
         }
 
-        // Filter out already-generated invoices for this month
-        $existing = Invoice::where('student_id', $student->id)
+        // 4. Calculate Previous Unpaid Balance (Arrears / बक्यौता)
+        // Check prior unpaid/partially-paid invoices for this student in this session
+        $priorInvoicesDue = (float) Invoice::where('student_id', $student->id)
             ->where('session_id', $sessionId)
-            ->where('billing_month', $month)
-            ->where('billing_year', $year)
-            ->where('is_auto_generated', true)
-            ->pluck('fee_type_id')
-            ->toArray();
+            ->whereIn('status', ['unpaid', 'partial'])
+            ->where(function ($q) use ($year, $month) {
+                $q->where('billing_year', '<', $year)
+                  ->orWhere(function ($q2) use ($year, $month) {
+                      $q2->where('billing_year', $year)
+                         ->where('billing_month', '<', $month);
+                  })
+                  ->orWhereNull('billing_month');
+            })
+            ->get()
+            ->sum(function ($inv) {
+                return $inv->current_net_due ?? max(0, (float) $inv->amount - (float) $inv->amount_paid);
+            });
 
-        $structures = $structures->filter(function ($s) use ($existing) {
-            return ! in_array($s->fee_type_id, $existing);
-        });
+        // Reconcile with running ledger balance
+        $previousDues = round(max($priorInvoicesDue, $ledgerBalance), 2);
 
-        if ($structures->isEmpty()) {
-            return 0;
+        // 5. Calculate Overdue Late Fine (विलम्ब शुल्क)
+        // If student has overdue past invoices that crossed due_date
+        $hasOverdue = Invoice::where('student_id', $student->id)
+            ->where('session_id', $sessionId)
+            ->whereIn('status', ['unpaid', 'partial'])
+            ->whereNotNull('due_date')
+            ->whereDate('due_date', '<', today())
+            ->exists();
+
+        $fineAmount = 0.0;
+        if ($hasOverdue && $previousDues > 0) {
+            // Apply 5% penalty or flat Rs. 200 (capped at Rs. 1,000)
+            $fineAmount = round(min(1000.0, max(200.0, $previousDues * 0.05)), 2);
         }
 
-        return DB::transaction(function () use ($student, $sessionId, $classId, $structures, $month, $year) {
+        $monthTitle = Carbon::create($year, $month)->format('F Y') . ' Fee Statement';
+
+        return DB::transaction(function () use (
+            $student, $sessionId, $classId, $structures, $transport, $hostel,
+            $previousDues, $fineAmount, $month, $year, $monthTitle
+        ) {
             return $this->createInvoiceFromStructures(
-                student:    $student,
-                structures: $structures,
-                sessionId:  $sessionId,
-                month:      $month,
-                year:       $year,
-                trigger:    'monthly',
-                title:      Carbon::create($year, $month)->format('F Y') . ' Fee',
-                dueDate:    Carbon::create($year, $month, 10)->toDateString(),
-                isAuto:     true,
+                student:      $student,
+                structures:   $structures,
+                sessionId:    $sessionId,
+                month:        $month,
+                year:         $year,
+                trigger:      'monthly',
+                title:        $monthTitle,
+                dueDate:      Carbon::create($year, $month, 10)->toDateString(),
+                isAuto:       true,
+                transport:    $transport,
+                hostel:       $hostel,
+                previousDues: $previousDues,
+                fineAmount:   $fineAmount
             );
         });
     }
@@ -257,18 +317,18 @@ class BillingService
         User       $student,
         Collection $structures,
         int        $sessionId,
-        ?int       $month,
-        ?int       $year,
-        string     $trigger,
-        string     $title,
-        string     $dueDate,
-        bool       $isAuto = true,
-        string     $extraDesc = '',
+        ?int              $month,
+        ?int              $year,
+        string            $trigger,
+        string            $title,
+        string            $dueDate,
+        bool              $isAuto = true,
+        string            $extraDesc = '',
+        ?StudentTransport $transport = null,
+        ?HostelAllocation $hostel = null,
+        float             $previousDues = 0.0,
+        float             $fineAmount = 0.0,
     ): int {
-        if ($structures->isEmpty()) {
-            return 0;
-        }
-
         // Load student discounts
         $discounts = StudentFeeDiscount::with('discount')
             ->where('student_id', $student->id)
@@ -282,11 +342,13 @@ class BillingService
             ->get();
 
         $items         = [];
-        $totalGross    = 0;
-        $totalDiscount = 0;
-        $totalTax      = 0;
-        $totalNet      = 0;
+        $totalGross    = 0.0;
+        $totalDiscount = 0.0;
+        $totalTax      = 0.0;
+        $totalNet      = 0.0;
+        $monthSuffix   = ($month && $year) ? ' — ' . Carbon::create($year, $month)->format('F Y') : '';
 
+        // 1. Regular academic fee structures
         foreach ($structures as $structure) {
             $basePrice = (float) $structure->amount;
 
@@ -308,8 +370,7 @@ class BillingService
             $items[] = [
                 'fee_type_id'      => $structure->fee_type_id,
                 'fee_structure_id' => $structure->id,
-                'description'      => $structure->name
-                    . ($month ? ' — ' . Carbon::create($year, $month)->format('F Y') : ''),
+                'description'      => $structure->name . $monthSuffix,
                 'unit_price'       => $basePrice,
                 'quantity'         => 1,
                 'discount_amount'  => $discountAmount,
@@ -324,21 +385,69 @@ class BillingService
             $totalNet      += $lineTotal;
         }
 
-        if ($totalNet <= 0) {
+        // 2. Dynamic Transport Route Fee (if active)
+        if ($transport && ($transport->monthly_fee > 0 || ($transport->stop && $transport->stop->stop_fee > 0))) {
+            $busFare = (float) ($transport->monthly_fee ?: ($transport->stop?->stop_fee ?? 0));
+            if ($busFare > 0) {
+                $routeName = $transport->route?->name ?? 'Bus Route';
+                $stopName  = $transport->stop?->name ?? 'Designated Stop';
+                $items[] = [
+                    'fee_type_id'      => null,
+                    'fee_structure_id' => null,
+                    'description'      => "Transport Service ({$routeName} - {$stopName})" . $monthSuffix,
+                    'unit_price'       => $busFare,
+                    'quantity'         => 1,
+                    'discount_amount'  => 0,
+                    'tax_rate'         => 0,
+                    'tax_amount'       => 0,
+                    'total'            => $busFare,
+                ];
+                $totalGross += $busFare;
+                $totalNet   += $busFare;
+            }
+        }
+
+        // 3. Dynamic Hostel Room/Bed Fee (if active)
+        if ($hostel && $hostel->room && $hostel->room->cost_per_bed > 0) {
+            $hostelFare = (float) $hostel->room->cost_per_bed;
+            $hostelName = $hostel->hostel?->name ?? 'Hostel';
+            $roomNum    = $hostel->room->room_number ?? 'Room';
+            $items[] = [
+                'fee_type_id'      => null,
+                'fee_structure_id' => null,
+                'description'      => "Hostel Accommodation ({$hostelName}, Rm {$roomNum})" . $monthSuffix,
+                'unit_price'       => $hostelFare,
+                'quantity'         => 1,
+                'discount_amount'  => 0,
+                'tax_rate'         => 0,
+                'tax_amount'       => 0,
+                'total'            => $hostelFare,
+            ];
+            $totalGross += $hostelFare;
+            $totalNet   += $hostelFare;
+        }
+
+        // If no new charges and no arrears, don't generate empty invoice
+        if ($totalNet <= 0 && $previousDues <= 0) {
             return 0;
         }
 
+        $firstFeeTypeId = $structures->first()?->fee_type_id;
+
         // Create the invoice
         $invoice = Invoice::create([
+            'school_id'        => $student->school_id,
             'student_id'       => $student->id,
             'session_id'       => $sessionId,
-            'fee_type_id'      => $structures->first()->fee_type_id,
+            'fee_type_id'      => $firstFeeTypeId,
             'title'            => $title,
             'description'      => $extraDesc ?: null,
             'total_amount'     => round($totalGross, 2),
             'discount_amount'  => round($totalDiscount, 2),
             'tax_amount'       => round($totalTax, 2),
             'amount'           => round($totalNet, 2),
+            'previous_due'     => round($previousDues, 2),
+            'fine_amount'      => round($fineAmount, 2),
             'status'           => 'unpaid',
             'due_date'         => $dueDate,
             'billing_month'    => $month,
@@ -351,16 +460,21 @@ class BillingService
             InvoiceItem::create(array_merge($item, ['invoice_id' => $invoice->id]));
         }
 
-        // Post debit to student ledger
-        StudentLedger::debit(
-            studentId:   $student->id,
-            amount:      (float) $invoice->amount,
-            description: $invoice->title . ' (#' . $invoice->invoice_number . ')',
-            type:        'invoice',
-            sessionId:   $sessionId,
-            reference:   $invoice,
-            date:        today()->toDateString(),
-        );
+        // Post debit to student ledger for new month charges + newly accrued fines only!
+        // (Previous dues were already recorded in past invoices, preventing double-debit)
+        $newChargesToDebit = round($totalNet + $fineAmount, 2);
+        if ($newChargesToDebit > 0) {
+            StudentLedger::debit(
+                studentId:   $student->id,
+                amount:      $newChargesToDebit,
+                description: $invoice->title . ' (#' . $invoice->invoice_number . ')' .
+                             ($fineAmount > 0 ? ' [incl. Late Fine Rs. ' . number_format($fineAmount, 2) . ']' : ''),
+                type:        'invoice',
+                sessionId:   $sessionId,
+                reference:   $invoice,
+                date:        today()->toDateString(),
+            );
+        }
 
         return 1;
     }
@@ -394,8 +508,7 @@ class BillingService
 
     private function currentSessionId(): int
     {
-        $session = SchoolSession::where('is_current', true)->first()
-            ?? SchoolSession::latest()->first();
+        $session = SchoolSession::current() ?? SchoolSession::latest('id')->first();
 
         if (! $session) {
             throw new \RuntimeException('No active school session found.');

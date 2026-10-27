@@ -57,10 +57,6 @@ class InvoiceItem extends Model
 
     // ── Computed helpers ──────────────────────────────────────────────────────
 
-    /**
-     * (Re)calculate totals from components and save.
-     * Call after changing unit_price, quantity, discount_amount, or tax_rate.
-     */
     public function recalculate(): static
     {
         $subtotal = $this->unit_price * $this->quantity;
@@ -68,5 +64,17 @@ class InvoiceItem extends Model
         $this->tax_amount = round($afterDiscount * ($this->tax_rate / 100), 2);
         $this->total = round($afterDiscount + $this->tax_amount, 2);
         return $this;
+    }
+
+    // ── Accessors for backward compatibility ───────────────────────────────────
+
+    public function getNameAttribute(): ?string
+    {
+        return $this->description ?? $this->feeType?->name;
+    }
+
+    public function getAmountAttribute(): float
+    {
+        return (float) ($this->total ?? $this->unit_price ?? 0);
     }
 }

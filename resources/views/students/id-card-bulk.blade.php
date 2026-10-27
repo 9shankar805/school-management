@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Bulk Student ID Cards</title>
 @php
   $t          = \App\Models\IdCardTemplate::active();
-  $school     = config('tenant.school');
-  $schoolName = $school?->name ?? config('app.name', 'Genesis Global School');
+  $school     = config('tenant.school') ?? \App\Models\School::first();
+  $schoolName = $school?->name ?? config('app.name', 'School Hub Management');
   $tagline    = $t->tagline_text ?? 'Student Identification Card';
-  $address    = $school?->address ?? 'Siraha-7, Nepal';
-  $phone      = $school?->phone ?? '+91 97110 00560';
+  $address    = $school?->address ?? 'Kathmandu, Nepal';
+  $phone      = $school?->phone ?? '+977-1-4412345';
+  $headerBg   = $t->header_bg_color ?? '#1e3a8a';
+  $layout     = $layout ?? 'dualsided';
 
   $logoSrc = '';
   if ($school?->logo) {
@@ -20,240 +23,449 @@
   }
 @endphp
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family:DejaVu Sans,sans-serif; background:#ffffff; }
-.page { padding:10pt; }
-.cw { float:left; margin:6pt; page-break-inside:avoid; }
+  @page {
+      size: A4 portrait;
+      margin: 6mm 6mm;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: DejaVu Sans, sans-serif; background: #ffffff; color: #0f172a; }
+  
+  .sheet {
+      width: 100%;
+      page-break-inside: avoid;
+  }
+  .page-break {
+      page-break-after: always;
+  }
 
-.card {
-    width: 153pt; height: 238pt; position: relative; overflow: hidden;
-    background: #ffffff; border-radius: 8pt; border: 0.75pt solid #cbd5e1;
-}
+  table.grid-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 5mm 4.5mm;
+  }
+  table.grid-table td.card-cell {
+      width: 50%;
+      vertical-align: top;
+      padding: 0;
+  }
 
-.hd {
-    position: absolute; top: 0; left: 0; right: 0; height: 50pt;
-    background: {{ $t->header_bg_color ?? '#1d4ed8' }}; color: #ffffff;
-    text-align: center; padding-top: 3.5pt;
-}
-.hd-curved-bar {
-    position: absolute; bottom: -6pt; left: -10pt; right: -10pt; height: 12pt;
-    background: {{ $t->header_bg_color ?? '#1d4ed8' }};
-    border-bottom-left-radius: 50%; border-bottom-right-radius: 50%;
-}
-.logo-box {
-    display: inline-block; vertical-align: middle; width: 13pt; height: 13pt;
-    border-radius: 50%; background: #ffffff; padding: 1pt; margin-right: 2pt; overflow: hidden;
-}
-.logo-box img { width: 100%; height: 100%; object-fit: contain; }
-.school-title { display: inline-block; vertical-align: middle; font-size: 7pt; font-weight: bold; color: #ffffff; text-transform: uppercase; }
-.school-sub { font-size: 4pt; color: #e2e8f0; margin-top: 0.5pt; }
-.school-add { font-size: 3.6pt; color: #cbd5e1; margin-top: 0.5pt; }
-.school-phone { font-size: 4pt; font-weight: bold; color: #ffffff; margin-top: 0.5pt; }
+  /* FRONT CARD CONTAINER */
+  .card-front {
+      width: 100%;
+      height: 58.5mm;
+      border: 0.8pt solid #cbd5e1;
+      border-radius: 4.5mm;
+      background: #ffffff;
+      position: relative;
+      overflow: hidden;
+  }
 
-.photo-wrap { position: absolute; top: 48pt; left: 0; right: 0; text-align: center; z-index: 10; }
-.photo-img {
-    width: 42pt; height: 44pt; object-fit: cover; border-radius: 4pt;
-    border: 1.5pt solid {{ $t->header_bg_color ?? '#1d4ed8' }}; background: #f8fafc;
-}
-.student-name { font-size: 8.5pt; font-weight: bold; color: #0f172a; margin-top: 1.5pt; text-align: center; }
+  .front-header {
+      background: {{ $headerBg }};
+      color: #ffffff;
+      text-align: center;
+      padding: 2mm 2.5mm 1.5mm;
+      height: 14.5mm;
+  }
+  .front-school-title {
+      font-size: 7.2pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.3pt;
+      line-height: 1.1;
+      color: #ffffff;
+  }
+  .front-school-sub {
+      font-size: 4.5pt;
+      color: #dbeafe;
+      margin-top: 0.8pt;
+  }
+  .front-school-contact {
+      font-size: 4pt;
+      color: #bfdbfe;
+      margin-top: 0.5pt;
+  }
 
-.info-wrap { position: absolute; top: 108pt; left: 8pt; right: 8pt; }
-.info-tbl { width: 100%; border-collapse: collapse; font-size: 5.2pt; }
-.info-tbl td { padding: 1.2pt 0; vertical-align: top; border-bottom: 0.4pt solid #f1f5f9; }
-.lbl { color: #475569; font-weight: bold; white-space: nowrap; width: 1%; padding-right: 2pt; }
-.colon { color: #475569; font-weight: bold; width: 4pt; text-align: center; padding-right: 4pt; }
-.val { color: #0f172a; font-weight: bold; word-break: break-all; }
-.add-box { font-size: 4.5pt; color: #334155; margin-top: 2pt; line-height: 1.2; }
+  .front-body {
+      padding: 1.5mm 2.5mm;
+  }
+  table.front-body-table {
+      width: 100%;
+      border-collapse: collapse;
+  }
+  .photo-container {
+      width: 18mm;
+      vertical-align: top;
+      text-align: left;
+  }
+  .photo-box {
+      width: 16mm;
+      height: 19.5mm;
+      border: 1pt solid {{ $headerBg }};
+      border-radius: 2mm;
+      overflow: hidden;
+      background: #f8fafc;
+      text-align: center;
+  }
+  .photo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+  }
 
-.ft {
-    position: absolute; bottom: 4pt; left: 8pt; right: 8pt; height: 20pt;
-    border-top: 0.4pt solid #e2e8f0; padding-top: 2pt;
-}
-.ft-left { position: absolute; left: 0; bottom: 0; text-align: left; }
-.class-badge { font-size: 5.8pt; font-weight: bold; color: #0f172a; }
-.valid-badge { font-size: 4.2pt; font-weight: bold; color: #475569; margin-top: 1pt; }
-.sig-box { position: absolute; right: 0; bottom: 0; text-align: center; }
-.sig-lbl { font-size: 4pt; font-weight: bold; color: #475569; margin-top: 1pt; }
+  .details-container {
+      vertical-align: top;
+      padding-left: 2mm;
+  }
+  .student-name {
+      font-size: 7.8pt;
+      font-weight: bold;
+      color: #0f172a;
+      line-height: 1.1;
+      margin-bottom: 1pt;
+  }
+  table.info-subtable {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 5pt;
+  }
+  table.info-subtable td {
+      padding: 0.5pt 0;
+      vertical-align: top;
+  }
+  .lbl {
+      color: #64748b;
+      font-weight: bold;
+      width: 19mm;
+  }
+  .val {
+      color: #0f172a;
+      font-weight: bold;
+  }
 
-/* BACKSIDE */
-.back-card {
-    width: 153pt; height: 238pt; position: relative; overflow: hidden;
-    background: #f8fafc; border-radius: 8pt; border: 0.75pt solid #cbd5e1;
-    page-break-inside: avoid;
-}
-.back-hd {
-    height: 30pt; background: {{ $t->header_bg_color ?? '#1d4ed8' }}; color: #ffffff;
-    text-align: center; padding-top: 4pt;
-}
-.back-title { font-size: 7pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5pt; }
-.back-sub { font-size: 4.2pt; opacity: 0.85; margin-top: 1pt; }
+  .front-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 7mm;
+      background: #f8fafc;
+      border-top: 0.5pt solid #e2e8f0;
+      padding: 1mm 2.5mm;
+  }
+  table.footer-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 4.5pt;
+  }
+  .valid-txt {
+      color: #475569;
+      font-weight: bold;
+  }
+  .sig-txt {
+      text-align: right;
+      color: #1e3a8a;
+      font-weight: bold;
+  }
 
-.qr-section { margin-top: 6pt; text-align: center; padding: 0 6pt; }
-.qr-frame {
-    display: inline-block; background: #ffffff; padding: 3pt; border-radius: 4pt;
-    border: 1.2pt solid {{ $t->header_bg_color ?? '#1d4ed8' }}; box-shadow: 0 2pt 4pt rgba(0,0,0,0.06);
-}
-.qr-frame img { width: 54pt; height: 54pt; display: block; }
-.scan-title { font-size: 5.8pt; font-weight: bold; color: #0f172a; margin-top: 3pt; }
-.scan-sub { font-size: 4pt; color: #2563eb; font-weight: bold; margin-top: 1pt; }
-
-.instructions-box {
-    margin: 5pt 8pt 0; background: #ffffff; border-radius: 4pt;
-    border: 0.4pt solid #e2e8f0; padding: 4pt 5pt; text-align: left;
-}
-.inst-item { font-size: 4pt; color: #334155; margin-bottom: 2pt; line-height: 1.2; }
-.inst-item strong { color: #0f172a; }
-
-.back-ft {
-    position: absolute; bottom: 4pt; left: 8pt; right: 8pt;
-    height: 18pt; text-align: center; border-top: 0.4pt solid #cbd5e1; padding-top: 2pt;
-}
-.back-emg { font-size: 4.8pt; font-weight: bold; color: #dc2626; }
-.back-copy { font-size: 3.8pt; color: #64748b; margin-top: 1pt; }
-.cf:after { content:''; display:table; clear:both; }
+  /* BACK CARD CONTAINER */
+  .card-back {
+      width: 100%;
+      height: 58.5mm;
+      border: 0.8pt solid #cbd5e1;
+      border-radius: 4.5mm;
+      background: #f8fafc;
+      position: relative;
+      overflow: hidden;
+  }
+  .back-header {
+      background: {{ $headerBg }};
+      color: #ffffff;
+      text-align: center;
+      padding: 1.8mm 2mm;
+      font-size: 6pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5pt;
+  }
+  .back-body {
+      padding: 1.5mm 2.5mm;
+  }
+  table.back-table {
+      width: 100%;
+      border-collapse: collapse;
+  }
+  .qr-cell {
+      width: 18mm;
+      vertical-align: middle;
+      text-align: center;
+  }
+  .qr-box {
+      width: 16mm;
+      height: 16mm;
+      border: 0.8pt solid #cbd5e1;
+      border-radius: 1.5mm;
+      background: #ffffff;
+      padding: 0.8mm;
+      margin: 0 auto;
+  }
+  .qr-box img {
+      width: 100%;
+      height: 100%;
+  }
+  .qr-caption {
+      font-size: 3.8pt;
+      font-weight: bold;
+      color: #1e3a8a;
+      margin-top: 0.8pt;
+  }
+  .terms-cell {
+      vertical-align: top;
+      padding-left: 2mm;
+      font-size: 4.4pt;
+      color: #334155;
+      line-height: 1.25;
+  }
+  .terms-cell ul {
+      margin-left: 3mm;
+      padding-left: 0;
+  }
+  .terms-cell li {
+      margin-bottom: 0.8pt;
+  }
+  .emg-note {
+      font-size: 4.6pt;
+      color: #dc2626;
+      font-weight: bold;
+      margin-top: 1pt;
+  }
+  .back-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 5.5mm;
+      background: #e2e8f0;
+      text-align: center;
+      font-size: 4.2pt;
+      color: #475569;
+      padding-top: 1.2mm;
+  }
 </style>
 </head>
 <body>
-<div class="page">
-  @foreach($students as $s)
-  @php
-    $st    = $s['student'];
-    $promo = $s['promotion'];
-    $className   = $promo->schoolClass?->class_name ?? '—';
-    $sectionName = $promo->section?->section_name   ?? '—';
-    $idNumber    = $promo?->id_card_number            ?? ('GGS-' . date('Y') . '-' . str_pad($st->id, 3, '0', STR_PAD_LEFT));
-    $bloodType   = $st->blood_type                   ?? 'A+';
-    $session     = $schoolSession?->session_name      ?? (date('Y') . '-' . (date('Y')+1));
 
-    // Fetch Father & Mother Name
-    $fatherName = null;
-    $motherName = null;
+@php
+  $perPage = ($layout === 'front') ? 8 : 4; // 8 front cards per page OR 4 dual-sided pairs per page
+  $chunks  = $students->chunk($perPage);
+@endphp
 
-    if ($st->relationLoaded('parents') && $st->parents && $st->parents->isNotEmpty()) {
-        foreach ($st->parents as $p) {
-            $rel = strtolower($p->pivot->relationship ?? $p->relationship ?? '');
-            $gen = strtolower($p->gender ?? '');
-
-            if (!$fatherName && ($rel === 'father' || $gen === 'male')) {
-                $fatherName = $p->full_name;
+@foreach($chunks as $chunkIndex => $pageStudents)
+<div class="sheet">
+  <table class="grid-table">
+    @if($layout === 'front')
+      {{-- 8 FRONT CARDS (2 Columns x 4 Rows) --}}
+      @foreach($pageStudents->chunk(2) as $rowStudents)
+      <tr>
+        @foreach($rowStudents as $s)
+          @php
+            $st    = $s['student'];
+            $promo = $s['promotion'];
+            $className   = $promo->schoolClass?->class_name ?? '—';
+            $sectionName = $promo->section?->section_name   ?? '—';
+            $idNumber    = $promo?->id_card_number ?: ('ST-' . date('Y') . '-' . str_pad($st->id, 4, '0', STR_PAD_LEFT));
+            $bloodType   = $st->blood_type ?: 'A+';
+            $session     = $schoolSession?->session_name ?: (date('Y') . '-' . (date('Y')+1));
+            $dob         = $st->birthday ? \Carbon\Carbon::parse($st->birthday)->format('d M Y') : '—';
+            $contact     = $st->phone ?: ($st->emergency_contact ?: $phone);
+            
+            $fatherName = $st->parent_info?->father_name;
+            if (!$fatherName && $st->parents && $st->parents->isNotEmpty()) {
+                foreach ($st->parents as $pr) {
+                    if (strtolower($pr->pivot->relationship ?? $pr->relationship ?? '') === 'father') {
+                        $fatherName = $pr->full_name;
+                    }
+                }
             }
-            if (!$motherName && ($rel === 'mother' || $gen === 'female')) {
-                $motherName = $p->full_name;
-            }
-        }
-    }
-
-    if (!$fatherName) $fatherName = $st->parent_info?->father_name;
-    if (!$motherName) $motherName = $st->parent_info?->mother_name;
-
-    if (!$fatherName || !$motherName) {
-        $admApp = \Illuminate\Support\Facades\DB::table('admission_applications')
-            ->where('email', $st->email)
-            ->orWhere('first_name', $st->first_name)
-            ->first();
-        if ($admApp) {
-            $fatherName = $fatherName ?: ($admApp->father_name ?? null);
-            $motherName = $motherName ?: ($admApp->mother_name ?? null);
-        }
-    }
-
-    $fatherName = $fatherName ?: '—';
-    $motherName = $motherName ?: '—';
-
-    $dob        = $st->birthday ? \Carbon\Carbon::parse($st->birthday)->format('d-m-Y') : '—';
-    $contact    = $st->phone ?? $st->emergency_contact ?? $phone;
-    $studentAdd = $st->address ?: '';
-    $qrToken    = $st->qr_token ?? $st->id;
-    $verifyUrl  = route('student.verify', ['token' => $qrToken]);
-    $qrApiUrl   = 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=' . urlencode($verifyUrl);
-
-    $qrSrc = '';
-    try {
-        $qrData = @file_get_contents($qrApiUrl);
-        if ($qrData) {
-            $qrSrc = 'data:image/png;base64,' . base64_encode($qrData);
-        }
-    } catch (\Exception $e) {}
-
-    if (!$qrSrc) {
-        $qrSrc = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-    }
-  @endphp
-
-  {{-- FRONT CARD --}}
-  <div class="cw">
-    <div class="card">
-      <div class="hd">
-        <div class="hd-curved-bar"></div>
-        <div>
-          @if($logoSrc)
-            <span class="logo-box"><img src="{{ $logoSrc }}" alt=""></span>
-          @endif
-          <span class="school-title">{{ Str::limit($schoolName, 22) }}</span>
-        </div>
-        <div class="school-sub">{{ $tagline }}</div>
-        <div class="school-add">{{ Str::limit($address, 40) }}</div>
-        <div class="school-phone">Phone No.: {{ $phone }}</div>
-      </div>
-
-      <div class="photo-wrap">
-        <img class="photo-img" src="{{ $s['photoSrc'] }}" alt="">
-        <div class="student-name">{{ $st->full_name }}</div>
-      </div>
-
-      <div class="info-wrap">
-        <table class="info-tbl">
-          <tr><td class="lbl">Reg No.</td><td class="colon">:</td><td class="val">{{ $idNumber }}</td></tr>
-          <tr><td class="lbl">Father's Name</td><td class="colon">:</td><td class="val">{{ $fatherName }}</td></tr>
-          <tr><td class="lbl">Mother's Name</td><td class="colon">:</td><td class="val">{{ $motherName }}</td></tr>
-          <tr><td class="lbl">D.O.B.</td><td class="colon">:</td><td class="val">{{ $dob }}</td></tr>
-          <tr><td class="lbl">Blood Group</td><td class="colon">:</td><td class="val">{{ $bloodType }}</td></tr>
-          <tr><td class="lbl">Contact No.</td><td class="colon">:</td><td class="val">{{ $contact }}</td></tr>
-        </table>
-        @if($studentAdd)
-        <div class="add-box"><span style="font-weight:bold;color:#475569;">Add.:</span> {{ Str::limit($studentAdd, 45) }}</div>
+            $fatherName = $fatherName ?: '—';
+          @endphp
+          <td class="card-cell">
+            <div class="card-front">
+              <div class="front-header">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    @if($logoSrc)
+                    <td style="width: 12mm; vertical-align: middle; text-align: left; padding-right: 1.5mm;">
+                      <div style="width: 10.5mm; height: 10.5mm; border-radius: 50%; background: #ffffff; padding: 1pt; overflow: hidden; display: inline-block;">
+                        <img src="{{ $logoSrc }}" style="width: 100%; height: 100%; object-fit: contain; display: block;" alt="Logo">
+                      </div>
+                    </td>
+                    @endif
+                    <td style="vertical-align: middle; text-align: {{ $logoSrc ? 'left' : 'center' }};">
+                      <div class="front-school-title">{{ Str::limit($schoolName, $logoSrc ? 22 : 26) }}</div>
+                      <div class="front-school-sub">{{ $tagline }}</div>
+                      <div class="front-school-contact">{{ Str::limit($address, $logoSrc ? 28 : 36) }} &bull; Tel: {{ $phone }}</div>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+              <div class="front-body">
+                <table class="front-body-table">
+                  <tr>
+                    <td class="photo-container">
+                      <div class="photo-box">
+                        <img src="{{ $s['photoSrc'] }}" alt="Photo">
+                      </div>
+                    </td>
+                    <td class="details-container">
+                      <div class="student-name">{{ Str::limit($st->full_name, 22) }}</div>
+                      <table class="info-subtable">
+                        <tr><td class="lbl">ID / Reg No:</td><td class="val">{{ $idNumber }}</td></tr>
+                        <tr><td class="lbl">Class & Sec:</td><td class="val">{{ $className }} ({{ $sectionName }})</td></tr>
+                        <tr><td class="lbl">Father:</td><td class="val">{{ Str::limit($fatherName, 18) }}</td></tr>
+                        <tr><td class="lbl">DOB / Blood:</td><td class="val">{{ $dob }} &bull; {{ $bloodType }}</td></tr>
+                        <tr><td class="lbl">Phone:</td><td class="val">{{ $contact }}</td></tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+              <div class="front-footer">
+                <table class="footer-table">
+                  <tr>
+                    <td class="valid-txt">Valid: {{ $session }}</td>
+                    <td class="sig-txt">Principal Sign.</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+          </td>
+        @endforeach
+        @if($rowStudents->count() == 1)
+          <td class="card-cell"></td>
         @endif
-      </div>
+      </tr>
+      @endforeach
 
-      <div class="ft">
-        <div class="ft-left">
-          <div class="class-badge">Class: {{ $className }}{{ strcasecmp($sectionName, '—') !== 0 ? ' ('.$sectionName.')' : '' }}</div>
-          <div class="valid-badge">Valid Upto: {{ $session }}</div>
-        </div>
-        <div class="sig-box">
-          <svg width="30" height="9" viewBox="0 0 100 30" style="display:block;margin:0 auto;"><path d="M5 25 Q 20 5, 40 20 T 70 10 T 95 25" fill="none" stroke="#1e3a8a" stroke-width="3" /></svg>
-          <div class="sig-lbl">Principal Sign.</div>
-        </div>
-      </div>
-    </div>
-  </div>
+    @else
+      {{-- DUAL SIDED (4 Students: Front + Back Side-by-Side per row) --}}
+      @foreach($pageStudents as $s)
+        @php
+          $st    = $s['student'];
+          $promo = $s['promotion'];
+          $className   = $promo->schoolClass?->class_name ?? '—';
+          $sectionName = $promo->section?->section_name   ?? '—';
+          $idNumber    = $promo?->id_card_number ?: ('ST-' . date('Y') . '-' . str_pad($st->id, 4, '0', STR_PAD_LEFT));
+          $bloodType   = $st->blood_type ?: 'A+';
+          $session     = $schoolSession?->session_name ?: (date('Y') . '-' . (date('Y')+1));
+          $dob         = $st->birthday ? \Carbon\Carbon::parse($st->birthday)->format('d M Y') : '—';
+          $contact     = $st->phone ?: ($st->emergency_contact ?: $phone);
+          
+          $fatherName = $st->parent_info?->father_name;
+          if (!$fatherName && $st->parents && $st->parents->isNotEmpty()) {
+              foreach ($st->parents as $pr) {
+                  if (strtolower($pr->pivot->relationship ?? $pr->relationship ?? '') === 'father') {
+                      $fatherName = $pr->full_name;
+                  }
+              }
+          }
+          $fatherName = $fatherName ?: '—';
+        @endphp
+        <tr>
+          {{-- FRONT CARD --}}
+          <td class="card-cell">
+            <div class="card-front">
+              <div class="front-header">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    @if($logoSrc)
+                    <td style="width: 12mm; vertical-align: middle; text-align: left; padding-right: 1.5mm;">
+                      <div style="width: 10.5mm; height: 10.5mm; border-radius: 50%; background: #ffffff; padding: 1pt; overflow: hidden; display: inline-block;">
+                        <img src="{{ $logoSrc }}" style="width: 100%; height: 100%; object-fit: contain; display: block;" alt="Logo">
+                      </div>
+                    </td>
+                    @endif
+                    <td style="vertical-align: middle; text-align: {{ $logoSrc ? 'left' : 'center' }};">
+                      <div class="front-school-title">{{ Str::limit($schoolName, $logoSrc ? 22 : 26) }}</div>
+                      <div class="front-school-sub">{{ $tagline }}</div>
+                      <div class="front-school-contact">{{ Str::limit($address, $logoSrc ? 28 : 36) }} &bull; Tel: {{ $phone }}</div>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+              <div class="front-body">
+                <table class="front-body-table">
+                  <tr>
+                    <td class="photo-container">
+                      <div class="photo-box">
+                        <img src="{{ $s['photoSrc'] }}" alt="Photo">
+                      </div>
+                    </td>
+                    <td class="details-container">
+                      <div class="student-name">{{ Str::limit($st->full_name, 22) }}</div>
+                      <table class="info-subtable">
+                        <tr><td class="lbl">ID / Reg No:</td><td class="val">{{ $idNumber }}</td></tr>
+                        <tr><td class="lbl">Class & Sec:</td><td class="val">{{ $className }} ({{ $sectionName }})</td></tr>
+                        <tr><td class="lbl">Father:</td><td class="val">{{ Str::limit($fatherName, 18) }}</td></tr>
+                        <tr><td class="lbl">DOB / Blood:</td><td class="val">{{ $dob }} &bull; {{ $bloodType }}</td></tr>
+                        <tr><td class="lbl">Phone:</td><td class="val">{{ $contact }}</td></tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+              <div class="front-footer">
+                <table class="footer-table">
+                  <tr>
+                    <td class="valid-txt">Valid: {{ $session }}</td>
+                    <td class="sig-txt">Principal Sign.</td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+          </td>
 
-  {{-- BACK CARD --}}
-  <div class="cw">
-    <div class="back-card">
-      <div class="back-hd">
-        <div class="back-title">STUDENT VERIFICATION</div>
-        <div class="back-sub">{{ $schoolName }}</div>
-      </div>
-      <div class="qr-section">
-        <div class="qr-frame"><img src="{{ $qrSrc }}" alt="Scan QR"></div>
-        <div class="scan-title">DIGITAL VERIFICATION & QUICK LOGIN</div>
-        <div class="scan-sub">📷 Scan with Camera to Verify Details</div>
-      </div>
-      <div class="instructions-box">
-        <div class="inst-item"><strong>1. Verification:</strong> Scan QR code with any mobile camera to verify identity.</div>
-        <div class="inst-item"><strong>2. Portal Login:</strong> Open app & scan this QR code to login directly.</div>
-        <div class="inst-item"><strong>3. Ownership:</strong> Property of {{ Str::limit($schoolName, 20) }}.</div>
-      </div>
-      <div class="back-ft">
-        <div class="back-emg">Emergency Phone: {{ $phone }}</div>
-        <div class="back-copy">If found, please return to {{ Str::limit($address, 35) }}</div>
-      </div>
-    </div>
-  </div>
-
-  @endforeach
-  <div class="cf"></div>
+          {{-- BACK CARD --}}
+          <td class="card-cell">
+            <div class="card-back">
+              <div class="back-header">
+                INSTANT QR LOGIN &bull; DIGITAL ID
+              </div>
+              <div class="back-body">
+                <table class="back-table">
+                  <tr>
+                    <td class="qr-cell">
+                      <div class="qr-box">
+                        <img src="{{ $s['qrSrc'] }}" alt="Instant QR Login">
+                      </div>
+                      <div class="qr-caption">INSTANT LOGIN</div>
+                    </td>
+                    <td class="terms-cell">
+                      <ul>
+                        <li>1. Scan with phone camera for instant portal login.</li>
+                        <li>2. Live student authenticity verification online.</li>
+                        <li>3. Card is non-transferable property of institution.</li>
+                        <li>4. If found, please return to school office.</li>
+                      </ul>
+                      <div class="emg-note">Emergency Tel: {{ $phone }}</div>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+              <div class="back-footer">
+                Serial No: {{ $idNumber }} &bull; {{ Str::limit($schoolName, 30) }}
+              </div>
+            </div>
+          </td>
+        </tr>
+      @endforeach
+    @endif
+  </table>
 </div>
+@if(!$loop->last)
+<div class="page-break"></div>
+@endif
+@endforeach
+
 </body>
 </html>

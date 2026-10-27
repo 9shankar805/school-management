@@ -29,6 +29,7 @@
                         <span><i class="bi bi-calendar-event me-1"></i>Due: {{ $homework->due_date->format('M d, Y') }}</span>
                         <span><i class="bi bi-award me-1"></i>{{ $homework->total_marks }} marks total</span>
                         <span><i class="bi bi-people me-1"></i>{{ $homework->submissions->count() }} submitted</span>
+                        <span><i class="bi bi-pen me-1 text-indigo-500"></i>{{ $homework->acknowledgements->count() }} Parent Sign-offs</span>
                     </div>
                     @if($homework->description)
                     <p class="mt-3 text-sm text-slate-600">{{ $homework->description }}</p>
@@ -54,8 +55,8 @@
 
         {{-- Submissions --}}
         <h2 class="text-base font-semibold text-slate-700 mb-3">
-            Submissions
-            <span class="ml-2 text-xs font-normal text-slate-400">{{ $homework->submissions->count() }} total</span>
+            Submissions & Diary Verification
+            <span class="ml-2 text-xs font-normal text-slate-400">{{ $homework->submissions->count() }} submitted · {{ $homework->acknowledgements->count() }} signed</span>
         </h2>
 
         @if($homework->submissions->isEmpty())
@@ -72,11 +73,15 @@
                         <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500">Submitted</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500">Status</th>
                         <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500">Marks</th>
+                        <th class="text-left px-5 py-3 text-xs font-semibold text-slate-500">Parent Diary (हस्ताक्षर)</th>
                         <th class="px-5 py-3"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
                     @foreach($homework->submissions as $sub)
+                    @php
+                        $ack = $homework->acknowledgements->firstWhere('student_id', $sub->student_id);
+                    @endphp
                     <tr class="hover:bg-slate-50 transition">
                         <td class="px-5 py-3">
                             <div class="flex items-center gap-2">
@@ -97,14 +102,35 @@
                             {{ $sub->marks_obtained !== null ? $sub->marks_obtained . '/' . $homework->total_marks : '—' }}
                         </td>
                         <td class="px-5 py-3">
+                            @if($ack)
+                            <span class="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
+                                <i class="bi bi-patch-check-fill text-emerald-600"></i> Signed ({{ $ack->parent->full_name ?? 'Parent' }})
+                            </span>
+                            @else
+                            <span class="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full bg-slate-100 text-slate-400 font-medium">
+                                <i class="bi bi-clock"></i> Not Signed
+                            </span>
+                            @endif
+                        </td>
+                        <td class="px-5 py-3">
                             <div class="flex items-center gap-2 justify-end">
                                 @if($sub->file_path)
                                 <a href="{{ asset('storage/' . $sub->file_path) }}" target="_blank"
-                                   class="text-xs text-indigo-600 hover:underline"><i class="bi bi-download me-0.5"></i>File</a>
+                                   class="text-xs text-indigo-600 hover:underline"><i class="bi bi-download me-0.5"></i>Original</a>
                                 @endif
+                                @if($sub->annotated_file_path)
+                                <a href="{{ asset('storage/' . $sub->annotated_file_path) }}" target="_blank"
+                                   class="text-xs text-emerald-600 font-bold hover:underline inline-flex items-center gap-0.5">
+                                    <i class="bi bi-patch-check-fill text-emerald-500"></i> Marked
+                                </a>
+                                @endif
+                                <a href="{{ route('homework.submission.annotate', $sub->id) }}"
+                                   class="text-xs px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg transition inline-flex items-center gap-1 font-semibold">
+                                    <i class="bi bi-pen"></i> Annotate
+                                </a>
                                 <button onclick="openGradeModal({{ $sub->id }}, {{ $sub->marks_obtained ?? 'null' }}, '{{ addslashes($sub->teacher_feedback ?? '') }}')"
                                         class="text-xs px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-lg transition">
-                                    {{ $sub->status === 'graded' ? 'Re-grade' : 'Grade' }}
+                                    {{ $sub->status === 'graded' ? 'Score' : 'Grade' }}
                                 </button>
                             </div>
                         </td>

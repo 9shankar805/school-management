@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Department;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class DepartmentController extends Controller
 {
@@ -15,37 +16,74 @@ class DepartmentController extends Controller
 
     public function index()
     {
+        $user = auth()->user();
         $departments = Department::with('head', 'teachers')->get();
-        $teachers    = User::whereIn('role', ['teacher', 'class-teacher', 'admin', 'principal'])
-            ->orWhereHas('roles', fn($q) => $q->whereIn('name', ['teacher', 'class-teacher']))
-            ->get();
+
+        $teachersQuery = User::where(function ($q) {
+            $q->whereIn('role', ['teacher', 'class-teacher', 'admin', 'principal'])
+              ->orWhereHas('roles', fn($r) => $r->whereIn('name', ['teacher', 'class-teacher']));
+        });
+
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $teachersQuery->where('school_id', $user->school_id);
+        }
+
+        $teachers = $teachersQuery->get();
         return view('teachers.departments.index', compact('departments', 'teachers'));
     }
 
     public function store(Request $request)
     {
         $this->authorize('create teachers');
+        $user = auth()->user();
+
         $data = $request->validate([
-            'name'        => 'required|string|max:255|unique:departments,name',
-            'code'        => 'nullable|string|max:20|unique:departments,code',
+            'name'        => [
+                'required', 'string', 'max:255',
+                Rule::unique('departments', 'name')->where('school_id', $user->school_id),
+            ],
+            'code'        => [
+                'nullable', 'string', 'max:20',
+                Rule::unique('departments', 'code')->where('school_id', $user->school_id),
+            ],
             'description' => 'nullable|string|max:1000',
             'head_id'     => 'nullable|exists:users,id',
         ]);
-        Department::create(array_merge($data, ['is_active' => true]));
+
+        Department::create(array_merge($data, [
+            'school_id' => $user->school_id,
+            'is_active' => true,
+        ]));
+
         return back()->with('status', 'Department created.');
     }
 
     public function update(Request $request, int $id)
     {
         $this->authorize('create teachers');
-        $dept = Department::findOrFail($id);
+        $user = auth()->user();
+
+        $query = Department::query();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $query->where('school_id', $user->school_id);
+        }
+
+        $dept = $query->findOrFail($id);
+
         $data = $request->validate([
-            'name'        => 'required|string|max:255|unique:departments,name,' . $id,
-            'code'        => 'nullable|string|max:20|unique:departments,code,' . $id,
+            'name'        => [
+                'required', 'string', 'max:255',
+                Rule::unique('departments', 'name')->where('school_id', $user->school_id)->ignore($id),
+            ],
+            'code'        => [
+                'nullable', 'string', 'max:20',
+                Rule::unique('departments', 'code')->where('school_id', $user->school_id)->ignore($id),
+            ],
             'description' => 'nullable|string|max:1000',
             'head_id'     => 'nullable|exists:users,id',
             'is_active'   => 'boolean',
         ]);
+
         $dept->update($data);
         return back()->with('status', 'Department updated.');
     }
@@ -53,7 +91,15 @@ class DepartmentController extends Controller
     public function destroy(int $id)
     {
         $this->authorize('create teachers');
-        Department::findOrFail($id)->delete();
+        $user = auth()->user();
+
+        $query = Department::query();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $query->where('school_id', $user->school_id);
+        }
+
+        $dept = $query->findOrFail($id);
+        $dept->delete();
         return back()->with('status', 'Department deleted.');
     }
 
@@ -61,9 +107,22 @@ class DepartmentController extends Controller
     public function assignTeacher(Request $request, int $id)
     {
         $this->authorize('create teachers');
-        $request->validate(['teacher_id' => 'required|exists:users,id']);
-        $dept = Department::findOrFail($id);
-        $dept->teachers()->syncWithoutDetaching([$request->teacher_id]);
+        $user = auth()->user();
+
+        $query = Department::query();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $query->where('school_id', $user->school_id);
+        }
+
+        $dept = $query->findOrFail($id);
+
+        $teacherQuery = User::where('id', $request->teacher_id);
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $teacherQuery->where('school_id', $user->school_id);
+        }
+        $teacher = $teacherQuery->firstOrFail();
+
+        $dept->teachers()->syncWithoutDetaching([$teacher->id]);
         return back()->with('status', 'Teacher assigned to department.');
     }
 
@@ -71,7 +130,15 @@ class DepartmentController extends Controller
     public function removeTeacher(int $id, int $teacherId)
     {
         $this->authorize('create teachers');
-        Department::findOrFail($id)->teachers()->detach($teacherId);
+        $user = auth()->user();
+
+        $query = Department::query();
+        if ($user->school_id && !$user->hasRole('super-admin')) {
+            $query->where('school_id', $user->school_id);
+        }
+
+        $dept = $query->findOrFail($id);
+        $dept->teachers()->detach($teacherId);
         return back()->with('status', 'Teacher removed from department.');
     }
 }

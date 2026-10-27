@@ -79,7 +79,7 @@ class LiveQuizController extends Controller
 
                 $qType = $qData['question_type'] ?? 'mcq';
                 $options = [];
-                if ($qType === 'mcq' || $qType === 'true_false') {
+                if ($qType !== 'direct') {
                     $options = [
                         ['key' => 'A', 'text' => $qData['option_a'] ?? 'Option A'],
                         ['key' => 'B', 'text' => $qData['option_b'] ?? 'Option B'],
@@ -88,12 +88,19 @@ class LiveQuizController extends Controller
                     ];
                 }
 
+                $correctOpt = null;
+                if ($qType !== 'direct') {
+                    $correctOpt = strtoupper((string)($qData['correct_option'] ?? 'A'));
+                } else {
+                    $correctOpt = $qData['correct_option'] ?? null;
+                }
+
                 LiveQuizQuestion::create([
                     'live_quiz_id'       => $quiz->id,
                     'question_text'      => $qData['question_text'],
                     'question_type'      => $qType,
                     'options'            => $options,
-                    'correct_option'     => strtoupper($qData['correct_option'] ?? 'A'),
+                    'correct_option'     => $correctOpt,
                     'direct_answer'      => $qData['direct_answer'] ?? null,
                     'points'             => $qData['points'] ?? $quiz->default_points,
                     'time_limit_seconds' => $qData['time_limit_seconds'] ?? $quiz->default_time_limit,
@@ -204,8 +211,9 @@ class LiveQuizController extends Controller
             'explanation'        => 'nullable|string',
         ]);
 
+        $qType = $validated['question_type'];
         $options = [];
-        if ($validated['question_type'] !== 'direct') {
+        if ($qType !== 'direct') {
             $options = [
                 ['key' => 'A', 'text' => $validated['option_a'] ?? 'Option A'],
                 ['key' => 'B', 'text' => $validated['option_b'] ?? 'Option B'],
@@ -214,14 +222,21 @@ class LiveQuizController extends Controller
             ];
         }
 
+        $correctOpt = null;
+        if ($qType !== 'direct') {
+            $correctOpt = strtoupper((string)($validated['correct_option'] ?? 'A'));
+        } else {
+            $correctOpt = $validated['correct_option'] ?? null;
+        }
+
         $maxOrder = LiveQuizQuestion::where('live_quiz_id', $quizId)->max('sort_order') ?? 0;
 
         LiveQuizQuestion::create([
             'live_quiz_id'       => $quiz->id,
             'question_text'      => $validated['question_text'],
-            'question_type'      => $validated['question_type'],
+            'question_type'      => $qType,
             'options'            => $options,
-            'correct_option'     => strtoupper($validated['correct_option'] ?? 'A'),
+            'correct_option'     => $correctOpt,
             'direct_answer'      => $validated['direct_answer'] ?? null,
             'points'             => $validated['points'],
             'time_limit_seconds' => $validated['time_limit_seconds'],
@@ -252,8 +267,10 @@ class LiveQuizController extends Controller
      */
     public function seedDemoQuiz()
     {
+        $userId = Auth::id() ?: \App\Models\User::value('id') ?: 1;
+
         $quiz = LiveQuiz::create([
-            'created_by'         => Auth::id(),
+            'created_by'         => $userId,
             'title'              => 'Inter-House Science & General Knowledge Championship 2026',
             'description'        => 'Exciting multi-group live competition quiz for school houses and classes!',
             'category'           => 'Science & General Knowledge',

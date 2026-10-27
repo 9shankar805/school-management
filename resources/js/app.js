@@ -219,36 +219,86 @@ function initAutoToasts() {
 
 // Registry of navigable commands (static + dynamically extendable)
 const CMD_REGISTRY = [
-    // Navigation
-    { label: 'Dashboard',          icon: 'bi-grid-1x2',               category: 'Navigation', href: '/home',                       shortcut: 'G H' },
-    { label: 'Students — List',    icon: 'bi-people',                  category: 'Navigation', href: '/students/view' },
-    { label: 'Students — Add',     icon: 'bi-person-plus',             category: 'Navigation', href: '/students/add' },
-    { label: 'Teachers — List',    icon: 'bi-person-badge',            category: 'Navigation', href: '/teachers/view/list' },
-    { label: 'Attendance — Take',  icon: 'bi-check2-square',           category: 'Navigation', href: '/attendances/take' },
-    { label: 'Attendance — View',  icon: 'bi-calendar-week',           category: 'Navigation', href: '/attendances/view' },
-    { label: 'Exams — List',       icon: 'bi-file-text',               category: 'Navigation', href: '/exams/view' },
-    { label: 'Marks — Enter',      icon: 'bi-pencil-square',           category: 'Navigation', href: '/marks/create' },
-    { label: 'Results',            icon: 'bi-award',                   category: 'Navigation', href: '/results' },
-    { label: 'Timetable',          icon: 'bi-calendar4-range',         category: 'Navigation', href: '/routine' },
-    { label: 'Library',            icon: 'bi-journals',                category: 'Navigation', href: '/library' },
-    { label: 'Transport',          icon: 'bi-bus-front',               category: 'Navigation', href: '/transport' },
-    { label: 'Hostel',             icon: 'bi-building',                category: 'Navigation', href: '/hostel/hostels' },
-    { label: 'Finance',            icon: 'bi-cash-stack',              category: 'Navigation', href: '/finance' },
-    { label: 'HR Dashboard',       icon: 'bi-people-fill',             category: 'Navigation', href: '/hr' },
-    { label: 'Inventory',          icon: 'bi-boxes',                   category: 'Navigation', href: '/inventory' },
-    { label: 'Analytics',          icon: 'bi-pie-chart',               category: 'Navigation', href: '/analytics/dashboard' },
-    { label: 'Reports',            icon: 'bi-file-earmark-spreadsheet',category: 'Navigation', href: '/reports' },
-    { label: 'Notices',            icon: 'bi-megaphone',               category: 'Navigation', href: '/notice/create' },
-    { label: 'Notifications',      icon: 'bi-bell',                    category: 'Navigation', href: '/notifications' },
-    { label: 'Roles & Permissions',icon: 'bi-shield-check',            category: 'Navigation', href: '/roles' },
-    { label: 'Academic Settings',  icon: 'bi-tools',                   category: 'Navigation', href: '/academics/settings' },
-    { label: 'AI Dashboard',       icon: 'bi-robot',                   category: 'Navigation', href: '/ai-features' },
-    { label: 'File Manager',       icon: 'bi-folder2-open',            category: 'Navigation', href: '/files' },
-    // Actions
-    { label: 'Toggle dark mode',   icon: 'bi-moon-fill',               category: 'Actions',    action: 'toggleTheme' },
-    { label: 'Change password',    icon: 'bi-key',                     category: 'Actions',    href: '/password/change' },
-    { label: 'Security (2FA)',     icon: 'bi-shield-lock',             category: 'Actions',    href: '/two-factor/setup' },
-    { label: 'Keyboard shortcuts', icon: 'bi-keyboard',               category: 'Actions',    action: 'showShortcuts' },
+    // ── Academic Management ──
+    { label: 'Classes & Sections',          icon: 'bi-diagram-3-fill',         category: 'Academic', href: '/classes',                  keywords: ['class', 'classes', 'section', 'sections', 'grade', 'grades', 'room', 'rooms', 'classroom', 'class & section', 'classes & sections'] },
+    { label: 'Courses & Subjects',          icon: 'bi-book-fill',              category: 'Academic', href: '/classes',                  keywords: ['course', 'courses', 'subject', 'subjects', 'curriculum', 'book', 'theory', 'practical', 'course & subject', 'courses & subjects'] },
+    { label: 'Add New Course / Subject',    icon: 'bi-journal-plus',           category: 'Academic', href: '/courses/create',           keywords: ['add course', 'new course', 'add subject', 'new subject', 'create course', 'create subject'] },
+    { label: 'Timetable',                   icon: 'bi-calendar4-range',        category: 'Academic', href: '/routine',                 keywords: ['routine', 'timetable', 'schedule', 'periods', 'time table', 'class schedule', 'bell schedule', 'routines'] },
+    { label: 'Academic Programs',           icon: 'bi-mortarboard-fill',       category: 'Academic', href: '/programs',                keywords: ['program', 'programs', 'stream', 'science', 'management', 'humanities', 'faculty', 'academic programs'] },
+    { label: 'Departments',                 icon: 'bi-building',               category: 'Academic', href: '/departments',             keywords: ['department', 'departments', 'dept', 'academic departments', 'faculty dept', 'faculty departments'] },
+    { label: 'Academic Terms',              icon: 'bi-calendar-range',         category: 'Academic', href: '/terms',                   keywords: ['terms', 'term', 'semester', 'semesters', 'session', 'academic session', 'quarter', 'academic terms'] },
+    { label: 'Curriculum',                  icon: 'bi-journal-richtext',       category: 'Academic', href: '/curriculums',             keywords: ['curriculum', 'curriculums', 'textbook', 'syllabus', 'lessons', 'course plan'] },
+    { label: 'Syllabus',                    icon: 'bi-journal-bookmark-fill',  category: 'Academic', href: '/syllabus',                keywords: ['syllabus', 'syllabi', 'course outline', 'download syllabus', 'curriculum outline'] },
+    { label: 'Lesson Plans',                icon: 'bi-journal-plus',           category: 'Academic', href: '/lesson-plans',            keywords: ['lesson plan', 'lesson plans', 'lesson', 'teaching plan', 'lecture notes'] },
+    { label: 'Online Classes',              icon: 'bi-camera-video-fill',      category: 'Academic', href: '/online-classes',          keywords: ['online class', 'online classes', 'zoom', 'google meet', 'live class', 'virtual classroom', 'video class'] },
+    { label: 'Promotions',                  icon: 'bi-graph-up-arrow',         category: 'Academic', href: '/promotions',              keywords: ['promotion', 'promotions', 'upgrade', 'next grade', 'promote students', 'pass class', 'next class'] },
+    { label: 'Roll Numbers',                icon: 'bi-card-heading',           category: 'Academic', href: '/roll-numbers',            keywords: ['roll numbers', 'roll number', 'roll no', 'symbol number', 'student roll', 'assign roll'] },
+
+    // ── Students & Admissions ──
+    { label: 'Students Directory',          icon: 'bi-people-fill',            category: 'Students', href: '/students/view',           keywords: ['students', 'student list', 'scholars', 'pupil', 'view students'], shortcut: 'G S' },
+    { label: 'Add New Student (Admission)', icon: 'bi-person-plus-fill',       category: 'Students', href: '/students/add',            keywords: ['add student', 'enroll', 'new admission', 'register student', 'new student'] },
+    { label: 'Admissions & Inquiries',      icon: 'bi-inboxes-fill',           category: 'Students', href: '/admissions',              keywords: ['admission', 'admissions', 'inquiries', 'leads', 'applications', 'online apply'] },
+    { label: 'Student ID Cards Generator',  icon: 'bi-qr-code-scan',          category: 'Students', href: '/student/id-cards/bulk',   keywords: ['id card', 'id cards', 'badge', 'identity card', 'print id', 'qr code'] },
+    { label: 'Certificates & Marksheets',   icon: 'bi-patch-check-fill',       category: 'Students', href: '/certificates',            keywords: ['certificate', 'character certificate', 'transfer certificate', 'tc', 'transcript'] },
+    { label: 'Disciplinary Records',        icon: 'bi-shield-exclamation',     category: 'Students', href: '/discipline',              keywords: ['discipline', 'behavior', 'incident', 'conduct', 'infraction', 'warning'] },
+    { label: 'Student Houses & Clubs',      icon: 'bi-flag-fill',              category: 'Students', href: '/houses',                  keywords: ['house', 'houses', 'clubs', 'eca', 'sports team'] },
+
+    // ── Teachers & Human Resources ──
+    { label: 'Teachers & Faculty',          icon: 'bi-person-badge-fill',      category: 'Staff',    href: '/teachers/view/list',      keywords: ['teachers', 'teacher list', 'faculty', 'instructors', 'educators', 'staff'], shortcut: 'G T' },
+    { label: 'Add New Teacher',             icon: 'bi-person-plus',            category: 'Staff',    href: '/teachers/add',            keywords: ['add teacher', 'new teacher', 'hire', 'onboard teacher'] },
+    { label: 'Staff Daily Attendance',      icon: 'bi-person-check-fill',      category: 'Staff',    href: '/staff/attendance',        keywords: ['staff attendance', 'teacher attendance', 'punch in', 'clock in', 'faculty attendance'] },
+    { label: 'Staff Leave Applications',    icon: 'bi-calendar2-minus-fill',   category: 'Staff',    href: '/staff-leaves',            keywords: ['staff leave', 'teacher leave', 'leave request', 'day off'] },
+    { label: 'HR & Employee Management',    icon: 'bi-person-workspace',       category: 'Staff',    href: '/hr',                      keywords: ['hr', 'human resources', 'staff directory', 'contracts', 'designation'] },
+    { label: 'Payroll & Salary Slips',      icon: 'bi-cash-coin',              category: 'Staff',    href: '/payroll',                 keywords: ['payroll', 'salary', 'payslip', 'wages', 'salary payment', 'allowance'] },
+
+    // ── Attendance ──
+    { label: 'Take Student Attendance',     icon: 'bi-check2-square',          category: 'Attendance', href: '/attendances/take',      keywords: ['take attendance', 'mark attendance', 'roll call', 'present', 'absent'], shortcut: 'G A' },
+    { label: 'View Attendance Records',     icon: 'bi-calendar-check-fill',    category: 'Attendance', href: '/attendances/view',      keywords: ['view attendance', 'attendance report', 'monthly attendance', 'shortage'] },
+    { label: 'QR Code Attendance Scanner',  icon: 'bi-upc-scan',               category: 'Attendance', href: '/attendance/qr',         keywords: ['qr attendance', 'scan attendance', 'barcode attendance', 'kiosk'] },
+
+    // ── Examinations & Results ──
+    { label: 'Examinations List',           icon: 'bi-file-earmark-text-fill', category: 'Exams',    href: '/exams/view',              keywords: ['exams', 'exam list', 'term exam', 'annual exam', 'unit test'] },
+    { label: 'Create New Examination',      icon: 'bi-file-earmark-plus-fill', category: 'Exams',    href: '/exams/create',            keywords: ['create exam', 'add exam', 'schedule exam', 'new test'] },
+    { label: 'Marks Entry Portal',          icon: 'bi-pencil-square',          category: 'Exams',    href: '/marks/create',            keywords: ['marks', 'mark entry', 'enter marks', 'grading', 'scores', 'input marks'] },
+    { label: 'Results & Gradebook',         icon: 'bi-award-fill',             category: 'Exams',    href: '/results',                 keywords: ['results', 'result sheet', 'report card', 'gpa', 'transcript', 'rank', 'gradebook'], shortcut: 'G R' },
+    { label: 'Grading System & GPA Scale',  icon: 'bi-percent',                category: 'Exams',    href: '/exam/grade/system/index', keywords: ['grading system', 'gpa scale', 'letter grade', 'percentage scale'] },
+    { label: 'AI Question Paper Generator', icon: 'bi-stars',                  category: 'Exams',    href: '/question-papers/create',  keywords: ['ai paper', 'question paper', 'exam paper generator', 'generate quiz', 'test paper'] },
+    { label: 'Online CBT Examinations',     icon: 'bi-laptop-fill',            category: 'Exams',    href: '/online-exams',            keywords: ['online exam', 'cbt', 'computer exam', 'mock test', 'online test'] },
+    { label: 'Live Quiz Classroom',         icon: 'bi-trophy-fill',            category: 'Exams',    href: '/live-quiz',               keywords: ['live quiz', 'kahoot', 'gamified quiz', 'quiz battle', 'game'] },
+    { label: 'Homework & Assignments',      icon: 'bi-journal-check',          category: 'Exams',    href: '/homework',                keywords: ['homework', 'assignments', 'daily homework', 'tasks', 'submissions'] },
+
+    // ── Finance & Fees ──
+    { label: 'Fee Invoices & Payments',     icon: 'bi-receipt-cutoff',         category: 'Finance',  href: '/payments',                keywords: ['fees', 'fee', 'invoices', 'payments', 'fee collection', 'dues', 'receipt', 'tuition'], shortcut: 'G F' },
+    { label: 'Fee Structures & Heads',      icon: 'bi-wallet2',                category: 'Finance',  href: '/fee-structures',          keywords: ['fee structure', 'fee heads', 'monthly fee', 'transport fee', 'admission fee'] },
+    { label: 'Fee Discounts & Waivers',     icon: 'bi-tags-fill',              category: 'Finance',  href: '/fee-discounts',           keywords: ['discounts', 'scholarships', 'waivers', 'concessions', 'financial aid'] },
+    { label: 'Accounting, Income & Expense',icon: 'bi-cash-stack',             category: 'Finance',  href: '/finance',                 keywords: ['accounting', 'income', 'expenses', 'cash flow', 'vouchers', 'ledger'] },
+
+    // ── Communication & Notices ──
+    { label: 'Notice Board & Circulars',    icon: 'bi-megaphone-fill',         category: 'Communication', href: '/notice/create',      keywords: ['notices', 'notice', 'circular', 'announcements', 'bulletin', 'news'], shortcut: 'G N' },
+    { label: 'SMS & WhatsApp Messages',     icon: 'bi-chat-dots-fill',         category: 'Communication', href: '/communication',      keywords: ['sms', 'whatsapp', 'bulk sms', 'broadcast', 'messages', 'push notification'] },
+    { label: 'Event & Holiday Calendar',    icon: 'bi-calendar-event-fill',    category: 'Communication', href: '/events',             keywords: ['events', 'calendar', 'holidays', 'academic calendar', 'vacations', 'annual day'] },
+    { label: 'Parent Portal & Messaging',   icon: 'bi-people',                 category: 'Communication', href: '/parents',            keywords: ['parents', 'parent portal', 'guardian', 'parent communication'] },
+    { label: 'Feedback & Grievance Desk',   icon: 'bi-chat-heart-fill',        category: 'Communication', href: '/feedback',           keywords: ['feedback', 'grievance', 'complaints', 'suggestion box', 'tickets'] },
+
+    // ── Facilities & Operations ──
+    { label: 'Library & Book Catalog',      icon: 'bi-bookshelf',              category: 'Operations', href: '/library',               keywords: ['library', 'books', 'issue book', 'return book', 'catalog', 'isbn'], shortcut: 'G L' },
+    { label: 'Transport & Fleet Routes',    icon: 'bi-bus-front-fill',         category: 'Operations', href: '/transport',             keywords: ['transport', 'bus', 'van', 'vehicle', 'routes', 'driver', 'pickup point'] },
+    { label: 'Hostel & Dormitory Rooms',    icon: 'bi-building-fill-check',    category: 'Operations', href: '/hostel/hostels',        keywords: ['hostel', 'dorm', 'rooms', 'bed allocation', 'warden', 'hostel fee'] },
+    { label: 'Inventory & Asset Store',     icon: 'bi-boxes',                  category: 'Operations', href: '/inventory',             keywords: ['inventory', 'assets', 'equipment', 'stationery', 'lab items', 'stock'] },
+    { label: 'Visitor Book & Gate Passes',  icon: 'bi-person-lines-fill',      category: 'Operations', href: '/visitors',              keywords: ['visitors', 'guest', 'gate pass', 'visitor log', 'security check'] },
+
+    // ── Settings & Configuration ──
+    { label: 'School Profile & Website CMS',icon: 'bi-globe2',                 category: 'Settings', href: '/school-profile',          keywords: ['school profile', 'website', 'landing page', 'logo', 'theme', 'principal photo', 'banner'] },
+    { label: 'Academic System Settings',    icon: 'bi-sliders2',               category: 'Settings', href: '/academics/settings',      keywords: ['academic settings', 'session settings', 'semester config', 'system configuration'] },
+    { label: 'Roles & User Permissions',    icon: 'bi-shield-lock-fill',       category: 'Settings', href: '/roles',                   keywords: ['roles', 'permissions', 'access control', 'privileges', 'admin roles'] },
+    { label: 'Reports & Analytics Hub',     icon: 'bi-file-earmark-bar-graph', category: 'Settings', href: '/reports',                 keywords: ['reports', 'analytics', 'data export', 'audit log', 'statistics'] },
+    { label: 'AI Settings & Assistant',     icon: 'bi-robot',                  category: 'Settings', href: '/ai-features',             keywords: ['ai features', 'ai dashboard', 'gemini', 'gpt', 'smart tools'] },
+    { label: 'Two-Factor Authentication (2FA)', icon: 'bi-shield-check',      category: 'Settings', href: '/two-factor/setup',         keywords: ['2fa', 'security', 'two factor', 'otp', 'authenticator'] },
+
+    // ── Quick Actions ──
+    { label: 'Toggle Dark / Light Mode',    icon: 'bi-moon-stars-fill',        category: 'Actions',  action: 'toggleTheme',            keywords: ['dark mode', 'light mode', 'theme', 'toggle dark', 'night mode'], shortcut: 'T' },
+    { label: 'Change Account Password',     icon: 'bi-key-fill',               category: 'Actions',  href: '/password/change',         keywords: ['change password', 'reset password', 'security credentials'] },
+    { label: 'Keyboard Shortcuts Help',     icon: 'bi-keyboard-fill',          category: 'Actions',  action: 'showShortcuts',          keywords: ['shortcuts', 'hotkeys', 'keyboard help'], shortcut: '?' },
 ];
 
 let cmdSelected = -1;
@@ -287,49 +337,38 @@ function renderCmdResults(query) {
     if (!container) return;
 
     const q = query.trim().toLowerCase();
-    const matched = CMD_REGISTRY.filter(c =>
-        c.label.toLowerCase().includes(q) || c.category.toLowerCase().includes(q)
-    );
-
-    console.log('renderCmdResults called', { query, q, matchedCount: matched.length });
-
-    // If query is empty or too short, show static results only
-    if (!q || q.length < 2) {
-        if (!matched.length) {
-            container.innerHTML = `<div class="px-4 py-6 text-center text-sm" style="color:var(--text-muted)">
-                <i class="bi bi-search-heart d-block" style="font-size:1.5rem;margin-bottom:.5rem"></i>
-                Type to search...
-            </div>`;
-            return;
+    const matched = CMD_REGISTRY.filter(c => {
+        if (!q) return true;
+        if (c.label.toLowerCase().includes(q) || c.category.toLowerCase().includes(q)) return true;
+        if (c.keywords) {
+            if (Array.isArray(c.keywords)) {
+                return c.keywords.some(k => k.toLowerCase().includes(q) || q.includes(k.toLowerCase()));
+            }
+            return c.keywords.toLowerCase().includes(q);
         }
+        return false;
+    });
+
+    // If query is empty, show all static navigation options grouped by category
+    if (!q) {
         renderStaticResults(matched, q, container);
         return;
     }
 
-    console.log('Fetching search results for:', q);
-
-    // For longer queries, fetch dynamic results from API
+    // Fetch dynamic database results in parallel with matching static commands
     fetch(`/search?q=${encodeURIComponent(q)}`, {
         headers: {
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest'
         }
     })
-    .then(r => {
-        console.log('Fetch response status:', r.status);
-        if (!r.ok) {
-            console.error('Search API error:', r.status, r.statusText);
-            throw new Error('API error');
-        }
-        return r.json();
-    })
+    .then(r => r.ok ? r.json() : { data: [] })
     .then(response => {
-        console.log('Search results:', response);
         let html = '';
         
-        // Add dynamic results first
+        // Dynamic search results (People, Classes, Courses, Notices)
         if (response.data && response.data.length > 0) {
-            html += `<div class="cmd-group-label">People</div>`;
+            html += `<div class="cmd-group-label">Records & People</div>`;
             response.data.forEach((item, i) => {
                 const label = highlight(item.label, q);
                 const sublabel = highlight(item.sublabel, q);
@@ -343,9 +382,9 @@ function renderCmdResults(query) {
             });
         }
 
-        // Add static navigation results
+        // Static navigation menu results
         if (matched.length > 0) {
-            html += `<div class="cmd-group-label">Navigation</div>`;
+            html += `<div class="cmd-group-label">Pages & Features</div>`;
             matched.forEach((c, i) => {
                 const label = highlight(c.label, q);
                 const shortcut = c.shortcut ? `<span class="cmd-shortcut">${c.shortcut}</span>` : '';
@@ -371,8 +410,6 @@ function renderCmdResults(query) {
         cmdSelected = -1;
     })
     .catch((error) => {
-        console.error('Search fetch error:', error);
-        // Fallback to static results on error
         renderStaticResults(matched, q, container);
     });
 }
@@ -758,11 +795,27 @@ function highlightActiveNav() {
 }
 
 /* ============================================================
+   16. UNIVERSAL MOBILE RESPONSIVE TABLES
+   ============================================================ */
+function initResponsiveTables() {
+    document.querySelectorAll('table').forEach(function (table) {
+        if (!table.closest('.overflow-x-auto, .table-responsive, [class*="overflow-x"]')) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'table-responsive-wrapper overflow-x-auto w-full max-w-full';
+            wrapper.style.webkitOverflowScrolling = 'touch';
+            table.parentNode.insertBefore(wrapper, table);
+            wrapper.appendChild(table);
+        }
+    });
+}
+
+/* ============================================================
    INIT — runs when DOM is ready
    ============================================================ */
 document.addEventListener('DOMContentLoaded', function () {
     restoreSidebarState();
     initAutoToasts();
+    initResponsiveTables();
     initTableSort();
     initTableSearch();
     initConfirmDelete();

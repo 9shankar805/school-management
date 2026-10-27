@@ -83,9 +83,28 @@ class IssuedCertificate extends Model
     {
         $prefix   = strtoupper(substr($type, 0, 3));
         $year     = now()->year;
-        $lastNum  = self::whereYear('created_at', $year)->count() + 1;
+        $base     = sprintf('CERT-%s-%d-', $prefix, $year);
 
-        return sprintf('CERT-%s-%d-%06d', $prefix, $year, $lastNum);
+        $latest = static::withoutGlobalScopes()
+            ->withTrashed()
+            ->where('certificate_number', 'like', $base . '%')
+            ->orderByDesc('certificate_number')
+            ->first();
+
+        $next = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest->certificate_number, $matches)) {
+            $next = ((int) $matches[1]) + 1;
+        }
+
+        do {
+            $candidate = $base . str_pad($next, 6, '0', STR_PAD_LEFT);
+            $exists = static::withoutGlobalScopes()->withTrashed()->where('certificate_number', $candidate)->exists();
+            if ($exists) {
+                $next++;
+            }
+        } while ($exists);
+
+        return $candidate;
     }
 
     /**

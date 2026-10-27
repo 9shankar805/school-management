@@ -31,7 +31,7 @@
  */
 
 const OFFLINE_DB_NAME    = 'schoolhub-offline';
-const OFFLINE_DB_VERSION = 3;   // v3: adds syllabi/assignments/marks/notices caches
+const OFFLINE_DB_VERSION = 5;   // v5: adds complete finance (expenses, income, payments, day-book caches)
 
 let _db = null;
 
@@ -160,6 +160,81 @@ function offlineDbOpen() {
                     const ex = db.createObjectStore('exams_cache', { keyPath: 'id' });
                     ex.createIndex('by_session', 'session_id', { unique: false });
                     ex.createIndex('by_class',   'class_id',   { unique: false });
+                }
+            }
+
+            // ── V4 EXTENSION — comprehensive offline modules ─────────────
+            if (oldVer < 4) {
+                // Homework
+                if (!db.objectStoreNames.contains('homework_cache')) {
+                    const hw = db.createObjectStore('homework_cache', { keyPath: 'id' });
+                    hw.createIndex('by_class',   'class_id',   { unique: false });
+                    hw.createIndex('by_due',     'due_date',   { unique: false });
+                    hw.createIndex('by_session', 'session_id', { unique: false });
+                }
+
+                // Routines / Timetables
+                if (!db.objectStoreNames.contains('routines_cache')) {
+                    const rt = db.createObjectStore('routines_cache', { keyPath: 'id' });
+                    rt.createIndex('by_class',   'class_id',   { unique: false });
+                    rt.createIndex('by_day',     'weekday',    { unique: false });
+                    rt.createIndex('by_teacher', 'teacher_id', { unique: false });
+                }
+
+                // Fee Invoices
+                if (!db.objectStoreNames.contains('invoices_cache')) {
+                    const inv = db.createObjectStore('invoices_cache', { keyPath: 'id' });
+                    inv.createIndex('by_student', 'student_id',     { unique: false });
+                    inv.createIndex('by_status',  'status',         { unique: false });
+                    inv.createIndex('by_number',  'invoice_number', { unique: false });
+                }
+
+                // Visitors
+                if (!db.objectStoreNames.contains('visitors_cache')) {
+                    const vs = db.createObjectStore('visitors_cache', { keyPath: 'id' });
+                    vs.createIndex('by_status', 'status', { unique: false });
+                }
+
+                // Leave Applications
+                if (!db.objectStoreNames.contains('leave_cache')) {
+                    const lv = db.createObjectStore('leave_cache', { keyPath: 'id' });
+                    lv.createIndex('by_user',   'user_id', { unique: false });
+                    lv.createIndex('by_status', 'status',  { unique: false });
+                }
+
+                // Feedback
+                if (!db.objectStoreNames.contains('feedback_cache')) {
+                    const fb = db.createObjectStore('feedback_cache', { keyPath: 'id' });
+                    fb.createIndex('by_status', 'status', { unique: false });
+                }
+            }
+
+            // ── V5 EXTENSION — Complete Offline Finance & POS Architecture ────
+            if (oldVer < 5) {
+                // Expenses
+                if (!db.objectStoreNames.contains('expenses_cache')) {
+                    const exp = db.createObjectStore('expenses_cache', { keyPath: 'id' });
+                    exp.createIndex('by_category', 'category',     { unique: false });
+                    exp.createIndex('by_date',     'expense_date', { unique: false });
+                }
+
+                // Income
+                if (!db.objectStoreNames.contains('income_cache')) {
+                    const inc = db.createObjectStore('income_cache', { keyPath: 'id' });
+                    inc.createIndex('by_category', 'category',    { unique: false });
+                    inc.createIndex('by_date',     'income_date', { unique: false });
+                }
+
+                // Payments & Receipts
+                if (!db.objectStoreNames.contains('payments_cache')) {
+                    const pay = db.createObjectStore('payments_cache', { keyPath: 'id' });
+                    pay.createIndex('by_invoice', 'invoice_id',   { unique: false });
+                    pay.createIndex('by_date',    'payment_date', { unique: false });
+                }
+
+                // Day Book Summary
+                if (!db.objectStoreNames.contains('day_book_cache')) {
+                    db.createObjectStore('day_book_cache', { keyPath: 'date' });
                 }
             }
         };
@@ -295,6 +370,8 @@ window.OFFLINE_MODULES = {
     student:           { label: 'Add Student',                icon: 'bi-person-plus',    priority: 1 },
     syllabus:          { label: 'Create Syllabus',            icon: 'bi-journal-text',   priority: 2 },
     assignment:        { label: 'Create Assignment',          icon: 'bi-file-earmark',   priority: 2 },
+    homework:          { label: 'Daily Homework',             icon: 'bi-pencil-square',  priority: 2 },
+    homework_sign:     { label: 'Parent Diary Sign-Off',      icon: 'bi-pen-fill',       priority: 2 },
     marks:             { label: 'Submit Marks',               icon: 'bi-bar-chart',      priority: 2 },
     notice:            { label: 'Post Notice',                icon: 'bi-megaphone',      priority: 3 },
     attendance:        { label: 'Student Attendance',         icon: 'bi-calendar2-check',priority: 1 },
@@ -302,6 +379,9 @@ window.OFFLINE_MODULES = {
     fee_collection:    { label: 'Fee Collection',             icon: 'bi-cash-coin',      priority: 2 },
     expense:           { label: 'Expense Voucher',            icon: 'bi-receipt-cut',    priority: 3 },
     income:            { label: 'Income Receipt',             icon: 'bi-wallet2',        priority: 3 },
+    visitor:           { label: 'Visitor Check-in',           icon: 'bi-person-badge-fill', priority: 3 },
+    leave:             { label: 'Leave Request',              icon: 'bi-calendar-x',     priority: 3 },
+    feedback:          { label: 'Feedback / Grievance',       icon: 'bi-chat-heart',     priority: 4 },
     gradebook:         { label: 'Marks / Grade Entry',        icon: 'bi-journal-text',   priority: 2 },
     staff:             { label: 'Staff / HR Record',          icon: 'bi-person-badge',   priority: 3 },
     library_issue:     { label: 'Library Book Issue/Return',  icon: 'bi-book',           priority: 3 },

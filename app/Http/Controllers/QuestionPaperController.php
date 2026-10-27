@@ -147,7 +147,7 @@ class QuestionPaperController extends Controller
         }
 
         $data = $request->validate([
-            'title'       => 'required|string|max:255',
+            'title'       => 'nullable|string|max:255',
             'exam_name'   => 'nullable|string|max:255',
             'subject'     => 'nullable|string|max:100',
             'class_label' => 'nullable|string|max:100',
@@ -158,6 +158,10 @@ class QuestionPaperController extends Controller
             'paper_size'  => 'required|in:A4,Letter',
             'orientation' => 'required|in:portrait,landscape',
         ]);
+
+        if (empty($data['title'])) {
+            $data['title'] = $paper->title;
+        }
 
         $this->paperRepo->update($id, $data);
 
@@ -324,7 +328,11 @@ class QuestionPaperController extends Controller
                 'defaultFont'     => 'sans-serif',
                 'dpi'             => 120,
                 'isRemoteEnabled' => true,
-            ]);
+                'font_dir'        => storage_path('fonts'),
+                'font_cache'      => storage_path('fonts'),
+                'temp_dir'        => sys_get_temp_dir(),
+                'chroot'          => realpath(base_path()),
+            ], true);
 
         return $pdf->stream("question-paper-{$paper->id}.pdf");
     }
@@ -520,30 +528,139 @@ class QuestionPaperController extends Controller
         }
 
         $request->validate([
-            'document_file' => 'nullable|file|mimes:txt,pdf,docx,doc,jpg,jpeg,png,webp|max:10240',
-            'prompt_text'   => 'nullable|string|max:5000',
-            'difficulty'    => 'required|in:mixed,easy,medium,hard',
-            'mode'          => 'required|in:append,replace',
+            'document_file'            => 'nullable|file|mimes:txt,pdf,docx,doc,jpg,jpeg,png,webp|max:10240',
+            'prompt_text'              => 'nullable|string|max:10000',
+            'difficulty'               => 'nullable|in:mixed,easy,medium,hard',
+            'mode'                     => 'nullable|in:append,replace',
+            'section_id'               => 'nullable|integer',
+            'new_section_title'        => 'nullable|string|max:150',
+            'new_section_instructions' => 'nullable|string|max:500',
         ]);
 
-        if (!$request->hasFile('document_file') && empty($request->input('prompt_text'))) {
-            return response()->json(['error' => 'Please upload a file or enter instructions/topics.'], 422);
+        $difficulty = $request->input('difficulty', 'mixed');
+        $mode       = $request->input('mode', 'append');
+        $sectionId  = $request->input('section_id');
+        $newTitle   = trim($request->input('new_section_title', ''));
+        $newInst    = trim($request->input('new_section_instructions', ''));
+        $promptText = trim($request->input('prompt_text', ''));
+        $hasFile    = $request->hasFile('document_file');
+
+        // Case 1: Just creating a new section without AI text (empty section)
+        if (!empty($newTitle) && empty($promptText) && !$hasFile) {
+            $sortOrder = ($paper->sections()->max('sort_order') ?? 0) + 1;
+            $sec = QuestionSection::create([
+                'school_id'    => $paper->school_id,
+                'paper_id'     => $paper->id,
+                'title'        => $newTitle,
+                'instructions' => $newInst ?: null,
+                'sort_order'   => $sortOrder,
+            ]);
+            return response()->json([
+                'success'    => true,
+                'message'    => "Section \"{$newTitle}\" created successfully.",
+                'section_id' => $sec->id,
+            ]);
+        }
+
+        if (!$hasFile && empty($promptText)) {
+            return response()->json(['error' => 'Please upload a file or paste question text.'], 422);
         }
 
         try {
+            $targetSection = null;
+            if ($sectionId) {
+                $targetSection = QuestionSection::where('paper_id', $paper->id)->find($sectionId);
+            }
+
+            $targetTitle = $targetSection ? $targetSection->title : ($newTitle ?: null);
+
             $sectionsData = $aiExtractor->generateSectionsAndQuestions(
                 $request->file('document_file'),
-                $request->input('prompt_text'),
-                $request->input('difficulty', 'mixed'),
-                $paper->class_label ?: 'Secondary'
+                $promptText,
+                $difficulty,
+                $paper->class_label ?: 'Secondary',
+                $targetTitle
             );
 
             if (empty($sectionsData)) {
                 return response()->json(['error' => 'AI could not extract questions from the provided input.'], 422);
             }
 
-            // If mode === 'replace', clear existing sections
-            if ($request->input('mode') === 'replace') {
+            // Case A: Adding to an existing section OR creating a new section with AI questions
+            if ($targetSection || !empty($newTitle)) {
+                $section = $targetSection;
+                if (!$section) {
+                    $sortOrder = ($paper->sections()->max('sort_order') ?? 0) + 1;
+                    $section = QuestionSection::create([
+                        'school_id'    => $paper->school_id,
+                        'paper_id'     => $paper->id,
+                        'title'        => $newTitle,
+                        'instructions' => $newInst ?: null,
+                        'sort_order'   => $sortOrder,
+                    ]);
+                }
+
+                // Gather all questions from all sections in AI output
+                $allQuestions = [];
+                foreach ($sectionsData as $secItem) {
+                    if (!empty($secItem['questions']) && is_array($secItem['questions'])) {
+                        foreach ($secItem['questions'] as $qItem) {
+                            $allQuestions[] = $qItem;
+                        }
+                    }
+                }
+
+                if (empty($allQuestions)) {
+                    return response()->json(['error' => 'AI could not find any structured questions in the pasted content.'], 422);
+                }
+
+                $qSortOrder = $section->questions()->max('sort_order') ?? 0;
+                $createdQuestionsCount = 0;
+                $createdQuestions = [];
+
+                foreach ($allQuestions as $qItem) {
+                    $qSortOrder++;
+                    $qType = strtolower($qItem['question_type'] ?? 'short_answer');
+                    if (!array_key_exists($qType, QuestionBank::QUESTION_TYPES)) {
+                        $qType = 'short_answer';
+                    }
+
+                    $newQ = QuestionQuestion::create([
+                        'school_id'       => $paper->school_id,
+                        'section_id'      => $section->id,
+                        'question_type'   => $qType,
+                        'question_text'   => $qItem['question_text'] ?? 'Question',
+                        'answer_text'     => $qItem['answer_text'] ?? null,
+                        'options'         => !empty($qItem['options']) && is_array($qItem['options']) ? $qItem['options'] : null,
+                        'correct_answer'  => $qItem['correct_answer'] ?? null,
+                        'allocated_marks' => !empty($qItem['allocated_marks']) ? (float)$qItem['allocated_marks'] : 1.0,
+                        'difficulty'      => in_array($qItem['difficulty'] ?? '', ['easy', 'medium', 'hard']) ? $qItem['difficulty'] : 'medium',
+                        'bloom_taxonomy'  => $qItem['bloom_taxonomy'] ?? null,
+                        'sort_order'      => $qSortOrder,
+                    ]);
+                    $createdQuestions[] = $newQ;
+                    $createdQuestionsCount++;
+                }
+
+                $section->recalcMarks();
+                $this->paperRepo->renumberQuestions($paper->id);
+                $paper->fresh()->saveVersion("AI added {$createdQuestionsCount} question(s) to {$section->title}");
+
+                $freshQuestions = QuestionQuestion::whereIn('id', collect($createdQuestions)->pluck('id'))->get();
+
+                return response()->json([
+                    'success'             => true,
+                    'message'             => "Successfully added {$createdQuestionsCount} question(s) to {$section->title}!",
+                    'section_id'          => $section->id,
+                    'section_title'       => $section->title,
+                    'section_total_marks' => $section->fresh()->total_marks,
+                    'questions_created'   => $createdQuestionsCount,
+                    'questions'           => $freshQuestions,
+                ]);
+            }
+
+            // Case B: Global whole-paper AI generation (append or replace)
+            if ($mode === 'replace') {
                 foreach ($paper->sections as $sec) {
                     $sec->questions()->delete();
                     $sec->delete();
@@ -552,7 +669,6 @@ class QuestionPaperController extends Controller
 
             $createdSectionsCount  = 0;
             $createdQuestionsCount = 0;
-
             $sortOrder = $paper->sections()->max('sort_order') ?? 0;
 
             foreach ($sectionsData as $secItem) {
@@ -564,11 +680,10 @@ class QuestionPaperController extends Controller
                 $section = QuestionSection::create([
                     'school_id'    => $paper->school_id,
                     'paper_id'     => $paper->id,
-                    'title'        => $secItem['title'] ?? 'Group ' . $sortOrder,
+                    'title'        => $secItem['title'] ?? 'Group ' . chr(64 + $sortOrder),
                     'instructions' => $secItem['instructions'] ?? null,
                     'sort_order'   => $sortOrder,
                 ]);
-
                 $createdSectionsCount++;
 
                 $qSortOrder = 0;
@@ -592,7 +707,6 @@ class QuestionPaperController extends Controller
                         'bloom_taxonomy'  => $qItem['bloom_taxonomy'] ?? null,
                         'sort_order'      => $qSortOrder,
                     ]);
-
                     $createdQuestionsCount++;
                 }
 

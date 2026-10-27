@@ -40,23 +40,43 @@ class Payment extends Model
             }
         });
 
-        // After payment saved → update invoice status + post credit to student ledger
+        // After payment saved → update invoice status and cached paid_amount
+        // (Student ledger credit & double-entry accounting are handled by PaymentObserver)
         static::created(function (Payment $payment) {
             $payment->updateInvoiceStatus();
-            $payment->postLedgerCredit();
         });
     }
 
     public static function generateReceiptNumber(): string
     {
         $year   = now()->year;
-        $latest = static::whereYear('created_at', $year)->latest('id')->first();
-        $next   = $latest ? ((int) substr($latest->receipt_number, -6)) + 1 : 1;
-        return 'RCP-' . $year . '-' . str_pad($next, 6, '0', STR_PAD_LEFT);
+        $prefix = 'RCP-' . $year . '-';
+
+        $latest = static::withoutGlobalScopes()
+            ->withTrashed()
+            ->where('receipt_number', 'like', $prefix . '%')
+            ->orderByDesc('receipt_number')
+            ->first();
+
+        $next = 1;
+        if ($latest && preg_match('/-(\d+)$/', $latest->receipt_number, $matches)) {
+            $next = ((int) $matches[1]) + 1;
+        }
+
+        do {
+            $candidate = $prefix . str_pad($next, 6, '0', STR_PAD_LEFT);
+            $exists = static::withoutGlobalScopes()->withTrashed()->where('receipt_number', $candidate)->exists();
+            if ($exists) {
+                $next++;
+            }
+        } while ($exists);
+
+        return $candidate;
     }
 
     /**
-     * After a payment is recorded, recompute the parent invoice status.
+     * After a payment is recorded, recompute the parent invoice status against total_payable
+     * (accounting for current charges, carried-over arrears, and late fines).
      */
     public function updateInvoiceStatus(): void
     {
@@ -64,7 +84,7 @@ class Payment extends Model
         if (! $invoice) return;
 
         $paid = (float) $invoice->payments()->sum('amount');
-        $due  = (float) $invoice->amount;
+        $due  = (float) $invoice->total_payable;
 
         if ($paid <= 0) {
             $status = 'unpaid';
@@ -74,7 +94,10 @@ class Payment extends Model
             $status = 'partial';
         }
 
-        $invoice->update(['status' => $status]);
+        $invoice->update([
+            'status'      => $status,
+            'paid_amount' => $paid,
+        ]);
     }
 
     /**

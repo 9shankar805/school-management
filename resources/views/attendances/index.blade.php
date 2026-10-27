@@ -1,79 +1,67 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <div class="row justify-content-start">
-        <div class="col-xs-11 col-sm-11 col-md-11 col-lg-10 col-xl-10 col-xxl-10">
-            <div class="row pt-2">
-                <div class="col ps-4">
-                    <h1 class="display-6 mb-3"><i class="bi bi-calendar2-week"></i> Attendance</h1>
-                    <div class="row">
-                        <div class="col">
-                            <div class="row">
-                                @foreach ($classes_and_sections['school_classes'] as $school_class)
-                                <div class="col-12">
-                                    <div class="card my-3">
-                                        <div class="card-header bg-transparent">
-                                            <i class="bi bi-diagram-2"></i> {{$school_class->class_name}}
-                                        </div>
-                                        <div class="card-body text-dark">
-                                            @if ($academic_setting->attendance_type == 'course')
-                                                @foreach ($courses as $course)
-                                                    @if ($course->class_id == $school_class->id)
-                                                    <h6>
-                                                        Course: {{$course->course_name}}
-                                                    </h6>
-                                                    <div class="list-group mb-2">
-                                                        <a href="{{url('attendances/view?class_id='.$school_class->id.'&class_name='.$school_class->class_name.'&course_id='.$course->id.'&course_name='.$course->course_name)}}" class="list-group-item list-group-item-action  d-flex justify-content-between align-items-center">
-                                                            View Attendance
-                                                            {{-- <span class="badge bg-success rounded-pill">PRESENT TODAY 38</span> --}}
-                                                        </a>
-                                                        <a href="{{url('attendances/take?class_id='.$school_class->id.'&class_name='.$school_class->class_name.'&course_id='.$course->id.'&course_name='.$course->course_name)}}" class="list-group-item list-group-item-action">
-                                                            Take Attendance
-                                                        </a>
-                                                    </div>   
-                                                    @endif
-                                                @endforeach
-                                            @else
-                                            <div class="tab-content">
-                                                <div class="accordion" id="accordionClass{{$school_class->id}}">
-                                                    @foreach ($classes_and_sections['school_sections'] as $school_section)
-                                                        <div class="accordion-item">
-                                                            <h2 class="accordion-header" id="headingClass{{$school_class->id}}Section{{$school_section->id}}">
-                                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseClass{{$school_class->id}}Section{{$school_section->id}}" aria-expanded="false" aria-controls="collapseClass{{$school_class->id}}Section{{$school_section->id}}">
-                                                                    {{$school_section->section_name}}
-                                                                </button>
-                                                            </h2>
-                                                            <div id="collapseClass{{$school_class->id}}Section{{$school_section->id}}" class="accordion-collapse collapse" aria-labelledby="headingClass{{$school_class->id}}Section{{$school_section->id}}" data-bs-parent="#accordionClass{{$school_class->id}}">
-                                                                <div class="accordion-body">
-                                                                    <div class="list-group mb-2">
-                                                                        <a href="{{url('attendances/view?class_id='.$school_class->id.'&section_id='.$school_section->id.'&class_name='.$school_class->class_name.'&section_name='.$school_section->section_name)}}" class="list-group-item list-group-item-action  d-flex justify-content-between align-items-center">
-                                                                            View Attendance
-                                                                            {{-- <span class="badge bg-success rounded-pill">PRESENT TODAY 38</span> --}}
-                                                                        </a>
-                                                                        <a href="{{url('attendances/take?class_id='.$school_class->id.'&class_name='.$school_class->class_name.'&section_id='.$school_section->id.'&section_name='.$school_section->section_name)}}" class="list-group-item list-group-item-action">
-                                                                            Take Attendance
-                                                                        </a>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                            @endif
-                                        </div>
-                                        {{-- <div class="card-footer bg-transparent">Total Students: 120</div> --}}
-                                    </div>
-                                </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @include('layouts.footer')
+<div class="flex-1 p-4 lg:p-7 overflow-auto bg-slate-50/50 min-h-screen">
+
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 tracking-tight leading-none">Attendance Management</h1>
+            <p class="text-xs text-slate-400 mt-1">Take student attendance, inspect records, and review analytics</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('attendance.create.show') }}" 
+               class="px-5 py-2.5 bg-[#1E1B4B] hover:bg-[#312E81] text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center gap-2">
+                <i class="bi bi-calendar2-check"></i> Take Attendance
+            </a>
         </div>
     </div>
+
+    @include('session-messages')
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        @foreach ($classes_and_sections['school_classes'] as $school_class)
+        <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center text-sm">
+                        <i class="bi bi-mortarboard"></i>
+                    </span>
+                    <h2 class="text-base font-bold text-slate-800">{{ $school_class->class_name }}</h2>
+                </div>
+            </div>
+
+            <div class="space-y-2 mt-4 pt-3 border-t border-slate-100">
+                @if ($academic_setting->attendance_type == 'course')
+                    @foreach ($courses as $course)
+                        @if ($course->class_id == $school_class->id)
+                        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                            <span class="text-xs font-semibold text-slate-700">{{ $course->course_name }}</span>
+                            <div class="flex items-center gap-1.5">
+                                <a href="{{ route('attendance.create.show', ['class_id' => $school_class->id, 'course_id' => $course->id]) }}" 
+                                   class="px-3 py-1 bg-indigo-600 text-white rounded-lg text-[11px] font-semibold hover:bg-indigo-700 transition">
+                                    Take
+                                </a>
+                            </div>
+                        </div>
+                        @endif
+                    @endforeach
+                @else
+                    @foreach ($classes_and_sections['school_sections'] as $school_section)
+                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                        <span class="text-xs font-semibold text-slate-700">Section {{ $school_section->section_name }}</span>
+                        <div class="flex items-center gap-1.5">
+                            <a href="{{ route('attendance.create.show', ['class_id' => $school_class->id, 'section_id' => $school_section->id]) }}" 
+                               class="px-3 py-1 bg-[#1E1B4B] text-white rounded-lg text-[11px] font-semibold hover:bg-[#312E81] transition">
+                                Take
+                            </a>
+                        </div>
+                    </div>
+                    @endforeach
+                @endif
+            </div>
+        </div>
+        @endforeach
+    </div>
+
 </div>
 @endsection

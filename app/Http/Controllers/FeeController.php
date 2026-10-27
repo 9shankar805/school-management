@@ -10,6 +10,8 @@ use App\Models\SchoolSession;
 use App\Models\StudentFeeDiscount;
 use App\Models\User;
 use App\Models\Invoice;
+use App\Models\Payment;
+use App\Models\StudentLedger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -323,6 +325,117 @@ class FeeController extends Controller
                 'recentPayments' => collect(),
                 'overdueInvoices' => collect(),
                 'error' => 'Unable to load finance overview: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // ── Fee Profiles (Student Fee Profile / Inkwelly SaaS View) ───────────────
+
+    public function feeProfiles(Request $request, ?int $studentId = null)
+    {
+        try {
+            $studentQuery = User::role('student')->with(['promotions.schoolClass', 'promotions.section']);
+
+            $selectedStudent = null;
+            if ($studentId) {
+                $selectedStudent = $studentQuery->find($studentId);
+            } elseif ($request->filled('student_id')) {
+                $selectedStudent = $studentQuery->find($request->input('student_id'));
+            }
+
+            if (!$selectedStudent) {
+                // Find student with existing invoices first, or first available student
+                $studentWithInvoices = Invoice::whereNotNull('student_id')->latest()->value('student_id');
+                $selectedStudent = $studentWithInvoices ? $studentQuery->find($studentWithInvoices) : $studentQuery->first();
+            }
+
+            $allStudents = User::role('student')
+                ->select('id', 'first_name', 'last_name', 'admission_no', 'email', 'photo')
+                ->with(['promotions.schoolClass', 'promotions.section'])
+                ->orderBy('first_name')
+                ->take(150)
+                ->get();
+
+            if (!$selectedStudent) {
+                return view('finance.fee-profiles', [
+                    'selectedStudent' => null,
+                    'allStudents'     => $allStudents,
+                    'invoices'        => collect(),
+                    'payments'        => collect(),
+                    'ledger'          => collect(),
+                    'totalCharged'    => 0,
+                    'totalPaid'       => 0,
+                    'totalDue'        => 0,
+                    'collectionRate'  => 0,
+                    'baseFee'         => 0,
+                    'fineAmount'      => 0,
+                    'discountAmount'  => 0,
+                    'pendingInvoicesCount' => 0,
+                    'paidInvoicesCount'    => 0,
+                    'discountsCount'       => 0,
+                    'activeStructures'     => collect(),
+                ]);
+            }
+
+            $invoices = Invoice::where('student_id', $selectedStudent->id)
+                ->with(['items.feeType', 'payments.recordedBy'])
+                ->latest()
+                ->get();
+
+            $payments = Payment::whereIn('invoice_id', $invoices->pluck('id'))
+                ->with(['invoice', 'recordedBy'])
+                ->latest()
+                ->get();
+
+            $ledger = StudentLedger::where('student_id', $selectedStudent->id)
+                ->orderBy('entry_date')
+                ->get();
+
+            // Calculate summary metrics
+            $totalCharged = (float)$invoices->sum('amount');
+            $totalPaid = (float)$payments->sum('amount');
+            $totalDue = max(0, $totalCharged - $totalPaid);
+            $collectionRate = $totalCharged > 0 ? min(100, round(($totalPaid / $totalCharged) * 100)) : 0;
+
+            $fineAmount = (float)$invoices->sum('fine_amount');
+            $discountAmount = (float)$invoices->sum('discount_amount');
+            $baseFee = max(0, $totalCharged - $fineAmount);
+
+            $pendingInvoicesCount = $invoices->where('status', '!=', 'paid')->count();
+            $paidInvoicesCount = $invoices->where('status', 'paid')->count();
+            $discountsCount = StudentFeeDiscount::where('student_id', $selectedStudent->id)->count();
+
+            $classId = $selectedStudent->class_id ?? optional($selectedStudent->promotions->last())->class_id;
+            $activeStructures = FeeStructure::with(['category'])
+                ->when($classId, fn($q) => $q->where('class_id', $classId))
+                ->get();
+
+            return view('finance.fee-profiles', compact(
+                'selectedStudent', 'allStudents', 'invoices', 'payments', 'ledger',
+                'totalCharged', 'totalPaid', 'totalDue', 'collectionRate',
+                'baseFee', 'fineAmount', 'discountAmount',
+                'pendingInvoicesCount', 'paidInvoicesCount', 'discountsCount',
+                'activeStructures'
+            ));
+        } catch (\Exception $e) {
+            return view('finance.fee-profiles', [
+                'selectedStudent' => null,
+                'allStudents'     => collect(),
+                'invoices'        => collect(),
+                'payments'        => collect(),
+                'ledger'          => collect(),
+                'totalCharged'    => 0,
+                'totalPaid'       => 0,
+                'totalDue'        => 0,
+                'collectionRate'  => 0,
+                'baseFee'         => 0,
+                'fineAmount'      => 0,
+                'discountAmount'  => 0,
+                'pendingInvoicesCount' => 0,
+                'paidInvoicesCount'    => 0,
+                'discountsCount'       => 0,
+                'activeStructures'     => collect(),
+                'error'           => 'Unable to load fee profile: ' . $e->getMessage(),
             ]);
         }
     }

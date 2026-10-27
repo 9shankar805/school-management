@@ -24,9 +24,11 @@ class SectionStoreRequest extends FormRequest
     public function rules()
     {
         return [
-            'section_name'  => 'required',
-            'room_no'       => 'required',
-            'class_id'      => 'required|integer|gt:0',
+            'section_name'  => 'required|string',
+            'room_no'       => 'nullable|string',
+            'class_id'      => 'required_without_all:class_ids,all_classes|nullable',
+            'class_ids'     => 'nullable|array',
+            'all_classes'   => 'nullable|boolean',
             'session_id'    => 'required|integer|gt:0',
         ];
     }
