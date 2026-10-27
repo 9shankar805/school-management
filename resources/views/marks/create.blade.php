@@ -196,16 +196,23 @@
                                 @endforeach
                             @elseif(count($sectionStudents) > 0)
                                 @foreach ($sectionStudents as $sectionStudent)
+                                    @php
+                                        $stu = $sectionStudent->student ?? null;
+                                        $rollNo = $sectionStudent->roll_no ?? $stu?->roll_no ?? '—';
+                                    @endphp
                                     <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                                        <td class="py-3 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                                            {{ $rollNo }}
+                                        </td>
                                         <td class="py-3 px-4 font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                                             <div class="w-7 h-7 rounded-full bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center text-xs">
-                                                {{ substr($sectionStudent->student->first_name ?? 'S', 0, 1) }}
+                                                {{ substr($stu->first_name ?? 'S', 0, 1) }}
                                             </div>
-                                            {{ $sectionStudent->student->first_name ?? '' }} {{ $sectionStudent->student->last_name ?? '' }}
+                                            {{ $stu->first_name ?? '' }} {{ $stu->last_name ?? '' }}
                                         </td>
                                         @foreach ($exams as $exam)
                                             <td class="py-3 px-4">
-                                                <input type="number" step="0.01" min="0" @if($exam_rules_by_exam_id->has($exam->id)) max="{{ $exam_rules_by_exam_id[$exam->id] }}" @endif class="w-full text-xs px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20" name="student_mark[{{ $sectionStudent->student->id }}][{{ $exam->id }}]">
+                                                <input type="number" step="0.01" min="0" @if($exam_rules_by_exam_id->has($exam->id)) max="{{ $exam_rules_by_exam_id[$exam->id] }}" @endif class="w-full text-xs px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20" name="student_mark[{{ $stu->id ?? $sectionStudent->student_id }}][{{ $exam->id }}]">
                                             </td>
                                         @endforeach
                                     </tr>
