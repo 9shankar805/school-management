@@ -168,20 +168,31 @@ class MarkController extends Controller
             $user = auth()->user();
             $isAdmin = $this->isMarksManagementUser($user);
 
-            $academic_setting = $this->academicSettingRepository ? $this->academicSettingRepository->getAcademicSetting() : null;
-            $semesters = $this->semesterRepository ? $this->semesterRepository->getAll($current_school_session_id) : collect();
+            $schoolId = $user->school_id ?? null;
+            $cacheBase = "marks_create_{$schoolId}_{$current_school_session_id}";
 
-            // Classes list: Admins see all classes; teachers see ONLY classes where they are assigned
+            // ── Cached lookups (5 min TTL) ────────────────────────────
+            $academic_setting = \Illuminate\Support\Facades\Cache::remember("{$cacheBase}_acset", 300, fn() =>
+                $this->academicSettingRepository ? $this->academicSettingRepository->getAcademicSetting() : null
+            );
+
+            $semesters = \Illuminate\Support\Facades\Cache::remember("{$cacheBase}_sems", 300, fn() =>
+                $this->semesterRepository ? $this->semesterRepository->getAll($current_school_session_id) : collect()
+            );
+
+            // Classes list: Admins see all; teachers see only assigned classes
             if ($isAdmin) {
-                $school_classes = $this->schoolClassRepository ? $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id) : collect();
+                $school_classes = \Illuminate\Support\Facades\Cache::remember("{$cacheBase}_classes", 300, fn() =>
+                    $this->schoolClassRepository ? $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id) : collect()
+                );
             } else {
-                $assignedClassIds = \App\Models\AssignedTeacher::where('session_id', $current_school_session_id)
-                    ->where('teacher_id', $user->id)
-                    ->pluck('class_id')
-                    ->unique()
-                    ->filter()
-                    ->toArray();
-                $school_classes = \App\Models\SchoolClass::whereIn('id', $assignedClassIds)->orderBy('class_name')->get();
+                // Per-teacher cache (short TTL since assignments change)
+                $school_classes = \Illuminate\Support\Facades\Cache::remember("{$cacheBase}_classes_{$user->id}", 120, function() use ($current_school_session_id, $user) {
+                    $assignedClassIds = \App\Models\AssignedTeacher::where('session_id', $current_school_session_id)
+                        ->where('teacher_id', $user->id)
+                        ->pluck('class_id')->unique()->filter()->toArray();
+                    return \App\Models\SchoolClass::whereIn('id', $assignedClassIds)->orderBy('class_name')->get();
+                });
             }
 
             // Resolve selected semester
@@ -286,53 +297,37 @@ class MarkController extends Controller
                 if (!$isAdmin) {
                     $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
                 }
-
-                // Fetch exams for this session, semester, class
+                // Single query for exams
                 $exams = Exam::where('session_id', $current_school_session_id)
                     ->when($semester_id > 0, fn($q) => $q->where('semester_id', $semester_id))
                     ->where('class_id', $class_id)
                     ->get();
-
-                $examRulesByExamId = ExamRule::where('session_id', $current_school_session_id)
-                    ->whereIn('exam_id', $exams->pluck('id'))
+                $examIds = $exams->pluck('id');
+                // Single query for exam rules
+                $examRulesByExamId = ExamRule::whereIn('exam_id', $examIds)
                     ->pluck('total_marks', 'exam_id');
-
-                $courseMaxMarks = [];
                 $examsByCourse = $exams->keyBy('course_id');
+                $courseMaxMarks = [];
                 foreach ($classCourses as $crs) {
                     $ex = $examsByCourse->get($crs->id);
-                    if ($ex && isset($examRulesByExamId[$ex->id])) {
-                        $courseMaxMarks[$crs->id] = (float)$examRulesByExamId[$ex->id];
-                    } else {
-                        $courseMaxMarks[$crs->id] = 100;
-                    }
+                    $courseMaxMarks[$crs->id] = ($ex && isset($examRulesByExamId[$ex->id]))
+                        ? (float)$examRulesByExamId[$ex->id] : 100;
                 }
-
-                // Fetch all recorded marks for these students and courses
-                $studentIds = $sectionStudents->map(fn($item) => $item->student_id ?? optional($item->student)->id)->filter()->unique()->toArray();
-
-                // Get exam IDs for this specific class + semester to load correct marks
-                $semesterExamIds = Exam::where('session_id', $current_school_session_id)
-                    ->where('class_id', $class_id)
-                    ->when($semester_id > 0, fn($q) => $q->where('semester_id', $semester_id))
-                    ->pluck('id');
-
+                // Single optimized marks query (only needed columns)
+                $studentIds = $sectionStudents->map(fn($item) => $item->student_id ?? optional($item->student)->id)->filter()->unique()->values()->toArray();
                 $existingMarks = Mark::where('session_id', $current_school_session_id)
                     ->where('class_id', $class_id)
                     ->whereIn('student_id', $studentIds)
                     ->whereIn('course_id', $classCourses->pluck('id'))
-                    ->whereIn('exam_id', $semesterExamIds)
-                    ->orderByDesc('updated_at') // latest mark wins
-                    ->get();
-
+                    ->whereIn('exam_id', $examIds)
+                    ->orderByDesc('updated_at')
+                    ->get(['student_id', 'course_id', 'marks']);
                 $marksMatrix = [];
                 foreach ($existingMarks as $m) {
-                    // Only set if not already set (latest wins due to orderByDesc)
                     if (!isset($marksMatrix[$m->student_id][$m->course_id])) {
                         $marksMatrix[$m->student_id][$m->course_id] = $m->marks;
                     }
                 }
-
                 return view('marks.create', [
                     'academic_setting'          => $academic_setting,
                     'semesters'                 => $semesters,
