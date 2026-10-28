@@ -152,7 +152,13 @@ class SectionController extends Controller
                              && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'attendance-officer']);
         $forAttendance = $request->query('for_attendance') || $request->query('is_attendance');
 
-        if ($isRestrictedTeacher) {
+        $isClassTeacherThisClass = $user ? \App\Models\AssignedTeacher::where('session_id', $sessionId)
+            ->where('teacher_id', $user->id)
+            ->where('class_id', $classId)
+            ->where('is_class_teacher', true)
+            ->exists() : false;
+
+        if ($isRestrictedTeacher && !$isClassTeacherThisClass) {
             $query = \App\Models\AssignedTeacher::where('session_id', $sessionId)
                 ->where('teacher_id', $user->id)
                 ->where('class_id', $classId);
@@ -190,8 +196,9 @@ class SectionController extends Controller
         }
 
         return response()->json([
-            'sections' => $sections,
-            'courses'  => $courses,
+            'sections'         => $sections,
+            'courses'          => $courses,
+            'is_class_teacher' => $isClassTeacherThisClass,
         ])->header('Cache-Control', 'no-store, no-cache');
     }
 

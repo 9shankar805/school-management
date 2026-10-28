@@ -21,19 +21,34 @@
                 {{ $assignment->schoolClass?->class_name }} — Section {{ preg_replace('/^Section\s+/i', '', $assignment->section?->section_name ?? 'A') }} &middot; Cross-Subject Terminal Ledger
             </p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-wrap">
             {{-- Exam selector dropdown --}}
             <form method="GET" action="{{ route('class-incharge.gradebook') }}" class="flex items-center gap-2">
                 <label class="text-xs font-bold text-slate-500 uppercase">Exam:</label>
                 <select name="exam_id" onchange="this.form.submit()" class="text-xs font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-amber-500 focus:outline-none shadow-sm">
                     @foreach($exams as $ex)
                     <option value="{{ $ex->id }}" {{ $examId == $ex->id ? 'selected' : '' }}>
-                        {{ $ex->name }}
+                        {{ $ex->name ?? $ex->exam_name }}
                     </option>
                     @endforeach
                 </select>
             </form>
-            <a href="{{ route('class-incharge.dashboard') }}" class="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold hover:bg-slate-200 transition">
+
+            <a href="{{ route('course.mark.create', ['class_id' => $assignment->class_id, 'section_id' => $assignment->section_id, 'semester_id' => $selectedExam?->semester_id ?? 1, 'course_id' => 'all']) }}" 
+               class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5"
+               title="Open Master Grade Ledger to view and edit marks across all subjects for your class">
+                <i class="bi bi-pencil-square"></i> Edit All Subject Marks
+            </a>
+
+            <a href="{{ route('results.class.report-cards', ['class_id' => $assignment->class_id, 'section_id' => $assignment->section_id, 'semester_id' => $selectedExam?->semester_id ?? 1, 'stream' => 1]) }}" 
+               target="_blank" 
+               data-no-loader
+               class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5"
+               title="Print individual official report cards for every student in the whole class on separate A4 pages">
+                <i class="bi bi-printer-fill"></i> Print Class Results (Individual A4)
+            </a>
+
+            <a href="{{ route('class-incharge.dashboard') }}" class="px-3.5 py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold hover:bg-slate-200 transition">
                 ← Overview
             </a>
         </div>

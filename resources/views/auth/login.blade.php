@@ -188,19 +188,24 @@
 
                 {{-- School Identity Card Header (Desktop & Mobile) --}}
                 @if($school)
-                <div class="flex items-center gap-3.5 mb-6 p-3 rounded-2xl bg-indigo-50/80 dark:bg-slate-800/80 border border-indigo-100 dark:border-slate-700/80 shadow-sm backdrop-blur-xs">
-                    <div class="w-11 h-11 rounded-xl bg-white dark:bg-slate-900 p-1 shadow-xs border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
-                        <img src="{{ $schoolLogo }}" alt="{{ $schoolName }} logo" class="w-full h-full object-contain rounded-lg">
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <div class="flex items-center gap-1.5">
-                            <h3 class="font-bold text-sm text-slate-900 dark:text-white truncate">{{ $schoolName }}</h3>
-                            <i class="bi bi-patch-check-fill text-indigo-600 dark:text-indigo-400 text-xs flex-shrink-0" title="Verified School"></i>
+                <div class="flex items-center justify-between gap-3.5 mb-6 p-3 rounded-2xl bg-indigo-50/80 dark:bg-slate-800/80 border border-indigo-100 dark:border-slate-700/80 shadow-sm backdrop-blur-xs">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-11 h-11 rounded-xl bg-white dark:bg-slate-900 p-1 shadow-xs border border-slate-200 dark:border-slate-700 flex items-center justify-center flex-shrink-0">
+                            <img src="{{ $schoolLogo }}" alt="{{ $schoolName }} logo" class="w-full h-full object-contain rounded-lg">
                         </div>
-                        <p class="text-xs text-slate-600 dark:text-slate-300 font-medium truncate mt-0.5">
-                            {{ $school->city ? $school->city . ' · ' : '' }}Official Login Portal
-                        </p>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5">
+                                <h3 class="font-bold text-sm text-slate-900 dark:text-white truncate">{{ $schoolName }}</h3>
+                                <i class="bi bi-patch-check-fill text-indigo-600 dark:text-indigo-400 text-xs flex-shrink-0" title="Verified School"></i>
+                            </div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 font-medium truncate mt-0.5">
+                                {{ $school->city ? $school->city . ' · ' : '' }}Official Login Portal
+                            </p>
+                        </div>
                     </div>
+                    <a href="{{ route('login', ['school' => 'none']) }}" class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline px-2 py-1 rounded-lg hover:bg-white/60 dark:hover:bg-slate-700/60 transition flex-shrink-0" title="Switch to another school or portal">
+                        Switch
+                    </a>
                 </div>
                 @else
                 <div class="flex items-center gap-3.5 mb-6 p-3 rounded-2xl bg-indigo-50/80 dark:bg-slate-800/80 border border-indigo-100 dark:border-slate-700/80 shadow-sm backdrop-blur-xs">
@@ -237,8 +242,11 @@
                 @endif
 
                 {{-- Login form --}}
-                <form method="POST" action="{{ route('login') }}" class="space-y-4">
+                <form method="POST" action="{{ $school ? route('login', ['school' => $school->slug]) : route('login') }}" class="space-y-4">
                     @csrf
+                    @if($school)
+                        <input type="hidden" name="school_id" value="{{ $school->id }}">
+                    @endif
 
                     {{-- Email --}}
                     <div class="form-group-modern">

@@ -10,12 +10,13 @@
                 </p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <a href="{{ route('results.class.report-cards', request()->query()) }}"
+                <a href="{{ route('results.class.report-cards', array_merge(request()->query(), ['stream' => 1])) }}"
                    data-no-loader
                    target="_blank"
-                   class="btn px-4 py-2 text-white rounded-xl text-sm font-semibold transition flex items-center gap-1.5 shadow-sm"
-                   style="background-color: #4f46e5 !important; color: #ffffff !important;">
-                    <i class="bi bi-file-earmark-person-fill"></i> All Report Cards (PDF)
+                   class="btn px-4 py-2 text-white rounded-xl text-sm font-bold transition flex items-center gap-1.5 shadow-sm"
+                   style="background-color: #4f46e5 !important; color: #ffffff !important;"
+                   title="Print individual official marksheets / report cards for all students in this class on separate A4 pages">
+                    <i class="bi bi-printer-fill"></i> Print All Marksheets (Individual A4)
                 </a>
                 <a href="{{ route('results.class.pdf', request()->query()) }}"
                    data-no-loader
