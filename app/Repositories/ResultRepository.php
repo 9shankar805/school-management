@@ -338,38 +338,34 @@ class ResultRepository
             $percentage = $totalMax > 0 ? round(($totalMarks / $totalMax) * 100, 4) : 0.0;
 
             return compact('student', 'courses', 'gpa', 'totalMarks', 'totalMax', 'percentage', 'passed', 'failed', 'aPlusCount');
-        })
-        // Nepal CDC ranking: primary = total marks desc, secondary = GPA desc,
-        // tertiary = A+ count desc, quaternary = failed count asc
-        ->sortBy([
-            fn($a, $b) => $b['totalMarks']  <=> $a['totalMarks'],
-            fn($a, $b) => $b['gpa']          <=> $a['gpa'],
-            fn($a, $b) => $b['aPlusCount']   <=> $a['aPlusCount'],
-            fn($a, $b) => $a['failed']        <=> $b['failed'],
-        ])
-        ->values();
+        });
 
-        // Standard competition ranking (Nepal practice):
-        // Tied students share the SAME rank; next rank skips by tie size
-        // e.g. two students at #2 → next is #4 (not #3)
-        $rank      = 1;
-        $prevKey   = null;
-        $sameCount = 0;
+        // Nepal CDC ranking — usort for reliable multi-key sort
+        $sorted = $results->values()->toArray();
+        usort($sorted, function ($a, $b) {
+            if ($b['totalMarks'] != $a['totalMarks']) return $b['totalMarks'] <=> $a['totalMarks'];
+            if ($b['gpa']        != $a['gpa'])        return $b['gpa']        <=> $a['gpa'];
+            if ($b['aPlusCount'] != $a['aPlusCount']) return $b['aPlusCount'] <=> $a['aPlusCount'];
+            return $a['failed'] <=> $b['failed'];
+        });
 
-        return $results->map(function ($row) use (&$rank, &$prevKey, &$sameCount) {
-            // Tie key = totalMarks + GPA + aPlusCount + failed
+        // Standard competition ranking: ties share rank, next skips
+        // e.g. 3 students tied at #1 → all get #1, next student gets #4
+        $rank = 1; $prevKey = null; $tieCount = 0;
+        $ranked = [];
+        foreach ($sorted as $row) {
             $key = $row['totalMarks'] . '_' . $row['gpa'] . '_' . $row['aPlusCount'] . '_' . $row['failed'];
-
             if ($prevKey !== null && $key === $prevKey) {
-                $sameCount++;
+                $tieCount++;
             } else {
-                $rank     += $sameCount;
-                $sameCount = 0;
+                if ($prevKey !== null) $rank += $tieCount + 1;
+                $tieCount = 0;
             }
             $row['rank'] = $rank;
-            $prevKey     = $key;
-            return $row;
-        });
+            $prevKey = $key;
+            $ranked[] = $row;
+        }
+        return collect($ranked);
     }
 
     /**
