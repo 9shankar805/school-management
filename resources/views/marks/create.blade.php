@@ -7,19 +7,37 @@
 <div class="px-2 sm:px-4 lg:px-8 py-4 sm:py-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
 
     {{-- Page Header --}}
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div class="flex items-center gap-2.5">
-            <span class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center font-bold text-lg sm:text-xl shadow-md shadow-indigo-500/20 flex-shrink-0">
-                <i class="bi bi-pencil-square"></i>
-            </span>
-            <div>
-                <h1 class="text-lg sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight leading-tight">
-                    Enter Marks & Grades
-                    @if(!empty($isAdmin))
-                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 align-middle">Admin</span>
-                    @endif
-                </h1>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">Direct master grade ledger with real-time GPA calculation</p>
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-3">
+                <span class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-indigo-500/20">
+                    <i class="bi bi-pencil-square"></i>
+                </span>
+                <div>
+                    <h1 class="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
+                        Enter Marks & Grades
+                        @if(!empty($isAdmin))
+                        <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex items-center gap-1">
+                            <i class="bi bi-shield-lock-fill text-indigo-500"></i> Admin Mode (All Subjects)
+                        </span>
+                        @elseif(!empty($isClassTeacher))
+                        <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
+                            <i class="bi bi-star-fill text-amber-500"></i> Class Teacher Mode (Class In-Charge · All Subjects)
+                        </span>
+                        @else
+                        <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                            <i class="bi bi-person-badge-fill text-emerald-500"></i> Subject Teacher Mode (Assigned Subject Only)
+                        </span>
+                        @endif
+                    </h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        @if(!empty($isAdmin) || !empty($isClassTeacher))
+                            Direct master grade ledger across all subjects with individual class marksheet printing & evaluations
+                        @else
+                            Record marks and submit evaluations for your assigned subjects
+                        @endif
+                    </p>
+                </div>
             </div>
         </div>
         <nav aria-label="breadcrumb" class="hidden sm:flex">
@@ -108,7 +126,13 @@
         <div class="flex items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
             <div class="flex items-center gap-2.5">
                 <span class="w-2.5 h-6 bg-indigo-600 rounded-full"></span>
-                <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Select Examination, Class & Entry Scope</h2>
+                <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">
+                    @if(!empty($canEditAllSubjects))
+                        Select Examination, Class & Entry Scope
+                    @else
+                        Select Your Assigned Class & Subject
+                    @endif
+                </h2>
             </div>
             <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -156,7 +180,7 @@
                     Section
                 </label>
                 <select id="filter_section_id" name="section_id" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
-                    <option value="0">All Sections (Entire Class)</option>
+                    <option value="0">{{ !empty($canEditAllSubjects) ? 'All Sections (Entire Class)' : 'All Assigned Sections' }}</option>
                 </select>
             </div>
 
@@ -164,19 +188,31 @@
             <div>
                 <label for="filter_course_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
                     <span>Subject / Scope <span class="text-rose-500">*</span></span>
-                    <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">⚡ All Subjects Recommended</span>
+                    @if(!empty($canEditAllSubjects))
+                        <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">⚡ All Subjects Authorized</span>
+                    @else
+                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Assigned Subjects Only</span>
+                    @endif
                 </label>
-                <select id="filter_course_id" name="course_id" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-indigo-200 dark:border-indigo-800/80 bg-indigo-50/30 dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium transition">
-                    <option value="all" {{ ($course_id === 'all' || empty($course_id) || $course_id == '0') ? 'selected' : '' }}>
-                        ⚡ All Subjects at Once (Master Grade Ledger)
-                    </option>
+                <select id="filter_course_id" name="course_id" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-indigo-200 dark:border-indigo-800/80 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium transition">
+                    @if(!empty($canEditAllSubjects))
+                        <option value="all" {{ ($course_id === 'all' || empty($course_id) || $course_id == '0') ? 'selected' : '' }}>
+                            ⚡ All Subjects at Once (Master Grade Ledger)
+                        </option>
+                    @else
+                        <option value="">-- Choose Your Assigned Subject --</option>
+                    @endif
                 </select>
             </div>
 
             <div class="col-span-2 lg:col-span-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 hidden sm:flex">
                     <i class="bi bi-info-circle text-indigo-500"></i>
-                    <span>Selecting <strong>All Subjects</strong> allows entering marks for the entire class on one screen.</span>
+                    @if(!empty($canEditAllSubjects))
+                        <span>Selecting <strong>All Subjects</strong> enables master bulk grade entry across all courses. Only assigned Class Teachers and Administrators have this privilege.</span>
+                    @else
+                        <span>You are viewing your assigned subjects. Only the designated <strong>Class Teacher</strong> or an Administrator can edit marks for all subjects and print class results.</span>
+                    @endif
                 </div>
                 <button type="submit" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-2">
                     <i class="bi bi-table"></i> Load Grade Sheet
@@ -217,7 +253,7 @@
                     <p class="text-xs text-indigo-200/80 mt-1 flex items-center gap-3 flex-wrap">
                         <span><strong class="text-white">{{ count($sectionStudents) }}</strong> Students Enrolled</span>
                         <span>•</span>
-                        <span><strong class="text-white">{{ count($classCourses) }}</strong> Total Subjects</span>
+                        <span><strong class="text-white">{{ count($classCourses) }}</strong> {{ !empty($isAdmin) ? 'Total Subjects' : 'Assigned Subjects' }}</span>
                         @if(!$isAllSubjectsMode && $selectedCourse)
                             <span>•</span>
                             <span>Course Type: <strong class="text-white">{{ $selectedCourse->course_type ?? 'Theory' }}</strong></span>
@@ -225,31 +261,66 @@
                     </p>
                 </div>
 
-                {{-- Mode Switcher Tabs --}}
-                <div class="flex items-center gap-2 bg-white/10 p-1.5 rounded-2xl backdrop-blur-md border border-white/10 flex-shrink-0">
-                    <a href="{{ route('course.mark.create', ['semester_id' => $semester_id, 'class_id' => $class_id, 'section_id' => $section_id, 'course_id' => 'all']) }}" 
-                       class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $isAllSubjectsMode ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
-                        <i class="bi bi-grid-3x3-gap-fill"></i>
-                        <span>All Subjects (Ledger)</span>
-                    </a>
-                    @if(count($classCourses) > 0)
-                        <div class="relative group">
-                            <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ !$isAllSubjectsMode ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
-                                <i class="bi bi-journal-text"></i>
-                                <span>{{ !$isAllSubjectsMode && $selectedCourse ? $selectedCourse->course_name : 'Single Subject' }}</span>
-                                <i class="bi bi-chevron-down text-[10px]"></i>
-                            </button>
-                            <div class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 hidden group-hover:block z-50">
-                                <div class="px-3 py-1 text-[10px] uppercase font-bold text-slate-400">Switch to Specific Subject</div>
-                                @foreach($classCourses as $courseItem)
-                                    <a href="{{ route('course.mark.create', ['semester_id' => $semester_id, 'class_id' => $class_id, 'section_id' => $section_id, 'course_id' => $courseItem->id]) }}" 
-                                       class="px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-indigo-600 flex items-center justify-between">
-                                        <span class="truncate">{{ $courseItem->course_name }}</span>
-                                        <span class="text-[10px] text-slate-400">{{ $courseItem->course_type ?? 'Theory' }}</span>
-                                    </a>
-                                @endforeach
-                            </div>
+                <div class="flex items-center gap-3 flex-wrap">
+                    @if(!empty($canEditAllSubjects))
+                        <a href="{{ route('results.class.report-cards', ['class_id' => $class_id, 'section_id' => $section_id, 'semester_id' => $semester_id, 'stream' => 1]) }}" 
+                           target="_blank" 
+                           data-no-loader
+                           class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-lg transition flex items-center gap-2 flex-shrink-0"
+                           title="Print individual official report cards for every student in the whole class on separate A4 pages">
+                            <i class="bi bi-printer-fill"></i>
+                            <span>Print Class Marksheets (Individual A4)</span>
+                        </a>
+                    @endif
+
+                    {{-- Mode Switcher Tabs (Admins & Class Teachers see All Subjects Ledger; Subject Teachers only see their assigned subjects) --}}
+                    @if(!empty($canEditAllSubjects))
+                        <div class="flex items-center gap-2 bg-white/10 p-1.5 rounded-2xl backdrop-blur-md border border-white/10 flex-shrink-0">
+                            <a href="{{ route('course.mark.create', ['semester_id' => $semester_id, 'class_id' => $class_id, 'section_id' => $section_id, 'course_id' => 'all']) }}" 
+                               class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ $isAllSubjectsMode ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                                <i class="bi bi-grid-3x3-gap-fill"></i>
+                                <span>All Subjects (Ledger)</span>
+                            </a>
+                            @if(count($classCourses) > 0)
+                                <div class="relative group">
+                                    <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 {{ !$isAllSubjectsMode ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-300 hover:text-white hover:bg-white/5' }}">
+                                        <i class="bi bi-journal-text"></i>
+                                        <span>{{ !$isAllSubjectsMode && $selectedCourse ? $selectedCourse->course_name : 'Single Subject' }}</span>
+                                        <i class="bi bi-chevron-down text-[10px]"></i>
+                                    </button>
+                                    <div class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 hidden group-hover:block z-50">
+                                        <div class="px-3 py-1 text-[10px] uppercase font-bold text-slate-400">Switch to Specific Subject</div>
+                                        @foreach($classCourses as $courseItem)
+                                            <a href="{{ route('course.mark.create', ['semester_id' => $semester_id, 'class_id' => $class_id, 'section_id' => $section_id, 'course_id' => $courseItem->id]) }}" 
+                                               class="px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-indigo-600 flex items-center justify-between">
+                                                <span class="truncate">{{ $courseItem->course_name }}</span>
+                                                <span class="text-[10px] text-slate-400">{{ $courseItem->course_type ?? 'Theory' }}</span>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
                         </div>
+                    @else
+                        @if(count($classCourses) > 1)
+                            <div class="relative group flex-shrink-0">
+                                <button type="button" class="px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white backdrop-blur-md border border-white/10 transition flex items-center gap-2">
+                                    <i class="bi bi-journal-check text-indigo-300"></i>
+                                    <span>Subject: {{ $selectedCourse ? $selectedCourse->course_name : 'Select Subject' }}</span>
+                                    <i class="bi bi-chevron-down text-[10px]"></i>
+                                </button>
+                                <div class="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 hidden group-hover:block z-50">
+                                    <div class="px-3 py-1 text-[10px] uppercase font-bold text-slate-400">Your Assigned Subjects</div>
+                                    @foreach($classCourses as $courseItem)
+                                        <a href="{{ route('course.mark.create', ['semester_id' => $semester_id, 'class_id' => $class_id, 'section_id' => $section_id, 'course_id' => $courseItem->id]) }}" 
+                                           class="px-3 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-slate-800 hover:text-indigo-600 flex items-center justify-between">
+                                            <span class="truncate">{{ $courseItem->course_name }}</span>
+                                            <span class="text-[10px] text-slate-400">{{ $courseItem->course_type ?? 'Theory' }}</span>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -277,6 +348,16 @@
                         </div>
 
                         <div class="flex items-center gap-2 flex-wrap">
+                            @if(!empty($canEditAllSubjects))
+                                <a href="{{ route('results.class.report-cards', ['class_id' => $class_id, 'section_id' => $section_id, 'semester_id' => $semester_id, 'stream' => 1]) }}"
+                                   target="_blank"
+                                   data-no-loader
+                                   class="px-3.5 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800/80 bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                                   title="Print individual official report cards for every student in the whole class on separate A4 pages">
+                                    <i class="bi bi-printer-fill text-indigo-600 dark:text-indigo-400"></i>
+                                    <span>Print Class Marksheets (Individual A4)</span>
+                                </a>
+                            @endif
                             <button type="button" onclick="fillZeroForEmpty()" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold transition flex items-center gap-1.5 shadow-xs" title="Set any remaining empty marks as 0 (Absent)">
                                 <i class="bi bi-magic text-indigo-500"></i> <span class="hidden sm:inline">Set Empty to 0</span><span class="sm:hidden">Absent</span>
                             </button>
@@ -451,13 +532,26 @@
                         </p>
                     </div>
 
-                    @if (!$final_marks_submitted && count($exams) > 0 && ($isWindowOpen || !empty($isAdmin)))
-                        <a href="{{ route('course.final.mark.submit.show', ['class_id' => $class_id, 'class_name' => $selectedClass->class_name ?? '', 'section_id' => $section_id, 'section_name' => $selectedSection->section_name ?? '', 'course_id' => $course_id, 'course_name' => $selectedCourse->course_name ?? '', 'semester_id' => $semester_id]) }}" 
-                           class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition flex items-center gap-1.5" 
-                           onclick="return confirm('Are you sure you want to submit final marks for this course?')">
-                            <i class="bi bi-check2-all"></i> Submit Final Marks
-                        </a>
-                    @endif
+                    <div class="flex items-center gap-2 flex-wrap">
+                        @if(!empty($canEditAllSubjects))
+                            <a href="{{ route('results.class.report-cards', ['class_id' => $class_id, 'section_id' => $section_id, 'semester_id' => $semester_id, 'stream' => 1]) }}" 
+                               target="_blank" 
+                               data-no-loader
+                               class="px-4 py-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 border border-indigo-200 dark:border-indigo-800 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                               title="Print individual official report cards for every student in the whole class on separate A4 pages">
+                                <i class="bi bi-printer-fill text-indigo-600 dark:text-indigo-400"></i>
+                                <span>Print Class Marksheets (Individual A4)</span>
+                            </a>
+                        @endif
+
+                        @if (!$final_marks_submitted && count($exams) > 0 && ($isWindowOpen || !empty($isAdmin)))
+                            <a href="{{ route('course.final.mark.submit.show', ['class_id' => $class_id, 'class_name' => $selectedClass->class_name ?? '', 'section_id' => $section_id, 'section_name' => $selectedSection->section_name ?? '', 'course_id' => $course_id, 'course_name' => $selectedCourse->course_name ?? '', 'semester_id' => $semester_id]) }}" 
+                               class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition flex items-center gap-1.5" 
+                               onclick="return confirm('Are you sure you want to submit final marks for this course?')">
+                                <i class="bi bi-check2-all"></i> Submit Final Marks
+                            </a>
+                        @endif
+                    </div>
                 </div>
 
                 <form action="{{ route('course.mark.store') }}" method="POST" class="p-6">
@@ -584,11 +678,14 @@
 
 {{-- Scripts for dynamic Section/Course loading, keyboard shortcuts, and live GPA calculations --}}
 <script>
+const IS_ADMIN = {{ !empty($isAdmin) ? 'true' : 'false' }};
+const IS_CLASS_TEACHER = {{ !empty($isClassTeacher) ? 'true' : 'false' }};
+const CAN_EDIT_ALL = {{ !empty($canEditAllSubjects) ? 'true' : 'false' }};
 const PRESELECTED_SECTION = "{{ $section_id }}";
 const PRESELECTED_COURSE = "{{ $course_id }}";
 
 function handleClassChange(classId) {
-    loadSectionsAndCourses(classId, '0', 'all');
+    loadSectionsAndCourses(classId, '0', (IS_ADMIN || IS_CLASS_TEACHER) ? 'all' : '');
 }
 
 function loadSectionsAndCourses(classId, preselectedSection, preselectedCourse) {
@@ -598,19 +695,21 @@ function loadSectionsAndCourses(classId, preselectedSection, preselectedCourse) 
     if (!selectSection || !selectCourse) return;
 
     if (!classId) {
-        selectSection.innerHTML = '<option value="0">All Sections (Entire Class)</option>';
-        selectCourse.innerHTML = '<option value="all">⚡ All Subjects at Once (Master Grade Ledger)</option>';
+        selectSection.innerHTML = '<option value="0">' + (CAN_EDIT_ALL ? 'All Sections (Entire Class)' : 'All Assigned Sections') + '</option>';
+        selectCourse.innerHTML = CAN_EDIT_ALL ? '<option value="all">⚡ All Subjects at Once (Master Grade Ledger)</option>' : '<option value="">-- Choose Your Assigned Subject --</option>';
         return;
     }
 
     selectSection.innerHTML = '<option value="0">Loading sections...</option>';
-    selectCourse.innerHTML = '<option value="all">Loading courses...</option>';
+    selectCourse.innerHTML = '<option value="">Loading courses...</option>';
 
     fetch('{{ route("get.sections.courses.by.classId") }}?class_id=' + classId)
         .then(res => res.json())
         .then(data => {
+            const hasAllPrivilege = IS_ADMIN || !!data.is_class_teacher || CAN_EDIT_ALL;
+
             // Populate Sections
-            let secHtml = '<option value="0">All Sections (Entire Class)</option>';
+            let secHtml = '<option value="0">' + (hasAllPrivilege ? 'All Sections (Entire Class)' : 'All Assigned Sections') + '</option>';
             if (data.sections && data.sections.length > 0) {
                 data.sections.forEach(sec => {
                     const isSel = String(sec.id) === String(preselectedSection) ? 'selected' : '';
@@ -620,23 +719,35 @@ function loadSectionsAndCourses(classId, preselectedSection, preselectedCourse) 
             selectSection.innerHTML = secHtml;
 
             // Populate Courses
-            const isAllSelected = (!preselectedCourse || preselectedCourse === 'all' || preselectedCourse === '0') ? 'selected' : '';
-            let crsHtml = `<option value="all" ${isAllSelected}>⚡ All Subjects at Once (Master Grade Ledger)</option>`;
+            let crsHtml = '';
+            if (hasAllPrivilege) {
+                const isAllSelected = (!preselectedCourse || preselectedCourse === 'all' || preselectedCourse === '0') ? 'selected' : '';
+                crsHtml = `<option value="all" ${isAllSelected}>⚡ All Subjects at Once (Master Grade Ledger)</option>`;
+            } else {
+                crsHtml = `<option value="">-- Choose Your Assigned Subject --</option>`;
+            }
             
             if (data.courses && data.courses.length > 0) {
-                crsHtml += `<optgroup label="Individual Subjects">`;
-                data.courses.forEach(crs => {
-                    const isSel = String(crs.id) === String(preselectedCourse) ? 'selected' : '';
+                if (hasAllPrivilege) {
+                    crsHtml += `<optgroup label="Individual Subjects">`;
+                }
+                data.courses.forEach((crs, idx) => {
+                    const shouldSelect = (String(crs.id) === String(preselectedCourse)) || (!hasAllPrivilege && (data.courses.length === 1 || (!preselectedCourse && idx === 0)));
+                    const isSel = shouldSelect ? 'selected' : '';
                     crsHtml += `<option value="${crs.id}" ${isSel}>${crs.course_name} (${crs.course_type || 'Theory'})</option>`;
                 });
-                crsHtml += `</optgroup>`;
+                if (hasAllPrivilege) {
+                    crsHtml += `</optgroup>`;
+                }
+            } else if (!hasAllPrivilege) {
+                crsHtml = `<option value="">No subjects assigned to you in this class</option>`;
             }
             selectCourse.innerHTML = crsHtml;
         })
         .catch(err => {
             console.error('Error fetching class sections and courses:', err);
-            selectSection.innerHTML = '<option value="0">All Sections (Entire Class)</option>';
-            selectCourse.innerHTML = '<option value="all">⚡ All Subjects at Once (Master Grade Ledger)</option>';
+            selectSection.innerHTML = '<option value="0">All Sections</option>';
+            selectCourse.innerHTML = CAN_EDIT_ALL ? '<option value="all">⚡ All Subjects at Once (Master Grade Ledger)</option>' : '<option value="">-- Select Assigned Subject --</option>';
         });
 }
 

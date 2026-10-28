@@ -187,6 +187,7 @@ class ClassTeacherPortalController extends Controller
 
         $exams   = Exam::where('session_id', $sessionId)->orderByDesc('id')->get();
         $examId  = $request->query('exam_id', $exams->first()?->id);
+        $selectedExam = $exams->firstWhere('id', $examId) ?? $exams->first();
         $courses = Course::where('class_id', $classId)->orWhere('session_id', $sessionId)->get();
 
         $students = Promotion::with('student')
@@ -207,7 +208,7 @@ class ClassTeacherPortalController extends Controller
         }
 
         return view('class-teacher.gradebook', compact(
-            'assignment', 'exams', 'examId', 'courses', 'students', 'marks'
+            'assignment', 'exams', 'examId', 'selectedExam', 'courses', 'students', 'marks'
         ));
     }
 

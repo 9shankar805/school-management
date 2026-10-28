@@ -15,10 +15,11 @@ use App\Interfaces\SemesterInterface;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Traits\AssignedTeacherCheck;
 
 class ResultSheetController extends Controller
 {
-    use SchoolSession;
+    use SchoolSession, AssignedTeacherCheck;
 
     protected $schoolSessionRepository;
     protected $schoolClassRepository;
@@ -328,6 +329,14 @@ class ResultSheetController extends Controller
         $classId    = (int) $request->class_id;
         $sectionId  = (int) $request->query('section_id', 0);
         $semesterId = (int) $request->semester_id;
+
+        $user = auth()->user();
+        if (!$this->isMarksManagementUser($user)) {
+            $isClassTeacher = $this->isAssignedClassTeacher($user, $sessionId, $classId, $sectionId);
+            if (!$isClassTeacher) {
+                abort(403, 'Access Restricted: Only designated class teachers (Class In-Charge) and school administrators can print individual report cards for the entire class.');
+            }
+        }
 
         $repo      = new ResultRepository();
         $results   = $repo->getClassResults($semesterId, $classId, $sectionId, $sessionId);

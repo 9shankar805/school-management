@@ -165,21 +165,68 @@ class MarkController extends Controller
                 ]);
             }
 
+            $user = auth()->user();
+            $isAdmin = $this->isMarksManagementUser($user);
+
             $academic_setting = $this->academicSettingRepository ? $this->academicSettingRepository->getAcademicSetting() : null;
             $semesters = $this->semesterRepository ? $this->semesterRepository->getAll($current_school_session_id) : collect();
-            $school_classes = $this->schoolClassRepository ? $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id) : collect();
 
-            // Resolve human-readable models
-            $selectedClass = $class_id ? SchoolClass::find($class_id) : null;
-            $selectedSection = $section_id > 0 ? Section::find($section_id) : null;
+            // Classes list: Admins see all classes; teachers see ONLY classes where they are assigned
+            if ($isAdmin) {
+                $school_classes = $this->schoolClassRepository ? $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id) : collect();
+            } else {
+                $assignedClassIds = \App\Models\AssignedTeacher::where('session_id', $current_school_session_id)
+                    ->where('teacher_id', $user->id)
+                    ->pluck('class_id')
+                    ->unique()
+                    ->filter()
+                    ->toArray();
+                $school_classes = \App\Models\SchoolClass::whereIn('id', $assignedClassIds)->orderBy('class_name')->get();
+            }
+
+            // Resolve selected semester
             $selectedSemester = $semester_id > 0 ? Semester::find($semester_id) : ($semesters->first() ?? null);
             if ($selectedSemester && $semester_id == 0) {
                 $semester_id = $selectedSemester->id;
             }
-            $selectedCourse = ($course_id && $course_id !== 'all' && (int)$course_id > 0) ? Course::find($course_id) : null;
 
-            // Determine entry mode: if course_id is empty, 0, 'all', or entry_mode is 'all_subjects'
-            $isAllSubjectsMode = empty($course_id) || $course_id === 'all' || (int)$course_id === 0 || $entry_mode === 'all_subjects';
+            // Determine Class Teacher vs Subject Teacher vs Administrator authority
+            $isClassTeacher = $class_id ? $this->isAssignedClassTeacher($user, $current_school_session_id, (int)$class_id, (int)$section_id) : false;
+            $canEditAllSubjects = $isAdmin || $isClassTeacher;
+
+            $teacherAssignedCourseIds = [];
+            if (!$canEditAllSubjects) {
+                // Regular Subject Teacher: restricted strictly to their assigned subjects
+                $isAllSubjectsMode = false;
+
+                if ($class_id) {
+                    $teacherAssignedCourseIds = \App\Models\AssignedTeacher::where('session_id', $current_school_session_id)
+                        ->where('teacher_id', $user->id)
+                        ->where('class_id', $class_id)
+                        ->when($section_id > 0, fn($q) => $q->where('section_id', $section_id))
+                        ->pluck('course_id')
+                        ->unique()
+                        ->filter()
+                        ->toArray();
+
+                    if (empty($teacherAssignedCourseIds)) {
+                        return redirect()->route('course.mark.create')->with('error', 'Access Restricted: You are not assigned to teach any subjects in the selected class and section.');
+                    }
+
+                    // If teacher requested 'all', '0', or an unassigned subject, auto-select their first assigned subject
+                    if (empty($course_id) || $course_id === 'all' || (int)$course_id === 0 || !in_array((int)$course_id, $teacherAssignedCourseIds)) {
+                        $course_id = (int) reset($teacherAssignedCourseIds);
+                    }
+                }
+            } else {
+                // Class Teacher or Administrator: can toggle between master grade ledger or single subject
+                $isAllSubjectsMode = empty($course_id) || $course_id === 'all' || (int)$course_id === 0 || $entry_mode === 'all_subjects';
+            }
+
+            // Resolve human-readable models
+            $selectedClass = $class_id ? SchoolClass::find($class_id) : null;
+            $selectedSection = $section_id > 0 ? Section::find($section_id) : null;
+            $selectedCourse = ($course_id && $course_id !== 'all' && (int)$course_id > 0) ? Course::find($course_id) : null;
 
             if (!$class_id) {
                 return view('marks.create', [
@@ -196,7 +243,7 @@ class MarkController extends Controller
                     'sectionStudents'           => collect(),
                     'exam_rules_by_exam_id'     => collect(),
                     'current_school_session_id' => $current_school_session_id,
-                    'isAllSubjectsMode'         => true,
+                    'isAllSubjectsMode'         => $canEditAllSubjects,
                     'classCourses'              => collect(),
                     'marksMatrix'               => [],
                     'courseMaxMarks'            => [],
@@ -204,15 +251,28 @@ class MarkController extends Controller
                     'selectedSection'           => null,
                     'selectedSemester'          => $selectedSemester,
                     'selectedCourse'            => null,
+                    'isAdmin'                   => $isAdmin,
+                    'isClassTeacher'            => $isClassTeacher,
+                    'canEditAllSubjects'        => $canEditAllSubjects,
                 ]);
             }
 
             // Fetch students for this class and section
             $sectionStudents = $this->userRepository ? $this->userRepository->getAllStudents($current_school_session_id, (int)$class_id, (int)$section_id) : collect();
 
-            // Check if current user is admin/management
-            $user = auth()->user();
-            $isAdmin = $user && ($user->hasAnyRole(['Super Admin', 'Admin', 'Exam Controller', 'Principal', 'Vice Principal', 'super-admin', 'admin', 'principal']) || $user->can('create marks'));
+            // Fetch courses: For regular subject teachers, ONLY their assigned courses! For Admins and Class Teachers, ALL courses in class
+            if (!$canEditAllSubjects) {
+                $classCourses = Course::where('class_id', $class_id)
+                    ->whereIn('id', $teacherAssignedCourseIds)
+                    ->orderBy('course_name')
+                    ->get();
+            } else {
+                $classCourses = Course::where('class_id', $class_id)
+                    ->where(function($q) use ($current_school_session_id) {
+                        $q->where('session_id', $current_school_session_id)->orWhereNull('session_id');
+                    })
+                    ->orderBy('id')
+                    ->get();
 
             // Fetch all courses assigned to this class — deduplicated by name
             $classCourses = Course::uniqueByName()
@@ -303,6 +363,8 @@ class MarkController extends Controller
                     'selectedSemester'          => $selectedSemester,
                     'selectedCourse'            => null,
                     'isAdmin'                   => $isAdmin,
+                    'isClassTeacher'            => $isClassTeacher,
+                    'canEditAllSubjects'        => $canEditAllSubjects,
                 ]);
             } else {
                 // Single Subject Entry Mode
@@ -374,8 +436,11 @@ class MarkController extends Controller
                     'selectedSemester'          => $selectedSemester,
                     'selectedCourse'            => $selectedCourse,
                     'isAdmin'                   => $isAdmin,
+                    'isClassTeacher'            => $isClassTeacher,
+                    'canEditAllSubjects'        => $canEditAllSubjects,
                 ]);
-            }
+            } // end single subject mode
+        } // end if ($class_id)
         } catch (\Exception $e) {
             return view('marks.create', [
                 'academic_setting'          => null,
@@ -463,14 +528,21 @@ class MarkController extends Controller
     {
         ini_set('memory_limit', '512M');
         $current_school_session_id = $this->getSchoolCurrentSession();
-        $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
+        $user = auth()->user();
+        $isAdmin = $this->isMarksManagementUser($user);
 
         $class_id = (int)$request->input('class_id');
         $section_id = (int)$request->input('section_id', 0);
         $semester_id = (int)$request->input('semester_id', 0);
 
+        $isClassTeacher = $class_id ? $this->isAssignedClassTeacher($user, $current_school_session_id, $class_id, $section_id) : false;
+        $canEditAllSubjects = $isAdmin || $isClassTeacher;
+
         // Case 1: Master Grade Ledger (All Subjects Submitted at once)
         if ($request->has('student_course_mark')) {
+            if (!$canEditAllSubjects) {
+                abort(403, 'Access Restricted: Only designated class teachers (Class In-Charge) and school administrators can edit and submit marks across all subjects.');
+            }
             $studentCourseMarks = $request->input('student_course_mark', []);
 
             if (empty($studentCourseMarks)) {
@@ -561,6 +633,10 @@ class MarkController extends Controller
         }
 
         // Case 2: Single Subject Entry (student_mark array)
+        if (!$isAdmin) {
+            $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
+        }
+
         $validator = Validator::make($request->all(), [
             'student_mark' => 'required|array',
             'student_mark.*' => 'required|array',

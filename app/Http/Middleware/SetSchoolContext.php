@@ -101,15 +101,28 @@ class SetSchoolContext
             }
         }
 
-        // ── 3. Session fallback ───────────────────────────────────────────
+        // ── 3. Session & Cookie fallback ─────────────────────────────────
         if (!$school && session()->has('tenant_school_id')) {
             $school = School::find(session('tenant_school_id'));
+        }
+
+        if (!$school && $request->hasCookie('last_school_slug')) {
+            $cookieSlug = $request->cookie('last_school_slug');
+            $cleanCookieSlug = str_replace(['-', '_', ' '], '', strtolower((string) $cookieSlug));
+            $school = School::where(function ($q) use ($cookieSlug, $cleanCookieSlug) {
+                $q->where('slug', $cookieSlug)
+                  ->orWhereRaw("REPLACE(slug, '-', '') = ?", [$cleanCookieSlug])
+                  ->orWhereRaw("LOWER(REPLACE(name, ' ', '')) = ?", [$cleanCookieSlug]);
+            })->orderByRaw("CASE WHEN status = 'active' THEN 0 WHEN status = 'pending' THEN 1 ELSE 2 END")->first();
         }
 
         // ── Bind to config + view ─────────────────────────────────────────
         if ($school) {
             $schoolId = $school->id;
-            session(['tenant_school_id' => $schoolId]);
+            session([
+                'tenant_school_id'   => $schoolId,
+                'tenant_school_slug' => $school->slug,
+            ]);
         }
 
         Config::set('tenant.school_id', $schoolId);
