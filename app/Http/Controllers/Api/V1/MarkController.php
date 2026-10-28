@@ -32,9 +32,10 @@ class MarkController extends Controller
             'mark'       => ['required', 'numeric', 'min:0'],
         ]);
 
+        $val = $request->input('marks', $request->input('mark'));
         $mark = Mark::updateOrCreate(
             $request->only('student_id', 'exam_id', 'course_id'),
-            ['mark' => $request->mark]
+            ['marks' => $val]
         );
 
         return response()->json(['status' => 'success', 'data' => $mark], 201);
@@ -47,10 +48,10 @@ class MarkController extends Controller
         ]);
 
         $marks = Mark::where('student_id', $request->student_id)
-            ->with('exam', 'course', 'gradeRule')
+            ->with('exam', 'course')
             ->get();
 
-        $total       = $marks->sum('mark');
+        $total       = $marks->sum('marks');
         $maxPossible = $marks->count() * 100; // placeholder
         $percentage  = $maxPossible > 0 ? round(($total / $maxPossible) * 100, 2) : 0;
 

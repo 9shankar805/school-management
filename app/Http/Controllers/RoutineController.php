@@ -270,6 +270,12 @@ class RoutineController extends Controller
             ->first();
 
         if ($conflict) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Slot conflicts with an existing class ({$conflict->start}–{$conflict->end}) on that day."
+                ], 422);
+            }
             return back()
                 ->withInput()
                 ->withErrors(['conflict' => "Slot conflicts with an existing class ({$conflict->start}–{$conflict->end}) on that day."]);
@@ -285,6 +291,12 @@ class RoutineController extends Controller
                 ->first();
 
             if ($teacherConflict) {
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "The selected teacher is already scheduled in another section from {$teacherConflict->start} to {$teacherConflict->end} on that day."
+                    ], 422);
+                }
                 return back()
                     ->withInput()
                     ->withErrors(['conflict' => "The selected teacher is already scheduled in another section from {$teacherConflict->start} to {$teacherConflict->end} on that day."]);
@@ -307,6 +319,26 @@ class RoutineController extends Controller
 
         $routine->update($updateData);
 
+        if ($request->expectsJson() || $request->ajax()) {
+            $routine->load(['course:id,course_name', 'teacher:id,first_name,last_name,name']);
+            return response()->json([
+                'success' => true,
+                'message' => 'Timetable slot updated successfully.',
+                'routine' => [
+                    'id'           => $routine->id,
+                    'weekday'      => (int) $routine->weekday,
+                    'start'        => substr($routine->start, 0, 5),
+                    'end'          => substr($routine->end, 0, 5),
+                    'course_id'    => $routine->course_id,
+                    'course_name'  => $routine->course?->course_name ?? 'Subject',
+                    'teacher_id'   => $routine->teacher_id,
+                    'teacher_name' => $routine->teacher?->full_name ?? ($routine->teacher?->name ?? 'Faculty'),
+                    'room'         => $routine->room,
+                    'color'        => $routine->color,
+                ]
+            ]);
+        }
+
         return redirect()->route('section.routine.show', [
             'class_id'   => $routine->class_id,
             'section_id' => $routine->section_id,
@@ -317,6 +349,9 @@ class RoutineController extends Controller
     public function destroy(Routine $routine)
     {
         $routine->delete();
+        if (request()->expectsJson() || request()->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Slot removed from timetable.']);
+        }
         return back()->with('status', 'Slot removed from timetable.');
     }
 
@@ -546,6 +581,7 @@ class RoutineController extends Controller
 
         // Conflict checking across other sections
         $conflicts = [];
+        $conflictingSlots = [];
         foreach ($slots as $slot) {
             $teacherId = $slot['teacher_id'] ?? null;
             if (!$teacherId || empty($slot['course_id'])) {
@@ -570,16 +606,27 @@ class RoutineController extends Controller
                 $tName = $clash->teacher?->full_name ?? $clash->teacher?->name ?? 'Teacher';
                 $cName = $clash->schoolClass?->class_name ?? 'Class';
                 $secName = $clash->section?->section_name ?? 'Section';
-                $conflicts[] = "Conflict: {$tName} is already scheduled in {$cName} ({$secName}) at {$s} - {$e} on Day {$w}.";
+                $msg = "Conflict: {$tName} is already scheduled in {$cName} ({$secName}) at {$s} - {$e} on Day {$w}.";
+                $conflicts[] = $msg;
+                $conflictingSlots[] = [
+                    'weekday'    => $w,
+                    'start'      => $s,
+                    'end'        => $e,
+                    'teacher_id' => $teacherId,
+                    'message'    => $msg
+                ];
             }
         }
 
-        if (!empty($conflicts)) {
+        $forceOverride = $request->boolean('force_override');
+        if (!empty($conflicts) && !$forceOverride) {
             return response()->json([
-                'success'   => false,
-                'conflict'  => true,
-                'message'   => implode("<br>", array_unique($conflicts)),
-                'conflicts' => array_unique($conflicts),
+                'success'           => false,
+                'conflict'          => true,
+                'can_override'      => true,
+                'message'           => implode("<br>", array_unique($conflicts)),
+                'conflicts'         => array_unique($conflicts),
+                'conflicting_slots' => $conflictingSlots,
             ], 422);
         }
 
