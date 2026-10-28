@@ -109,7 +109,15 @@
     </tr>
     <tr>
         <td class="lbl">Class Rank:</td>
-        <td class="val">{{ $result['rank'] ? '#' . $result['rank'] : '—' }}</td>
+        <td class="val">
+            @if($result['rank'])
+                @php $rank = (int)$result['rank']; @endphp
+                <span style="font-size:13px; font-weight:bold; color:#1e3a8a;">{{ ordinal($rank) }}</span>
+                <span style="font-size:9px; color:#64748b; font-weight:normal;"> Position</span>
+            @else
+                —
+            @endif
+        </td>
         <td class="lbl">Issue Date:</td>
         <td class="val">{{ now()->format('d M Y') }} (@bsDateEn(now()->toDateString()))</td>
     </tr>

@@ -283,15 +283,19 @@ class ResultRepository
             $student     = $marks->first()->student;
             $totalPoints = 0.0;
             $totalMarks  = 0.0;
+            $totalMax    = 0.0;
             $passed      = 0;
             $failed      = 0;
+            $aPlusCount  = 0;
             $courses     = [];
 
             foreach ($marks as $mark) {
                 $resolved    = $mark->resolveGrade($rules);
                 $totalPoints += $resolved['point'];
                 $totalMarks  += $mark->final_marks;
+                $totalMax    += ($mark->full_marks ?? 100);
                 $resolved['passed'] ? $passed++ : $failed++;
+                if ($resolved['grade'] === 'A+') $aPlusCount++;
 
                 $courses[] = [
                     'course'            => $mark->course,
@@ -303,28 +307,41 @@ class ResultRepository
                 ];
             }
 
-            $count = count($courses);
-            $gpa   = $count > 0 ? round($totalPoints / $count, 2) : 0.0;
+            $count      = count($courses);
+            $gpa        = $count > 0 ? round($totalPoints / $count, 2) : 0.0;
+            $percentage = $totalMax > 0 ? round(($totalMarks / $totalMax) * 100, 4) : 0.0;
 
-            return compact('student', 'courses', 'gpa', 'totalMarks', 'passed', 'failed');
+            return compact('student', 'courses', 'gpa', 'totalMarks', 'totalMax', 'percentage', 'passed', 'failed', 'aPlusCount');
         })
-        ->sortByDesc('gpa')
+        // Nepal CDC ranking: primary = total marks desc, secondary = GPA desc,
+        // tertiary = A+ count desc, quaternary = failed count asc
+        ->sortBy([
+            fn($a, $b) => $b['totalMarks']  <=> $a['totalMarks'],
+            fn($a, $b) => $b['gpa']          <=> $a['gpa'],
+            fn($a, $b) => $b['aPlusCount']   <=> $a['aPlusCount'],
+            fn($a, $b) => $a['failed']        <=> $b['failed'],
+        ])
         ->values();
 
-        // Assign ranks (ties share the same rank)
-        $rank    = 1;
-        $prev    = null;
+        // Standard competition ranking (Nepal practice):
+        // Tied students share the SAME rank; next rank skips by tie size
+        // e.g. two students at #2 → next is #4 (not #3)
+        $rank      = 1;
+        $prevKey   = null;
         $sameCount = 0;
 
-        return $results->map(function ($row) use (&$rank, &$prev, &$sameCount) {
-            if ($prev !== null && $row['gpa'] === $prev) {
+        return $results->map(function ($row) use (&$rank, &$prevKey, &$sameCount) {
+            // Tie key = totalMarks + GPA + aPlusCount + failed
+            $key = $row['totalMarks'] . '_' . $row['gpa'] . '_' . $row['aPlusCount'] . '_' . $row['failed'];
+
+            if ($prevKey !== null && $key === $prevKey) {
                 $sameCount++;
             } else {
-                $rank += $sameCount;
+                $rank     += $sameCount;
                 $sameCount = 0;
             }
             $row['rank'] = $rank;
-            $prev        = $row['gpa'];
+            $prevKey     = $key;
             return $row;
         });
     }

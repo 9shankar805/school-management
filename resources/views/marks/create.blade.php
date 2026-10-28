@@ -733,14 +733,27 @@ document.addEventListener('DOMContentLoaded', function() {
     // 2. Initial Row Calculations
     calculateAllRows();
 
-    // 3. Live Row Recalculation on keystroke
+    // 3. Live Row Recalculation on keystroke + max marks enforcement
     const table = document.getElementById('masterMarksTable');
     if (table) {
         table.addEventListener('input', function(e) {
-            if (e.target && e.target.classList.contains('mark-input')) {
-                const row = e.target.closest('.student-mark-row');
-                if (row) updateStudentRowStats(row);
+            if (!e.target.classList.contains('mark-input')) return;
+            // Enforce max
+            const max = parseFloat(e.target.dataset.maxMarks) || 100;
+            const val = parseFloat(e.target.value);
+            if (!isNaN(val) && val > max) {
+                e.target.value = max;
+                e.target.style.outline = '2px solid #ef4444';
+                e.target.title = `Max: ${max}`;
+                setTimeout(() => { e.target.style.outline = ''; }, 1000);
+            } else if (!isNaN(val) && val < 0) {
+                e.target.value = 0;
+            } else {
+                e.target.style.outline = '';
             }
+            // Recalculate row stats
+            const row = e.target.closest('.student-mark-row');
+            if (row) updateStudentRowStats(row);
         });
 
         // 4. Keyboard Arrow Key & Enter Navigation (Excel-like feel)

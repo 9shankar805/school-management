@@ -90,3 +90,20 @@ if (!function_exists('nepaliDigits')) {
         return \App\Services\NepaliDateService::toNepaliDigits($n);
     }
 }
+
+if (!function_exists('ordinal')) {
+    /**
+     * Convert a number to its ordinal string: 1 → 1st, 2 → 2nd, 3 → 3rd, 4 → 4th
+     */
+    function ordinal(int $number): string
+    {
+        $suffix = match (true) {
+            ($number % 100 >= 11 && $number % 100 <= 13) => 'th',
+            ($number % 10 === 1) => 'st',
+            ($number % 10 === 2) => 'nd',
+            ($number % 10 === 3) => 'rd',
+            default              => 'th',
+        };
+        return $number . $suffix;
+    }
+}

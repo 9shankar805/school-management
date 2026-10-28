@@ -461,6 +461,7 @@ class MarkController extends Controller
      */
     public function store(Request $request)
     {
+        ini_set('memory_limit', '512M');
         $current_school_session_id = $this->getSchoolCurrentSession();
         $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
 
@@ -523,21 +524,28 @@ class MarkController extends Controller
                 $examCache[$cId] = $exam;
             }
 
+            // Load all exam rules in one query (not per-course loop)
+            $examIds = collect($examCache)->pluck('id')->toArray();
+            $examRulesMap = ExamRule::whereIn('exam_id', $examIds)
+                ->pluck('total_marks', 'exam_id');
+
             $rows = [];
             foreach ($studentCourseMarks as $studentId => $coursesMarks) {
                 foreach ($coursesMarks as $cId => $mark) {
                     if ($mark === null || $mark === '') continue;
                     $cId = (int)$cId;
                     if (isset($examCache[$cId])) {
+                        $examId   = $examCache[$cId]->id;
+                        $maxMarks = (float)($examRulesMap[$examId] ?? 100);
                         $rows[] = [
                             'school_id'  => auth()->user()->school_id ?? null,
                             'class_id'   => $class_id,
                             'student_id' => (int)$studentId,
-                            'marks'      => (float)$mark,
+                            'marks'      => min(max((float)$mark, 0), $maxMarks),
                             'section_id' => $section_id,
                             'course_id'  => $cId,
                             'session_id' => $current_school_session_id,
-                            'exam_id'    => $examCache[$cId]->id,
+                            'exam_id'    => $examId,
                         ];
                     }
                 }
