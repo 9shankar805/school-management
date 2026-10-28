@@ -157,21 +157,23 @@ class ResultRepository
                     ->get();
 
                 if ($rawMarks->isNotEmpty()) {
+                    // Group by course_id then take the LATEST mark per course (not sum across all exams)
                     $byCourse = $rawMarks->groupBy('course_id');
                     $marks = $byCourse->map(function ($cMarks) use ($studentId, $classId, $sectionId, $semesterId, $sessionId) {
+                        // Use only the most recent mark entry for this course in this semester
+                        $latest = $cMarks->sortByDesc('id')->first();
                         $fm = new FinalMark();
                         $fm->student_id       = $studentId;
                         $fm->class_id         = $classId;
                         $fm->section_id       = $sectionId > 0 ? $sectionId : ($cMarks->first()->section_id ?? 0);
-                        $fm->course_id        = $cMarks->first()->course_id;
-                        $fm->course           = $cMarks->first()->course;
+                        $fm->course_id        = $latest->course_id;
+                        $fm->course           = $latest->course;
                         $fm->semester_id      = $semesterId;
                         $fm->session_id       = $sessionId;
-                        $fm->final_marks      = (float) $cMarks->sum('marks');
+                        $fm->final_marks      = (float) $latest->marks;
                         $fm->calculated_marks = $fm->final_marks;
                         $fm->note             = 'Recorded Exam Marks';
-                        // Sum up each exam's total_marks so resolveGrade() can normalise to %
-                        $fm->full_marks       = (float) $cMarks->sum(fn($m) => $m->exam?->examRule?->total_marks ?? 100);
+                        $fm->full_marks       = (float) ($latest->exam?->examRule?->total_marks ?? 100);
                         return $fm;
                     })->values();
                 }
@@ -285,10 +287,17 @@ class ResultRepository
                             $fm->section_id       = $cMarks->first()->section_id;
                             $fm->course_id        = $cMarks->first()->course_id;
                             $fm->course           = $cMarks->first()->course;
-                            $fm->final_marks      = (float) $cMarks->sum('marks');
+                            // Take LATEST mark only — do NOT sum across semesters
+                            $latest = $cMarks->sortByDesc('id')->first();
+                            $fm->student_id       = $latest->student_id;
+                            $fm->student          = $latest->student;
+                            $fm->class_id         = $latest->class_id;
+                            $fm->section_id       = $latest->section_id;
+                            $fm->course_id        = $latest->course_id;
+                            $fm->course           = $latest->course;
+                            $fm->final_marks      = (float) $latest->marks;
                             $fm->calculated_marks = $fm->final_marks;
-                            // Sum up each exam's total_marks so resolveGrade() can normalise to %
-                            $fm->full_marks       = (float) $cMarks->sum(fn($m) => $m->exam?->examRule?->total_marks ?? 100);
+                            $fm->full_marks       = (float) ($latest->exam?->examRule?->total_marks ?? 100);
                             return $fm;
                         });
                     });
