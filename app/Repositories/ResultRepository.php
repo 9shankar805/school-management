@@ -12,6 +12,7 @@ use App\Models\Section;
 use App\Models\Promotion;
 use App\Models\Mark;
 use App\Models\Exam;
+use App\Models\ExamRule;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
