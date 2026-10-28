@@ -267,25 +267,18 @@ class MarkController extends Controller
                     ->orderBy('course_name')
                     ->get();
             } else {
-                $classCourses = Course::where('class_id', $class_id)
+                // Admin/ClassTeacher: deduplicated courses for this class + semester
+                $classCourses = Course::uniqueByName()
+                    ->where('class_id', $class_id)
+                    ->when($semester_id > 0, fn($q) => $q->where('semester_id', $semester_id))
                     ->where(function($q) use ($current_school_session_id) {
                         $q->where('session_id', $current_school_session_id)->orWhereNull('session_id');
                     })
-                    ->orderBy('id')
+                    ->orderBy('course_name')
                     ->get();
-
-            // Fetch all courses assigned to this class — deduplicated by name
-            $classCourses = Course::uniqueByName()
-                ->where('class_id', $class_id)
-                ->when($semester_id > 0, fn($q) => $q->where('semester_id', $semester_id))
-                ->where(function($q) use ($current_school_session_id) {
-                    $q->where('session_id', $current_school_session_id)->orWhereNull('session_id');
-                })
-                ->orderBy('course_name')
-                ->get();
-
-            if ($classCourses->isEmpty()) {
-                $classCourses = Course::uniqueByName()->where('class_id', $class_id)->orderBy('course_name')->get();
+                if ($classCourses->isEmpty()) {
+                    $classCourses = Course::uniqueByName()->where('class_id', $class_id)->orderBy('course_name')->get();
+                }
             }
 
             if ($isAllSubjectsMode) {
@@ -440,7 +433,6 @@ class MarkController extends Controller
                     'canEditAllSubjects'        => $canEditAllSubjects,
                 ]);
             } // end single subject mode
-        } // end if ($class_id)
         } catch (\Exception $e) {
             return view('marks.create', [
                 'academic_setting'          => null,
