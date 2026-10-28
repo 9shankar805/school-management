@@ -1872,10 +1872,11 @@
 {{-- ═══════════════════════════════════════════════════════════
      FLOATING ACTION BUTTON (FAB)
 ═══════════════════════════════════════════════════════════ --}}
-<div class="fixed z-[9999] flex flex-col-reverse items-end gap-2" id="fab-group">
+<div class="fixed z-[9999] flex flex-col-reverse items-end gap-2" id="fab-group" style="right:1rem; bottom:4.75rem; pointer-events:none;">
     {{-- FAB toggle --}}
     <button id="fab-main" onclick="toggleFab()"
             class="shadow-floating flex items-center justify-center transition-all duration-200 hover:scale-105 cursor-pointer"
+            style="pointer-events:auto; position:relative; z-index:1;"
             title="Quick actions & Search">
         <i class="bi bi-plus-lg" id="fab-icon"></i>
     </button>
@@ -1911,11 +1912,13 @@ var isFabOpen = false;
 function toggleFab() {
     isFabOpen = !isFabOpen;
     var actions = document.getElementById('fab-actions');
-    var icon = document.getElementById('fab-icon');
+    var group   = document.getElementById('fab-group');
+    var icon    = document.getElementById('fab-icon');
     if (!actions) return;
     if (isFabOpen) {
         actions.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
-        if (icon) { icon.className = 'bi bi-x-lg text-xl'; }
+        if (group) group.style.pointerEvents = 'auto';
+        if (icon) icon.className = 'bi bi-x-lg text-xl';
     } else {
         closeFab();
     }
@@ -1923,8 +1926,12 @@ function toggleFab() {
 function closeFab() {
     isFabOpen = false;
     var actions = document.getElementById('fab-actions');
-    var icon = document.getElementById('fab-icon');
+    var group   = document.getElementById('fab-group');
+    var icon    = document.getElementById('fab-icon');
     if (actions) actions.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
+    // Keep pointer-events on the button itself but disable the container
+    // so it doesn't block scrolling in the bottom-right corner
+    if (group) group.style.pointerEvents = 'none';
     if (icon) icon.className = 'bi bi-plus-lg text-xl';
 }
 document.addEventListener('click', function(e) {
@@ -1932,6 +1939,11 @@ document.addEventListener('click', function(e) {
     if (fab && !fab.contains(e.target) && isFabOpen) {
         closeFab();
     }
+});
+// On page load make sure container allows click through
+document.addEventListener('DOMContentLoaded', function() {
+    var group = document.getElementById('fab-group');
+    if (group) group.style.pointerEvents = 'none';
 });
 </script>
 
