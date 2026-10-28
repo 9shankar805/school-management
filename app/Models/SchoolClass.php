@@ -38,7 +38,13 @@ class SchoolClass extends Model
      */
     public function courses()
     {
-        return $this->hasMany(Course::class, 'class_id', 'id');
+        return $this->hasMany(Course::class, 'class_id', 'id')
+                    ->whereIn('id', function($sub) {
+                        $sub->selectRaw('MIN(id)')
+                            ->from('courses')
+                            ->whereNull('deleted_at')
+                            ->groupBy('class_id', 'course_name');
+                    });
     }
 
     /**

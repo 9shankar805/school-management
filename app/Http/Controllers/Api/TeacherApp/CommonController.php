@@ -96,14 +96,22 @@ class CommonController extends Controller
             ->get()
             ->pluck('course')
             ->filter()
-            ->unique('id')
+            ->unique('course_name')
             ->values()
             ->map(fn($c) => ['id' => $c->id, 'name' => $c->course_name]);
+
+        if ($subjects->isEmpty()) {
+            $subjects = \App\Models\Course::uniqueByName()
+                ->where('session_id', $sessionId)
+                ->orderBy('course_name')
+                ->get(['id', 'course_name'])
+                ->map(fn($c) => ['id' => $c->id, 'name' => $c->course_name]);
+        }
 
         return response()->json([
             'status'   => 'success',
             'classes'  => $classes,
-            'subjects' => $subjects->isNotEmpty() ? $subjects : \App\Models\Course::limit(10)->get(['id', 'course_name as name']),
+            'subjects' => $subjects,
         ]);
     }
 

@@ -121,7 +121,8 @@ class QuestionPaperController extends Controller
             ->orderBy('id')
             ->get();
 
-        $courses = Course::where('session_id', $sessionId)
+        $courses = Course::uniqueByName()
+            ->where('session_id', $sessionId)
             ->select('id', 'course_name', 'course_code')
             ->orderBy('course_name')
             ->get();
