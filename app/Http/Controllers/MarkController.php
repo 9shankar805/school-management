@@ -155,6 +155,7 @@ class MarkController extends Controller
                     'current_school_session_id' => 0,
                     'isAllSubjectsMode'         => true,
                     'classCourses'              => collect(),
+                    'classSections'             => collect(),
                     'marksMatrix'               => [],
                     'courseMaxMarks'            => [],
                     'selectedClass'             => null,
@@ -175,8 +176,12 @@ class MarkController extends Controller
             if ($isAdmin) {
                 $school_classes = $this->schoolClassRepository ? $this->schoolClassRepository->getAllWithCoursesBySession($current_school_session_id) : collect();
             } else {
-                $assignedClassIds = \App\Models\AssignedTeacher::where('session_id', $current_school_session_id)
-                    ->where('teacher_id', $user->id)
+                $assignedClassIds = \App\Models\AssignedTeacher::where('teacher_id', $user->id)
+                    ->where(function($q) use ($current_school_session_id) {
+                        $q->where('session_id', $current_school_session_id)
+                          ->orWhereNull('session_id')
+                          ->orWhere('session_id', 0);
+                    })
                     ->pluck('class_id')
                     ->unique()
                     ->filter()
@@ -200,14 +205,50 @@ class MarkController extends Controller
                 $isAllSubjectsMode = false;
 
                 if ($class_id) {
-                    $teacherAssignedCourseIds = \App\Models\AssignedTeacher::where('session_id', $current_school_session_id)
-                        ->where('teacher_id', $user->id)
+                    $teacherAssignedCourseIds = \App\Models\AssignedTeacher::where('teacher_id', $user->id)
                         ->where('class_id', $class_id)
-                        ->when($section_id > 0, fn($q) => $q->where('section_id', $section_id))
+                        ->where(function($q) use ($current_school_session_id) {
+                            $q->where('session_id', $current_school_session_id)
+                              ->orWhereNull('session_id')
+                              ->orWhere('session_id', 0);
+                        })
+                        ->when($section_id > 0, function($q) use ($section_id) {
+                            $q->where(function($sq) use ($section_id) {
+                                $sq->where('section_id', (int)$section_id)
+                                  ->orWhere('section_id', 0)
+                                  ->orWhereNull('section_id');
+                            });
+                        })
                         ->pluck('course_id')
                         ->unique()
                         ->filter()
                         ->toArray();
+
+                    if (!empty($teacherAssignedCourseIds)) {
+                        $courseNames = Course::whereIn('id', $teacherAssignedCourseIds)->pluck('course_name')->unique()->filter()->all();
+                        if (!empty($courseNames)) {
+                            $allSameNameCourseIds = Course::where('class_id', $class_id)
+                                ->whereIn('course_name', $courseNames)
+                                ->pluck('id')
+                                ->all();
+                            $teacherAssignedCourseIds = array_values(array_unique(array_merge($teacherAssignedCourseIds, $allSameNameCourseIds)));
+                        }
+                    }
+
+                    if (empty($teacherAssignedCourseIds)) {
+                        $hasGeneralClassAssignment = \App\Models\AssignedTeacher::where('teacher_id', $user->id)
+                            ->where('class_id', $class_id)
+                            ->where(function($q) use ($current_school_session_id) {
+                                $q->where('session_id', $current_school_session_id)
+                                  ->orWhereNull('session_id')
+                                  ->orWhere('session_id', 0);
+                            })
+                            ->exists();
+
+                        if ($hasGeneralClassAssignment) {
+                            $teacherAssignedCourseIds = Course::where('class_id', $class_id)->pluck('id')->toArray();
+                        }
+                    }
 
                     if (empty($teacherAssignedCourseIds)) {
                         return redirect()->route('course.mark.create')->with('error', 'Access Restricted: You are not assigned to teach any subjects in the selected class and section.');
@@ -235,6 +276,7 @@ class MarkController extends Controller
                     'school_classes'            => $school_classes,
                     'exams'                     => collect(),
                     'students_with_marks'       => collect(),
+                    'marksByStudentAndExam'     => [],
                     'class_id'                  => null,
                     'section_id'                => 0,
                     'course_id'                 => 0,
@@ -245,6 +287,7 @@ class MarkController extends Controller
                     'current_school_session_id' => $current_school_session_id,
                     'isAllSubjectsMode'         => $canEditAllSubjects,
                     'classCourses'              => collect(),
+                    'classSections'             => collect(),
                     'marksMatrix'               => [],
                     'courseMaxMarks'            => [],
                     'selectedClass'             => null,
@@ -276,6 +319,28 @@ class MarkController extends Controller
 
                 if ($classCourses->isEmpty()) {
                     $classCourses = Course::where('class_id', $class_id)->orderBy('id')->get();
+                }
+            }
+
+            // Fetch sections for this class
+            if ($isAdmin || $isClassTeacher) {
+                $classSections = Section::where('class_id', $class_id)->orderBy('section_name')->get();
+            } else {
+                $assignedSectionIds = \App\Models\AssignedTeacher::where('teacher_id', $user->id)
+                    ->where('class_id', $class_id)
+                    ->where(function($q) use ($current_school_session_id) {
+                        $q->where('session_id', $current_school_session_id)
+                          ->orWhereNull('session_id')
+                          ->orWhere('session_id', 0);
+                    })
+                    ->pluck('section_id')
+                    ->unique()
+                    ->filter()
+                    ->all();
+                if (empty($assignedSectionIds) || in_array(0, $assignedSectionIds)) {
+                    $classSections = Section::where('class_id', $class_id)->orderBy('section_name')->get();
+                } else {
+                    $classSections = Section::where('class_id', $class_id)->whereIn('id', $assignedSectionIds)->orderBy('section_name')->get();
                 }
             }
 
@@ -325,6 +390,7 @@ class MarkController extends Controller
                     'school_classes'            => $school_classes,
                     'exams'                     => $exams,
                     'students_with_marks'       => collect(),
+                    'marksByStudentAndExam'     => [],
                     'class_id'                  => $class_id,
                     'section_id'                => $section_id,
                     'course_id'                 => 'all',
@@ -335,6 +401,7 @@ class MarkController extends Controller
                     'current_school_session_id' => $current_school_session_id,
                     'isAllSubjectsMode'         => true,
                     'classCourses'              => $classCourses,
+                    'classSections'             => $classSections,
                     'marksMatrix'               => $marksMatrix,
                     'courseMaxMarks'            => $courseMaxMarks,
                     'selectedClass'             => $selectedClass,
@@ -354,7 +421,20 @@ class MarkController extends Controller
                 $examRepository = new ExamRepository();
                 $exams = $examRepository->getAll($current_school_session_id, $semester_id, $class_id, (int)$course_id);
 
-                // Auto-create exam if missing
+                // If no exams found specifically for this course, check for class-level exams
+                if ($exams->isEmpty()) {
+                    $exams = Exam::where('session_id', $current_school_session_id)
+                        ->where('semester_id', $semester_id)
+                        ->where('class_id', $class_id)
+                        ->where(function($q) use ($course_id) {
+                            $q->where('course_id', (int)$course_id)
+                              ->orWhere('course_id', 0)
+                              ->orWhereNull('course_id');
+                        })
+                        ->get();
+                }
+
+                // Auto-create exam if still missing so teachers are never blocked
                 if ($exams->isEmpty()) {
                     $semName = $selectedSemester ? $selectedSemester->semester_name : 'Terminal Examination';
                     $newExam = Exam::create([
@@ -384,7 +464,14 @@ class MarkController extends Controller
 
                 $markRepository = new MarkRepository();
                 $studentsWithMarks = $markRepository->getAll($current_school_session_id, $semester_id, $class_id, $section_id, (int)$course_id);
-                $studentsWithMarks = $studentsWithMarks ? $studentsWithMarks->groupBy('student_id') : collect();
+
+                // Build a structured lookup map: student_id => [ exam_id => mark ]
+                $marksByStudentAndExam = [];
+                foreach ($studentsWithMarks as $m) {
+                    $marksByStudentAndExam[$m->student_id][$m->exam_id] = $m->marks;
+                }
+
+                $studentsWithMarksGrouped = $studentsWithMarks ? $studentsWithMarks->groupBy('student_id') : collect();
 
                 $final_marks_submitted = false;
                 $final_marks_submit_count = $markRepository->getFinalMarksCount($current_school_session_id, $semester_id, $class_id, $section_id, (int)$course_id);
@@ -397,7 +484,8 @@ class MarkController extends Controller
                     'semesters'                 => $semesters,
                     'school_classes'            => $school_classes,
                     'exams'                     => $exams,
-                    'students_with_marks'       => $studentsWithMarks,
+                    'students_with_marks'       => $studentsWithMarksGrouped,
+                    'marksByStudentAndExam'     => $marksByStudentAndExam,
                     'class_id'                  => $class_id,
                     'section_id'                => $section_id,
                     'course_id'                 => (int)$course_id,
@@ -408,6 +496,7 @@ class MarkController extends Controller
                     'current_school_session_id' => $current_school_session_id,
                     'isAllSubjectsMode'         => false,
                     'classCourses'              => $classCourses,
+                    'classSections'             => $classSections,
                     'marksMatrix'               => [],
                     'courseMaxMarks'            => [],
                     'selectedClass'             => $selectedClass,
@@ -436,6 +525,7 @@ class MarkController extends Controller
                 'current_school_session_id' => 0,
                 'isAllSubjectsMode'         => true,
                 'classCourses'              => collect(),
+                'classSections'             => collect(),
                 'marksMatrix'               => [],
                 'courseMaxMarks'            => [],
                 'selectedClass'             => null,
@@ -457,7 +547,7 @@ class MarkController extends Controller
     {
         try {
             $class_id = $request->query('class_id');
-            $section_id = $request->query('section_id');
+            $section_id = $request->query('section_id', 0);
             $course_id = $request->query('course_id');
             $semester_id = $request->query('semester_id', 0);
 
@@ -467,8 +557,11 @@ class MarkController extends Controller
             $studentsWithMarks = $markRepository->getAll($current_school_session_id, $semester_id, $class_id, $section_id, $course_id);
             $studentsWithMarks = $studentsWithMarks ? $studentsWithMarks->groupBy('student_id') : collect();
 
+            $sectionStudents = $this->userRepository ? $this->userRepository->getAllStudents($current_school_session_id, (int)$class_id, (int)$section_id) : collect();
+
             $data = [
                 'students_with_marks'       => $studentsWithMarks,
+                'sectionStudents'           => $sectionStudents,
                 'class_id'                  => $class_id,
                 'class_name'                => $request->query('class_name'),
                 'section_id'                => $section_id,
@@ -483,6 +576,7 @@ class MarkController extends Controller
         } catch (\Exception $e) {
             return view('marks.submit-final-marks', [
                 'students_with_marks'       => collect(),
+                'sectionStudents'           => collect(),
                 'class_id'                  => null,
                 'class_name'                => null,
                 'section_id'                => null,
@@ -566,8 +660,15 @@ class MarkController extends Controller
                 $examCache[$cId] = $exam;
             }
 
+            $studentSectionMap = \App\Models\Promotion::where('session_id', $current_school_session_id)
+                ->where('class_id', $class_id)
+                ->whereIn('student_id', array_keys($studentCourseMarks))
+                ->pluck('section_id', 'student_id')
+                ->toArray();
+
             $rows = [];
             foreach ($studentCourseMarks as $studentId => $coursesMarks) {
+                $actualSectionId = $section_id > 0 ? $section_id : (int)($studentSectionMap[$studentId] ?? 0);
                 foreach ($coursesMarks as $cId => $mark) {
                     if ($mark === null || $mark === '') {
                         continue;
@@ -577,7 +678,7 @@ class MarkController extends Controller
                             'class_id'   => $class_id,
                             'student_id' => (int)$studentId,
                             'marks'      => (float)$mark,
-                            'section_id' => $section_id,
+                            'section_id' => $actualSectionId,
                             'course_id'  => (int)$cId,
                             'session_id' => $current_school_session_id,
                             'exam_id'    => $examCache[$cId]->id,
@@ -637,8 +738,15 @@ class MarkController extends Controller
             }
         }
 
+        $studentSectionMap = \App\Models\Promotion::where('session_id', $current_school_session_id)
+            ->where('class_id', $class_id)
+            ->whereIn('student_id', array_keys($request->student_mark))
+            ->pluck('section_id', 'student_id')
+            ->toArray();
+
         $rows = [];
         foreach ($request->student_mark as $id => $stm) {
+            $actualSectionId = $section_id > 0 ? $section_id : (int)($studentSectionMap[$id] ?? 0);
             foreach ($stm as $exam => $mark) {
                 if ($mark === null || $mark === '') {
                     continue;
@@ -650,10 +758,10 @@ class MarkController extends Controller
                 }
 
                 $rows[] = [
-                    'class_id'   => (int)$request->class_id,
+                    'class_id'   => $class_id,
                     'student_id' => (int)$id,
                     'marks'      => (float)$mark,
-                    'section_id' => (int)$request->section_id,
+                    'section_id' => $actualSectionId,
                     'course_id'  => (int)$request->course_id,
                     'session_id' => (int)$request->session_id,
                     'exam_id'    => (int)$exam,
@@ -661,11 +769,15 @@ class MarkController extends Controller
             }
         }
 
+        if (empty($rows)) {
+            return back()->with('info', 'No marks entered to save. Please enter marks for at least one student.');
+        }
+
         try {
             $markRepository = new MarkRepository();
             $markRepository->create($rows);
 
-            return back()->with('status', 'Saving marks was successful!');
+            return back()->with('status', 'Saving marks was successful! ' . count($rows) . ' mark entry(ies) recorded.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }

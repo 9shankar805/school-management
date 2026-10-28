@@ -152,16 +152,24 @@ class SectionController extends Controller
                              && !$user->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator', 'attendance-officer']);
         $forAttendance = $request->query('for_attendance') || $request->query('is_attendance');
 
-        $isClassTeacherThisClass = $user ? \App\Models\AssignedTeacher::where('session_id', $sessionId)
-            ->where('teacher_id', $user->id)
+        $isClassTeacherThisClass = $user ? \App\Models\AssignedTeacher::where('teacher_id', $user->id)
             ->where('class_id', $classId)
             ->where('is_class_teacher', true)
+            ->where(function($q) use ($sessionId) {
+                $q->where('session_id', $sessionId)
+                  ->orWhereNull('session_id')
+                  ->orWhere('session_id', 0);
+            })
             ->exists() : false;
 
         if ($isRestrictedTeacher && !$isClassTeacherThisClass) {
-            $query = \App\Models\AssignedTeacher::where('session_id', $sessionId)
-                ->where('teacher_id', $user->id)
-                ->where('class_id', $classId);
+            $query = \App\Models\AssignedTeacher::where('teacher_id', $user->id)
+                ->where('class_id', $classId)
+                ->where(function($q) use ($sessionId) {
+                    $q->where('session_id', $sessionId)
+                      ->orWhereNull('session_id')
+                      ->orWhere('session_id', 0);
+                });
 
             if ($forAttendance) {
                 $query->where('is_class_teacher', true);
@@ -170,29 +178,81 @@ class SectionController extends Controller
             $assignedSectionIds = $query->pluck('section_id')
                 ->unique()->filter()->all();
 
-            $sections = \App\Models\Section::where('class_id', $classId)
-                ->whereIn('id', $assignedSectionIds)->get();
-
-            $assignedCourseIds = \App\Models\AssignedTeacher::where('session_id', $sessionId)
-                ->where('teacher_id', $user->id)
+            $hasAllSectionsAssignment = \App\Models\AssignedTeacher::where('teacher_id', $user->id)
                 ->where('class_id', $classId)
+                ->where(function($q) use ($sessionId) {
+                    $q->where('session_id', $sessionId)
+                      ->orWhereNull('session_id')
+                      ->orWhere('session_id', 0);
+                })
+                ->where(function($q) {
+                    $q->where('section_id', 0)->orWhereNull('section_id');
+                })
+                ->exists();
+
+            if ($hasAllSectionsAssignment || empty($assignedSectionIds)) {
+                $sections = $this->schoolSectionRepository->getAllByClassId($classId);
+            } else {
+                $sections = \App\Models\Section::where('class_id', $classId)
+                    ->whereIn('id', $assignedSectionIds)->get();
+            }
+
+            $assignedCourseIds = \App\Models\AssignedTeacher::where('teacher_id', $user->id)
+                ->where('class_id', $classId)
+                ->where(function($q) use ($sessionId) {
+                    $q->where('session_id', $sessionId)
+                      ->orWhereNull('session_id')
+                      ->orWhere('session_id', 0);
+                })
                 ->pluck('course_id')->unique()->filter()->all();
 
-            $courses = \App\Models\Course::uniqueByName()
+            $hasGeneralClassAssignment = \App\Models\AssignedTeacher::where('teacher_id', $user->id)
                 ->where('class_id', $classId)
-                ->whereIn('id', $assignedCourseIds)
-                ->orderBy('course_name')->get();
+                ->where(function($q) use ($sessionId) {
+                    $q->where('session_id', $sessionId)
+                      ->orWhereNull('session_id')
+                      ->orWhere('session_id', 0);
+                })
+                ->where(function($q) {
+                    $q->whereNull('course_id')->orWhere('course_id', 0);
+                })
+                ->exists();
+
+            if ($hasGeneralClassAssignment || empty($assignedCourseIds)) {
+                $courses = \App\Models\Course::where('class_id', $classId)
+                    ->when($semesterId > 0, fn($q) => $q->forSemester($semesterId))
+                    ->orderBy('course_name')
+                    ->get()
+                    ->unique('course_name')
+                    ->values();
+            } else {
+                $assignedCourseNames = \App\Models\Course::whereIn('id', $assignedCourseIds)
+                    ->pluck('course_name')
+                    ->unique()
+                    ->filter()
+                    ->all();
+
+                $courses = \App\Models\Course::where('class_id', $classId)
+                    ->where(function($q) use ($assignedCourseIds, $assignedCourseNames) {
+                        $q->whereIn('id', $assignedCourseIds);
+                        if (!empty($assignedCourseNames)) {
+                            $q->orWhereIn('course_name', $assignedCourseNames);
+                        }
+                    })
+                    ->when($semesterId > 0, fn($q) => $q->forSemester($semesterId))
+                    ->orderBy('course_name')
+                    ->get()
+                    ->unique('course_name')
+                    ->values();
+            }
         } else {
             $sections = $this->schoolSectionRepository->getAllByClassId($classId);
-            // Use uniqueByName to prevent showing same subject multiple times
-            // Optionally filter by semester if provided
-            $coursesQuery = \App\Models\Course::uniqueByName()
-                ->where('class_id', $classId)
-                ->orderBy('course_name');
-            if ($semesterId > 0) {
-                $coursesQuery->forSemester($semesterId);
-            }
-            $courses = $coursesQuery->get();
+            $courses = \App\Models\Course::where('class_id', $classId)
+                ->when($semesterId > 0, fn($q) => $q->forSemester($semesterId))
+                ->orderBy('course_name')
+                ->get()
+                ->unique('course_name')
+                ->values();
         }
 
         return response()->json([

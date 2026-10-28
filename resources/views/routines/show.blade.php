@@ -483,11 +483,17 @@
                 $slotList = [];
                 foreach ($daySlots->sortBy('start') as $slot) {
                     $slotList[] = [
-                        'id'      => $slot->id,
-                        'time'    => $slot->start . ' – ' . $slot->end,
-                        'subject' => $slot->course->course_name ?? 'Subject',
-                        'teacher' => $slot->teacher->full_name ?? ($slot->teacher->name ?? 'Faculty'),
-                        'room'    => $slot->room,
+                        'id'         => $slot->id,
+                        'weekday'    => (int) $slot->weekday,
+                        'start'      => substr($slot->start, 0, 5),
+                        'end'        => substr($slot->end, 0, 5),
+                        'time'       => substr($slot->start, 0, 5) . ' – ' . substr($slot->end, 0, 5),
+                        'course_id'  => $slot->course_id,
+                        'subject'    => $slot->course->course_name ?? 'Subject',
+                        'teacher_id' => $slot->teacher_id,
+                        'teacher'    => $slot->teacher->full_name ?? ($slot->teacher->name ?? 'Faculty'),
+                        'room'       => $slot->room,
+                        'color'      => $slot->color,
                     ];
                     $totalSlotCount++;
                 }
@@ -701,10 +707,26 @@
                     </button>
                 </div>
 
+                {{-- Quick Set Room for All --}}
+                <div class="flex items-center gap-1 bg-slate-800/90 border border-slate-700 rounded-lg p-1 text-xs">
+                    <input type="text" id="quickBulkRoomInput" placeholder="Room #"
+                           class="w-16 bg-slate-900 border-none text-xs text-slate-200 font-mono rounded px-1.5 py-0.5 focus:ring-0 text-center" title="Enter room number for section">
+                    <button type="button" onclick="quickApplyRoomToAll()" title="Apply room to all scheduled slots in matrix"
+                            class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded text-xs transition flex items-center gap-1">
+                        <i class="bi bi-door-open"></i> Set Room
+                    </button>
+                </div>
+
+                {{-- Auto-Assign Teachers --}}
+                <button type="button" onclick="quickAutoAssignTeachers()" title="Auto-assign teachers based on subject allocations"
+                        class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                    <i class="bi bi-person-check text-emerald-400"></i> Auto-Teachers
+                </button>
+
                 {{-- Clone from Another Section --}}
                 <button type="button" onclick="openCloneModal()"
                         class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-lg border border-slate-700 transition flex items-center gap-1.5">
-                    <i class="bi bi-copy text-indigo-400"></i> Clone Section…
+                    <i class="bi bi-copy text-indigo-400"></i> Clone…
                 </button>
 
                 {{-- Clear Grid --}}
@@ -742,6 +764,7 @@
             <div id="matrixConflictWarningBar" class="hidden items-center gap-2 text-rose-600 font-semibold bg-rose-50 px-2.5 py-1 rounded-md border border-rose-200">
                 <i class="bi bi-exclamation-triangle-fill"></i>
                 <span id="matrixConflictWarningText">Teacher double-booking detected</span>
+                <button type="button" onclick="showConflictDetailsModal()" class="underline hover:text-rose-800 text-[11px] ml-1 font-bold">View Clashes</button>
             </div>
         </div>
 
@@ -843,17 +866,14 @@
                             <td class="nsh-tt-td text-center actions-col print-hide">
                                 <div class="inline-flex items-center justify-center gap-2">
                                     @if(isset($slot['id']))
-                                    <a href="{{ route('routine.edit', $slot['id']) }}" 
+                                    <button type="button" onclick='openQuickEditModal(@json($slot))' 
                                        class="p-1 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition" 
-                                       title="Edit Slot">
+                                       title="Quick Edit Slot">
                                         <i class="bi bi-pencil text-sm"></i>
-                                    </a>
-                                    <form action="{{ route('routine.destroy', $slot['id']) }}" method="POST" onsubmit="return confirm('Remove slot?')" class="inline">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition" title="Delete">
-                                            <i class="bi bi-trash text-sm"></i>
-                                        </button>
-                                    </form>
+                                    </button>
+                                    <button type="button" onclick="quickDeleteSlot({{ $slot['id'] }}, this)" class="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition" title="Delete">
+                                        <i class="bi bi-trash text-sm"></i>
+                                    </button>
                                     @else
                                     <button type="button" onclick="openAddSlotModal({{ $groupKey }})" class="p-1 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-lg transition" title="Edit">
                                         <i class="bi bi-pencil text-sm"></i>
@@ -946,11 +966,16 @@
                                 $cellData = null;
                                 if ($slotMatch) {
                                     $cellData = [
-                                        'id'      => $slotMatch->id,
-                                        'subject' => $slotMatch->course?->course_name ?? 'Subject',
-                                        'teacher' => $slotMatch->teacher?->full_name ?? ($slotMatch->teacher?->name ?? 'Faculty'),
-                                        'room'    => $slotMatch->room,
-                                        'color'   => $slotMatch->color,
+                                        'id'         => $slotMatch->id,
+                                        'weekday'    => (int) $slotMatch->weekday,
+                                        'start'      => substr($slotMatch->start, 0, 5),
+                                        'end'        => substr($slotMatch->end, 0, 5),
+                                        'course_id'  => $slotMatch->course_id,
+                                        'subject'    => $slotMatch->course?->course_name ?? 'Subject',
+                                        'teacher_id' => $slotMatch->teacher_id,
+                                        'teacher'    => $slotMatch->teacher?->full_name ?? ($slotMatch->teacher?->name ?? 'Faculty'),
+                                        'room'       => $slotMatch->room,
+                                        'color'      => $slotMatch->color,
                                     ];
                                 } elseif (isset($sampleSchedule[$pIndex][$colNum])) {
                                     $cellData = $sampleSchedule[$pIndex][$colNum];
@@ -980,15 +1005,12 @@
                                         {{-- Hover Action Buttons --}}
                                         @if(isset($cellData['id']))
                                         <div class="absolute top-1 right-1 hidden group-hover:flex items-center gap-0.5 bg-white shadow-sm rounded-md p-0.5 border border-slate-200 z-10 print-hide">
-                                            <a href="{{ route('routine.edit', $cellData['id']) }}" class="p-1 text-slate-500 hover:text-indigo-600 rounded text-[10px]" title="Edit">
+                                            <button type="button" onclick='openQuickEditModal(@json($cellData))' class="p-1 text-slate-500 hover:text-indigo-600 rounded text-[10px]" title="Quick Edit">
                                                 <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <form action="{{ route('routine.destroy', $cellData['id']) }}" method="POST" onsubmit="return confirm('Remove slot?')">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="p-1 text-slate-500 hover:text-rose-600 rounded text-[10px]" title="Delete">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                            </button>
+                                            <button type="button" onclick="quickDeleteSlot({{ $cellData['id'] }}, this)" class="p-1 text-slate-500 hover:text-rose-600 rounded text-[10px]" title="Delete">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
                                         </div>
                                         @endif
 
@@ -1209,6 +1231,144 @@
     </div>
 </div>
 
+{{-- Quick Edit Slot Modal for Instant In-Place Slot Editing --}}
+<div id="quickEditSlotModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 print-hide">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden">
+        <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+            <h3 class="font-bold text-sm flex items-center gap-2">
+                <i class="bi bi-pencil-square text-indigo-400"></i> Quick Edit Timetable Slot
+            </h3>
+            <button type="button" onclick="closeQuickEditModal()" class="text-slate-400 hover:text-white text-base">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        
+        <form id="quickEditSlotForm" onsubmit="submitQuickEditSlot(event)" class="p-6 space-y-4">
+            <input type="hidden" id="quick_slot_id">
+
+            <div id="quickEditConflictAlert" class="hidden p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700">
+                <div class="flex items-start gap-2">
+                    <i class="bi bi-exclamation-triangle-fill text-rose-500 mt-0.5"></i>
+                    <span id="quickEditConflictText"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Subject / Course *</label>
+                    <select id="quick_course_id" required
+                            class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
+                        @foreach($courses as $c)
+                        <option value="{{ $c->id }}">{{ $c->course_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Teacher</label>
+                    <select id="quick_teacher_id"
+                            class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
+                        <option value="">No Teacher Assigned</option>
+                        @foreach($teachers as $t)
+                        <option value="{{ $t->id }}">{{ $t->full_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Day *</label>
+                    <select id="quick_weekday" required
+                            class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
+                        <option value="7">Sunday</option>
+                        <option value="1">Monday</option>
+                        <option value="2">Tuesday</option>
+                        <option value="3">Wednesday</option>
+                        <option value="4">Thursday</option>
+                        <option value="5">Friday</option>
+                        <option value="6">Saturday</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Start Time *</label>
+                    <input type="time" id="quick_start" required
+                           class="w-full border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-800 bg-white font-mono focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">End Time *</label>
+                    <input type="time" id="quick_end" required
+                           class="w-full border border-slate-200 rounded-xl px-2.5 py-2 text-xs text-slate-800 bg-white font-mono focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Room No.</label>
+                    <input type="text" id="quick_room" placeholder="e.g. 101, Lab"
+                           class="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 bg-white focus:ring-2 focus:ring-indigo-500 font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Color Theme</label>
+                    <input type="color" id="quick_color" value="#6366f1"
+                           class="w-full h-9 border border-slate-200 rounded-xl p-1 bg-white cursor-pointer">
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                <button type="button" id="btnQuickDeleteSlot" onclick="submitQuickDeleteSlot()"
+                        class="px-3 py-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 text-xs font-semibold rounded-xl transition flex items-center gap-1">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeQuickEditModal()"
+                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-xl transition">
+                        Cancel
+                    </button>
+                    <button type="submit" id="btnSaveQuickEdit"
+                            class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl transition shadow-xs flex items-center gap-1.5">
+                        <i class="bi bi-check2"></i> Update Slot
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Conflict Resolution Details Modal --}}
+<div id="matrixConflictModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center p-4 print-hide">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden">
+        <div class="px-6 py-4 bg-rose-600 text-white flex items-center justify-between">
+            <h3 class="font-bold text-sm flex items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill text-amber-300"></i> Teacher Scheduling Clashes
+            </h3>
+            <button type="button" onclick="closeConflictModal()" class="text-rose-100 hover:text-white text-base">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="p-6 space-y-4">
+            <p class="text-xs text-slate-600 leading-relaxed">
+                The following teachers have conflicting timetable bookings in other classes during these hours:
+            </p>
+            <div id="conflictModalList" class="space-y-2 max-h-[250px] overflow-y-auto bg-rose-50 border border-rose-200 rounded-xl p-3 text-xs text-rose-800">
+                <!-- Conflicts injected here -->
+            </div>
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                <button type="button" onclick="highlightConflictingCells()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-1.5">
+                    <i class="bi bi-eye"></i> Highlight in Matrix
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeConflictModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-xl transition">
+                        Edit Matrix
+                    </button>
+                    <button type="button" onclick="saveMatrixTimetable(true)" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl transition shadow-xs flex items-center gap-1.5">
+                        <i class="bi bi-shield-exclamation"></i> Save Anyway (Override)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Notification Toast --}}
 <div id="nshToast" class="nsh-toast bg-slate-900 text-white border border-slate-800">
     <i id="nshToastIcon" class="bi bi-check-circle-fill text-emerald-400 text-base"></i>
@@ -1245,6 +1405,8 @@ const ALL_WEEKDAYS = {
     6: { id: 6, name: 'Saturday', short: 'Sat' },
 };
 
+const ALL_DAYS_KEYS = [7, 1, 2, 3, 4, 5, 6];
+
 // Period Presets
 const PRESETS = {
     standard: [
@@ -1271,9 +1433,11 @@ const PRESETS = {
 
 // State Variables
 let currentPeriods = [];
-let activeDayKeys = [7, 1, 2, 3, 4, 5]; // Default Sunday to Friday (Nepal 6-Day)
-let matrixGrid = {}; // matrixGrid[pIndex][weekday] = { course_id, teacher_id, room, color }
+let activeDayKeys = [7, 1, 2, 3, 4, 5]; // Sunday to Friday (Nepal 6-Day default)
+let matrixGrid = {}; // matrixGrid[pIndex][weekday] = { id, course_id, teacher_id, room, color }
 let otherBookings = [];
+let lastConflicts = [];
+let lastConflictingSlots = [];
 let hasUnsavedChanges = false;
 
 // Initialize on DOM Ready
@@ -1293,6 +1457,7 @@ function showToast(msg, isError = false) {
     const toast = document.getElementById('nshToast');
     const msgEl = document.getElementById('nshToastMsg');
     const iconEl = document.getElementById('nshToastIcon');
+    if (!toast || !msgEl || !iconEl) return;
 
     msgEl.innerHTML = msg;
     if (isError) {
@@ -1305,7 +1470,7 @@ function showToast(msg, isError = false) {
 
     setTimeout(() => {
         toast.classList.remove('show');
-    }, 3500);
+    }, 4000);
 }
 
 // Fetch other bookings in background for real-time conflict checking
@@ -1317,11 +1482,10 @@ function fetchOtherBookings() {
         .then(data => {
             if (data.success) {
                 otherBookings = data.other_bookings || [];
-                // Update teacher mappings if server provided more recent
                 if (data.teacher_mappings && Object.keys(data.teacher_mappings).length > 0) {
                     SERVER_DATA.teacherMappings = data.teacher_mappings;
                 }
-                renderMatrix();
+                updateMatrixSummary();
             }
         })
         .catch(err => console.error('Error fetching matrix bookings:', err));
@@ -1330,34 +1494,43 @@ function fetchOtherBookings() {
 // Initialize Periods from Existing Slots or Default to Standard Preset
 function initPeriodsAndMatrix() {
     matrixGrid = {};
-
-    // 1. Check if existing slots have specific timings
     const existing = SERVER_DATA.existingSlots || [];
-    if (existing.length > 0) {
-        // Extract unique timings
-        const map = new Map();
-        existing.forEach(s => {
-            const st = (s.start || '').substring(0, 5);
-            const en = (s.end || '').substring(0, 5);
-            const key = `${st}-${en}`;
-            if (!map.has(key) && st && en) {
-                map.set(key, { start: st, end: en });
+
+    // 1. Collect all unique time ranges from existing slots
+    const uniqueTimesMap = new Map();
+    existing.forEach(s => {
+        const st = (s.start || '').substring(0, 5);
+        const en = (s.end || '').substring(0, 5);
+        if (st && en) {
+            uniqueTimesMap.set(`${st}-${en}`, { start: st, end: en });
+        }
+    });
+
+    const existingTimings = Array.from(uniqueTimesMap.values()).sort((a, b) => a.start.localeCompare(b.start));
+
+    if (existingTimings.length >= 4) {
+        currentPeriods = existingTimings.map((item, idx) => ({
+            name: `Period ${idx + 1}`,
+            start: item.start,
+            end: item.end,
+            is_break: false
+        }));
+    } else {
+        // Base on standard preset
+        currentPeriods = JSON.parse(JSON.stringify(PRESETS.standard));
+        // Merge in any custom existing timings so no slot is ever lost
+        existingTimings.forEach(et => {
+            const exists = currentPeriods.some(p => p.start === et.start && p.end === et.end);
+            if (!exists) {
+                currentPeriods.push({
+                    name: `Period ${currentPeriods.length + 1}`,
+                    start: et.start,
+                    end: et.end,
+                    is_break: false
+                });
             }
         });
-
-        const sorted = Array.from(map.values()).sort((a, b) => a.start.localeCompare(b.start));
-        if (sorted.length >= 3) {
-            currentPeriods = sorted.map((item, idx) => ({
-                name: `Period ${idx + 1}`,
-                start: item.start,
-                end: item.end,
-                is_break: false
-            }));
-        } else {
-            currentPeriods = JSON.parse(JSON.stringify(PRESETS.standard));
-        }
-    } else {
-        currentPeriods = JSON.parse(JSON.stringify(PRESETS.standard));
+        currentPeriods.sort((a, b) => a.start.localeCompare(b.start));
     }
 
     // 2. Populate matrixGrid with existing slots
@@ -1365,7 +1538,6 @@ function initPeriodsAndMatrix() {
         matrixGrid[pIdx] = {};
         if (p.is_break) return;
 
-        ALL_DAYS_KEYS = [1, 2, 3, 4, 5, 6, 7];
         ALL_DAYS_KEYS.forEach(day => {
             const match = existing.find(s => {
                 const sStart = (s.start || '').substring(0, 5);
@@ -1398,21 +1570,21 @@ function setWorkingDays(type) {
     const btnAll = document.getElementById('btnDaysAll');
 
     [btnSunFri, btnMonFri, btnMonSat, btnAll].forEach(b => {
-        b.className = 'px-2 py-1 rounded font-medium text-slate-400 hover:text-slate-200 transition';
+        if (b) b.className = 'px-2 py-1 rounded font-medium text-slate-400 hover:text-slate-200 transition';
     });
 
     if (type === 'sun-fri') {
         activeDayKeys = [7, 1, 2, 3, 4, 5];
-        btnSunFri.className = 'px-2 py-1 rounded font-semibold text-slate-200 bg-slate-700 transition';
+        if (btnSunFri) btnSunFri.className = 'px-2 py-1 rounded font-semibold text-slate-200 bg-slate-700 transition';
     } else if (type === 'mon-fri') {
         activeDayKeys = [1, 2, 3, 4, 5];
-        btnMonFri.className = 'px-2 py-1 rounded font-semibold text-slate-200 bg-slate-700 transition';
+        if (btnMonFri) btnMonFri.className = 'px-2 py-1 rounded font-semibold text-slate-200 bg-slate-700 transition';
     } else if (type === 'mon-sat') {
         activeDayKeys = [1, 2, 3, 4, 5, 6];
-        btnMonSat.className = 'px-2 py-1 rounded font-semibold text-slate-200 bg-slate-700 transition';
+        if (btnMonSat) btnMonSat.className = 'px-2 py-1 rounded font-semibold text-slate-200 bg-slate-700 transition';
     } else if (type === 'all') {
         activeDayKeys = [7, 1, 2, 3, 4, 5, 6];
-        btnAll.className = 'px-2 py-1 rounded font-semibold text-slate-200 bg-slate-700 transition';
+        if (btnAll) btnAll.className = 'px-2 py-1 rounded font-semibold text-slate-200 bg-slate-700 transition';
     }
 
     renderMatrix();
@@ -1422,7 +1594,6 @@ function setWorkingDays(type) {
 function applyPeriodPreset(type) {
     if (PRESETS[type]) {
         currentPeriods = JSON.parse(JSON.stringify(PRESETS[type]));
-        // re-initialize grid keys
         const newGrid = {};
         currentPeriods.forEach((p, idx) => {
             newGrid[idx] = matrixGrid[idx] || {};
@@ -1434,7 +1605,27 @@ function applyPeriodPreset(type) {
     }
 }
 
-// Render the entire Matrix Table
+// Check if a cell has a teacher clash with another class
+function getCellConflict(pIdx, dayKey) {
+    const period = currentPeriods[pIdx];
+    if (!period || period.is_break) return null;
+    const slot = matrixGrid[pIdx]?.[dayKey];
+    if (!slot || !slot.teacher_id) return null;
+
+    const teacherId = parseInt(slot.teacher_id);
+    const clash = otherBookings.find(ob => {
+        return ob.weekday === dayKey && 
+               ob.teacher_id === teacherId &&
+               ob.start < period.end && ob.end > period.start;
+    });
+
+    if (clash) {
+        return `Conflict: ${clash.teacher_name} is in ${clash.class_name} (${clash.section_name}) at ${clash.start}–${clash.end}`;
+    }
+    return null;
+}
+
+// Render the entire Matrix Table (called on init, column switch, preset change, or bulk copy)
 function renderMatrix() {
     const thead = document.getElementById('rapidMatrixThead');
     const tbody = document.getElementById('rapidMatrixTbody');
@@ -1448,7 +1639,7 @@ function renderMatrix() {
             <th class="nsh-matrix-th group">
                 <div class="flex items-center justify-center gap-1.5">
                     <span>${d.name}</span>
-                    <button type="button" onclick="copySingleDayToAll(${dayKey})" title="Copy ${d.name} schedule to all weekdays"
+                    <button type="button" onclick="copySingleDayToAll(${dayKey})" title="Copy ${d.name} schedule to all active weekdays"
                             class="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-700 text-amber-400 rounded transition text-[10px]" style="line-height:1;">
                         <i class="bi bi-lightning-charge-fill"></i>
                     </button>
@@ -1461,8 +1652,6 @@ function renderMatrix() {
 
     // 2. Build Tbody
     let tbHtml = '';
-    let totalSlots = 0;
-    let conflictCount = 0;
 
     currentPeriods.forEach((period, pIdx) => {
         if (!matrixGrid[pIdx]) matrixGrid[pIdx] = {};
@@ -1479,7 +1668,6 @@ function renderMatrix() {
             return;
         }
 
-        // Calculate period duration in minutes
         let durationMin = 45;
         try {
             const [sh, sm] = period.start.split(':').map(Number);
@@ -1489,10 +1677,16 @@ function renderMatrix() {
 
         tbHtml += `<tr>`;
         
-        // Row Header
+        // Row Header with 1-Click Copy Period Across Week button
         tbHtml += `
-            <th class="nsh-matrix-row-head">
-                <div class="font-bold text-slate-800 text-xs">${period.name}</div>
+            <th class="nsh-matrix-row-head group/head">
+                <div class="flex items-center justify-between gap-1">
+                    <span class="font-bold text-slate-800 text-xs">${period.name}</span>
+                    <button type="button" onclick="copyPeriodRowToAllDays(${pIdx})" title="Copy this period's schedule across all days"
+                            class="opacity-0 group-hover/head:opacity-100 p-0.5 hover:bg-slate-200 text-indigo-600 rounded text-[10px] transition">
+                        <i class="bi bi-arrow-right-short text-sm"></i>
+                    </button>
+                </div>
                 <div class="text-[11px] font-mono text-slate-500 mt-0.5">${period.start} – ${period.end}</div>
                 <span class="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-200 text-slate-600">${durationMin} min</span>
             </th>
@@ -1500,87 +1694,7 @@ function renderMatrix() {
 
         // Cells for each Day
         activeDayKeys.forEach(dayKey => {
-            const slot = matrixGrid[pIdx][dayKey] || null;
-            const courseId = slot ? slot.course_id : '';
-            const teacherId = slot ? slot.teacher_id : '';
-            const room = slot ? (slot.room || '') : '';
-
-            if (courseId) totalSlots++;
-
-            // Check conflict
-            let conflictMsg = null;
-            if (teacherId && otherBookings.length > 0) {
-                const clash = otherBookings.find(ob => {
-                    return ob.weekday === dayKey && 
-                           ob.teacher_id === parseInt(teacherId) &&
-                           ob.start < period.end && ob.end > period.start;
-                });
-                if (clash) {
-                    conflictMsg = `Conflict: ${clash.teacher_name} is in ${clash.class_name} (${clash.section_name})`;
-                    conflictCount++;
-                }
-            }
-
-            const cellClass = conflictMsg ? 'nsh-matrix-cell has-conflict' : (courseId ? 'nsh-matrix-cell has-subject' : 'nsh-matrix-cell');
-
-            tbHtml += `
-                <td class="${cellClass}" id="cell_${pIdx}_${dayKey}">
-                    
-                    {{-- Subject Dropdown --}}
-                    <div class="relative mb-1">
-                        <select onchange="onCellCourseChange(${pIdx}, ${dayKey}, this.value)"
-                                class="w-full bg-white border border-slate-200 hover:border-slate-300 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-2xs transition">
-                            <option value="">— Empty —</option>
-                            ${SERVER_DATA.courses.map(c => `
-                                <option value="${c.id}" ${courseId == c.id ? 'selected' : ''}>${c.course_name}</option>
-                            `).join('')}
-                        </select>
-                    </div>
-
-                    {{-- Teacher & Room Bar --}}
-                    <div class="flex items-center justify-between gap-1 text-[11px] min-h-[22px]">
-                        
-                        {{-- Teacher info --}}
-                        <div class="flex-1 truncate">
-                            ${courseId ? `
-                                <div class="inline-flex items-center gap-1 text-slate-700 font-medium">
-                                    <i class="bi bi-person-fill text-indigo-500 text-[10px]"></i>
-                                    <select onchange="onCellTeacherChange(${pIdx}, ${dayKey}, this.value)"
-                                            class="bg-transparent border-0 p-0 text-[11px] font-medium text-slate-600 hover:text-indigo-600 focus:ring-0 cursor-pointer truncate max-w-[95px]">
-                                        <option value="">No Teacher</option>
-                                        ${SERVER_DATA.teachers.map(t => `
-                                            <option value="${t.id}" ${teacherId == t.id ? 'selected' : ''}>${t.first_name || t.name}</option>
-                                        `).join('')}
-                                    </select>
-                                </div>
-                            ` : `<span class="text-slate-300 text-[10px]">—</span>`}
-                        </div>
-
-                        {{-- Room Input --}}
-                        ${courseId ? `
-                            <div class="w-12">
-                                <input type="text" placeholder="Room" value="${room}"
-                                       onchange="onCellRoomChange(${pIdx}, ${dayKey}, this.value)"
-                                       class="w-full bg-slate-50 border border-slate-200 rounded px-1 py-0.5 text-[10px] text-slate-700 text-center font-mono focus:bg-white focus:outline-none">
-                            </div>
-                            <button type="button" onclick="clearCellSlot(${pIdx}, ${dayKey})" title="Clear slot"
-                                    class="text-slate-300 hover:text-rose-500 text-xs px-0.5">
-                                <i class="bi bi-x"></i>
-                            </button>
-                        ` : ''}
-
-                    </div>
-
-                    {{-- Conflict Warning --}}
-                    ${conflictMsg ? `
-                        <div class="mt-1 px-1.5 py-0.5 bg-rose-100/90 text-rose-700 rounded text-[10px] font-bold flex items-center gap-1 leading-tight" title="${conflictMsg}">
-                            <i class="bi bi-exclamation-triangle-fill text-rose-500"></i>
-                            <span class="truncate">${conflictMsg}</span>
-                        </div>
-                    ` : ''}
-
-                </td>
-            `;
+            tbHtml += `<td class="nsh-matrix-cell" id="cell_${pIdx}_${dayKey}"></td>`;
         });
 
         tbHtml += `</tr>`;
@@ -1588,19 +1702,169 @@ function renderMatrix() {
 
     tbody.innerHTML = tbHtml;
 
-    // Update Counter & Conflict badge
+    // Populate inner DOM of each cell
+    currentPeriods.forEach((period, pIdx) => {
+        if (period.is_break) return;
+        activeDayKeys.forEach(dayKey => {
+            updateCellDOM(pIdx, dayKey);
+        });
+    });
+
+    updateMatrixSummary();
+}
+
+// Update single cell DOM in-place without destroying other cells or losing focus!
+function updateCellDOM(pIdx, dayKey) {
+    const cell = document.getElementById(`cell_${pIdx}_${dayKey}`);
+    if (!cell) return;
+
+    const slot = matrixGrid[pIdx]?.[dayKey] || null;
+    const courseId = slot ? slot.course_id : '';
+    const teacherId = slot ? slot.teacher_id : '';
+    const room = slot ? (slot.room || '') : '';
+    const conflictMsg = getCellConflict(pIdx, dayKey);
+
+    cell.className = conflictMsg ? 'nsh-matrix-cell has-conflict' : (courseId ? 'nsh-matrix-cell has-subject' : 'nsh-matrix-cell');
+
+    cell.innerHTML = `
+        <div class="relative mb-1">
+            <select onchange="onCellCourseChange(${pIdx}, ${dayKey}, this.value)"
+                    id="sel_course_${pIdx}_${dayKey}"
+                    class="w-full bg-white border border-slate-200 hover:border-slate-300 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-2xs transition">
+                <option value="">— Empty —</option>
+                ${SERVER_DATA.courses.map(c => `
+                    <option value="${c.id}" ${courseId == c.id ? 'selected' : ''}>${c.course_name}</option>
+                `).join('')}
+            </select>
+        </div>
+
+        <div class="flex items-center justify-between gap-1 text-[11px] min-h-[22px]">
+            <div class="flex-1 truncate">
+                ${courseId ? `
+                    <div class="inline-flex items-center gap-1 text-slate-700 font-medium">
+                        <i class="bi bi-person-fill text-indigo-500 text-[10px]"></i>
+                        <select onchange="onCellTeacherChange(${pIdx}, ${dayKey}, this.value)"
+                                id="sel_teacher_${pIdx}_${dayKey}"
+                                class="bg-transparent border-0 p-0 text-[11px] font-medium text-slate-600 hover:text-indigo-600 focus:ring-0 cursor-pointer truncate max-w-[95px]">
+                            <option value="">No Teacher</option>
+                            ${SERVER_DATA.teachers.map(t => `
+                                <option value="${t.id}" ${teacherId == t.id ? 'selected' : ''}>${t.first_name || t.name}</option>
+                            `).join('')}
+                        </select>
+                    </div>
+                ` : `<span class="text-slate-300 text-[10px]">—</span>`}
+            </div>
+
+            ${courseId ? `
+                <div class="w-12">
+                    <input type="text" placeholder="Room" value="${room}"
+                           id="inp_room_${pIdx}_${dayKey}"
+                           oninput="onCellRoomChange(${pIdx}, ${dayKey}, this.value)"
+                           class="w-full bg-slate-50 border border-slate-200 rounded px-1 py-0.5 text-[10px] text-slate-700 text-center font-mono focus:bg-white focus:outline-none">
+                </div>
+                <button type="button" onclick="clearCellSlot(${pIdx}, ${dayKey})" title="Clear slot"
+                        class="text-slate-300 hover:text-rose-500 text-xs px-0.5">
+                    <i class="bi bi-x"></i>
+                </button>
+            ` : ''}
+        </div>
+
+        ${conflictMsg ? `
+            <div class="mt-1 px-1.5 py-0.5 bg-rose-100/90 text-rose-700 rounded text-[10px] font-bold flex items-center gap-1 leading-tight" title="${conflictMsg}">
+                <i class="bi bi-exclamation-triangle-fill text-rose-500"></i>
+                <span class="truncate">${conflictMsg}</span>
+            </div>
+        ` : ''}
+    `;
+}
+
+// Rapid single-cell course change: auto-assigns teacher and updates cell DOM only
+function onCellCourseChange(pIdx, dayKey, courseId) {
+    if (!matrixGrid[pIdx]) matrixGrid[pIdx] = {};
+
+    if (!courseId) {
+        matrixGrid[pIdx][dayKey] = null;
+    } else {
+        const mappedTeacherId = SERVER_DATA.teacherMappings[courseId] || '';
+        const existing = matrixGrid[pIdx][dayKey] || {};
+        matrixGrid[pIdx][dayKey] = {
+            id: existing.id || null,
+            course_id: parseInt(courseId),
+            teacher_id: mappedTeacherId ? parseInt(mappedTeacherId) : (existing.teacher_id || null),
+            room: existing.room || '',
+            color: existing.color || ''
+        };
+    }
+
+    updateCellDOM(pIdx, dayKey);
+    updateMatrixSummary();
+    markUnsaved();
+}
+
+// Rapid single-cell teacher change
+function onCellTeacherChange(pIdx, dayKey, teacherId) {
+    if (matrixGrid[pIdx] && matrixGrid[pIdx][dayKey]) {
+        matrixGrid[pIdx][dayKey].teacher_id = teacherId ? parseInt(teacherId) : null;
+        updateCellDOM(pIdx, dayKey);
+        updateMatrixSummary();
+        markUnsaved();
+    }
+}
+
+// Fast room typing without destroying DOM
+function onCellRoomChange(pIdx, dayKey, roomVal) {
+    if (matrixGrid[pIdx] && matrixGrid[pIdx][dayKey]) {
+        matrixGrid[pIdx][dayKey].room = roomVal;
+        markUnsaved();
+    }
+}
+
+// Instant cell clear
+function clearCellSlot(pIdx, dayKey) {
+    if (matrixGrid[pIdx]) {
+        matrixGrid[pIdx][dayKey] = null;
+        updateCellDOM(pIdx, dayKey);
+        updateMatrixSummary();
+        markUnsaved();
+    }
+}
+
+// Summary updater: computes active slot count and live teacher clashes
+function updateMatrixSummary() {
+    let totalSlots = 0;
+    let conflictCount = 0;
+
+    currentPeriods.forEach((period, pIdx) => {
+        if (period.is_break || !matrixGrid[pIdx]) return;
+        activeDayKeys.forEach(dayKey => {
+            const slot = matrixGrid[pIdx][dayKey];
+            if (slot && slot.course_id) {
+                totalSlots++;
+                if (getCellConflict(pIdx, dayKey)) {
+                    conflictCount++;
+                }
+            }
+        });
+    });
+
     const countBadge = document.getElementById('matrixSaveCountBadge');
     if (countBadge) countBadge.textContent = totalSlots;
 
     const conflictBar = document.getElementById('matrixConflictWarningBar');
     const conflictText = document.getElementById('matrixConflictWarningText');
     if (conflictCount > 0) {
-        conflictBar.classList.remove('hidden');
-        conflictBar.classList.add('flex');
-        conflictText.textContent = `${conflictCount} teacher conflict${conflictCount > 1 ? 's' : ''} detected`;
+        if (conflictBar) {
+            conflictBar.classList.remove('hidden');
+            conflictBar.classList.add('flex');
+        }
+        if (conflictText) {
+            conflictText.textContent = `${conflictCount} teacher conflict${conflictCount > 1 ? 's' : ''} detected`;
+        }
     } else {
-        conflictBar.classList.add('hidden');
-        conflictBar.classList.remove('flex');
+        if (conflictBar) {
+            conflictBar.classList.add('hidden');
+            conflictBar.classList.remove('flex');
+        }
     }
 
     updateStatusText(totalSlots);
@@ -1621,9 +1885,7 @@ function updateStatusText(count) {
 function markUnsaved() {
     hasUnsavedChanges = true;
     const btn = document.getElementById('btnSaveMatrix');
-    if (btn) {
-        btn.classList.add('animate-pulse');
-    }
+    if (btn) btn.classList.add('animate-pulse');
     const count = Object.values(matrixGrid).reduce((acc, row) => {
         return acc + Object.values(row).filter(s => s && s.course_id).length;
     }, 0);
@@ -1633,62 +1895,14 @@ function markUnsaved() {
 function markSaved() {
     hasUnsavedChanges = false;
     const btn = document.getElementById('btnSaveMatrix');
-    if (btn) {
-        btn.classList.remove('animate-pulse');
-    }
+    if (btn) btn.classList.remove('animate-pulse');
     const count = Object.values(matrixGrid).reduce((acc, row) => {
         return acc + Object.values(row).filter(s => s && s.course_id).length;
     }, 0);
     updateStatusText(count);
 }
 
-// Cell Event Handlers
-function onCellCourseChange(pIdx, dayKey, courseId) {
-    if (!matrixGrid[pIdx]) matrixGrid[pIdx] = {};
-
-    if (!courseId) {
-        matrixGrid[pIdx][dayKey] = null;
-    } else {
-        // Auto-assign teacher from teacherMappings
-        const mappedTeacherId = SERVER_DATA.teacherMappings[courseId] || '';
-        const existing = matrixGrid[pIdx][dayKey] || {};
-        matrixGrid[pIdx][dayKey] = {
-            id: existing.id || null,
-            course_id: parseInt(courseId),
-            teacher_id: mappedTeacherId ? parseInt(mappedTeacherId) : (existing.teacher_id || null),
-            room: existing.room || '',
-            color: existing.color || ''
-        };
-    }
-
-    markUnsaved();
-    renderMatrix();
-}
-
-function onCellTeacherChange(pIdx, dayKey, teacherId) {
-    if (matrixGrid[pIdx] && matrixGrid[pIdx][dayKey]) {
-        matrixGrid[pIdx][dayKey].teacher_id = teacherId ? parseInt(teacherId) : null;
-        markUnsaved();
-        renderMatrix();
-    }
-}
-
-function onCellRoomChange(pIdx, dayKey, roomVal) {
-    if (matrixGrid[pIdx] && matrixGrid[pIdx][dayKey]) {
-        matrixGrid[pIdx][dayKey].room = roomVal;
-        markUnsaved();
-    }
-}
-
-function clearCellSlot(pIdx, dayKey) {
-    if (matrixGrid[pIdx]) {
-        matrixGrid[pIdx][dayKey] = null;
-        markUnsaved();
-        renderMatrix();
-    }
-}
-
-// 1-Click Accelerator: Copy Day Schedule to All Days
+// 1-Click Accelerator: Copy Day Schedule to All Days ("Fill Week")
 function quickApplyDayToAll() {
     const sel = document.getElementById('quickCopySourceDay');
     if (!sel) return;
@@ -1698,7 +1912,6 @@ function quickApplyDayToAll() {
 function copySingleDayToAll(sourceDay) {
     const dayName = ALL_WEEKDAYS[sourceDay]?.name || 'Day ' + sourceDay;
 
-    // Collect source slots
     let copiedCount = 0;
     currentPeriods.forEach((p, pIdx) => {
         if (p.is_break) return;
@@ -1727,6 +1940,88 @@ function copySingleDayToAll(sourceDay) {
     showToast(`⚡ Copied ${dayName} timetable to all active weekdays!`);
 }
 
+// 1-Click Accelerator: Copy Period Row across all active days
+function copyPeriodRowToAllDays(pIdx) {
+    const period = currentPeriods[pIdx];
+    if (!period || period.is_break) return;
+
+    // Find the first non-empty slot in this period row
+    let srcSlot = null;
+    for (let day of activeDayKeys) {
+        if (matrixGrid[pIdx]?.[day]?.course_id) {
+            srcSlot = matrixGrid[pIdx][day];
+            break;
+        }
+    }
+
+    if (!srcSlot) {
+        showToast(`Select a subject in ${period.name} first before copying row.`, true);
+        return;
+    }
+
+    activeDayKeys.forEach(day => {
+        if (!matrixGrid[pIdx]) matrixGrid[pIdx] = {};
+        matrixGrid[pIdx][day] = {
+            course_id: srcSlot.course_id,
+            teacher_id: srcSlot.teacher_id,
+            room: srcSlot.room,
+            color: srcSlot.color
+        };
+    });
+
+    markUnsaved();
+    renderMatrix();
+    showToast(`⚡ Filled ${period.name} across all active weekdays!`);
+}
+
+// 1-Click Accelerator: Apply Room to All scheduled slots in matrix
+function quickApplyRoomToAll() {
+    const input = document.getElementById('quickBulkRoomInput');
+    const roomVal = (input?.value || '').trim();
+    if (!roomVal) {
+        showToast('Please enter a room number first (e.g. 204, Lab).', true);
+        return;
+    }
+
+    let updatedCount = 0;
+    currentPeriods.forEach((p, pIdx) => {
+        if (p.is_break || !matrixGrid[pIdx]) return;
+        activeDayKeys.forEach(dayKey => {
+            const slot = matrixGrid[pIdx][dayKey];
+            if (slot && slot.course_id) {
+                slot.room = roomVal;
+                updatedCount++;
+            }
+        });
+    });
+
+    markUnsaved();
+    renderMatrix();
+    showToast(`🏢 Set Room "${roomVal}" for ${updatedCount} scheduled slots!`);
+}
+
+// 1-Click Accelerator: Auto-Assign Teachers based on subject allocations
+function quickAutoAssignTeachers() {
+    let assignedCount = 0;
+    currentPeriods.forEach((p, pIdx) => {
+        if (p.is_break || !matrixGrid[pIdx]) return;
+        activeDayKeys.forEach(dayKey => {
+            const slot = matrixGrid[pIdx][dayKey];
+            if (slot && slot.course_id) {
+                const mappedTeacherId = SERVER_DATA.teacherMappings[slot.course_id];
+                if (mappedTeacherId) {
+                    slot.teacher_id = parseInt(mappedTeacherId);
+                    assignedCount++;
+                }
+            }
+        });
+    });
+
+    markUnsaved();
+    renderMatrix();
+    showToast(`🧑‍🏫 Auto-assigned allocated teachers to ${assignedCount} slots!`);
+}
+
 // Clear all slots
 function clearMatrixGrid() {
     if (!confirm('Clear all timetable slots in the matrix?')) return;
@@ -1738,8 +2033,8 @@ function clearMatrixGrid() {
     showToast('🧹 Matrix cleared.');
 }
 
-// Bulk Save
-function saveMatrixTimetable() {
+// Bulk Save Entire Timetable Matrix (Fastest Way)
+function saveMatrixTimetable(forceOverride = false) {
     if (!SERVER_DATA.classId || !SERVER_DATA.sectionId) {
         showToast('Please select a Class and Section first.', true);
         return;
@@ -1747,8 +2042,7 @@ function saveMatrixTimetable() {
 
     const slotsToSave = [];
     currentPeriods.forEach((p, pIdx) => {
-        if (p.is_break) return;
-        if (!matrixGrid[pIdx]) return;
+        if (p.is_break || !matrixGrid[pIdx]) return;
 
         Object.keys(matrixGrid[pIdx]).forEach(dayKey => {
             const slot = matrixGrid[pIdx][dayKey];
@@ -1781,27 +2075,33 @@ function saveMatrixTimetable() {
         body: JSON.stringify({
             class_id: SERVER_DATA.classId,
             section_id: SERVER_DATA.sectionId,
-            slots: slotsToSave
+            slots: slotsToSave,
+            force_override: forceOverride
         })
     })
-    .then(r => r.json())
+    .then(async r => {
+        const data = await r.json().catch(() => null);
+        if (!r.ok && !data) {
+            throw new Error(`HTTP ${r.status}`);
+        }
+        return data || { success: false, message: 'Invalid response from server.' };
+    })
     .then(data => {
         btn.innerHTML = origHtml;
         btn.disabled = false;
 
         if (data.success) {
+            closeConflictModal();
             markSaved();
             showToast(`✅ ${data.message || 'Timetable saved successfully!'}`);
-            // refresh background bookings
             fetchOtherBookings();
         } else {
-            showToast(data.message || 'Error saving timetable', true);
             if (data.conflict) {
-                const conflictBar = document.getElementById('matrixConflictWarningBar');
-                const conflictText = document.getElementById('matrixConflictWarningText');
-                conflictBar.classList.remove('hidden');
-                conflictBar.classList.add('flex');
-                conflictText.innerHTML = data.message;
+                lastConflicts = data.conflicts || [data.message];
+                lastConflictingSlots = data.conflicting_slots || [];
+                openConflictModal(lastConflicts, lastConflictingSlots);
+            } else {
+                showToast(data.message || 'Error saving timetable', true);
             }
         }
     })
@@ -1813,17 +2113,217 @@ function saveMatrixTimetable() {
     });
 }
 
-// Clone Section Modal
-function openCloneModal() {
-    const modal = document.getElementById('cloneSectionModal');
+// Conflict Resolution Modal
+function openConflictModal(conflicts, conflictingSlots) {
+    const modal = document.getElementById('matrixConflictModal');
+    const list = document.getElementById('conflictModalList');
+    if (!modal || !list) return;
+
+    list.innerHTML = conflicts.map(c => `
+        <div class="flex items-start gap-2 py-1">
+            <i class="bi bi-exclamation-triangle-fill text-rose-500 mt-0.5 flex-shrink-0"></i>
+            <span>${c}</span>
+        </div>
+    `).join('');
+
     modal.classList.remove('hidden');
     modal.classList.add('flex');
 }
 
+function closeConflictModal() {
+    const modal = document.getElementById('matrixConflictModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+function showConflictDetailsModal() {
+    if (lastConflicts && lastConflicts.length > 0) {
+        openConflictModal(lastConflicts, lastConflictingSlots);
+    } else {
+        showToast('Scanning for conflicts…');
+        updateMatrixSummary();
+    }
+}
+
+function highlightConflictingCells() {
+    closeConflictModal();
+    // Scroll to matrix table
+    const table = document.getElementById('rapidMatrixTable');
+    if (table) table.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Highlight all conflicting cells with flash
+    document.querySelectorAll('.nsh-matrix-cell.has-conflict').forEach(el => {
+        el.classList.add('ring-4', 'ring-rose-500', 'animate-bounce');
+        setTimeout(() => el.classList.remove('ring-4', 'ring-rose-500', 'animate-bounce'), 3500);
+    });
+}
+
+// =========================================================================
+// QUICK EDIT MODAL (Fast In-Place Editing for Grid View and Day Schedule)
+// =========================================================================
+function openQuickEditModal(slotData) {
+    if (!slotData) return;
+    const modal = document.getElementById('quickEditSlotModal');
+    const alertBox = document.getElementById('quickEditConflictAlert');
+    if (alertBox) alertBox.classList.add('hidden');
+
+    document.getElementById('quick_slot_id').value = slotData.id || '';
+    if (document.getElementById('quick_weekday')) document.getElementById('quick_weekday').value = slotData.weekday || 1;
+    if (document.getElementById('quick_start')) document.getElementById('quick_start').value = slotData.start || '10:00';
+    if (document.getElementById('quick_end')) document.getElementById('quick_end').value = slotData.end || '10:45';
+    if (document.getElementById('quick_course_id')) document.getElementById('quick_course_id').value = slotData.course_id || '';
+    if (document.getElementById('quick_teacher_id')) document.getElementById('quick_teacher_id').value = slotData.teacher_id || '';
+    if (document.getElementById('quick_room')) document.getElementById('quick_room').value = slotData.room || '';
+    if (document.getElementById('quick_color')) document.getElementById('quick_color').value = slotData.color || '#6366f1';
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeQuickEditModal() {
+    const modal = document.getElementById('quickEditSlotModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+function submitQuickEditSlot(e) {
+    e.preventDefault();
+    const slotId = document.getElementById('quick_slot_id').value;
+    if (!slotId) return;
+
+    const btn = document.getElementById('btnSaveQuickEdit');
+    const origHtml = btn.innerHTML;
+    btn.innerHTML = `<i class="bi bi-arrow-repeat animate-spin"></i> Saving…`;
+    btn.disabled = true;
+
+    const payload = {
+        weekday: parseInt(document.getElementById('quick_weekday').value),
+        start: document.getElementById('quick_start').value,
+        end: document.getElementById('quick_end').value,
+        course_id: document.getElementById('quick_course_id').value,
+        teacher_id: document.getElementById('quick_teacher_id').value || null,
+        room: document.getElementById('quick_room').value || null,
+        color: document.getElementById('quick_color').value || null,
+    };
+
+    fetch(`/routine/${slotId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': SERVER_DATA.csrfToken,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(async r => {
+        const data = await r.json().catch(() => null);
+        if (!r.ok && !data) throw new Error(`HTTP ${r.status}`);
+        return data || { success: false, message: 'Server returned error.' };
+    })
+    .then(data => {
+        btn.innerHTML = origHtml;
+        btn.disabled = false;
+
+        if (data.success) {
+            closeQuickEditModal();
+            showToast(`✅ ${data.message || 'Slot updated successfully!'}`);
+            // Smoothly refresh view without full page reset
+            setTimeout(() => window.location.reload(), 400);
+        } else {
+            const alertBox = document.getElementById('quickEditConflictAlert');
+            const alertText = document.getElementById('quickEditConflictText');
+            if (alertBox && alertText) {
+                alertText.innerHTML = data.message || 'Error updating slot.';
+                alertBox.classList.remove('hidden');
+            } else {
+                showToast(data.message || 'Error updating slot', true);
+            }
+        }
+    })
+    .catch(err => {
+        btn.innerHTML = origHtml;
+        btn.disabled = false;
+        showToast('Server error while updating slot.', true);
+    });
+}
+
+function submitQuickDeleteSlot() {
+    const slotId = document.getElementById('quick_slot_id').value;
+    if (!slotId) return;
+    if (!confirm('Are you sure you want to remove this timetable slot?')) return;
+
+    fetch(`/routine/${slotId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': SERVER_DATA.csrfToken,
+            'Accept': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            closeQuickEditModal();
+            showToast('🗑️ Slot removed successfully.');
+            setTimeout(() => window.location.reload(), 400);
+        } else {
+            showToast(data.message || 'Could not delete slot', true);
+        }
+    })
+    .catch(() => showToast('Server error deleting slot.', true));
+}
+
+// 1-Click Fast Delete directly from row/tile
+function quickDeleteSlot(slotId, buttonEl) {
+    if (!confirm('Remove this slot from the timetable?')) return;
+
+    fetch(`/routine/${slotId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-TOKEN': SERVER_DATA.csrfToken,
+            'Accept': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            showToast('🗑️ Slot removed.');
+            const tr = buttonEl.closest('tr');
+            const td = buttonEl.closest('td');
+            if (tr && tr.classList.contains('nsh-tt-row')) {
+                tr.style.opacity = '0.3';
+                setTimeout(() => window.location.reload(), 300);
+            } else if (td) {
+                td.style.opacity = '0.3';
+                setTimeout(() => window.location.reload(), 300);
+            } else {
+                window.location.reload();
+            }
+        } else {
+            showToast(data.message || 'Could not remove slot.', true);
+        }
+    })
+    .catch(() => showToast('Server error removing slot.', true));
+}
+
+// Clone Section Modal
+function openCloneModal() {
+    const modal = document.getElementById('cloneSectionModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+}
+
 function closeCloneModal() {
     const modal = document.getElementById('cloneSectionModal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
 }
 
 function executeCloneSection() {
@@ -1859,10 +2359,8 @@ function executeCloneSection() {
 
         if (data.success) {
             closeCloneModal();
-            // Populate matrix
             const slots = data.slots || [];
             slots.forEach(s => {
-                // Find matching period index or create
                 let pIdx = currentPeriods.findIndex(p => p.start === s.start && p.end === s.end);
                 if (pIdx === -1) {
                     pIdx = currentPeriods.length;
@@ -1899,6 +2397,7 @@ function executeCloneSection() {
 // Period Schedule Modal
 function openPeriodModal() {
     const list = document.getElementById('periodEditorList');
+    if (!list) return;
     list.innerHTML = currentPeriods.map((p, idx) => `
         <div class="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs" id="periodRow_${idx}">
             <input type="text" value="${p.name}" placeholder="Period Name" id="pName_${idx}"
@@ -1918,14 +2417,18 @@ function openPeriodModal() {
     `).join('');
 
     const modal = document.getElementById('periodModal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
 }
 
 function closePeriodModal() {
     const modal = document.getElementById('periodModal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
 }
 
 function addNewPeriodRow() {
