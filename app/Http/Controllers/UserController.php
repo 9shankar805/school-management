@@ -282,8 +282,11 @@ class UserController extends Controller
         // Classes available for the timetable assignment form
         $allClasses = $this->schoolClassRepository->getAllBySession($sessionId);
 
-        // Courses for dropdown (filtered by class via AJAX in view)
-        $allCourses = \App\Models\Course::where('session_id', $sessionId)->get();
+        // Courses for dropdown (filtered by class via AJAX in view) — deduplicated by name
+        $allCourses = \App\Models\Course::uniqueByName()
+            ->where('session_id', $sessionId)
+            ->orderBy('course_name')
+            ->get();
 
         return view('teachers.profile', compact(
             'teacher','activeContract','attendanceStats',
