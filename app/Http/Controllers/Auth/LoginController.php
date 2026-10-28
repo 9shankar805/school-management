@@ -25,6 +25,11 @@ class LoginController extends Controller
      */
     public function showLoginForm(Request $request)
     {
+        // Already authenticated — send straight to dashboard
+        if (Auth::check()) {
+            return redirect()->route('home');
+        }
+
         // Allow user to explicitly clear school context: /login?school=none or /login?clear_school=1
         if ($request->get('school') === 'none' || $request->has('clear_school')) {
             session()->forget(['tenant_school_id', 'tenant_school_slug']);

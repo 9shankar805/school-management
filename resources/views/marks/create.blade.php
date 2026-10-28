@@ -387,7 +387,7 @@
                 </div>
             </div>
             @if(!empty($isAdmin))
-                <form action="{{ route('final.marks.submission.status.update') }}" method="POST" class="flex-shrink-0 self-start sm:self-center pl-10 sm:pl-0">
+                <form action="{{ route('school.final.marks.submission.status.update') }}" method="POST" class="flex-shrink-0 self-start sm:self-center pl-10 sm:pl-0">
                     @csrf
                     <button type="submit" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 border border-slate-200 dark:border-slate-700 transition shadow-xs flex items-center gap-1.5" onclick="return confirm('Lock submission window for teachers?')">
                         <i class="bi bi-lock"></i> Close for Teachers
@@ -418,7 +418,7 @@
                 </div>
             </div>
             @if(!empty($isAdmin))
-                <form action="{{ route('final.marks.submission.status.update') }}" method="POST" class="flex-shrink-0 self-start sm:self-center pl-10 sm:pl-0">
+                <form action="{{ route('school.final.marks.submission.status.update') }}" method="POST" class="flex-shrink-0 self-start sm:self-center pl-10 sm:pl-0">
                     @csrf
                     <input type="hidden" name="marks_submission_status" value="on">
                     <button type="submit" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm flex items-center gap-1.5">
