@@ -53,13 +53,21 @@ class FinalMark extends Model
      *
      * @param  \Illuminate\Database\Eloquent\Collection  $gradeRules
      */
-    public function resolveGrade($gradeRules): array
+    public function resolveGrade($gradeRules, ?float $fullMarks = null): array
     {
+        // Grade rules use a percentage scale (0–100).
+        // Normalise final_marks to a percentage before matching.
+        $fm    = (float) $this->final_marks;
+        $total = $fullMarks ?? (float)($this->full_marks ?? 0);
+        $score = ($total > 0 && $total != 100)
+            ? round(($fm / $total) * 100, 4)
+            : $fm;
+
         foreach ($gradeRules as $rule) {
-            if ($this->final_marks >= $rule->start_at && $this->final_marks <= $rule->end_at) {
+            if ($score >= $rule->start_at && $score <= $rule->end_at) {
                 $isPassingGrade = !in_array(strtoupper(trim($rule->grade)), ['NG', 'F', 'FAIL']) && (float)$rule->point > 0;
                 $passed = isset($this->examRule) && $this->examRule && $this->examRule->pass_marks > 0
-                    ? $this->final_marks >= $this->examRule->pass_marks
+                    ? $fm >= $this->examRule->pass_marks
                     : $isPassingGrade;
 
                 return [

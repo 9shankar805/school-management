@@ -124,7 +124,15 @@
         </tr>
         <tr>
             <td class="lbl">Class Rank:</td>
-            <td class="val">{{ $result['rank'] ? '#' . $result['rank'] : '—' }}</td>
+            <td class="val">
+                @if($result['rank'])
+                    @php $rank = (int)$result['rank']; @endphp
+                    <span style="font-size:13px; font-weight:bold; color:#1e3a8a;">{{ ordinal($rank) }}</span>
+                    <span style="font-size:9px; color:#64748b; font-weight:normal;"> Position</span>
+                @else
+                    &mdash;
+                @endif
+            </td>
             <td class="lbl">Issue Date:</td>
             <td class="val">{{ now()->format('d M Y') }} (@bsDateEn(now()->toDateString()))</td>
         </tr>
@@ -146,7 +154,7 @@
             @forelse($result['courses'] ?? [] as $c)
             <tr>
                 <td><b>{{ $c['course']?->course_name ?? 'Course' }}</b></td>
-                <td>100</td>
+                <td>{{ $c['full_marks'] ?? 100 }}</td>
                 <td>{{ round($c['final_marks'], 1) }}</td>
                 <td style="font-weight: bold; color: {{ $c['passed'] ? '#059669' : '#dc2626' }};">
                     {{ $c['grade'] }}

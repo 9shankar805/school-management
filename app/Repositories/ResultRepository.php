@@ -131,14 +131,24 @@ class ResultRepository
 
         $marks = $marksQuery->get();
 
+        // Pre-load ExamRule total_marks per course for correct full_marks display
+        $examIds = Exam::where('semester_id', $semesterId)
+            ->where('session_id', $sessionId)
+            ->where('class_id', $classId)
+            ->get(['id', 'course_id']);
+        $examRulesByCourse = ExamRule::whereIn('exam_id', $examIds->pluck('id'))
+            ->get(['exam_id', 'total_marks', 'pass_marks'])
+            ->keyBy(fn($r) => $examIds->firstWhere('id', $r->exam_id)?->course_id ?? 0);
+
         // Fallback: If FinalMark is not finalized yet for this term, aggregate from Mark table
         if ($marks->isEmpty()) {
             $examIds = Exam::where('semester_id', $semesterId)
                 ->where('session_id', $sessionId)
+                ->where('class_id',   $classId)      // ← must scope to student's class only
                 ->pluck('id');
 
             if ($examIds->isNotEmpty()) {
-                $rawMarks = Mark::with('course')
+                $rawMarks = Mark::with(['course', 'exam.examRule'])
                     ->where('student_id', $studentId)
                     ->where('class_id',    $classId)
                     ->where('session_id',  $sessionId)
@@ -159,6 +169,8 @@ class ResultRepository
                         $fm->final_marks      = (float) $cMarks->sum('marks');
                         $fm->calculated_marks = $fm->final_marks;
                         $fm->note             = 'Recorded Exam Marks';
+                        // Sum up each exam's total_marks so resolveGrade() can normalise to %
+                        $fm->full_marks       = (float) $cMarks->sum(fn($m) => $m->exam?->examRule?->total_marks ?? 100);
                         return $fm;
                     })->values();
                 }
@@ -196,6 +208,7 @@ class ResultRepository
                 'course'            => $mark->course,
                 'final_marks'       => $mark->final_marks,
                 'calculated_marks'  => $mark->calculated_marks,
+                'full_marks'        => (float)($examRulesByCourse[$mark->course_id]?->total_marks ?? $mark->full_marks ?? 100),
                 'note'              => $mark->note,
                 'grade'             => $resolved['grade'],
                 'point'             => $resolved['point'],
@@ -247,10 +260,11 @@ class ResultRepository
         if ($allMarks->isEmpty()) {
             $examIds = Exam::where('semester_id', $semesterId)
                 ->where('session_id', $sessionId)
+                ->where('class_id',   $classId)      // ← scope to this class only
                 ->pluck('id');
 
             if ($examIds->isNotEmpty()) {
-                $rawQuery = Mark::with(['student', 'course', 'exam'])
+                $rawQuery = Mark::with(['student', 'course', 'exam.examRule'])
                     ->where('session_id', $sessionId)
                     ->where('class_id',    $classId)
                     ->whereIn('exam_id',   $examIds);
@@ -272,6 +286,8 @@ class ResultRepository
                             $fm->course           = $cMarks->first()->course;
                             $fm->final_marks      = (float) $cMarks->sum('marks');
                             $fm->calculated_marks = $fm->final_marks;
+                            // Sum up each exam's total_marks so resolveGrade() can normalise to %
+                            $fm->full_marks       = (float) $cMarks->sum(fn($m) => $m->exam?->examRule?->total_marks ?? 100);
                             return $fm;
                         });
                     });
