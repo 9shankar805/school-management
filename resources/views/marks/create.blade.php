@@ -1,6 +1,21 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+/* ── Mobile select fix: prevent iOS zoom + ensure tappable ── */
+@media (max-width: 768px) {
+    select, input[type="number"], input[type="text"], input[type="date"], textarea {
+        font-size: 16px !important; /* prevents iOS auto-zoom */
+        -webkit-appearance: none;
+        min-height: 44px; /* Apple HIG minimum touch target */
+    }
+    select { -webkit-appearance: menulist; }
+    .mark-input { min-height: 40px !important; font-size: 16px !important; }
+    /* Ensure filter card doesn't clip dropdown */
+    #marksFilterForm { overflow: visible !important; }
+    .overflow-x-auto { -webkit-overflow-scrolling: touch; }
+}
+</style>
 {{-- Auto-save indicator --}}
 <div id="autoSaveIndicator" class="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 px-3 py-1.5 rounded-xl text-[11px] font-bold shadow-lg bg-emerald-600 text-white" style="opacity:0;transition:opacity 0.3s;"></div>
 
@@ -146,7 +161,7 @@
                 <label for="filter_semester_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                     Terminal Exam / Semester <span class="text-rose-500">*</span>
                 </label>
-                <select id="filter_semester_id" name="semester_id" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                <select id="filter_semester_id" name="semester_id" required class="w-full text-sm px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition" style="font-size:16px !important; -webkit-appearance:auto;">
                     @isset($semesters)
                         @foreach ($semesters as $sem)
                             <option value="{{ $sem->id }}" {{ $semester_id == $sem->id ? 'selected' : '' }}>
@@ -162,7 +177,7 @@
                 <label for="filter_class_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                     Class / Grade <span class="text-rose-500">*</span>
                 </label>
-                <select id="filter_class_id" name="class_id" required onchange="handleClassChange(this.value)" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                <select id="filter_class_id" name="class_id" required onchange="handleClassChange(this.value)" class="w-full text-sm px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition" style="font-size:16px !important; -webkit-appearance:auto;">
                     <option value="">-- Choose Class --</option>
                     @isset($school_classes)
                         @foreach ($school_classes as $sc)
@@ -179,7 +194,7 @@
                 <label for="filter_section_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                     Section
                 </label>
-                <select id="filter_section_id" name="section_id" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition">
+                <select id="filter_section_id" name="section_id" class="w-full text-sm px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition" style="font-size:16px !important; -webkit-appearance:menulist; min-height:44px;">
                     <option value="0">{{ !empty($canEditAllSubjects) ? 'All Sections (Entire Class)' : 'All Assigned Sections' }}</option>
                 </select>
             </div>
@@ -194,7 +209,7 @@
                         <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Assigned Subjects Only</span>
                     @endif
                 </label>
-                <select id="filter_course_id" name="course_id" required class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-indigo-200 dark:border-indigo-800/80 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium transition">
+                <select id="filter_course_id" name="course_id" required class="w-full text-sm px-3.5 py-3 rounded-xl border border-indigo-200 dark:border-indigo-800/80 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium transition" style="font-size:16px !important; -webkit-appearance:menulist; min-height:44px;">
                     @if(!empty($canEditAllSubjects))
                         <option value="all" {{ ($course_id === 'all' || empty($course_id) || $course_id == '0') ? 'selected' : '' }}>
                             ⚡ All Subjects at Once (Master Grade Ledger)
@@ -371,7 +386,7 @@
                     </div>
 
                     @if(count($classCourses) > 0 && count($sectionStudents) > 0)
-                        <div class="overflow-x-auto relative">
+                        <div class="overflow-x-auto relative" style="-webkit-overflow-scrolling:touch; touch-action:pan-x pan-y;">
                             <table class="w-full text-left text-xs border-collapse" id="masterMarksTable">
                                 <thead>
                                     <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-bold">
@@ -700,12 +715,20 @@ function loadSectionsAndCourses(classId, preselectedSection, preselectedCourse) 
         return;
     }
 
-    selectSection.innerHTML = '<option value="0">Loading sections...</option>';
-    selectCourse.innerHTML = '<option value="">Loading courses...</option>';
+     selectSection.innerHTML = '<option value="0">Loading sections...</option>';
+     selectCourse.innerHTML = '<option value="">Loading courses...</option>';
 
-    fetch('{{ route("get.sections.courses.by.classId") }}?class_id=' + classId)
-        .then(res => res.json())
-        .then(data => {
+     const _ctrl = new AbortController();
+     const _tout = setTimeout(() => {
+         _ctrl.abort();
+         selectSection.innerHTML = '<option value="0">All Sections</option>';
+         selectCourse.innerHTML = CAN_EDIT_ALL ? '<option value="all">⚡ All Subjects at Once</option>' : '<option value="">-- Select Subject --</option>';
+     }, 8000);
+
+     fetch('{{ route("get.sections.courses.by.classId") }}?class_id=' + classId + '&semester_id=' + (document.getElementById('filter_semester_id')?.value||'') + '&_t=' + Date.now(), { signal: _ctrl.signal })
+         .then(res => res.json())
+         .then(data => {
+             clearTimeout(_tout);
             const hasAllPrivilege = IS_ADMIN || !!data.is_class_teacher || CAN_EDIT_ALL;
 
             // Populate Sections
