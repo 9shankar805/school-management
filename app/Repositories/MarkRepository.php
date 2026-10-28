@@ -9,19 +9,67 @@ use App\Interfaces\MarkInterface;
 
 class MarkRepository implements MarkInterface {
     public function create($rows) {
+        if (empty($rows)) {
+            return;
+        }
+
         try {
-            foreach($rows as $row){
-                Mark::updateOrCreate([
-                    'session_id' => $row['session_id'],
-                    'class_id'   => $row['class_id'],
-                    'student_id' => $row['student_id'],
-                    'course_id'  => $row['course_id'],
-                    'exam_id'    => $row['exam_id'],
-                ], [
-                    'section_id' => $row['section_id'] ?? 0,
-                    'marks'      => $row['marks'],
-                ]);
-            }
+            \Illuminate\Support\Facades\DB::transaction(function () use ($rows) {
+                $schoolId = auth()->user()->school_id ?? null;
+                $sessionId = $rows[0]['session_id'] ?? null;
+                $classId = $rows[0]['class_id'] ?? null;
+
+                $studentIds = array_values(array_unique(array_column($rows, 'student_id')));
+                $courseIds = array_values(array_unique(array_column($rows, 'course_id')));
+                $examIds = array_values(array_unique(array_column($rows, 'exam_id')));
+
+                // Fetch all existing records in a single query instead of 1 query per row
+                $existingQuery = Mark::where('session_id', $sessionId)
+                    ->where('class_id', $classId)
+                    ->whereIn('student_id', $studentIds)
+                    ->whereIn('course_id', $courseIds)
+                    ->whereIn('exam_id', $examIds);
+
+                $existingMarks = $existingQuery->get()->keyBy(function ($item) {
+                    return $item->student_id . '_' . $item->course_id . '_' . $item->exam_id;
+                });
+
+                $toInsert = [];
+                $now = now();
+
+                foreach ($rows as $row) {
+                    $key = $row['student_id'] . '_' . $row['course_id'] . '_' . $row['exam_id'];
+
+                    if (isset($existingMarks[$key])) {
+                        $markRecord = $existingMarks[$key];
+                        $markRecord->marks = $row['marks'];
+                        $markRecord->section_id = $row['section_id'] ?? 0;
+                        if ($schoolId && empty($markRecord->school_id)) {
+                            $markRecord->school_id = $schoolId;
+                        }
+                        $markRecord->save();
+                    } else {
+                        $toInsert[] = [
+                            'school_id'  => $row['school_id'] ?? $schoolId,
+                            'session_id' => $row['session_id'],
+                            'class_id'   => $row['class_id'],
+                            'section_id' => $row['section_id'] ?? 0,
+                            'student_id' => $row['student_id'],
+                            'course_id'  => $row['course_id'],
+                            'exam_id'    => $row['exam_id'],
+                            'marks'      => $row['marks'],
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ];
+                    }
+                }
+
+                if (!empty($toInsert)) {
+                    foreach (array_chunk($toInsert, 250) as $chunk) {
+                        Mark::insert($chunk);
+                    }
+                }
+            });
         } catch (\Exception $e) {
             throw new \Exception('Failed to update students marks. '.$e->getMessage());
         }

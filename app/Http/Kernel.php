@@ -23,6 +23,9 @@ class Kernel extends HttpKernel
 
         // Module 22 — Security headers on every response (CSP, HSTS, X-Frame, etc.)
         \App\Http\Middleware\SecurityHeaders::class,
+
+        // Low-Internet & Fast Speed Optimization: Gzip HTTP compression
+        \App\Http\Middleware\CompressResponse::class,
     ];
 
     /**

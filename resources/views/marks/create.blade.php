@@ -442,9 +442,20 @@
                     @endif
                 </h2>
             </div>
-            <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>Active Session: <strong class="text-slate-700 dark:text-slate-200">{{ session('current_session_name', '2083-2084') }}</strong></span>
+            <div class="flex items-center gap-2 flex-wrap text-xs text-slate-500 dark:text-slate-400 font-medium">
+                {{-- Network Status Pill --}}
+                <div class="network-status-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-2xs" title="Live Connection Quality">
+                    <span class="status-dot w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span class="status-text">Online</span>
+                </div>
+                {{-- Auto-Draft Cache Pill --}}
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[11px] font-medium text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-2xs" title="Continuous Local Auto-Save (Zero Data Loss in Low Internet)">
+                    <span class="draft-status-text">💾 Auto-Draft: Active</span>
+                </div>
+                <div class="hidden sm:flex items-center gap-1.5 text-xs">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                    <span>Session: <strong class="text-slate-700 dark:text-slate-200">{{ session('current_session_name', '2083-2084') }}</strong></span>
+                </div>
             </div>
         </div>
 
@@ -698,6 +709,42 @@
                     </div>
                 </div>
             @endif
+        </div>
+
+        {{-- Enterprise Veda-Style Unsaved Draft Recovery Banner --}}
+        <div id="draftRecoveryBanner" class="hidden mb-4 p-3.5 sm:p-4 rounded-2xl bg-indigo-50/95 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm transition">
+            <div class="flex items-center gap-3">
+                <span class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-lg flex-shrink-0 shadow-sm">
+                    <i class="bi bi-cloud-arrow-down-fill"></i>
+                </span>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <strong class="text-xs font-bold text-indigo-950 dark:text-indigo-100">Unsaved Local Draft Recovered</strong>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-200 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200">Offline Protected</span>
+                    </div>
+                    <p class="text-[11px] text-indigo-700/90 dark:text-indigo-300 mt-0.5">
+                        Found <span id="draftCountText" class="font-bold">0</span> unsaved mark(s) preserved in your browser cache from <span id="draftTimeText" class="font-medium">earlier</span>.
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 self-end sm:self-center">
+                <button type="button" onclick="LocalDraftManager.applyDraft()" class="px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-xs flex items-center gap-1.5">
+                    <i class="bi bi-arrow-repeat"></i> Restore Draft
+                </button>
+                <button type="button" onclick="LocalDraftManager.clearDraft()" class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition">
+                    Discard
+                </button>
+            </div>
+        </div>
+
+        {{-- Floating Sync HUD / Status Notification --}}
+        <div id="syncStatusHud" class="hidden fixed bottom-6 right-6 z-50 max-w-sm rounded-2xl p-4 shadow-2xl border transition-all duration-300 flex items-center gap-3 backdrop-blur-md">
+            <div id="syncStatusIcon" class="text-xl flex-shrink-0"></div>
+            <div class="min-w-0 flex-1">
+                <div id="syncStatusTitle" class="text-xs font-bold"></div>
+                <div id="syncStatusDesc" class="text-[11px] opacity-90 mt-0.5 leading-snug"></div>
+            </div>
+            <button id="syncStatusActionBtn" type="button" class="hidden px-3 py-1.5 rounded-xl text-xs font-bold bg-white/20 hover:bg-white/30 transition shadow-xs"></button>
         </div>
 
         {{-- MAIN EVALUATION FORM CONTAINER --}}
@@ -1465,8 +1512,324 @@ function debouncedUpdateStudentRowStats(row) {
     rowUpdateTimers.set(row, rafId);
 }
 
+// --- ENTERPRISE VEDA-GRADE LOW-INTERNET & OFFLINE DRAFT ENGINE ---
+const CURRENT_DRAFT_KEY = 'marks_draft_v2_s{{ $current_school_session_id }}_sem{{ $semester_id }}_c{{ $class_id }}_sec{{ $section_id }}_crs{{ $course_id }}';
+
+// 1. Live Network Quality & Heartbeat Monitor
+const NetworkMonitor = {
+    isOnline: navigator.onLine,
+    isSlow: false,
+    latency: 0,
+    async checkConnection() {
+        if (!navigator.onLine) {
+            this.setOffline();
+            return;
+        }
+        const start = performance.now();
+        try {
+            await fetch('/favicon.ico?_v=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
+            this.latency = Math.round(performance.now() - start);
+            if (this.latency > 1200) {
+                this.setSlow();
+            } else {
+                this.setOnline();
+            }
+        } catch (e) {
+            this.setSlow();
+        }
+    },
+    setOnline() {
+        this.isOnline = true;
+        this.isSlow = false;
+        this.updatePills('online', 'Online (Fast)', 'bg-emerald-500', 'text-emerald-700 dark:text-emerald-300');
+    },
+    setSlow() {
+        this.isOnline = true;
+        this.isSlow = true;
+        this.updatePills('slow', 'Slow Internet (' + this.latency + 'ms)', 'bg-amber-500 animate-pulse', 'text-amber-700 dark:text-amber-300');
+    },
+    setOffline() {
+        this.isOnline = false;
+        this.updatePills('offline', 'Offline (Draft Mode)', 'bg-rose-500', 'text-rose-700 dark:text-rose-300');
+    },
+    updatePills(mode, label, dotBg, textCls) {
+        document.querySelectorAll('.network-status-pill').forEach(pill => {
+            const dot = pill.querySelector('.status-dot');
+            const txt = pill.querySelector('.status-text');
+            if (dot) dot.className = 'status-dot w-2 h-2 rounded-full ' + dotBg;
+            if (txt) txt.textContent = label;
+        });
+    }
+};
+
+// 2. High-speed Local Draft Engine (Preserves every keystroke in browser storage)
+const LocalDraftManager = {
+    timer: null,
+    saveDraft() {
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => {
+            const inputs = document.querySelectorAll('.mark-input');
+            const data = {};
+            let count = 0;
+            inputs.forEach(inp => {
+                if (inp.name && inp.value !== '') {
+                    data[inp.name] = inp.value;
+                    count++;
+                }
+            });
+            const draft = {
+                updatedAt: new Date().toISOString(),
+                count: count,
+                marks: data
+            };
+            try {
+                localStorage.setItem(CURRENT_DRAFT_KEY, JSON.stringify(draft));
+                this.updateDraftStatus(count);
+            } catch (err) {
+                console.warn('LocalStorage save failed:', err);
+            }
+        }, 150);
+    },
+    getDraft() {
+        try {
+            const raw = localStorage.getItem(CURRENT_DRAFT_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            return null;
+        }
+    },
+    clearDraft() {
+        try {
+            localStorage.removeItem(CURRENT_DRAFT_KEY);
+            this.updateDraftStatus(0);
+            const banner = document.getElementById('draftRecoveryBanner');
+            if (banner) banner.classList.add('hidden');
+        } catch (e) {}
+    },
+    checkExistingDraft() {
+        const draft = this.getDraft();
+        if (!draft || !draft.marks || Object.keys(draft.marks).length === 0) return;
+
+        let diffCount = 0;
+        Object.keys(draft.marks).forEach(name => {
+            const inp = document.querySelector(`input[name="${name}"]`);
+            if (inp && inp.value !== draft.marks[name]) {
+                diffCount++;
+            }
+        });
+
+        if (diffCount > 0) {
+            const banner = document.getElementById('draftRecoveryBanner');
+            const countSpan = document.getElementById('draftCountText');
+            const timeSpan = document.getElementById('draftTimeText');
+            if (banner && countSpan) {
+                countSpan.textContent = `${diffCount} unsaved mark(s)`;
+                if (timeSpan && draft.updatedAt) {
+                    const d = new Date(draft.updatedAt);
+                    timeSpan.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
+                banner.classList.remove('hidden');
+            }
+        }
+    },
+    applyDraft() {
+        const draft = this.getDraft();
+        if (!draft || !draft.marks) return;
+        let applied = 0;
+        Object.keys(draft.marks).forEach(name => {
+            const inp = document.querySelector(`input[name="${name}"]`);
+            if (inp) {
+                inp.value = draft.marks[name];
+                inp.classList.add('bg-amber-50', 'dark:bg-amber-950/40');
+                applied++;
+            }
+        });
+        calculateAllRows();
+        const banner = document.getElementById('draftRecoveryBanner');
+        if (banner) banner.classList.add('hidden');
+        showFloatingHud('Draft Restored', `✓ Restored ${applied} marks from local storage!`, 'success');
+    },
+    updateDraftStatus(count) {
+        document.querySelectorAll('.draft-status-text').forEach(el => {
+            if (count > 0) {
+                el.textContent = `💾 Draft: ${count} cached`;
+                el.classList.add('text-indigo-600', 'dark:text-indigo-400', 'font-bold');
+            } else {
+                el.textContent = `💾 Auto-Draft: Active`;
+                el.classList.remove('text-indigo-600', 'dark:text-indigo-400', 'font-bold');
+            }
+        });
+    }
+};
+
+// 3. Floating HUD / Toast Notification Engine
+let hudTimeout = null;
+function showFloatingHud(title, desc, type = 'info', actionText = null, actionCallback = null) {
+    const hud = document.getElementById('syncStatusHud');
+    if (!hud) return;
+
+    clearTimeout(hudTimeout);
+
+    const iconEl = document.getElementById('syncStatusIcon');
+    const titleEl = document.getElementById('syncStatusTitle');
+    const descEl = document.getElementById('syncStatusDesc');
+    const actBtn = document.getElementById('syncStatusActionBtn');
+
+    titleEl.textContent = title;
+    descEl.textContent = desc;
+
+    hud.className = 'fixed bottom-6 right-6 z-50 max-w-sm rounded-2xl p-4 shadow-2xl border transition-all duration-300 flex items-center gap-3 backdrop-blur-md ';
+
+    if (type === 'syncing') {
+        hud.classList.add('bg-slate-900/95', 'text-white', 'border-slate-700');
+        iconEl.innerHTML = '<span class="inline-block animate-spin text-indigo-400"><i class="bi bi-arrow-repeat"></i></span>';
+    } else if (type === 'success') {
+        hud.classList.add('bg-emerald-950/95', 'text-emerald-100', 'border-emerald-700/60');
+        iconEl.innerHTML = '<i class="bi bi-check-circle-fill text-emerald-400"></i>';
+        hudTimeout = setTimeout(() => hud.classList.add('hidden'), 4000);
+    } else if (type === 'error') {
+        hud.classList.add('bg-rose-950/95', 'text-rose-100', 'border-rose-700/60');
+        iconEl.innerHTML = '<i class="bi bi-exclamation-octagon-fill text-rose-400"></i>';
+    } else if (type === 'warning') {
+        hud.classList.add('bg-amber-950/95', 'text-amber-100', 'border-amber-700/60');
+        iconEl.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-amber-400"></i>';
+        hudTimeout = setTimeout(() => hud.classList.add('hidden'), 4000);
+    }
+
+    if (actionText && typeof actionCallback === 'function') {
+        actBtn.textContent = actionText;
+        actBtn.classList.remove('hidden');
+        actBtn.onclick = () => {
+            actionCallback();
+            hud.classList.add('hidden');
+        };
+    } else {
+        actBtn.classList.add('hidden');
+        actBtn.onclick = null;
+    }
+
+    hud.classList.remove('hidden');
+}
+
+// 4. Asynchronous High-Speed Sync with Low-Internet Auto-Retry
+async function saveMarksWithLowInternetSync(form, retryAttempt = 0) {
+    if (!form) return;
+
+    // Client-side bounds check to prevent server reject
+    const inputs = form.querySelectorAll('.mark-input');
+    let hasInvalid = false;
+    inputs.forEach(inp => {
+        const max = parseFloat(inp.dataset.maxMarks) || 100;
+        const val = parseFloat(inp.value);
+        if (!isNaN(val) && val > max) {
+            inp.classList.add('ring-2', 'ring-rose-500', 'border-rose-500', 'bg-rose-50');
+            hasInvalid = true;
+        } else {
+            inp.classList.remove('ring-2', 'ring-rose-500', 'border-rose-500', 'bg-rose-50');
+        }
+    });
+
+    if (hasInvalid) {
+        showFloatingHud('Validation Error', 'One or more entries exceed maximum allowed marks. Please correct highlighted cells.', 'warning');
+        return;
+    }
+
+    const saveBtns = form.querySelectorAll('button[type="submit"]');
+    saveBtns.forEach(b => {
+        b.disabled = true;
+        b.dataset.origHtml = b.innerHTML;
+        b.innerHTML = '<span class="inline-block animate-spin mr-1.5"><i class="bi bi-arrow-repeat"></i></span> Syncing...';
+    });
+
+    const isRetry = retryAttempt > 0;
+    showFloatingHud(
+        isRetry ? 'Reconnecting to Database...' : 'Syncing Marks to Database...',
+        isRetry ? `Slow internet detected. Retrying sync (attempt ${retryAttempt + 1} of 3)...` : 'Transmitting marks securely...',
+        'syncing'
+    );
+
+    try {
+        const formData = new FormData(form);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 14000); // 14s timeout for low bandwidth
+
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.message || `Server responded with HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // 1. Clear synchronized entries from local storage draft
+        LocalDraftManager.clearDraft();
+
+        // 2. Visually confirm rows saved with smooth green pulse
+        document.querySelectorAll('.has-unsaved').forEach(row => {
+            row.classList.remove('has-unsaved');
+            row.classList.add('bg-emerald-500/10');
+            setTimeout(() => row.classList.remove('bg-emerald-500/10'), 1500);
+        });
+
+        // 3. Reset floating mobile save indicator
+        const floatBtn = document.getElementById('mobileFloatingSaveBtn');
+        if (floatBtn) {
+            floatBtn.classList.remove('ring-4', 'ring-amber-400', 'bg-amber-600');
+            floatBtn.classList.add('opacity-90', 'bg-indigo-600');
+            floatBtn.innerHTML = '<i class="bi bi-check2-circle text-base"></i><span>All Saved ✓</span>';
+        }
+
+        // 4. Update save button feedback
+        saveBtns.forEach(b => {
+            b.disabled = false;
+            b.innerHTML = '<i class="bi bi-check2-all text-sm"></i> Saved ✓';
+            setTimeout(() => {
+                b.innerHTML = b.dataset.origHtml || 'Save Marks';
+            }, 2500);
+        });
+
+        showFloatingHud('All Marks Saved!', data.message || `Successfully synced ${data.count || ''} marks to the database!`, 'success');
+    } catch (err) {
+        console.warn('Sync attempt failed:', err);
+
+        // Auto-retry up to 2 times for transient network fluctuations
+        if (retryAttempt < 2 && navigator.onLine) {
+            const waitTime = (retryAttempt + 1) * 1500;
+            setTimeout(() => saveMarksWithLowInternetSync(form, retryAttempt + 1), waitTime);
+            return;
+        }
+
+        // Fallback: Ensure draft is securely cached in LocalStorage
+        LocalDraftManager.saveDraft();
+
+        showFloatingHud(
+            'Connection Drop Detected',
+            'Your marks are safely kept in your browser draft and will not be lost. Click to retry sync.',
+            'error',
+            'Retry Sync',
+            () => saveMarksWithLowInternetSync(form, 0)
+        );
+
+        saveBtns.forEach(b => {
+            b.disabled = false;
+            b.innerHTML = b.dataset.origHtml || 'Save Marks';
+        });
+    }
+}
+
 function markRowUnsaved(row) {
     if (row) row.classList.add('has-unsaved');
+    LocalDraftManager.saveDraft();
     const floatBtn = document.getElementById('mobileFloatingSaveBtn');
     if (floatBtn) {
         floatBtn.classList.remove('opacity-90');
@@ -1478,10 +1841,9 @@ function markRowUnsaved(row) {
 function submitActiveMarksForm() {
     const masterForm = document.getElementById('masterMarksForm');
     const singleForm = document.getElementById('singleMarksForm');
-    if (masterForm) {
-        masterForm.submit();
-    } else if (singleForm) {
-        singleForm.submit();
+    const activeForm = masterForm || singleForm;
+    if (activeForm) {
+        saveMarksWithLowInternetSync(activeForm);
     }
 }
 
@@ -1793,6 +2155,31 @@ document.addEventListener('DOMContentLoaded', function() {
             submitActiveMarksForm();
         }
     });
+
+    // 8. Attach Asynchronous Low-Internet Submit Handlers
+    const masterForm = document.getElementById('masterMarksForm');
+    if (masterForm) {
+        masterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveMarksWithLowInternetSync(this);
+        });
+    }
+
+    const singleForm = document.getElementById('singleMarksForm');
+    if (singleForm) {
+        singleForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveMarksWithLowInternetSync(this);
+        });
+    }
+
+    // 9. Initialize Network Monitor & Check Existing Drafts
+    NetworkMonitor.checkConnection();
+    window.addEventListener('online', () => NetworkMonitor.setOnline());
+    window.addEventListener('offline', () => NetworkMonitor.setOffline());
+    setInterval(() => NetworkMonitor.checkConnection(), 30000);
+
+    LocalDraftManager.checkExistingDraft();
 });
 </script>
 @endsection

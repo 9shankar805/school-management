@@ -690,8 +690,23 @@ class MarkController extends Controller
             try {
                 $markRepository = new MarkRepository();
                 $markRepository->create($rows);
+
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'status'  => 'success',
+                        'message' => 'Successfully recorded marks across all subjects for ' . count($rows) . ' entries!',
+                        'count'   => count($rows),
+                    ]);
+                }
+
                 return back()->with('status', 'Successfully recorded marks across all subjects for ' . count($rows) . ' entries!');
             } catch (\Exception $e) {
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json([
+                        'status'  => 'error',
+                        'message' => 'Error saving marks: ' . $e->getMessage(),
+                    ], 500);
+                }
                 return back()->with('error', 'Error saving marks: ' . $e->getMessage());
             }
         }
@@ -708,6 +723,13 @@ class MarkController extends Controller
         ]);
 
         if ($validator->fails()) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => $validator->errors()->first(),
+                    'errors'  => $validator->errors(),
+                ], 422);
+            }
             return back()->withInput()->withErrors($validator);
         }
 
@@ -754,7 +776,11 @@ class MarkController extends Controller
 
                 $max = $maxMarksByExamId[$exam] ?? 100;
                 if ((float)$mark > (float)$max) {
-                    return back()->withInput()->with('error', "Marks must be between 0 and {$max} for each exam.");
+                    $errMsg = "Marks must be between 0 and {$max} for each exam.";
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return response()->json(['status' => 'error', 'message' => $errMsg], 422);
+                    }
+                    return back()->withInput()->with('error', $errMsg);
                 }
 
                 $rows[] = [
@@ -770,6 +796,12 @@ class MarkController extends Controller
         }
 
         if (empty($rows)) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status'  => 'info',
+                    'message' => 'No marks entered to save. Please enter marks for at least one student.',
+                ]);
+            }
             return back()->with('info', 'No marks entered to save. Please enter marks for at least one student.');
         }
 
@@ -777,8 +809,22 @@ class MarkController extends Controller
             $markRepository = new MarkRepository();
             $markRepository->create($rows);
 
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status'  => 'success',
+                    'message' => 'Saving marks was successful! ' . count($rows) . ' mark entry(ies) recorded.',
+                    'count'   => count($rows),
+                ]);
+            }
+
             return back()->with('status', 'Saving marks was successful! ' . count($rows) . ' mark entry(ies) recorded.');
         } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => $e->getMessage(),
+                ], 500);
+            }
             return back()->with('error', $e->getMessage());
         }
     }
