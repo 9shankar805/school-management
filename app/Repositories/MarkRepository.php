@@ -10,14 +10,16 @@ use App\Interfaces\MarkInterface;
 class MarkRepository implements MarkInterface {
     public function create($rows) {
         try {
+            $schoolId = auth()->user()?->school_id ?? null;
             foreach($rows as $row){
                 Mark::updateOrCreate([
-                    'exam_id' => $row['exam_id'],
+                    'exam_id'    => $row['exam_id'],
                     'student_id' => $row['student_id'],
                     'session_id' => $row['session_id'],
-                    'class_id' => $row['class_id'],
+                    'class_id'   => $row['class_id'],
                     'section_id' => $row['section_id'],
-                    'course_id' => $row['course_id']
+                    'course_id'  => $row['course_id'],
+                    'school_id'  => $row['school_id'] ?? $schoolId,
                 ],['marks' => $row['marks']]);
             }
         } catch (\Exception $e) {

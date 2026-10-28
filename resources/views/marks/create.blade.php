@@ -1,37 +1,34 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="px-4 lg:px-8 py-6 max-w-7xl mx-auto space-y-6">
+{{-- Auto-save indicator --}}
+<div id="autoSaveIndicator" class="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 px-3 py-1.5 rounded-xl text-[11px] font-bold shadow-lg bg-emerald-600 text-white" style="opacity:0;transition:opacity 0.3s;"></div>
+
+<div class="px-2 sm:px-4 lg:px-8 py-4 sm:py-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
 
     {{-- Page Header --}}
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-3">
-                <span class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-indigo-500/20">
-                    <i class="bi bi-pencil-square"></i>
-                </span>
-                <div>
-                    <h1 class="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
-                        Enter Marks & Grades
-                        @if(!empty($isAdmin))
-                        <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                            Admin Mode
-                        </span>
-                        @endif
-                    </h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">
-                        Direct master grade ledger or single-course exam evaluations with real-time GPA calculation
-                    </p>
-                </div>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-center gap-2.5">
+            <span class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center font-bold text-lg sm:text-xl shadow-md shadow-indigo-500/20 flex-shrink-0">
+                <i class="bi bi-pencil-square"></i>
+            </span>
+            <div>
+                <h1 class="text-lg sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight leading-tight">
+                    Enter Marks & Grades
+                    @if(!empty($isAdmin))
+                    <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 align-middle">Admin</span>
+                    @endif
+                </h1>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">Direct master grade ledger with real-time GPA calculation</p>
             </div>
         </div>
-        <nav aria-label="breadcrumb">
+        <nav aria-label="breadcrumb" class="hidden sm:flex">
             <ol class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800/80 px-3.5 py-2 rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-xs">
                 <li><a href="{{ route('home') }}" class="hover:text-indigo-600 transition flex items-center gap-1"><i class="bi bi-house-door"></i> Home</a></li>
-                <li class="text-slate-300 dark:text-slate-600">/</li>
-                <li><a href="{{ route('course.mark.index') }}" class="hover:text-indigo-600 transition">Marks & Results</a></li>
-                <li class="text-slate-300 dark:text-slate-600">/</li>
-                <li class="font-semibold text-slate-800 dark:text-slate-200">Enter Marks</li>
+                <li class="text-slate-300">/</li>
+                <li><a href="{{ route('course.mark.index') }}" class="hover:text-indigo-600 transition">Marks</a></li>
+                <li class="text-slate-300">/</li>
+                <li class="font-semibold text-slate-800 dark:text-slate-200">Enter</li>
             </ol>
         </nav>
     </div>
@@ -60,7 +57,7 @@
                 </div>
             </div>
             @if(!empty($isAdmin))
-                <form action="{{ route('final.marks.submission.status.update') }}" method="POST" class="flex-shrink-0">
+                <form action="{{ route('school.final.marks.submission.status.update') }}" method="POST" class="flex-shrink-0">
                     @csrf
                     <button type="submit" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition shadow-xs flex items-center gap-1.5" onclick="return confirm('Lock submission window for teachers?')">
                         <i class="bi bi-lock"></i> Close Window for Teachers
@@ -95,7 +92,7 @@
                 </div>
             </div>
             @if(!empty($isAdmin))
-                <form action="{{ route('final.marks.submission.status.update') }}" method="POST" class="flex-shrink-0">
+                <form action="{{ route('school.final.marks.submission.status.update') }}" method="POST" class="flex-shrink-0">
                     @csrf
                     <input type="hidden" name="marks_submission_status" value="on">
                     <button type="submit" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-xs flex items-center gap-1.5">
@@ -119,7 +116,7 @@
             </div>
         </div>
 
-        <form action="{{ route('course.mark.create') }}" method="GET" id="marksFilterForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <form action="{{ route('course.mark.create') }}" method="GET" id="marksFilterForm" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {{-- Semester / Terminal Exam --}}
             <div>
                 <label for="filter_semester_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
@@ -176,12 +173,12 @@
                 </select>
             </div>
 
-            <div class="sm:col-span-2 lg:col-span-4 flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
-                <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <div class="col-span-2 lg:col-span-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 hidden sm:flex">
                     <i class="bi bi-info-circle text-indigo-500"></i>
-                    <span>Selecting <strong>All Subjects</strong> allows you to enter marks for the entire class across all courses on one screen.</span>
+                    <span>Selecting <strong>All Subjects</strong> allows entering marks for the entire class on one screen.</span>
                 </div>
-                <button type="submit" class="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition flex items-center gap-2">
+                <button type="submit" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-2">
                     <i class="bi bi-table"></i> Load Grade Sheet
                 </button>
             </div>
@@ -281,13 +278,13 @@
 
                         <div class="flex items-center gap-2 flex-wrap">
                             <button type="button" onclick="fillZeroForEmpty()" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold transition flex items-center gap-1.5 shadow-xs" title="Set any remaining empty marks as 0 (Absent)">
-                                <i class="bi bi-magic text-indigo-500"></i> Set Empty to 0 (Absent)
+                                <i class="bi bi-magic text-indigo-500"></i> <span class="hidden sm:inline">Set Empty to 0</span><span class="sm:hidden">Absent</span>
                             </button>
                             <button type="button" onclick="calculateAllRows()" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold transition flex items-center gap-1.5 shadow-xs">
-                                <i class="bi bi-arrow-clockwise text-emerald-500"></i> Recalculate
+                                <i class="bi bi-arrow-clockwise text-emerald-500"></i> <span class="hidden sm:inline">Recalculate</span>
                             </button>
-                            <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition flex items-center gap-2">
-                                <i class="bi bi-cloud-arrow-up-fill"></i> Save All Marks
+                            <button type="submit" class="px-4 sm:px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition flex items-center gap-2">
+                                <i class="bi bi-cloud-arrow-up-fill"></i> <span>Save All</span>
                             </button>
                         </div>
                     </div>
@@ -297,11 +294,11 @@
                             <table class="w-full text-left text-xs border-collapse" id="masterMarksTable">
                                 <thead>
                                     <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 font-bold">
-                                        <th class="py-3 px-4 min-w-[70px] sticky left-0 bg-slate-100 dark:bg-slate-800 z-10 text-center">
+                                        <th class="py-3 px-2 sm:px-4 min-w-[50px] sm:min-w-[70px] sticky left-0 bg-slate-100 dark:bg-slate-800 z-10 text-center">
                                             Roll
                                         </th>
-                                        <th class="py-3 px-4 min-w-[200px] sticky left-[70px] bg-slate-100 dark:bg-slate-800 z-10">
-                                            Student Name
+                                        <th class="py-3 px-2 sm:px-4 min-w-[130px] sm:min-w-[200px] sticky left-[50px] sm:left-[70px] bg-slate-100 dark:bg-slate-800 z-10">
+                                            Student
                                         </th>
                                         @foreach($classCourses as $course)
                                             <th class="py-3 px-3 min-w-[120px] text-center border-l border-slate-200/60 dark:border-slate-800">
@@ -313,13 +310,13 @@
                                                 </div>
                                             </th>
                                         @endforeach
-                                        <th class="py-3 px-3 min-w-[100px] text-center bg-indigo-50/60 dark:bg-indigo-950/30 border-l border-indigo-100 dark:border-indigo-900/40 text-indigo-950 dark:text-indigo-200 font-bold">
+                                        <th class="py-3 px-3 min-w-[100px] text-center bg-indigo-50/60 dark:bg-indigo-950/30 border-l border-indigo-100 dark:border-indigo-900/40 text-indigo-950 dark:text-indigo-200 font-bold hidden sm:table-cell">
                                             Total
                                         </th>
-                                        <th class="py-3 px-3 min-w-[80px] text-center bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-950 dark:text-indigo-200 font-bold">
+                                        <th class="py-3 px-3 min-w-[80px] text-center bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-950 dark:text-indigo-200 font-bold hidden sm:table-cell">
                                             %
                                         </th>
-                                        <th class="py-3 px-3 min-w-[90px] text-center bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-950 dark:text-indigo-200 font-bold">
+                                        <th class="py-3 px-3 min-w-[90px] text-center bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-950 dark:text-indigo-200 font-bold hidden md:table-cell">
                                             GPA
                                         </th>
                                         <th class="py-3 px-3 min-w-[90px] text-center bg-indigo-50/60 dark:bg-indigo-950/30 text-indigo-950 dark:text-indigo-200 font-bold">
@@ -345,7 +342,7 @@
                                             </td>
 
                                             {{-- Student Name & Avatar --}}
-                                            <td class="py-3 px-4 font-semibold text-slate-800 dark:text-slate-100 sticky left-[70px] bg-white dark:bg-slate-900 group-hover:bg-indigo-50/20 dark:group-hover:bg-slate-800/40 z-10">
+                                            <td class="py-3 px-4 font-semibold text-slate-800 dark:text-slate-100 sticky left-[50px] sm:left-[70px] bg-white dark:bg-slate-900 group-hover:bg-indigo-50/20 dark:group-hover:bg-slate-800/40 z-10">
                                                 <div class="flex items-center gap-2.5">
                                                     <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-indigo-500 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-xs flex-shrink-0">
                                                         {{ strtoupper(substr($fullName, 0, 1)) }}
@@ -374,18 +371,18 @@
                                                            data-student-id="{{ $stuId }}"
                                                            data-course-id="{{ $course->id }}"
                                                            data-max-marks="{{ $maxM }}"
-                                                           class="mark-input w-full max-w-[90px] text-center font-mono text-xs font-bold py-1.5 px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                                                           class="mark-input w-full max-w-[70px] sm:max-w-[90px] text-center font-mono text-xs font-bold py-1.5 px-1 sm:px-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
                                                 </td>
                                             @endforeach
 
                                             {{-- Dynamic Row Calculations --}}
-                                            <td class="py-3 px-3 text-center font-mono font-bold text-slate-700 dark:text-slate-200 bg-indigo-50/20 dark:bg-indigo-950/10 border-l border-indigo-100/50 dark:border-indigo-900/30">
+                                            <td class="py-3 px-3 text-center font-mono font-bold text-slate-700 dark:text-slate-200 bg-indigo-50/20 dark:bg-indigo-950/10 border-l border-indigo-100/50 dark:border-indigo-900/30 hidden sm:table-cell">
                                                 <span class="row-total-marks">—</span>
                                             </td>
-                                            <td class="py-3 px-3 text-center font-mono font-semibold text-slate-700 dark:text-slate-200 bg-indigo-50/20 dark:bg-indigo-950/10">
+                                            <td class="py-3 px-3 text-center font-mono font-semibold text-slate-700 dark:text-slate-200 bg-indigo-50/20 dark:bg-indigo-950/10 hidden sm:table-cell">
                                                 <span class="row-percentage">—</span>
                                             </td>
-                                            <td class="py-3 px-3 text-center font-mono font-bold bg-indigo-50/20 dark:bg-indigo-950/10">
+                                            <td class="py-3 px-3 text-center font-mono font-bold bg-indigo-50/20 dark:bg-indigo-950/10 hidden md:table-cell">
                                                 <span class="row-gpa text-slate-400">—</span>
                                             </td>
                                             <td class="py-3 px-3 text-center bg-indigo-50/20 dark:bg-indigo-950/10">
@@ -403,7 +400,7 @@
                         <div class="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4">
                             <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
                                 <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-                                <span>Tip: Use <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-mono text-[10px]">Tab</kbd> or <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-mono text-[10px]">Arrow Keys</kbd> to quickly navigate cells. Press <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-mono text-[10px]">Ctrl+S</kbd> / <kbd class="px-1.5 py-0.5 rounded bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-mono text-[10px]">⌘+S</kbd> to save.</span>
+                                <span>Tip: Use <kbd class="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 font-mono text-[10px] text-slate-700 dark:text-slate-200 font-semibold shadow-sm">Tab</kbd> or <kbd class="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 font-mono text-[10px] text-slate-700 dark:text-slate-200 font-semibold shadow-sm">Arrow Keys</kbd> to quickly navigate cells. Press <kbd class="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 font-mono text-[10px] text-slate-700 dark:text-slate-200 font-semibold shadow-sm">Ctrl+S</kbd> / <kbd class="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 font-mono text-[10px] text-slate-700 dark:text-slate-200 font-semibold shadow-sm">⌘+S</kbd> to save.</span>
                             </div>
 
                             <div class="flex items-center gap-3">
@@ -812,6 +809,76 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // 7. ── AUTO-SAVE to localStorage (survives refresh) ──────────────────
+    const STORAGE_KEY = 'marks_draft_{{ $class_id }}_{{ $section_id }}_{{ $semester_id }}';
+    const saveIndicator = document.getElementById('autoSaveIndicator');
+
+    function showSaveIndicator(msg, color) {
+        if (!saveIndicator) return;
+        saveIndicator.textContent = msg;
+        saveIndicator.className = `fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 px-3 py-1.5 rounded-xl text-[11px] font-bold shadow-lg transition-all ${color}`;
+        saveIndicator.style.opacity = '1';
+        clearTimeout(saveIndicator._timer);
+        saveIndicator._timer = setTimeout(() => { saveIndicator.style.opacity = '0'; }, 3000);
+    }
+
+    function saveDraftToLocal() {
+        const inputs = document.querySelectorAll('.mark-input');
+        const draft = {};
+        inputs.forEach(inp => {
+            const key = inp.name;
+            if (inp.value.trim() !== '') draft[key] = inp.value;
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+        showSaveIndicator('✓ Draft saved locally', 'bg-emerald-600 text-white');
+    }
+
+    function loadDraftFromLocal() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        try {
+            const draft = JSON.parse(raw);
+            let restored = 0;
+            Object.entries(draft).forEach(([name, value]) => {
+                const inp = document.querySelector(`input[name="${CSS.escape(name)}"]`);
+                if (inp && inp.value.trim() === '') {
+                    inp.value = value;
+                    restored++;
+                }
+            });
+            if (restored > 0) {
+                showSaveIndicator(`↺ Restored ${restored} draft marks`, 'bg-indigo-600 text-white');
+                calculateAllRows();
+            }
+        } catch(e) {}
+    }
+
+    // Load draft on page load
+    loadDraftFromLocal();
+
+    // Auto-save every 30 seconds
+    setInterval(saveDraftToLocal, 30000);
+
+    // Save on every input change (debounced)
+    let draftTimer;
+    const masterTable = document.getElementById('masterMarksTable');
+    if (masterTable) {
+        masterTable.addEventListener('input', function(e) {
+            if (e.target.classList.contains('mark-input')) {
+                clearTimeout(draftTimer);
+                draftTimer = setTimeout(saveDraftToLocal, 1500);
+            }
+        });
+    }
+
+    // Clear draft on successful form submit
+    const masterForm = document.getElementById('masterMarksForm');
+    if (masterForm) {
+        masterForm.addEventListener('submit', function() {
+            localStorage.removeItem(STORAGE_KEY);
+        });
+    }
 });
 </script>
 @endsection

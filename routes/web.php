@@ -283,6 +283,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/marks/create', [MarkController::class, 'create'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher'])->name('course.mark.create');
     Route::post('/marks/store', [MarkController::class, 'store'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher'])->name('course.mark.store');
     Route::get('/marks/results', [MarkController::class, 'index'])->name('course.mark.list.show');
+    Route::get('/marks', [MarkController::class, 'index'])->name('course.mark.index');
     // Route::get('/marks/view', function () {
     //     return view('marks.view');
     // });

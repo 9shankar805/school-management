@@ -214,16 +214,18 @@ class MarkController extends Controller
             $user = auth()->user();
             $isAdmin = $user && ($user->hasAnyRole(['Super Admin', 'Admin', 'Exam Controller', 'Principal', 'Vice Principal', 'super-admin', 'admin', 'principal']) || $user->can('create marks'));
 
-            // Fetch all courses assigned to this class
-            $classCourses = Course::where('class_id', $class_id)
+            // Fetch all courses assigned to this class — deduplicated by name
+            $classCourses = Course::uniqueByName()
+                ->where('class_id', $class_id)
+                ->when($semester_id > 0, fn($q) => $q->where('semester_id', $semester_id))
                 ->where(function($q) use ($current_school_session_id) {
                     $q->where('session_id', $current_school_session_id)->orWhereNull('session_id');
                 })
-                ->orderBy('id')
+                ->orderBy('course_name')
                 ->get();
 
             if ($classCourses->isEmpty()) {
-                $classCourses = Course::where('class_id', $class_id)->orderBy('id')->get();
+                $classCourses = Course::uniqueByName()->where('class_id', $class_id)->orderBy('course_name')->get();
             }
 
             if ($isAllSubjectsMode) {
@@ -255,15 +257,27 @@ class MarkController extends Controller
 
                 // Fetch all recorded marks for these students and courses
                 $studentIds = $sectionStudents->map(fn($item) => $item->student_id ?? optional($item->student)->id)->filter()->unique()->toArray();
+
+                // Get exam IDs for this specific class + semester to load correct marks
+                $semesterExamIds = Exam::where('session_id', $current_school_session_id)
+                    ->where('class_id', $class_id)
+                    ->when($semester_id > 0, fn($q) => $q->where('semester_id', $semester_id))
+                    ->pluck('id');
+
                 $existingMarks = Mark::where('session_id', $current_school_session_id)
                     ->where('class_id', $class_id)
                     ->whereIn('student_id', $studentIds)
                     ->whereIn('course_id', $classCourses->pluck('id'))
+                    ->whereIn('exam_id', $semesterExamIds)
+                    ->orderByDesc('updated_at') // latest mark wins
                     ->get();
 
                 $marksMatrix = [];
                 foreach ($existingMarks as $m) {
-                    $marksMatrix[$m->student_id][$m->course_id] = $m->marks;
+                    // Only set if not already set (latest wins due to orderByDesc)
+                    if (!isset($marksMatrix[$m->student_id][$m->course_id])) {
+                        $marksMatrix[$m->student_id][$m->course_id] = $m->marks;
+                    }
                 }
 
                 return view('marks.create', [
@@ -457,18 +471,29 @@ class MarkController extends Controller
         // Case 1: Master Grade Ledger (All Subjects Submitted at once)
         if ($request->has('student_course_mark')) {
             $studentCourseMarks = $request->input('student_course_mark', []);
+
+            if (empty($studentCourseMarks)) {
+                return back()->with('error', 'No marks data received. Please enter at least one mark before saving.');
+            }
+
             $semester = Semester::find($semester_id);
             $semesterName = $semester ? $semester->semester_name : 'Terminal Examination';
 
-            $courses = Course::where('class_id', $class_id)->get()->keyBy('id');
+            // Get ALL unique course IDs submitted from the form
+            $submittedCourseIds = collect($studentCourseMarks)
+                ->flatMap(fn($courses) => array_keys($courses))
+                ->unique()
+                ->map(fn($id) => (int)$id)
+                ->toArray();
 
-            // Find or create exams for all courses
+            // Build exam cache keyed by course_id
             $examCache = [];
-            foreach ($courses as $cId => $course) {
+            foreach ($submittedCourseIds as $cId) {
+                // Find exam for this course in this semester
                 $exam = Exam::where('session_id', $current_school_session_id)
-                    ->where('semester_id', $semester_id)
                     ->where('class_id', $class_id)
                     ->where('course_id', $cId)
+                    ->when($semester_id > 0, fn($q) => $q->where('semester_id', $semester_id))
                     ->first();
 
                 if (!$exam) {
@@ -484,20 +509,16 @@ class MarkController extends Controller
                     ]);
                 }
 
-                // Ensure ExamRule exists (default 100 max, 40 pass)
-                $rule = ExamRule::where('session_id', $current_school_session_id)
-                    ->where('exam_id', $exam->id)
-                    ->first();
-                if (!$rule) {
-                    ExamRule::create([
-                        'school_id'   => auth()->user()->school_id ?? null,
-                        'exam_id'     => $exam->id,
-                        'session_id'  => $current_school_session_id,
-                        'total_marks' => 100,
-                        'pass_marks'  => 40,
-                        'marks_distribution_note' => 'Standard 100 marks',
-                    ]);
-                }
+                // Ensure ExamRule exists
+                ExamRule::firstOrCreate(
+                    ['exam_id' => $exam->id, 'session_id' => $current_school_session_id],
+                    [
+                        'school_id'                => auth()->user()->school_id ?? null,
+                        'total_marks'              => 100,
+                        'pass_marks'               => 40,
+                        'marks_distribution_note'  => 'Standard 100 marks',
+                    ]
+                );
 
                 $examCache[$cId] = $exam;
             }
@@ -505,16 +526,16 @@ class MarkController extends Controller
             $rows = [];
             foreach ($studentCourseMarks as $studentId => $coursesMarks) {
                 foreach ($coursesMarks as $cId => $mark) {
-                    if ($mark === null || $mark === '') {
-                        continue;
-                    }
+                    if ($mark === null || $mark === '') continue;
+                    $cId = (int)$cId;
                     if (isset($examCache[$cId])) {
                         $rows[] = [
+                            'school_id'  => auth()->user()->school_id ?? null,
                             'class_id'   => $class_id,
                             'student_id' => (int)$studentId,
                             'marks'      => (float)$mark,
                             'section_id' => $section_id,
-                            'course_id'  => (int)$cId,
+                            'course_id'  => $cId,
                             'session_id' => $current_school_session_id,
                             'exam_id'    => $examCache[$cId]->id,
                         ];
