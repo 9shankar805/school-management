@@ -3097,16 +3097,31 @@ document.addEventListener('DOMContentLoaded', function() {
     var THRESHOLD  = 8;   // px — ignore tiny jitter
     var SHOW_AT    = 60;  // px from bottom — always show near page end
 
+    // Check if page actually has enough content to scroll
+    function isPageScrollable() {
+        return document.documentElement.scrollHeight > window.innerHeight + 10;
+    }
+
     function onScroll() {
         if (!nav) return;
-        var y       = window.scrollY;
-        var delta   = y - lastY;
-        var docH    = document.documentElement.scrollHeight;
-        var winH    = window.innerHeight;
-        var nearBottom = (y + winH) >= (docH - SHOW_AT);
 
-        if (nearBottom) {
-            // Always show when near the bottom of the page
+        // If page is not scrollable, always keep nav visible
+        if (!isPageScrollable()) {
+            nav.classList.remove('nav-hidden');
+            lastY = window.scrollY;
+            ticking = false;
+            return;
+        }
+
+        var y          = window.scrollY;
+        var delta      = y - lastY;
+        var docH       = document.documentElement.scrollHeight;
+        var winH       = window.innerHeight;
+        var nearBottom = (y + winH) >= (docH - SHOW_AT);
+        var atTop      = y <= 10;
+
+        if (atTop || nearBottom) {
+            // Always show at very top or near bottom
             nav.classList.remove('nav-hidden');
         } else if (delta > THRESHOLD) {
             // Scrolling DOWN — hide
@@ -3115,7 +3130,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Scrolling UP — show
             nav.classList.remove('nav-hidden');
         }
-        lastY = y;
+
+        lastY   = y;
         ticking = false;
     }
 
@@ -3126,14 +3142,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, { passive: true });
 
+    // Re-check scrollability on resize / content change
+    window.addEventListener('resize', function () {
+        if (nav && !isPageScrollable()) {
+            nav.classList.remove('nav-hidden');
+        }
+    }, { passive: true });
+
     // Touch swipe support (for momentum scrolling on iOS)
     var touchStartY = 0;
     document.addEventListener('touchstart', function (e) {
         touchStartY = e.touches[0].clientY;
     }, { passive: true });
     document.addEventListener('touchend', function (e) {
-        var diff = touchStartY - e.changedTouches[0].clientY;
         if (!nav) return;
+        // Only act on swipe if page is scrollable
+        if (!isPageScrollable()) {
+            nav.classList.remove('nav-hidden');
+            return;
+        }
+        var diff = touchStartY - e.changedTouches[0].clientY;
         if (diff > THRESHOLD) {
             nav.classList.add('nav-hidden');
         } else if (diff < -THRESHOLD) {
