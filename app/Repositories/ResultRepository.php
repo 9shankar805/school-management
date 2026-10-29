@@ -207,11 +207,15 @@ class ResultRepository
             $totalMarks  += $mark->final_marks;
             $resolved['passed'] ? $passed++ : $failed++;
 
+            $fullMarks = (float)($examRulesByCourse[$mark->course_id]?->total_marks ?? $mark->full_marks ?? 100);
+            $passMarks = (float)($examRulesByCourse[$mark->course_id]?->pass_marks ?? round($fullMarks * 0.4, 0));
+
             $courses[] = [
                 'course'            => $mark->course,
                 'final_marks'       => $mark->final_marks,
                 'calculated_marks'  => $mark->calculated_marks,
-                'full_marks'        => (float)($examRulesByCourse[$mark->course_id]?->total_marks ?? $mark->full_marks ?? 100),
+                'full_marks'        => $fullMarks,
+                'pass_marks'        => $passMarks,
                 'note'              => $mark->note,
                 'grade'             => $resolved['grade'],
                 'point'             => $resolved['point'],

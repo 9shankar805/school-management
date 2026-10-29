@@ -302,7 +302,20 @@ class ResultSheetController extends Controller
             $sessionId
         );
 
-        $pdf = Pdf::loadView('results.pdf.report-card', compact('result', 'verifyUrl', 'qrSrc', 'verifyToken', 'school', 'logoSrc'))
+        $attendance = \App\Models\Attendance::statsFor($studentId, $sessionId);
+
+        $classTeacher = \App\Models\AssignedTeacher::with('teacher')
+            ->where('session_id', $sessionId)
+            ->where('class_id', $classId)
+            ->where('is_class_teacher', true)
+            ->when($sectionId > 0, function ($q) use ($sectionId) {
+                $q->where(function ($sq) use ($sectionId) {
+                    $sq->where('section_id', $sectionId)->orWhere('section_id', 0)->orWhereNull('section_id');
+                });
+            })
+            ->first()?->teacher;
+
+        $pdf = Pdf::loadView('results.pdf.report-card', compact('result', 'verifyUrl', 'qrSrc', 'verifyToken', 'school', 'logoSrc', 'attendance', 'classTeacher'))
             ->setPaper('A4', 'portrait')
             ->setOptions(['defaultFont' => 'DejaVu Sans', 'dpi' => 150, 'isRemoteEnabled' => true, 'chroot' => public_path(), 'isHtml5ParserEnabled' => true]);
 
@@ -350,6 +363,17 @@ class ResultSheetController extends Controller
             return back()->with('error', "No student results found for {$class->class_name} in {$semester->semester_name}.");
         }
 
+        $classTeacher = \App\Models\AssignedTeacher::with('teacher')
+            ->where('session_id', $sessionId)
+            ->where('class_id', $classId)
+            ->where('is_class_teacher', true)
+            ->when($sectionId > 0, function ($q) use ($sectionId) {
+                $q->where(function ($sq) use ($sectionId) {
+                    $sq->where('section_id', $sectionId)->orWhere('section_id', 0)->orWhereNull('section_id');
+                });
+            })
+            ->first()?->teacher;
+
         $cards = [];
         foreach ($results as $row) {
             $stuId = $row['student']->id;
@@ -357,16 +381,19 @@ class ResultSheetController extends Controller
             $token = $this->generateMarksheetToken($stuId, $semesterId, $classId, $sessionId);
             $vUrl  = route('results.verify', ['token' => $token]);
             $qr    = $this->getQrCodeSrc('https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' . urlencode($vUrl));
+            $att   = \App\Models\Attendance::statsFor($stuId, $sessionId);
 
             $cards[] = [
-                'result'      => $res,
-                'verifyToken' => $token,
-                'verifyUrl'   => $vUrl,
-                'qrSrc'       => $qr,
+                'result'       => $res,
+                'verifyToken'  => $token,
+                'verifyUrl'    => $vUrl,
+                'qrSrc'        => $qr,
+                'attendance'   => $att,
+                'classTeacher' => $classTeacher,
             ];
         }
 
-        $pdf = Pdf::loadView('results.pdf.class-report-cards', compact('cards', 'class', 'section', 'semester', 'school', 'logoSrc'))
+        $pdf = Pdf::loadView('results.pdf.class-report-cards', compact('cards', 'class', 'section', 'semester', 'school', 'logoSrc', 'classTeacher'))
             ->setPaper('A4', 'portrait')
             ->setOptions(['defaultFont' => 'DejaVu Sans', 'dpi' => 150, 'isRemoteEnabled' => true, 'chroot' => public_path(), 'isHtml5ParserEnabled' => true]);
 
