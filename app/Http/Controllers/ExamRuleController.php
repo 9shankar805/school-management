@@ -113,10 +113,49 @@ class ExamRuleController extends Controller
     public function update(Request $request)
     {
         try {
-            $examRuleRepository = new ExamRuleRepository();
-            $examRuleRepository->update($request);
+            $sessionId = $this->getSchoolCurrentSession();
+            $schoolId  = auth()->user()->school_id ?? null;
+            $ruleId    = (int) $request->exam_rule_id;
+            $examId    = (int) $request->exam_id;
+            $courseId  = (int) $request->course_id;
 
-            return back()->with('status', 'Exam rule update was successful!');
+            // No rule yet — create exam + rule
+            if ($ruleId === 0) {
+                // Find or create exam for this course
+                if ($examId === 0) {
+                    $course = \App\Models\Course::find($courseId);
+                    $semId  = \App\Models\Semester::where('session_id', $sessionId)->value('id');
+                    $exam   = \App\Models\Exam::firstOrCreate([
+                        'session_id'  => $sessionId,
+                        'class_id'    => $course?->class_id,
+                        'course_id'   => $courseId,
+                        'semester_id' => $semId,
+                    ], [
+                        'school_id'  => $schoolId,
+                        'exam_name'  => 'Terminal',
+                        'start_date' => now(),
+                        'end_date'   => now()->addDays(7),
+                    ]);
+                    $examId = $exam->id;
+                }
+                \App\Models\ExamRule::create([
+                    'school_id'               => $schoolId,
+                    'exam_id'                 => $examId,
+                    'session_id'              => $sessionId,
+                    'total_marks'             => $request->total_marks,
+                    'pass_marks'              => $request->pass_marks,
+                    'marks_distribution_note' => '{}',
+                ]);
+                return back()->with('status', 'Exam rule created!');
+            }
+
+            // Rule exists — update it
+            \App\Models\ExamRule::where('id', $ruleId)->update([
+                'total_marks' => $request->total_marks,
+                'pass_marks'  => $request->pass_marks,
+            ]);
+
+            return back()->with('status', 'Exam rule updated!');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
