@@ -881,6 +881,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <input type="hidden" name="exam_id" id="ruleExamId">
             <input type="hidden" name="exam_rule_id" id="ruleRuleId">
             <input type="hidden" name="course_id" id="ruleCourseId">
+            <input type="hidden" name="class_id" value="{{ $class_id }}">
+            <input type="hidden" name="semester_id" value="{{ $semester_id }}">
 
             <div>
                 <p class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-3">

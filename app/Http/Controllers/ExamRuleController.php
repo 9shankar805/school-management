@@ -124,10 +124,11 @@ class ExamRuleController extends Controller
                 // Find or create exam for this course
                 if ($examId === 0) {
                     $course = \App\Models\Course::find($courseId);
-                    $semId  = \App\Models\Semester::where('session_id', $sessionId)->value('id');
+                    $classId = (int)($request->class_id ?? $course?->class_id);
+                    $semId   = (int)($request->semester_id ?? \App\Models\Semester::where('session_id', $sessionId)->value('id'));
                     $exam   = \App\Models\Exam::firstOrCreate([
                         'session_id'  => $sessionId,
-                        'class_id'    => $course?->class_id,
+                        'class_id'    => $classId,
                         'course_id'   => $courseId,
                         'semester_id' => $semId,
                     ], [
