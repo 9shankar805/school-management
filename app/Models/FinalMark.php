@@ -59,9 +59,19 @@ class FinalMark extends Model
         // Normalise final_marks to a percentage before matching.
         $fm    = (float) $this->final_marks;
         $total = $fullMarks ?? (float)($this->full_marks ?? 0);
-        $score = ($total > 0 && $total != 100)
-            ? round(($fm / $total) * 100, 4)
-            : $fm;
+
+        if ($total > 0 && $total != 100) {
+            // Guard: if marks were entered out of 100 but total was recorded lower than obtained
+            if ($fm > $total && $fm <= 100) {
+                $score = $fm;
+            } else {
+                $score = round(($fm / $total) * 100, 4);
+            }
+        } else {
+            $score = $fm;
+        }
+        // Normalize score between 0 and 100 for rule matching
+        $score = min(100.0, max(0.0, $score));
 
         foreach ($gradeRules as $rule) {
             if ($score >= $rule->start_at && $score <= $rule->end_at) {
