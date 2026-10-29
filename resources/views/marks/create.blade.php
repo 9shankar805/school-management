@@ -398,6 +398,13 @@
                     <input type="hidden" name="course_id" value="{{ $course_id }}">
 
                     @if(count($exams) > 0)
+                        {{-- Search bar for single subject mode --}}
+                        <div class="px-4 py-2 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+                            <div class="relative w-full max-w-sm">
+                                <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" id="studentQuickFilter" placeholder="Filter by student name or roll..." class="w-full text-xs pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" style="font-size:16px !important; min-height:40px;">
+                            </div>
+                        </div>
                         <div class="overflow-x-auto mb-6">
                             <table class="w-full text-left text-xs">
                                 <thead>
@@ -424,7 +431,7 @@
                                                 $stu = $students_with_mark[0]->student ?? null;
                                                 $stuName = trim(($stu->first_name ?? '') . ' ' . ($stu->last_name ?? ''));
                                             @endphp
-                                            <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                                            <tr class="student-mark-row hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition" data-student-name="{{ strtolower($stuName) }}" data-roll-no="{{ $stu?->roll_no ?? '' }}">
                                                 <td class="py-3 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
                                                     {{ $stu?->roll_no ?? '—' }}
                                                 </td>
@@ -463,7 +470,7 @@
                                                 $rollNo = $sectionStudent->roll_no ?? $stu?->roll_no ?? '—';
                                                 $stuName = trim(($stu->first_name ?? '') . ' ' . ($stu->last_name ?? ''));
                                             @endphp
-                                            <tr class="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                                            <tr class="student-mark-row hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition" data-student-name="{{ strtolower($stuName) }}" data-roll-no="{{ $rollNo }}">
                                                 <td class="py-3 px-4 font-mono font-bold text-indigo-600 dark:text-indigo-400">
                                                     {{ $rollNo }}
                                                 </td>
