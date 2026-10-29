@@ -16,10 +16,13 @@ class ExamRuleRepository implements ExamRuleInterface {
 
     public function update($request) {
         try {
+            $existing = ExamRule::where('id', $request->exam_rule_id)->first();
             ExamRule::where('id', $request->exam_rule_id)->update([
-                'total_marks'   => $request->total_marks,
-                'pass_marks'    => $request->pass_marks,
-                'marks_distribution_note'   => $request->marks_distribution_note
+                'total_marks'              => $request->total_marks,
+                'pass_marks'               => $request->pass_marks,
+                'marks_distribution_note'  => $request->marks_distribution_note
+                    ?? $existing?->marks_distribution_note
+                    ?? '{}',
             ]);
         } catch (\Exception $e) {
             throw new \Exception('Failed to update exam rule. '.$e->getMessage());
