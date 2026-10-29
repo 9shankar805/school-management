@@ -919,7 +919,7 @@
                                         </div>
                                     </td>
                                     <td class="p-3 text-center">
-                                        <form method="POST" action="{{ route('course.delete', $first->id) }}"
+                                        <form method="POST" action="{{ route('school.course.delete', $first->id) }}"
                                               onsubmit="return confirm('Delete {{ addslashes($first->course_name) }} from {{ $first->schoolClass->class_name ?? '' }}? This removes ALL term records for this subject.')">
                                             @csrf
                                             <button type="submit"
