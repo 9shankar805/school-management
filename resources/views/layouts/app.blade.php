@@ -1602,6 +1602,11 @@
         <i class="bi {{ request()->is('attendances*') ? 'bi-calendar-check-fill' : 'bi-calendar-check' }}"></i>
         <span>Attendance</span>
     </a>
+    <a href="{{ route('course.mark.create') }}"
+       class="mobile-nav-item {{ request()->is('marks*') ? 'active' : '' }}">
+        <i class="bi {{ request()->is('marks*') ? 'bi-pencil-square' : 'bi-pencil-square' }}"></i>
+        <span>Marks</span>
+    </a>
     <a href="{{ url('students/view/list') }}"
        class="mobile-nav-item {{ request()->is('students*') ? 'active' : '' }}">
         <i class="bi {{ request()->is('students*') ? 'bi-person-badge-fill' : 'bi-person-badge' }}"></i>
