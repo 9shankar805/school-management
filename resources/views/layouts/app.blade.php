@@ -383,7 +383,7 @@
         width: 100% !important;
         max-width: 100vw !important;
         box-sizing: border-box !important;
-        z-index: 40 !important;
+        z-index: 50 !important;
         background-color: rgba(255, 255, 255, 0.96) !important;
         backdrop-filter: blur(12px) !important;
         -webkit-backdrop-filter: blur(12px) !important;
@@ -1139,7 +1139,7 @@
     <aside id="sidebar"
            class="fixed inset-y-0 left-0 z-40 flex flex-col w-60 transition-transform duration-300 ease-in-out
                   -translate-x-full lg:translate-x-0 lg:static lg:inset-auto lg:z-auto"
-           style="background:url('/imgs/sidebarbg.webp') center center / cover no-repeat;border-right:1px solid rgba(255,255,255,.06)">
+           style="background:url('/imgs/sidebarbg.webp') center center / cover no-repeat;border-right:1px solid rgba(255,255,255,.06);padding-bottom: calc(4rem + env(safe-area-inset-bottom))">
 
         {{-- Logo / Brand --}}
         <div class="flex items-center justify-between h-16 px-5 flex-shrink-0" style="border-bottom:1px solid rgba(255,255,255,.07)">
