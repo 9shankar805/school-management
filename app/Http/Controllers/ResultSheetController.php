@@ -304,7 +304,7 @@ class ResultSheetController extends Controller
 
         $pdf = Pdf::loadView('results.pdf.report-card', compact('result', 'verifyUrl', 'qrSrc', 'verifyToken', 'school', 'logoSrc'))
             ->setPaper('A4', 'portrait')
-            ->setOptions(['defaultFont' => 'sans-serif', 'dpi' => 120, 'isRemoteEnabled' => true, 'chroot' => public_path()]);
+            ->setOptions(['defaultFont' => 'DejaVu Sans', 'dpi' => 150, 'isRemoteEnabled' => true, 'chroot' => public_path(), 'isHtml5ParserEnabled' => true]);
 
         $stuName = $result['student']?->full_name ?? 'Student';
         if ($request->query('stream') == '1') {
@@ -368,7 +368,7 @@ class ResultSheetController extends Controller
 
         $pdf = Pdf::loadView('results.pdf.class-report-cards', compact('cards', 'class', 'section', 'semester', 'school', 'logoSrc'))
             ->setPaper('A4', 'portrait')
-            ->setOptions(['defaultFont' => 'sans-serif', 'dpi' => 120, 'isRemoteEnabled' => true, 'chroot' => public_path()]);
+            ->setOptions(['defaultFont' => 'DejaVu Sans', 'dpi' => 150, 'isRemoteEnabled' => true, 'chroot' => public_path(), 'isHtml5ParserEnabled' => true]);
 
         $secName = $section ? '-' . $section->section_name : '';
         $filename = "all-report-cards-{$class->class_name}{$secName}-{$semester->semester_name}.pdf";

@@ -5,12 +5,15 @@
 <title>Class Marksheets — {{ $class->class_name }} ({{ $semester->semester_name }})</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: DejaVu Sans, sans-serif; font-size: 10px; color: #1e293b; background: #fff; }
-    
+    body { font-family: DejaVu Sans, sans-serif; font-size: 11.5px; color: #1e293b; background: #fff; }
+
+    @page {
+        size: A4 portrait;
+        margin: 14mm 14mm 14mm 14mm;
+    }
+
     .sheet-page {
-        padding: 24px;
-        max-width: 750px;
-        margin: 0 auto;
+        width: 100%;
         page-break-after: always;
     }
     .sheet-page:last-child {
@@ -19,7 +22,7 @@
 
     /* Institutional Header */
     .header { text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 12px; margin-bottom: 14px; position: relative; }
-    .header h1 { font-size: 18px; color: #1e3a8a; font-weight: bold; text-transform: uppercase; margin-bottom: 2px; }
+    .header h1 { font-size: 19px; color: #1e3a8a; font-weight: bold; text-transform: uppercase; margin-bottom: 2px; }
     .header .sub { font-size: 9.5px; color: #475569; margin-bottom: 3px; }
     .header .iemis { font-size: 8.5px; color: #64748b; font-style: italic; }
 
