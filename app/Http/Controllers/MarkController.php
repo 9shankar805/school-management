@@ -368,15 +368,24 @@ class MarkController extends Controller
                     ->where('class_id', $class_id)
                     ->get();
                 $examIds = $exams->pluck('id');
-                // Single query for exam rules
-                $examRulesByExamId = ExamRule::whereIn('exam_id', $examIds)
-                    ->pluck('total_marks', 'exam_id');
+                // Load full exam rules (total_marks + pass_marks) keyed by exam_id
+                $examRulesFullByExamId = ExamRule::whereIn('exam_id', $examIds)
+                    ->get(['exam_id', 'total_marks', 'pass_marks', 'id'])
+                    ->keyBy('exam_id');
+                $examRulesByExamId = $examRulesFullByExamId->pluck('total_marks', 'exam_id');
                 $examsByCourse = $exams->keyBy('course_id');
-                $courseMaxMarks = [];
+                // Build per-course: max marks, pass marks, exam id, rule id
+                $courseMaxMarks  = [];
+                $coursePassMarks = [];
+                $courseExamIds   = [];
+                $courseRuleIds   = [];
                 foreach ($classCourses as $crs) {
                     $ex = $examsByCourse->get($crs->id);
-                    $courseMaxMarks[$crs->id] = ($ex && isset($examRulesByExamId[$ex->id]))
-                        ? (float)$examRulesByExamId[$ex->id] : 100;
+                    $rule = $ex ? ($examRulesFullByExamId[$ex->id] ?? null) : null;
+                    $courseMaxMarks[$crs->id]  = $rule ? (float)$rule->total_marks : 100;
+                    $coursePassMarks[$crs->id] = $rule ? (float)$rule->pass_marks  : 40;
+                    $courseExamIds[$crs->id]   = $ex?->id;
+                    $courseRuleIds[$crs->id]   = $rule?->id;
                 }
                 // Single optimized marks query (only needed columns)
                 $studentIds = $sectionStudents->map(fn($item) => $item->student_id ?? optional($item->student)->id)->filter()->unique()->values()->toArray();
@@ -413,6 +422,9 @@ class MarkController extends Controller
                     'classSections'             => $classSections,
                     'marksMatrix'               => $marksMatrix,
                     'courseMaxMarks'            => $courseMaxMarks,
+                    'coursePassMarks'           => $coursePassMarks,
+                    'courseExamIds'             => $courseExamIds,
+                    'courseRuleIds'             => $courseRuleIds,
                     'selectedClass'             => $selectedClass,
                     'selectedSection'           => $selectedSection,
                     'selectedSemester'          => $selectedSemester,

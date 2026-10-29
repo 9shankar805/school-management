@@ -179,4 +179,26 @@ class CourseController extends Controller
     {
         //
     }
+
+    /**
+     * Delete a course (all semester copies for same name+class) via POST /course/delete/{id}
+     */
+    public function destroyById(int $id)
+    {
+        $this->authorize('create classes');
+        $course = Course::findOrFail($id);
+
+        // Delete all semester copies of this subject for the same class
+        $deleted = Course::where('class_id', $course->class_id)
+            ->where('course_name', $course->course_name)
+            ->where('session_id', $course->session_id)
+            ->count();
+
+        Course::where('class_id', $course->class_id)
+            ->where('course_name', $course->course_name)
+            ->where('session_id', $course->session_id)
+            ->delete();
+
+        return back()->with('status', "Subject \"{$course->course_name}\" removed ({$deleted} term record(s) deleted).");
+    }
 }

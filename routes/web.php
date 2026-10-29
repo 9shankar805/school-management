@@ -160,6 +160,7 @@ Route::middleware(['auth'])->group(function () {
         // Courses
         Route::post('course/create', [CourseController::class, 'store'])->name('course.create');
         Route::post('course/update', [CourseController::class, 'update'])->name('course.update');
+        Route::post('course/delete/{id}', [CourseController::class, 'destroyById'])->name('course.delete');
 
         // Teacher
         Route::post('teacher/create', [UserController::class, 'storeTeacher'])->name('teacher.create');

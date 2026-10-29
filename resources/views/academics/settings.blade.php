@@ -889,6 +889,8 @@
                                     <th class="p-3 font-semibold">Type</th>
                                     <th class="p-3 font-semibold">Class</th>
                                     <th class="p-3 font-semibold">Semesters / Terms</th>
+                                    <th class="p-3 font-semibold text-center w-16">Action</th>
+                                    <th class="p-3 font-semibold text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
@@ -915,6 +917,17 @@
                                             </span>
                                             @endforeach
                                         </div>
+                                    </td>
+                                    <td class="p-3 text-center">
+                                        <form method="POST" action="{{ route('course.delete', $first->id) }}"
+                                              onsubmit="return confirm('Delete {{ addslashes($first->course_name) }} from {{ $first->schoolClass->class_name ?? '' }}? This removes ALL term records for this subject.')">
+                                            @csrf
+                                            <button type="submit"
+                                                    class="p-1.5 text-rose-500 hover:text-white hover:bg-rose-500 rounded-lg transition border border-rose-200 hover:border-rose-500"
+                                                    title="Delete Subject">
+                                                <i class="bi bi-trash text-xs"></i>
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                                 @empty

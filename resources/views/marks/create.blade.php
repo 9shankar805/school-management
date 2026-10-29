@@ -222,7 +222,16 @@
                                                     {{ $course->course_name }}
                                                 </div>
                                                 <div class="flex items-center justify-center gap-1 text-[10px] font-normal text-slate-500 dark:text-slate-400 mt-0.5">
-                                                    <span>Max: <strong class="text-indigo-600 dark:text-indigo-400">{{ $courseMaxMarks[$course->id] ?? 100 }}</strong></span>
+                                                    <span>FM: <strong class="text-indigo-600 dark:text-indigo-400" id="fm-{{ $course->id }}">{{ $courseMaxMarks[$course->id] ?? 100 }}</strong></span>
+                                                    <span class="text-slate-300">|</span>
+                                                    <span>PM: <strong class="text-rose-500" id="pm-{{ $course->id }}">{{ $coursePassMarks[$course->id] ?? 40 }}</strong></span>
+                                                    @if(!empty($isAdmin) || !empty($isClassTeacher))
+                                                    <button type="button"
+                                                        onclick="openRuleEdit({{ $course->id }}, '{{ addslashes($course->course_name) }}', {{ $courseMaxMarks[$course->id] ?? 100 }}, {{ $coursePassMarks[$course->id] ?? 40 }}, {{ $courseExamIds[$course->id] ?? 0 }}, {{ $courseRuleIds[$course->id] ?? 0 }})"
+                                                        class="ml-0.5 p-0.5 text-slate-400 hover:text-indigo-600 rounded transition" title="Edit FM/PM">
+                                                        <i class="bi bi-pencil-fill text-[9px]"></i>
+                                                    </button>
+                                                    @endif
                                                 </div>
                                             </th>
                                         @endforeach
@@ -855,4 +864,96 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+@push('modals')
+{{-- FM/PM Edit Modal --}}
+<div id="ruleEditModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[9999] items-center justify-center p-4"
+     onclick="if(event.target===this)closeRuleEdit()">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div class="px-5 py-3.5 bg-indigo-600 flex items-center justify-between">
+            <h3 class="text-white font-bold text-sm flex items-center gap-2">
+                <i class="bi bi-pencil-square"></i> Edit Marks Rule
+            </h3>
+            <button onclick="closeRuleEdit()" class="w-7 h-7 flex items-center justify-center rounded-lg bg-white/20 hover:bg-white/30 text-white font-bold">&times;</button>
+        </div>
+        <form id="ruleEditForm" method="POST" action="{{ route('exam.rule.update') }}" class="p-5 space-y-4 bg-white dark:bg-slate-900">
+            @csrf
+            <input type="hidden" name="exam_id" id="ruleExamId">
+            <input type="hidden" name="exam_rule_id" id="ruleRuleId">
+            <input type="hidden" name="course_id" id="ruleCourseId">
+
+            <div>
+                <p class="text-xs font-bold text-slate-700 dark:text-slate-300 mb-3">
+                    Subject: <span id="ruleSubjectName" class="text-indigo-600"></span>
+                </p>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        Full Marks (FM) <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="number" name="total_marks" id="ruleFM" min="1" max="1000" step="0.5" required
+                           class="w-full px-3 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-center outline-none focus:border-indigo-500"
+                           style="font-size:16px;">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                        Pass Marks (PM) <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="number" name="pass_marks" id="rulePM" min="0" max="1000" step="0.5" required
+                           class="w-full px-3 py-2 rounded-xl border-2 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 font-bold text-center outline-none focus:border-rose-500"
+                           style="font-size:16px;">
+                </div>
+            </div>
+            <div class="text-[11px] text-slate-400 bg-slate-50 dark:bg-slate-800 rounded-lg p-2">
+                <i class="bi bi-info-circle text-indigo-500 me-1"></i>
+                Changes apply to this subject's exam rule immediately.
+            </div>
+            <div class="flex gap-2 pt-1">
+                <button type="button" onclick="closeRuleEdit()"
+                        class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-200 transition">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition">
+                    <i class="bi bi-check2 me-1"></i> Save Rule
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+function openRuleEdit(courseId, courseName, fm, pm, examId, ruleId) {
+    document.getElementById('ruleCourseId').value  = courseId;
+    document.getElementById('ruleExamId').value    = examId;
+    document.getElementById('ruleRuleId').value    = ruleId;
+    document.getElementById('ruleSubjectName').textContent = courseName;
+    document.getElementById('ruleFM').value        = fm;
+    document.getElementById('rulePM').value        = pm;
+    const m = document.getElementById('ruleEditModal');
+    m.classList.remove('hidden'); m.classList.add('flex');
+}
+function closeRuleEdit() {
+    const m = document.getElementById('ruleEditModal');
+    m.classList.add('hidden'); m.classList.remove('flex');
+}
+// After save, update header display without reload
+document.getElementById('ruleEditForm')?.addEventListener('submit', function(e) {
+    const courseId = document.getElementById('ruleCourseId').value;
+    const fm = document.getElementById('ruleFM').value;
+    const pm = document.getElementById('rulePM').value;
+    // Update displayed values in table header
+    const fmEl = document.getElementById('fm-' + courseId);
+    const pmEl = document.getElementById('pm-' + courseId);
+    if (fmEl) fmEl.textContent = fm;
+    if (pmEl) pmEl.textContent = pm;
+    // Update all mark input max values for this course
+    document.querySelectorAll(`input.mark-input[data-course-id="${courseId}"]`).forEach(inp => {
+        inp.max = fm;
+    });
+    closeRuleEdit();
+});
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeRuleEdit(); });
+</script>
+@endpush
 @endsection
