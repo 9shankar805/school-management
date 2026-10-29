@@ -21,122 +21,73 @@
 
 <div class="px-2 sm:px-4 lg:px-8 py-2 sm:py-3 max-w-7xl mx-auto space-y-2 sm:space-y-3">
 
-    {{-- Page Header --}}
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-3">
-                <span class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white flex items-center justify-center font-bold text-xl shadow-md shadow-indigo-500/20">
-                    <i class="bi bi-pencil-square"></i>
-                </span>
-                <div>
-                    <h1 class="text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
-                        Enter Marks & Grades
-                        @if(!empty($isAdmin))
-                        <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex items-center gap-1">
-                            <i class="bi bi-shield-lock-fill text-indigo-500"></i> Admin Mode (All Subjects)
-                        </span>
-                        @elseif(!empty($isClassTeacher))
-                        <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1">
-                            <i class="bi bi-star-fill text-amber-500"></i> Class Teacher Mode (Class In-Charge · All Subjects)
-                        </span>
-                        @else
-                        <span class="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
-                            <i class="bi bi-person-badge-fill text-emerald-500"></i> Subject Teacher Mode (Assigned Subject Only)
-                        </span>
-                        @endif
-                    </h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">
-                        @if(!empty($isAdmin) || !empty($isClassTeacher))
-                            Direct master grade ledger across all subjects with individual class marksheet printing & evaluations
-                        @else
-                            Record marks and submit evaluations for your assigned subjects
-                        @endif
-                    </p>
-                </div>
+    {{-- Page Header — compact on mobile --}}
+    <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+            <span class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-base shadow-md flex-shrink-0">
+                <i class="bi bi-pencil-square"></i>
+            </span>
+            <div class="min-w-0">
+                <h1 class="text-base sm:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight leading-tight truncate">
+                    Enter Marks & Grades
+                </h1>
+                <p class="text-[11px] text-slate-400 hidden sm:block">Direct master grade ledger with real-time GPA</p>
             </div>
         </div>
-        <nav aria-label="breadcrumb" class="hidden sm:flex">
-            <ol class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800/80 px-3.5 py-2 rounded-xl border border-slate-200/70 dark:border-slate-800 shadow-xs">
-                <li><a href="{{ route('home') }}" class="hover:text-indigo-600 transition flex items-center gap-1"><i class="bi bi-house-door"></i> Home</a></li>
-                <li class="text-slate-300">/</li>
-                <li><a href="{{ route('course.mark.index') }}" class="hover:text-indigo-600 transition">Marks</a></li>
-                <li class="text-slate-300">/</li>
-                <li class="font-semibold text-slate-800 dark:text-slate-200">Enter</li>
-            </ol>
-        </nav>
+        @if(!empty($isAdmin))
+        <span class="text-[10px] font-bold px-2 py-1 rounded-lg bg-indigo-100 text-indigo-700 border border-indigo-200 flex-shrink-0 flex items-center gap-1">
+            <i class="bi bi-shield-lock-fill"></i> Admin
+        </span>
+        @elseif(!empty($isClassTeacher))
+        <span class="text-[10px] font-bold px-2 py-1 rounded-lg bg-amber-100 text-amber-700 border border-amber-200 flex-shrink-0 flex items-center gap-1">
+            <i class="bi bi-star-fill"></i> Class Teacher
+        </span>
+        @endif
     </div>
-
     @include('session-messages')
 
-    {{-- Marks Submission Window Status Bar --}}
+    {{-- Marks Submission Window Status Bar — compact --}}
     @php
         $isWindowOpen = isset($academic_setting) && is_array($academic_setting) && isset($academic_setting['marks_submission_status']) && $academic_setting['marks_submission_status'] === 'on';
     @endphp
-
     @if($isWindowOpen)
-        <div class="p-3 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-white dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-slate-900 border border-emerald-200 dark:border-emerald-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
-            <div class="flex items-center gap-3">
-                <span class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg flex-shrink-0">
-                    <i class="bi bi-unlock-fill"></i>
-                </span>
-                <div>
-                    <p class="text-xs font-bold text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
-                        Marks Submission Window is OPEN
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/80 dark:text-emerald-300">
-                            Active
-                        </span>
-                    </p>
-                    <p class="text-[11px] text-emerald-700/80 dark:text-emerald-400">All teachers and administrators can record and submit term evaluations.</p>
-                </div>
-            </div>
-            @if(!empty($isAdmin))
-                <form action="{{ route('school.final.marks.submission.status.update') }}" method="POST" class="flex-shrink-0">
-                    @csrf
-                    <button type="submit" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition shadow-xs flex items-center gap-1.5" onclick="return confirm('Lock submission window for teachers?')">
-                        <i class="bi bi-lock"></i> Close Window for Teachers
-                    </button>
-                </form>
-            @endif
+    <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60">
+        <div class="flex items-center gap-2">
+            <i class="bi bi-unlock-fill text-emerald-600 text-sm flex-shrink-0"></i>
+            <p class="text-xs font-bold text-emerald-800 dark:text-emerald-200">Submission Window is <span class="text-emerald-600">OPEN</span></p>
         </div>
+        @if(!empty($isAdmin))
+        <form action="{{ route('school.final.marks.submission.status.update') }}" method="POST">
+            @csrf
+            <button type="submit" class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 flex items-center gap-1" onclick="return confirm('Lock submission window?')">
+                <i class="bi bi-lock"></i> Close
+            </button>
+        </form>
+        @endif
+    </div>
     @else
-        <div class="p-3 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-white dark:from-amber-950/30 dark:via-orange-950/20 dark:to-slate-900 border border-amber-200 dark:border-amber-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
-            <div class="flex items-center gap-3">
-                <span class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg flex-shrink-0">
-                    <i class="bi bi-shield-lock-fill"></i>
-                </span>
-                <div>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <p class="text-xs font-bold text-amber-900 dark:text-amber-200">
-                            Marks Submission Window is Closed for Teachers
-                        </p>
-                        @if(!empty($isAdmin))
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                                <i class="bi bi-lightning-charge-fill text-amber-500"></i> Admin Direct Access Authorized
-                            </span>
-                        @endif
-                    </div>
-                    <p class="text-[11px] text-amber-700/80 dark:text-amber-400">
-                        @if(!empty($isAdmin))
-                            As an administrator, you have full privileges to enter and update marks directly anytime.
-                        @else
-                            Marks submission is currently locked by administration. Please contact your Exam Controller.
-                        @endif
-                    </p>
-                </div>
-            </div>
-            @if(!empty($isAdmin))
-                <form action="{{ route('school.final.marks.submission.status.update') }}" method="POST" class="flex-shrink-0">
-                    @csrf
-                    <input type="hidden" name="marks_submission_status" value="on">
-                    <button type="submit" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-xs flex items-center gap-1.5">
-                        <i class="bi bi-unlock-fill"></i> Open Window for Teachers
-                    </button>
-                </form>
-            @endif
+    <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60">
+        <div class="flex items-center gap-2">
+            <i class="bi bi-shield-lock-fill text-amber-600 text-sm flex-shrink-0"></i>
+            <p class="text-xs font-bold text-amber-800 dark:text-amber-200">
+                @if(!empty($isAdmin))
+                    Window Closed — <span class="text-indigo-600">Admin Access Active</span>
+                @else
+                    Submission Window Closed
+                @endif
+            </p>
         </div>
+        @if(!empty($isAdmin))
+        <form action="{{ route('school.final.marks.submission.status.update') }}" method="POST">
+            @csrf
+            <input type="hidden" name="marks_submission_status" value="on">
+            <button type="submit" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-600 text-white flex items-center gap-1">
+                <i class="bi bi-unlock-fill"></i> Open
+            </button>
+        </form>
+        @endif
+    </div>
     @endif
-
-
     {{-- Filter Card --}}
     <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div class="px-4 py-3 flex items-center gap-2 border-b border-slate-100 dark:border-slate-800">
@@ -144,7 +95,7 @@
             <span class="text-sm font-bold text-slate-800 dark:text-slate-100">Select Examination, Class &amp; Entry Scope</span>
         </div>
         <form action="{{ route('course.mark.create') }}" method="GET" id="marksFilterForm" class="p-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+            <div class="grid grid-cols-2 gap-3 mb-3">
                 {{-- Semester --}}
                 <div>
                     <label for="filter_semester_id" class="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-400 mb-1">
