@@ -136,105 +136,6 @@
         </div>
     @endif
 
-    {{-- Filter Card --}}
-    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6">
-        <div class="flex items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
-            <div class="flex items-center gap-2.5">
-                <span class="w-2.5 h-6 bg-indigo-600 rounded-full"></span>
-                <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">
-                    @if(!empty($canEditAllSubjects))
-                        Select Examination, Class & Entry Scope
-                    @else
-                        Select Your Assigned Class & Subject
-                    @endif
-                </h2>
-            </div>
-            <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>Active Session: <strong class="text-slate-700 dark:text-slate-200">{{ session('current_session_name', '2083-2084') }}</strong></span>
-            </div>
-        </div>
-
-        <form action="{{ route('course.mark.create') }}" method="GET" id="marksFilterForm" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {{-- Semester / Terminal Exam --}}
-            <div>
-                <label for="filter_semester_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Terminal Exam / Semester <span class="text-rose-500">*</span>
-                </label>
-                <select id="filter_semester_id" name="semester_id" required class="w-full text-sm px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition" style="font-size:16px !important; -webkit-appearance:auto;">
-                    @isset($semesters)
-                        @foreach ($semesters as $sem)
-                            <option value="{{ $sem->id }}" {{ $semester_id == $sem->id ? 'selected' : '' }}>
-                                {{ $sem->semester_name }}
-                            </option>
-                        @endforeach
-                    @endisset
-                </select>
-            </div>
-
-            {{-- Class / Grade --}}
-            <div>
-                <label for="filter_class_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Class / Grade <span class="text-rose-500">*</span>
-                </label>
-                <select id="filter_class_id" name="class_id" required onchange="handleClassChange(this.value)" class="w-full text-sm px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition" style="font-size:16px !important; -webkit-appearance:auto;">
-                    <option value="">-- Choose Class --</option>
-                    @isset($school_classes)
-                        @foreach ($school_classes as $sc)
-                            <option value="{{ $sc->id }}" {{ $class_id == $sc->id ? 'selected' : '' }}>
-                                {{ $sc->class_name }}
-                            </option>
-                        @endforeach
-                    @endisset
-                </select>
-            </div>
-
-            {{-- Section --}}
-            <div>
-                <label for="filter_section_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Section
-                </label>
-                <select id="filter_section_id" name="section_id" class="w-full text-sm px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition" style="font-size:16px !important; -webkit-appearance:menulist; min-height:44px;">
-                    <option value="0">{{ !empty($canEditAllSubjects) ? 'All Sections (Entire Class)' : 'All Assigned Sections' }}</option>
-                </select>
-            </div>
-
-            {{-- Scope / Subject --}}
-            <div>
-                <label for="filter_course_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
-                    <span>Subject / Scope <span class="text-rose-500">*</span></span>
-                    @if(!empty($canEditAllSubjects))
-                        <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">⚡ All Subjects Authorized</span>
-                    @else
-                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Assigned Subjects Only</span>
-                    @endif
-                </label>
-                <select id="filter_course_id" name="course_id" required class="w-full text-sm px-3.5 py-3 rounded-xl border border-indigo-200 dark:border-indigo-800/80 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium transition" style="font-size:16px !important; -webkit-appearance:menulist; min-height:44px;">
-                    @if(!empty($canEditAllSubjects))
-                        <option value="all" {{ ($course_id === 'all' || empty($course_id) || $course_id == '0') ? 'selected' : '' }}>
-                            ⚡ All Subjects at Once (Master Grade Ledger)
-                        </option>
-                    @else
-                        <option value="">-- Choose Your Assigned Subject --</option>
-                    @endif
-                </select>
-            </div>
-
-            <div class="col-span-2 lg:col-span-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 hidden sm:flex">
-                    <i class="bi bi-info-circle text-indigo-500"></i>
-                    @if(!empty($canEditAllSubjects))
-                        <span>Selecting <strong>All Subjects</strong> enables master bulk grade entry across all courses. Only assigned Class Teachers and Administrators have this privilege.</span>
-                    @else
-                        <span>You are viewing your assigned subjects. Only the designated <strong>Class Teacher</strong> or an Administrator can edit marks for all subjects and print class results.</span>
-                    @endif
-                </div>
-                <button type="submit" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-2">
-                    <i class="bi bi-table"></i> Load Grade Sheet
-                </button>
-            </div>
-        </form>
-    </div>
 
     @if($class_id)
         {{-- Professional Class & Evaluation Breadcrumb Hero Card --}}
@@ -340,6 +241,106 @@
                 </div>
             </div>
         </div>
+
+    {{-- Filter Card --}}
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm p-6">
+        <div class="flex items-center justify-between gap-4 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <div class="flex items-center gap-2.5">
+                <span class="w-2.5 h-6 bg-indigo-600 rounded-full"></span>
+                <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">
+                    @if(!empty($canEditAllSubjects))
+                        Select Examination, Class & Entry Scope
+                    @else
+                        Select Your Assigned Class & Subject
+                    @endif
+                </h2>
+            </div>
+            <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Active Session: <strong class="text-slate-700 dark:text-slate-200">{{ session('current_session_name', '2083-2084') }}</strong></span>
+            </div>
+        </div>
+
+        <form action="{{ route('course.mark.create') }}" method="GET" id="marksFilterForm" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {{-- Semester / Terminal Exam --}}
+            <div>
+                <label for="filter_semester_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Terminal Exam / Semester <span class="text-rose-500">*</span>
+                </label>
+                <select id="filter_semester_id" name="semester_id" required class="w-full text-sm px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition" style="font-size:16px !important; -webkit-appearance:auto;">
+                    @isset($semesters)
+                        @foreach ($semesters as $sem)
+                            <option value="{{ $sem->id }}" {{ $semester_id == $sem->id ? 'selected' : '' }}>
+                                {{ $sem->semester_name }}
+                            </option>
+                        @endforeach
+                    @endisset
+                </select>
+            </div>
+
+            {{-- Class / Grade --}}
+            <div>
+                <label for="filter_class_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Class / Grade <span class="text-rose-500">*</span>
+                </label>
+                <select id="filter_class_id" name="class_id" required onchange="handleClassChange(this.value)" class="w-full text-sm px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition" style="font-size:16px !important; -webkit-appearance:auto;">
+                    <option value="">-- Choose Class --</option>
+                    @isset($school_classes)
+                        @foreach ($school_classes as $sc)
+                            <option value="{{ $sc->id }}" {{ $class_id == $sc->id ? 'selected' : '' }}>
+                                {{ $sc->class_name }}
+                            </option>
+                        @endforeach
+                    @endisset
+                </select>
+            </div>
+
+            {{-- Section --}}
+            <div>
+                <label for="filter_section_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                    Section
+                </label>
+                <select id="filter_section_id" name="section_id" class="w-full text-sm px-3.5 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition" style="font-size:16px !important; -webkit-appearance:menulist; min-height:44px;">
+                    <option value="0">{{ !empty($canEditAllSubjects) ? 'All Sections (Entire Class)' : 'All Assigned Sections' }}</option>
+                </select>
+            </div>
+
+            {{-- Scope / Subject --}}
+            <div>
+                <label for="filter_course_id" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center justify-between">
+                    <span>Subject / Scope <span class="text-rose-500">*</span></span>
+                    @if(!empty($canEditAllSubjects))
+                        <span class="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold">⚡ All Subjects Authorized</span>
+                    @else
+                        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">Assigned Subjects Only</span>
+                    @endif
+                </label>
+                <select id="filter_course_id" name="course_id" required class="w-full text-sm px-3.5 py-3 rounded-xl border border-indigo-200 dark:border-indigo-800/80 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium transition" style="font-size:16px !important; -webkit-appearance:menulist; min-height:44px;">
+                    @if(!empty($canEditAllSubjects))
+                        <option value="all" {{ ($course_id === 'all' || empty($course_id) || $course_id == '0') ? 'selected' : '' }}>
+                            ⚡ All Subjects at Once (Master Grade Ledger)
+                        </option>
+                    @else
+                        <option value="">-- Choose Your Assigned Subject --</option>
+                    @endif
+                </select>
+            </div>
+
+            <div class="col-span-2 lg:col-span-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 hidden sm:flex">
+                    <i class="bi bi-info-circle text-indigo-500"></i>
+                    @if(!empty($canEditAllSubjects))
+                        <span>Selecting <strong>All Subjects</strong> enables master bulk grade entry across all courses. Only assigned Class Teachers and Administrators have this privilege.</span>
+                    @else
+                        <span>You are viewing your assigned subjects. Only the designated <strong>Class Teacher</strong> or an Administrator can edit marks for all subjects and print class results.</span>
+                    @endif
+                </div>
+                <button type="submit" class="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/20 transition flex items-center justify-center gap-2">
+                    <i class="bi bi-table"></i> Load Grade Sheet
+                </button>
+            </div>
+        </form>
+    </div>
 
         {{-- MAIN EVALUATION FORM CONTAINER --}}
         @if($isAllSubjectsMode)
