@@ -394,6 +394,14 @@
         justify-content: space-around !important;
         align-items: center !important;
         margin: 0 !important;
+        /* Hide/show on scroll */
+        transform: translateY(0) !important;
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        will-change: transform !important;
+    }
+
+    #mobile-bottom-nav.nav-hidden {
+        transform: translateY(110%) !important;
     }
 
     [data-theme="dark"] #mobile-bottom-nav,
@@ -3077,6 +3085,61 @@ document.addEventListener('DOMContentLoaded', function() {
             closeBottomNavCustomizer();
         }
     });
+})();
+</script>
+
+<script>
+/* ── Bottom Nav: hide on scroll down, show on scroll up ── */
+(function () {
+    var nav        = document.getElementById('mobile-bottom-nav');
+    var lastY      = window.scrollY;
+    var ticking    = false;
+    var THRESHOLD  = 8;   // px — ignore tiny jitter
+    var SHOW_AT    = 60;  // px from bottom — always show near page end
+
+    function onScroll() {
+        if (!nav) return;
+        var y       = window.scrollY;
+        var delta   = y - lastY;
+        var docH    = document.documentElement.scrollHeight;
+        var winH    = window.innerHeight;
+        var nearBottom = (y + winH) >= (docH - SHOW_AT);
+
+        if (nearBottom) {
+            // Always show when near the bottom of the page
+            nav.classList.remove('nav-hidden');
+        } else if (delta > THRESHOLD) {
+            // Scrolling DOWN — hide
+            nav.classList.add('nav-hidden');
+        } else if (delta < -THRESHOLD) {
+            // Scrolling UP — show
+            nav.classList.remove('nav-hidden');
+        }
+        lastY = y;
+        ticking = false;
+    }
+
+    window.addEventListener('scroll', function () {
+        if (!ticking) {
+            window.requestAnimationFrame(onScroll);
+            ticking = true;
+        }
+    }, { passive: true });
+
+    // Touch swipe support (for momentum scrolling on iOS)
+    var touchStartY = 0;
+    document.addEventListener('touchstart', function (e) {
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    document.addEventListener('touchend', function (e) {
+        var diff = touchStartY - e.changedTouches[0].clientY;
+        if (!nav) return;
+        if (diff > THRESHOLD) {
+            nav.classList.add('nav-hidden');
+        } else if (diff < -THRESHOLD) {
+            nav.classList.remove('nav-hidden');
+        }
+    }, { passive: true });
 })();
 </script>
 
