@@ -144,7 +144,7 @@
             <span class="text-sm font-bold text-slate-800 dark:text-slate-100">Select Examination, Class &amp; Entry Scope</span>
         </div>
         <form action="{{ route('course.mark.create') }}" method="GET" id="marksFilterForm" class="p-4">
-            <div class="grid grid-cols-2 gap-3 mb-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 {{-- Semester --}}
                 <div>
                     <label for="filter_semester_id" class="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-400 mb-1">
