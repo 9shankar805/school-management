@@ -157,23 +157,23 @@ class ResultRepository
                     ->get();
 
                 if ($rawMarks->isNotEmpty()) {
-                    // Group by course_id then take the LATEST mark per course (not sum across all exams)
-                    $byCourse = $rawMarks->groupBy('course_id');
+                    // Group by course_NAME — use earliest exam (lowest exam_id) per subject
+                    $byCourse = $rawMarks->groupBy(fn($m) => $m->course?->course_name ?? $m->course_id);
                     $marks = $byCourse->map(function ($cMarks) use ($studentId, $classId, $sectionId, $semesterId, $sessionId) {
-                        // Use only the most recent mark entry for this course in this semester
-                        $latest = $cMarks->sortByDesc('id')->first();
+                        $primaryExamId = $cMarks->sortBy('exam_id')->first()->exam_id;
+                        $best = $cMarks->where('exam_id', $primaryExamId)->sortByDesc('updated_at')->first();
                         $fm = new FinalMark();
                         $fm->student_id       = $studentId;
                         $fm->class_id         = $classId;
-                        $fm->section_id       = $sectionId > 0 ? $sectionId : ($cMarks->first()->section_id ?? 0);
-                        $fm->course_id        = $latest->course_id;
-                        $fm->course           = $latest->course;
+                        $fm->section_id       = $sectionId > 0 ? $sectionId : ($best->section_id ?? 0);
+                        $fm->course_id        = $best->course_id;
+                        $fm->course           = $best->course;
                         $fm->semester_id      = $semesterId;
                         $fm->session_id       = $sessionId;
-                        $fm->final_marks      = (float) $latest->marks;
+                        $fm->final_marks      = (float) $best->marks;
                         $fm->calculated_marks = $fm->final_marks;
                         $fm->note             = 'Recorded Exam Marks';
-                        $fm->full_marks       = (float) ($latest->exam?->examRule?->total_marks ?? 100);
+                        $fm->full_marks       = (float) ($best->exam?->examRule?->total_marks ?? 100);
                         return $fm;
                     })->values();
                 }
@@ -279,27 +279,29 @@ class ResultRepository
                 $rawMarks = $rawQuery->get();
                 if ($rawMarks->isNotEmpty()) {
                     $allMarks = $rawMarks->groupBy('student_id')->map(function ($stuMarks) {
-                        return $stuMarks->groupBy('course_id')->map(function ($cMarks) {
-                            $fm = new FinalMark();
-                            $fm->student_id       = $cMarks->first()->student_id;
-                            $fm->student          = $cMarks->first()->student;
-                            $fm->class_id         = $cMarks->first()->class_id;
-                            $fm->section_id       = $cMarks->first()->section_id;
-                            $fm->course_id        = $cMarks->first()->course_id;
-                            $fm->course           = $cMarks->first()->course;
-                            // Take LATEST mark only — do NOT sum across semesters
-                            $latest = $cMarks->sortByDesc('id')->first();
-                            $fm->student_id       = $latest->student_id;
-                            $fm->student          = $latest->student;
-                            $fm->class_id         = $latest->class_id;
-                            $fm->section_id       = $latest->section_id;
-                            $fm->course_id        = $latest->course_id;
-                            $fm->course           = $latest->course;
-                            $fm->final_marks      = (float) $latest->marks;
-                            $fm->calculated_marks = $fm->final_marks;
-                            $fm->full_marks       = (float) ($latest->exam?->examRule?->total_marks ?? 100);
-                            return $fm;
-                        });
+                        // Group by course_name to deduplicate subjects across semesters.
+                        // When multiple exams exist for the same subject, pick the exam
+                        // with the LOWEST id (first created = main exam used for entry).
+                        return $stuMarks->groupBy(fn($m) => $m->course?->course_name ?? $m->course_id)
+                            ->map(function ($cMarks) {
+                                // Within each subject group, pick the mark from the earliest exam
+                                // (lowest exam_id = the original exam the teacher used for entry)
+                                // then take the latest save for that exam
+                                $primaryExamId = $cMarks->sortBy('exam_id')->first()->exam_id;
+                                $primaryMarks  = $cMarks->where('exam_id', $primaryExamId)->sortByDesc('updated_at');
+                                $best = $primaryMarks->first();
+                                $fm = new FinalMark();
+                                $fm->student_id       = $best->student_id;
+                                $fm->student          = $best->student;
+                                $fm->class_id         = $best->class_id;
+                                $fm->section_id       = $best->section_id;
+                                $fm->course_id        = $best->course_id;
+                                $fm->course           = $best->course;
+                                $fm->final_marks      = (float) $best->marks;
+                                $fm->calculated_marks = $fm->final_marks;
+                                $fm->full_marks       = (float) ($best->exam?->examRule?->total_marks ?? 100);
+                                return $fm;
+                            });
                     });
                 }
             }
