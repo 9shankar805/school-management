@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Semester;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Traits\SchoolSession;
 use App\Interfaces\CourseInterface;
 use App\Http\Requests\CourseStoreRequest;
@@ -200,5 +201,37 @@ class CourseController extends Controller
             ->delete();
 
         return back()->with('status', "Subject \"{$course->course_name}\" removed ({$deleted} term record(s) deleted).");
+    }
+
+    /**
+     * Reorder courses (subjects) for a given class.
+     *
+     * Accepts JSON: { "order": [{ "course_name": "English", "position": 0 }, ...] , "class_id": 5 }
+     * Updates all rows (across semesters/sessions) with the matching course_name + class_id.
+     *
+     * POST /courses/reorder
+     */
+    public function reorder(Request $request)
+    {
+        $this->authorize('create classes');
+
+        $request->validate([
+            'class_id'         => 'required|integer|min:1',
+            'order'            => 'required|array|min:1',
+            'order.*.course_name' => 'required|string|max:255',
+            'order.*.position'    => 'required|integer|min:0',
+        ]);
+
+        $classId = (int) $request->class_id;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $classId) {
+            foreach ($request->order as $item) {
+                Course::where('class_id', $classId)
+                    ->where('course_name', $item['course_name'])
+                    ->update(['position' => (int) $item['position']]);
+            }
+        });
+
+        return response()->json(['success' => true, 'message' => 'Subject order saved.']);
     }
 }

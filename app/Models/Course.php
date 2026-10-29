@@ -11,7 +11,11 @@ class Course extends Model
 {
     use HasFactory, HasTenant, SoftDeletes;
 
-    protected $fillable = ['school_id', 'course_name', 'course_type', 'class_id', 'semester_id', 'session_id'];
+    protected $fillable = ['school_id', 'course_name', 'course_type', 'class_id', 'semester_id', 'session_id', 'position'];
+
+    protected $casts = [
+        'position' => 'integer',
+    ];
 
     /**
      * Convenience accessor so ->name works alongside ->course_name
@@ -56,6 +60,15 @@ class Course extends Model
                 ->groupBy('class_id', 'course_name');
         });
         return $query;
+    }
+
+    /**
+     * Scope: order by position first, then alphabetically by course_name as fallback.
+     * Usage: Course::ordered()->where(...)
+     */
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('position', 'asc')->orderBy('course_name', 'asc');
     }
 }
 

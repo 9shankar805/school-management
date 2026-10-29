@@ -185,6 +185,14 @@
                                     <i class="bi bi-printer-fill text-indigo-600 dark:text-indigo-400"></i>
                                     <span>Print Class Marksheets (Individual A4)</span>
                                 </a>
+                                {{-- Reorder Subjects button (admin / class-teacher only) --}}
+                                <button type="button" onclick="openReorderModal()"
+                                    class="px-3 py-1.5 rounded-xl border border-violet-200 dark:border-violet-800/80 bg-violet-50/70 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/50 text-xs font-semibold transition flex items-center gap-1.5 shadow-xs"
+                                    title="Drag subjects to change their column order">
+                                    <i class="bi bi-arrow-down-up text-violet-600 dark:text-violet-400"></i>
+                                    <span class="hidden sm:inline">Reorder Subjects</span>
+                                    <span class="sm:hidden">Order</span>
+                                </button>
                             @endif
                             <button type="button" onclick="fillZeroForEmpty()" class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold transition flex items-center gap-1.5 shadow-xs" title="Set any remaining empty marks as 0 (Absent)">
                                 <i class="bi bi-magic text-indigo-500"></i> <span class="hidden sm:inline">Set Empty to 0</span><span class="sm:hidden">Absent</span>
@@ -957,5 +965,203 @@ document.getElementById('ruleEditForm')?.addEventListener('submit', function(e) 
 });
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeRuleEdit(); });
 </script>
+
+{{-- ════════════════════════════════════════════════════════════
+     SUBJECT REORDER MODAL (drag-and-drop + ↑↓ buttons)
+     Visible only to Admins and Class Teachers
+     ═══════════════════════════════════════════════════════════ --}}
+@if(!empty($canEditAllSubjects) && isset($classCourses) && count($classCourses) > 0)
+<div id="reorderModal"
+     class="hidden fixed inset-0 z-[9999] items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+     role="dialog" aria-modal="true" aria-labelledby="reorderModalTitle">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden border border-slate-200 dark:border-slate-700">
+
+        {{-- Header --}}
+        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700 bg-violet-50/60 dark:bg-violet-950/30">
+            <div class="flex items-center gap-2">
+                <i class="bi bi-arrow-down-up text-violet-600 dark:text-violet-400 text-base"></i>
+                <h3 id="reorderModalTitle" class="font-bold text-slate-800 dark:text-slate-100 text-sm">Reorder Subjects</h3>
+            </div>
+            <button type="button" onclick="closeReorderModal()" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition" aria-label="Close">
+                <i class="bi bi-x-lg text-sm"></i>
+            </button>
+        </div>
+
+        {{-- Body --}}
+        <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40">
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <i class="bi bi-grip-vertical text-slate-400"></i>
+                Drag rows or use the <strong>↑ ↓</strong> buttons to set the column order.
+                Click <strong>Save Order</strong> when done.
+            </p>
+        </div>
+
+        <ul id="reorderList" class="divide-y divide-slate-100 dark:divide-slate-800 overflow-y-auto max-h-72 select-none"
+            aria-label="Subject list — drag to reorder">
+            @foreach($classCourses as $course)
+            <li class="reorder-item flex items-center gap-3 px-4 py-2.5 bg-white dark:bg-slate-900 hover:bg-violet-50/30 dark:hover:bg-violet-950/20 transition cursor-grab active:cursor-grabbing"
+                data-course-name="{{ $course->course_name }}"
+                draggable="true">
+                <span class="reorder-handle text-slate-300 dark:text-slate-600 text-base flex-shrink-0" aria-hidden="true">
+                    <i class="bi bi-grip-vertical"></i>
+                </span>
+                <span class="flex-1 text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">{{ $course->course_name }}</span>
+                <div class="flex flex-col gap-0.5 flex-shrink-0">
+                    <button type="button" onclick="moveReorderItem(this, -1)"
+                        class="p-0.5 rounded hover:bg-violet-100 dark:hover:bg-violet-900/40 text-violet-500 transition"
+                        aria-label="Move {{ $course->course_name }} up">
+                        <i class="bi bi-chevron-up text-[11px]"></i>
+                    </button>
+                    <button type="button" onclick="moveReorderItem(this, 1)"
+                        class="p-0.5 rounded hover:bg-violet-100 dark:hover:bg-violet-900/40 text-violet-500 transition"
+                        aria-label="Move {{ $course->course_name }} down">
+                        <i class="bi bi-chevron-down text-[11px]"></i>
+                    </button>
+                </div>
+            </li>
+            @endforeach
+        </ul>
+
+        {{-- Footer --}}
+        <div class="flex items-center justify-between gap-3 px-5 py-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60">
+            <span id="reorderStatus" class="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1.5"></span>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="closeReorderModal()"
+                    class="px-4 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 transition">
+                    Cancel
+                </button>
+                <button type="button" onclick="saveSubjectOrder()"
+                    id="reorderSaveBtn"
+                    class="px-4 py-1.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold shadow-md shadow-violet-600/20 transition flex items-center gap-1.5">
+                    <i class="bi bi-check-circle-fill"></i> Save Order
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── Reorder Modal ──────────────────────────────────────────────────────────
+const _reorderClassId = {{ (int)$class_id }};
+const _reorderRoute   = '{{ route("school.course.reorder") }}';
+const _csrfToken      = '{{ csrf_token() }}';
+
+function openReorderModal() {
+    const m = document.getElementById('reorderModal');
+    m.classList.remove('hidden');
+    m.classList.add('flex');
+    document.getElementById('reorderStatus').innerHTML = '';
+    initDragAndDrop();
+}
+
+function closeReorderModal() {
+    const m = document.getElementById('reorderModal');
+    m.classList.add('hidden');
+    m.classList.remove('flex');
+}
+
+// ↑↓ button handler
+function moveReorderItem(btn, direction) {
+    const li = btn.closest('li');
+    const list = document.getElementById('reorderList');
+    const items = [...list.querySelectorAll('li.reorder-item')];
+    const idx = items.indexOf(li);
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= items.length) return;
+    if (direction === -1) {
+        list.insertBefore(li, items[targetIdx]);
+    } else {
+        items[targetIdx].insertAdjacentElement('afterend', li);
+    }
+    li.scrollIntoView({ block: 'nearest' });
+}
+
+// Drag-and-drop
+let _dragSrc = null;
+function initDragAndDrop() {
+    const list = document.getElementById('reorderList');
+    list.querySelectorAll('li.reorder-item').forEach(item => {
+        item.addEventListener('dragstart', function(e) {
+            _dragSrc = this;
+            this.classList.add('opacity-50', 'ring-2', 'ring-violet-400');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        item.addEventListener('dragend', function() {
+            this.classList.remove('opacity-50', 'ring-2', 'ring-violet-400');
+            list.querySelectorAll('li.reorder-item').forEach(i => i.classList.remove('border-t-2', 'border-violet-400'));
+        });
+        item.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            list.querySelectorAll('li.reorder-item').forEach(i => i.classList.remove('border-t-2', 'border-violet-400'));
+            if (this !== _dragSrc) this.classList.add('border-t-2', 'border-violet-400');
+        });
+        item.addEventListener('drop', function(e) {
+            e.preventDefault();
+            if (_dragSrc && this !== _dragSrc) {
+                const allItems = [...list.querySelectorAll('li.reorder-item')];
+                const srcIdx  = allItems.indexOf(_dragSrc);
+                const destIdx = allItems.indexOf(this);
+                if (srcIdx < destIdx) {
+                    this.insertAdjacentElement('afterend', _dragSrc);
+                } else {
+                    list.insertBefore(_dragSrc, this);
+                }
+            }
+            list.querySelectorAll('li.reorder-item').forEach(i => i.classList.remove('border-t-2', 'border-violet-400'));
+        });
+    });
+}
+
+// Save order to server
+function saveSubjectOrder() {
+    const list = document.getElementById('reorderList');
+    const items = [...list.querySelectorAll('li.reorder-item')];
+    const order = items.map((el, idx) => ({
+        course_name: el.dataset.courseName,
+        position:    idx
+    }));
+
+    const btn = document.getElementById('reorderSaveBtn');
+    const status = document.getElementById('reorderStatus');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split animate-spin"></i> Saving…';
+    status.innerHTML = '';
+
+    fetch(_reorderRoute, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': _csrfToken,
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({ class_id: _reorderClassId, order: order }),
+    })
+    .then(res => res.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Save Order';
+        if (data.success) {
+            status.innerHTML = '<i class="bi bi-check-circle-fill text-emerald-500"></i> <span class="text-emerald-600 dark:text-emerald-400">Saved! Reloading…</span>';
+            setTimeout(() => { window.location.reload(); }, 900);
+        } else {
+            status.innerHTML = '<span class="text-rose-500">' + (data.message || 'Error saving order.') + '</span>';
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Save Order';
+        status.innerHTML = '<span class="text-rose-500">Network error. Please try again.</span>';
+    });
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeReorderModal(); });
+// Close on backdrop click
+document.getElementById('reorderModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeReorderModal();
+});
+</script>
+@endif
+
 @endpush
 @endsection

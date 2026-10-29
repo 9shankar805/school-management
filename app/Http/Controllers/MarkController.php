@@ -318,7 +318,7 @@ class MarkController extends Controller
             if (!$canEditAllSubjects) {
                 $classCourses = Course::where('class_id', $class_id)
                     ->whereIn('id', $teacherAssignedCourseIds)
-                    ->orderBy('course_name')
+                    ->ordered()
                     ->get();
             } else {
                 // Admin/ClassTeacher: deduplicated courses for this class + semester
@@ -328,10 +328,10 @@ class MarkController extends Controller
                     ->where(function($q) use ($current_school_session_id) {
                         $q->where('session_id', $current_school_session_id)->orWhereNull('session_id');
                     })
-                    ->orderBy('course_name')
+                    ->ordered()
                     ->get();
                 if ($classCourses->isEmpty()) {
-                    $classCourses = Course::uniqueByName()->where('class_id', $class_id)->orderBy('course_name')->get();
+                    $classCourses = Course::uniqueByName()->where('class_id', $class_id)->ordered()->get();
                 }
             }
 

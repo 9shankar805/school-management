@@ -221,7 +221,7 @@ class SectionController extends Controller
             if ($hasGeneralClassAssignment || empty($assignedCourseIds)) {
                 $courses = \App\Models\Course::where('class_id', $classId)
                     ->when($semesterId > 0, fn($q) => $q->forSemester($semesterId))
-                    ->orderBy('course_name')
+                    ->ordered()
                     ->get()
                     ->unique('course_name')
                     ->values();
@@ -240,7 +240,7 @@ class SectionController extends Controller
                         }
                     })
                     ->when($semesterId > 0, fn($q) => $q->forSemester($semesterId))
-                    ->orderBy('course_name')
+                    ->ordered()
                     ->get()
                     ->unique('course_name')
                     ->values();
@@ -249,7 +249,7 @@ class SectionController extends Controller
             $sections = $this->schoolSectionRepository->getAllByClassId($classId);
             $courses = \App\Models\Course::where('class_id', $classId)
                 ->when($semesterId > 0, fn($q) => $q->forSemester($semesterId))
-                ->orderBy('course_name')
+                ->ordered()
                 ->get()
                 ->unique('course_name')
                 ->values();
