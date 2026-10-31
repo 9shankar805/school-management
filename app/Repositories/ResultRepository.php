@@ -195,6 +195,16 @@ class ResultRepository
             ->where('session_id', $sessionId)
             ->first();
 
+        if ($promotion && $semesterId > 0 && \App\Models\Setting::get('roll_number_mode', 'yearly') === 'terminal') {
+            $termRoll = \App\Models\TerminalRollNumber::where('session_id', $sessionId)
+                ->where('semester_id', $semesterId)
+                ->where('student_id', $studentId)
+                ->value('roll_no');
+            if ($termRoll !== null && $termRoll !== '') {
+                $promotion->roll_no = $termRoll;
+            }
+        }
+
         $courses     = [];
         $totalPoints = 0.0;
         $totalMarks  = 0.0;

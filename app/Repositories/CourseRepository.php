@@ -29,10 +29,17 @@ class CourseRepository implements CourseInterface {
 
     public function update($request) {
         try {
-            Course::find($request->course_id)->update([
-                'course_name'  => $request->course_name,
-                'course_type'  => $request->course_type,
-            ]);
+            $course = Course::find($request->course_id);
+            if ($course) {
+                // Keep subject name & type consistent across all semesters in the session for this class
+                Course::where('class_id', $course->class_id)
+                    ->where('session_id', $course->session_id)
+                    ->where('course_name', $course->course_name)
+                    ->update([
+                        'course_name'  => $request->course_name,
+                        'course_type'  => $request->course_type,
+                    ]);
+            }
         } catch (\Exception $e) {
             throw new \Exception('Failed to update Course. '.$e->getMessage());
         }

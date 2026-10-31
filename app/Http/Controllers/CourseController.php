@@ -234,4 +234,59 @@ class CourseController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Subject order saved.']);
     }
+
+    /**
+     * Synchronize all courses/subjects across all semesters in the current session.
+     * Ensures every class has identical subjects across Term 1, Term 2, Term 3, etc.
+     *
+     * POST /courses/sync-semesters
+     */
+    public function syncAllCoursesToAllSemesters(Request $request)
+    {
+        $this->authorize('create courses');
+        $sessionId = (int) ($request->session_id ?: $this->getSchoolCurrentSession());
+
+        $semesters = Semester::where('session_id', $sessionId)->get();
+        if ($semesters->isEmpty()) {
+            return back()->with('error', 'No terms/semesters found in the current session to sync. Please add semesters first.');
+        }
+
+        // Get all unique (class_id, course_name) subjects defined anywhere in this session
+        $uniqueSubjects = Course::where('session_id', $sessionId)
+            ->orderBy('position', 'asc')
+            ->orderBy('id', 'asc')
+            ->get()
+            ->unique(fn($c) => $c->class_id . '___' . $c->course_name);
+
+        if ($uniqueSubjects->isEmpty()) {
+            return back()->with('error', 'No subjects found in the current session to sync. Please create subjects first.');
+        }
+
+        $createdCount = 0;
+        foreach ($uniqueSubjects as $subject) {
+            foreach ($semesters as $semester) {
+                $c = Course::firstOrCreate([
+                    'course_name' => $subject->course_name,
+                    'class_id'    => $subject->class_id,
+                    'semester_id' => $semester->id,
+                    'session_id'  => $sessionId,
+                ], [
+                    'course_type' => $subject->course_type,
+                    'position'    => $subject->position ?? 0,
+                    'school_id'   => $subject->school_id ?? null,
+                ]);
+
+                if ($c->wasRecentlyCreated) {
+                    $createdCount++;
+                }
+            }
+        }
+
+        $msg = "Curriculum synchronized successfully! ";
+        $msg .= $createdCount > 0
+            ? "Replicated {$createdCount} missing subject record(s) across all terms."
+            : "All subjects are already perfectly synchronized across all " . $semesters->count() . " terms.";
+
+        return back()->with('status', $msg);
+    }
 }

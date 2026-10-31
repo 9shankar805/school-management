@@ -162,6 +162,31 @@ class SectionController extends Controller
             })
             ->exists() : false;
 
+        // Auto-reconcile subjects for this semester:
+        // In K-12/secondary schools, all semesters share the exact same subjects.
+        // If subjects are defined for this class in this session, ensure they exist for the requested semester.
+        if ($classId > 0 && $semesterId > 0) {
+            $classSubjects = \App\Models\Course::where('class_id', $classId)
+                ->where('session_id', $sessionId)
+                ->orderBy('position', 'asc')
+                ->orderBy('id', 'asc')
+                ->get()
+                ->unique('course_name');
+
+            foreach ($classSubjects as $subj) {
+                \App\Models\Course::firstOrCreate([
+                    'course_name' => $subj->course_name,
+                    'class_id'    => $classId,
+                    'semester_id' => $semesterId,
+                    'session_id'  => $sessionId,
+                ], [
+                    'course_type' => $subj->course_type,
+                    'position'    => $subj->position ?? 0,
+                    'school_id'   => $subj->school_id ?? null,
+                ]);
+            }
+        }
+
         if ($isRestrictedTeacher && !$isClassTeacherThisClass) {
             $query = \App\Models\AssignedTeacher::where('teacher_id', $user->id)
                 ->where('class_id', $classId)
@@ -249,6 +274,16 @@ class SectionController extends Controller
             $sections = $this->schoolSectionRepository->getAllByClassId($classId);
             $courses = \App\Models\Course::where('class_id', $classId)
                 ->when($semesterId > 0, fn($q) => $q->forSemester($semesterId))
+                ->ordered()
+                ->get()
+                ->unique('course_name')
+                ->values();
+        }
+
+        // Fallback: If no courses found for this specific semester, return all session subjects for this class
+        if ((!isset($courses) || $courses->isEmpty()) && $classId > 0) {
+            $courses = \App\Models\Course::where('class_id', $classId)
+                ->where('session_id', $sessionId)
                 ->ordered()
                 ->get()
                 ->unique('course_name')

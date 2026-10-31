@@ -49,4 +49,31 @@ class Promotion extends Model
     public function section() {
         return $this->belongsTo(Section::class, 'section_id');
     }
+
+    /**
+     * Terminal-specific roll numbers.
+     */
+    public function terminalRollNumbers()
+    {
+        return $this->hasMany(TerminalRollNumber::class, 'student_id', 'student_id')
+            ->where('session_id', $this->session_id)
+            ->where('class_id', $this->class_id);
+    }
+
+    /**
+     * Get roll number for a specific semester/term or fallback to session roll number.
+     */
+    public function getRollNoForSemester(?int $semesterId = null): ?string
+    {
+        if ($semesterId) {
+            $termRoll = TerminalRollNumber::where('session_id', $this->session_id)
+                ->where('semester_id', $semesterId)
+                ->where('student_id', $this->student_id)
+                ->value('roll_no');
+            if ($termRoll !== null && $termRoll !== '') {
+                return $termRoll;
+            }
+        }
+        return $this->roll_no;
+    }
 }

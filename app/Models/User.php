@@ -432,4 +432,10 @@ class User extends Authenticatable implements MustVerifyEmail
         $initials = strtoupper(substr($this->first_name, 0, 1) . substr($this->last_name, 0, 1));
         return "https://ui-avatars.com/api/?name={$initials}&background=6366f1&color=fff&size=128";
     }
+
+    /** Terminal-specific roll numbers */
+    public function terminalRollNumbers()
+    {
+        return $this->hasMany(TerminalRollNumber::class, 'student_id');
+    }
 }

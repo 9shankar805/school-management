@@ -144,6 +144,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('final-marks-submission-status/update', [AcademicSettingController::class, 'updateFinalMarksSubmissionStatus'])->name('final.marks.submission.status.update');
 
         Route::post('attendance/type/update', [AcademicSettingController::class, 'updateAttendanceType'])->name('attendance.type.update');
+        Route::post('roll-number-mode/update', [AcademicSettingController::class, 'updateRollNumberMode'])->name('roll.number.mode.update');
 
         // Class
         Route::post('class/create', [SchoolClassController::class, 'store'])->name('class.create');
@@ -162,6 +163,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('course/update', [CourseController::class, 'update'])->name('course.update');
         Route::post('course/delete/{id}', [CourseController::class, 'destroyById'])->name('course.delete');
         Route::post('courses/reorder', [CourseController::class, 'reorder'])->name('course.reorder');
+        Route::post('courses/sync-semesters', [CourseController::class, 'syncAllCoursesToAllSemesters'])->name('course.sync.semesters');
 
         // Teacher
         Route::post('teacher/create', [UserController::class, 'storeTeacher'])->name('teacher.create');
@@ -328,6 +330,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/roll-numbers', [RollNumberController::class, 'index'])->name('roll-numbers.index');
     Route::post('/roll-numbers/update-bulk', [RollNumberController::class, 'updateBulk'])->name('roll-numbers.update-bulk');
     Route::post('/roll-numbers/auto-assign', [RollNumberController::class, 'autoAssign'])->name('roll-numbers.auto-assign');
+    Route::get('/roll-numbers/reassign', [RollNumberController::class, 'showReassign'])->name('roll-numbers.reassign');
+    Route::post('/roll-numbers/reassign', [RollNumberController::class, 'applyReassign'])->name('roll-numbers.reassign.apply');
 
     // School Setup & Academic Settings
     Route::get('/school/setup', [AcademicSettingController::class, 'index'])->name('school.setup');

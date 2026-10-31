@@ -867,17 +867,29 @@
             {{-- Right: Courses List Table (Grouped) --}}
             <div class="lg:col-span-7">
                 <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-6 h-full flex flex-col">
-                    <div class="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800 flex-wrap">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-5 bg-cyan-600 rounded-full"></span>
                             <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100">Subjects in Current Session</h2>
                         </div>
                         @php
+                            $totalSemCount = isset($semesters) ? count($semesters) : 0;
                             $grouped = collect($courses ?? [])->groupBy(function($c) {
                                 return $c->course_name . '___' . $c->class_id;
                             });
                         @endphp
-                        <span class="text-xs font-semibold text-slate-400">{{ $grouped->count() }} Subject(s)</span>
+                        <div class="flex items-center gap-2.5">
+                            @if($grouped->count() > 0 && $totalSemCount > 1)
+                            <form method="POST" action="{{ route('school.course.sync.semesters') }}" class="inline" onsubmit="return confirm('Synchronize all subjects across all semesters/terms in this session? This ensures every term shares identical subjects.')">
+                                @csrf
+                                <input type="hidden" name="session_id" value="{{ $current_school_session_id }}">
+                                <button type="submit" class="px-3 py-1.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800 hover:bg-cyan-100 dark:hover:bg-cyan-900/50 transition text-xs font-semibold flex items-center gap-1.5 shadow-xs" title="Propagate any single-term subjects across all semesters/terms in this session">
+                                    <i class="bi bi-arrow-repeat"></i> Sync Across All Terms
+                                </button>
+                            </form>
+                            @endif
+                            <span class="text-xs font-semibold text-slate-400">{{ $grouped->count() }} Subject(s)</span>
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800 flex-1">
@@ -890,12 +902,14 @@
                                     <th class="p-3 font-semibold">Class</th>
                                     <th class="p-3 font-semibold">Semesters / Terms</th>
                                     <th class="p-3 font-semibold text-center w-16">Action</th>
-                                    <th class="p-3 font-semibold text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
                                 @forelse($grouped as $key => $group)
-                                @php $first = $group->first(); @endphp
+                                @php
+                                    $first = $group->first();
+                                    $isAllTerms = ($totalSemCount > 0 && $group->count() >= $totalSemCount);
+                                @endphp
                                 <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition">
                                     <td class="p-3 text-center text-slate-400 font-mono">{{ $loop->iteration }}</td>
                                     <td class="p-3 font-bold text-slate-800 dark:text-slate-200">
@@ -910,12 +924,18 @@
                                         {{ $first->schoolClass->class_name ?? 'Class #' . $first->class_id }}
                                     </td>
                                     <td class="p-3">
-                                        <div class="flex flex-wrap gap-1">
-                                            @foreach($group as $crs)
-                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/50">
-                                                {{ $crs->semester->semester_name ?? 'Sem #' . $crs->semester_id }}
-                                            </span>
-                                            @endforeach
+                                        <div class="flex flex-wrap items-center gap-1">
+                                            @if($isAllTerms)
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50" title="Active in all {{ $totalSemCount }} terms">
+                                                    <i class="bi bi-check-all text-xs"></i> All Terms ({{ $group->count() }})
+                                                </span>
+                                            @else
+                                                @foreach($group as $crs)
+                                                <span class="inline-flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/50">
+                                                    {{ $crs->semester->semester_name ?? 'Sem #' . $crs->semester_id }}
+                                                </span>
+                                                @endforeach
+                                            @endif
                                         </div>
                                     </td>
                                     <td class="p-3 text-center">
@@ -932,7 +952,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="5" class="p-6 text-center text-slate-400">No courses/subjects added yet.</td>
+                                    <td colspan="6" class="p-6 text-center text-slate-400">No courses/subjects added yet.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
@@ -1432,7 +1452,7 @@
          STEP 7: ACADEMIC RULES & CONTROLS
          ═══════════════════════════════════════════════════════════════ --}}
     <div class="step-panel hidden" id="step-7">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {{-- Attendance Mode Card --}}
             <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-6">
@@ -1518,12 +1538,69 @@
                 </form>
             </div>
 
+            {{-- Roll Number Assignment Mode Card --}}
+            <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                        <span class="w-2 h-5 bg-purple-600 rounded-full"></span>
+                        <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                            <i class="bi bi-sort-numeric-down text-purple-500"></i> Roll Number Assignment Policy
+                        </h2>
+                    </div>
+
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+                        Choose whether student roll numbers remain fixed for the full academic year or re-rank dynamically each term/semester.
+                    </p>
+
+                    <form action="{{ route('school.roll.number.mode.update') }}" method="POST" class="space-y-4" id="rollNumberModeForm">
+                        @csrf
+                        <div class="space-y-3">
+                            @php
+                                $currentRollMode = $academic_setting->roll_number_mode ?? \App\Models\Setting::get('roll_number_mode', 'yearly');
+                            @endphp
+                            <label class="flex items-start gap-3 p-3.5 rounded-2xl border {{ $currentRollMode === 'yearly' ? 'border-purple-500/60 bg-purple-50/40 dark:bg-purple-950/20 ring-1 ring-purple-500/20' : 'border-slate-200 dark:border-slate-700' }} hover:bg-slate-50 dark:hover:bg-slate-800/60 transition cursor-pointer">
+                                <input type="radio" name="roll_number_mode" value="yearly" {{ $currentRollMode === 'yearly' ? 'checked' : '' }}
+                                       class="mt-0.5 text-purple-600 focus:ring-purple-500">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Yearly</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Rank once per year</span>
+                                    </div>
+                                    <span class="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">Roll numbers remain fixed throughout the academic session. Assigned once during admission or session start.</span>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 p-3.5 rounded-2xl border {{ $currentRollMode === 'terminal' ? 'border-purple-500/60 bg-purple-50/40 dark:bg-purple-950/20 ring-1 ring-purple-500/20' : 'border-slate-200 dark:border-slate-700' }} hover:bg-slate-50 dark:hover:bg-slate-800/60 transition cursor-pointer">
+                                <input type="radio" name="roll_number_mode" value="terminal" {{ $currentRollMode === 'terminal' ? 'checked' : '' }}
+                                       class="mt-0.5 text-purple-600 focus:ring-purple-500">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Terminal / Semester-wise</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300">Dynamic each term</span>
+                                    </div>
+                                    <span class="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">Roll numbers change each term based on exam rankings from the preceding terminal results (e.g. Terminal 2 results define Terminal 3 roll numbers).</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center gap-2 pt-1">
+                            <button type="submit" class="py-2.5 px-6 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold shadow-md shadow-purple-600/25 transition flex items-center gap-2 cursor-pointer">
+                                <i class="bi bi-check2"></i> Save Roll Policy
+                            </button>
+                            <a href="{{ route('roll-numbers.reassign') }}" class="py-2.5 px-3.5 rounded-xl border border-purple-200 dark:border-purple-800 hover:bg-purple-50 dark:hover:bg-purple-950/40 text-purple-700 dark:text-purple-300 text-xs font-semibold transition flex items-center gap-1.5" title="Open Roll Number Reassignment Tool">
+                                <i class="bi bi-arrow-repeat"></i> Reassign Tool
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             {{-- Academic Health Checklist summary card --}}
-            <div class="md:col-span-2 bg-gradient-to-br from-indigo-50/80 to-white dark:from-indigo-950/30 dark:to-slate-900 border border-indigo-100 dark:border-indigo-900/60 rounded-3xl p-6">
+            <div class="lg:col-span-3 bg-gradient-to-br from-indigo-50/80 to-white dark:from-indigo-950/30 dark:to-slate-900 border border-indigo-100 dark:border-indigo-900/60 rounded-3xl p-6">
                 <h3 class="text-sm font-bold text-indigo-950 dark:text-indigo-200 mb-3 flex items-center gap-2">
                     <i class="bi bi-shield-check text-indigo-600 dark:text-indigo-400"></i> Setup Health Checklist
                 </h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-center">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-7 gap-3 text-center">
                     <div class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-xs">
                         <div class="w-6 h-6 rounded-full {{ count($school_sessions ?? []) > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600' }} flex items-center justify-center mx-auto mb-1 text-xs">
                             <i class="bi {{ count($school_sessions ?? []) > 0 ? 'bi-check' : 'bi-x' }}"></i>
@@ -1570,6 +1647,14 @@
                         </div>
                         <span class="text-[11px] font-bold block text-slate-700 dark:text-slate-300">Teachers</span>
                         <span class="text-[10px] text-slate-400">{{ count($assigned_teachers ?? []) }} mapped</span>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-xs">
+                        <div class="w-6 h-6 rounded-full bg-purple-100 text-purple-600 dark:bg-purple-950 dark:text-purple-300 flex items-center justify-center mx-auto mb-1 text-xs">
+                            <i class="bi bi-sort-numeric-down"></i>
+                        </div>
+                        <span class="text-[11px] font-bold block text-slate-700 dark:text-slate-300">Roll Policy</span>
+                        <span class="text-[10px] text-slate-400 capitalize">{{ ($academic_setting->roll_number_mode ?? \App\Models\Setting::get('roll_number_mode', 'yearly')) === 'terminal' ? 'Terminal' : 'Yearly' }}</span>
                     </div>
                 </div>
             </div>
@@ -2142,12 +2227,25 @@ function renderMatrix(data) {
     // Teachers list: use data.teachers or fallback to ALL_TEACHERS
     const teachersList = (data.teachers && data.teachers.length > 0) ? data.teachers : ALL_TEACHERS;
 
-    // Fast lookup for current assignments: key = `${course_id}_${section_id}`
+    // Fast lookup for current assignments: support both array and object formats and both key orders
     const assignmentMap = {};
-    if (data.assignments && Array.isArray(data.assignments)) {
-        data.assignments.forEach(a => {
-            assignmentMap[`${a.course_id}_${a.section_id}`] = a.teacher_id;
-        });
+    if (data.assignments) {
+        if (Array.isArray(data.assignments)) {
+            data.assignments.forEach(a => {
+                const tid = a.teacher_id;
+                assignmentMap[`${a.course_id}_${a.section_id}`] = tid;
+                assignmentMap[`${a.section_id}_${a.course_id}`] = tid;
+            });
+        } else if (typeof data.assignments === 'object') {
+            Object.entries(data.assignments).forEach(([k, val]) => {
+                const tid = (val && typeof val === 'object') ? val.teacher_id : val;
+                assignmentMap[k] = tid;
+                const parts = k.split('_');
+                if (parts.length === 2) {
+                    assignmentMap[`${parts[1]}_${parts[0]}`] = tid;
+                }
+            });
+        }
     }
 
     // Construct tbody
@@ -2169,7 +2267,7 @@ function renderMatrix(data) {
         `;
 
         data.sections.forEach(sec => {
-            const assignedTeacherId = assignmentMap[`${course.id}_${sec.id}`] || '';
+            const assignedTeacherId = assignmentMap[`${course.id}_${sec.id}`] || assignmentMap[`${sec.id}_${course.id}`] || '';
             let optionsHtml = '<option value="">— Unassigned —</option>';
             teachersList.forEach(t => {
                 const isSelected = String(t.id) === String(assignedTeacherId);

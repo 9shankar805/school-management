@@ -13,9 +13,13 @@ return new class extends Migration
             if (DB::getDriverName() === 'mysql') {
                 DB::statement("ALTER TABLE `live_quiz_questions` MODIFY COLUMN `correct_option` VARCHAR(255) NULL");
             } else {
-                Schema::table('live_quiz_questions', function (Blueprint $table) {
-                    $table->string('correct_option', 255)->nullable()->change();
-                });
+                try {
+                    Schema::table('live_quiz_questions', function (Blueprint $table) {
+                        $table->string('correct_option', 255)->nullable()->change();
+                    });
+                } catch (\Throwable $e) {
+                    // SQLite without doctrine/dbal doesn't support ->change()
+                }
             }
         }
     }
