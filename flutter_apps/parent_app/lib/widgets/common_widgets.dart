@@ -37,7 +37,7 @@ class AppCard extends StatelessWidget {
           ),
           boxShadow: shadow ?? [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.04),
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04),
               blurRadius: 14,
               offset: const Offset(0, 4),
             ),
@@ -80,7 +80,7 @@ class GradientCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(radius),
           boxShadow: [
             BoxShadow(
-              color: colors.first.withOpacity(0.35),
+              color: colors.first.withValues(alpha: 0.35),
               blurRadius: 18,
               offset: const Offset(0, 8),
             ),
@@ -125,7 +125,7 @@ class SectionHeader extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.08),
+                color: AppTheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -203,7 +203,7 @@ class CircleIconButton extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
+                  color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 )
@@ -260,9 +260,9 @@ class GradeBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: _color.withOpacity(0.12),
+        color: _color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: _color.withOpacity(0.3)),
+        border: Border.all(color: _color.withValues(alpha: 0.3)),
       ),
       child: Center(
         child: Text(
@@ -284,9 +284,9 @@ class StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         label,
@@ -326,7 +326,7 @@ class MetricStatCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 3),
             )
@@ -339,7 +339,7 @@ class MetricStatCard extends StatelessWidget {
               width: 34,
               height: 34,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: color, size: 18),
@@ -399,7 +399,7 @@ class EmptyStateWidget extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: AppTheme.primary.withOpacity(0.1),
+                color: AppTheme.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 36, color: AppTheme.primary),
@@ -458,7 +458,7 @@ class AppLoadingOverlay extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 20,
               offset: const Offset(0, 6),
             )

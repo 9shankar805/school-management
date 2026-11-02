@@ -44,6 +44,106 @@ class ClassController extends Controller
     }
 
     /**
+     * GET /api/teacher-app/classes/{id}/subjects
+     * Return all real subjects/courses configured for this class with FM and PM rules.
+     */
+    public function subjects(Request $request, $id): JsonResponse
+    {
+        $teacher = $request->user();
+        $sessionId = \App\Models\SchoolSession::current()?->id ?? \App\Models\SchoolSession::latest('id')->value('id') ?? 1;
+        $semesterId = (int) $request->query('semester_id', 0);
+
+        // Fetch courses for this class
+        $courses = \App\Models\Course::where('class_id', $id)
+            ->when($semesterId > 0, fn($q) => $q->where('semester_id', $semesterId))
+            ->where(function($q) use ($sessionId) {
+                $q->where('session_id', $sessionId)->orWhereNull('session_id');
+            })
+            ->ordered()
+            ->get()
+            ->unique('course_name')
+            ->values();
+
+        if ($courses->isEmpty()) {
+            $courses = \App\Models\Course::where('class_id', $id)
+                ->ordered()
+                ->get()
+                ->unique('course_name')
+                ->values();
+        }
+
+        // Exam rules for FM and PM
+        $exams = \App\Models\Exam::where('session_id', $sessionId)
+            ->where('class_id', $id)
+            ->when($semesterId > 0, fn($q) => $q->where('semester_id', $semesterId))
+            ->get();
+        $examRules = \App\Models\ExamRule::whereIn('exam_id', $exams->pluck('id'))->get()->keyBy('exam_id');
+        $examsByCourse = $exams->keyBy('course_id');
+
+        $isClassTeacher = $teacher ? \App\Models\AssignedTeacher::where('teacher_id', $teacher->id)
+            ->where('class_id', $id)
+            ->where('is_class_teacher', true)
+            ->where(function($q) use ($sessionId) {
+                $q->where('session_id', $sessionId)->orWhereNull('session_id')->orWhere('session_id', 0);
+            })->exists() : false;
+
+        $isAdmin = $teacher && $teacher->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'academic-coordinator']);
+
+        $assignedCourseIds = [];
+        if ($teacher && !$isAdmin && !$isClassTeacher) {
+            $assignedCourseIds = \App\Models\AssignedTeacher::where('teacher_id', $teacher->id)
+                ->where('class_id', $id)
+                ->where(function($q) use ($sessionId) {
+                    $q->where('session_id', $sessionId)->orWhereNull('session_id')->orWhere('session_id', 0);
+                })
+                ->pluck('course_id')
+                ->unique()
+                ->filter()
+                ->toArray();
+        }
+
+        $formatted = $courses->map(function ($c) use ($examsByCourse, $examRules, $assignedCourseIds, $isAdmin, $isClassTeacher) {
+            $ex = $examsByCourse->get($c->id);
+            $rule = $ex ? ($examRules[$ex->id] ?? null) : null;
+            $fm = $rule ? (float)$rule->total_marks : 100.0;
+            $pm = $rule ? (float)$rule->pass_marks : 40.0;
+            $thFm = $fm > 25 ? ($fm - 25.0) : $fm;
+            $prFm = $fm > 25 ? 25.0 : 0.0;
+            $isAssigned = $isAdmin || $isClassTeacher || empty($assignedCourseIds) || in_array($c->id, $assignedCourseIds);
+
+            // Generate clean short code (e.g. ENG, NEP, MTH, SCI, ACC)
+            $words = preg_split('/\s+/', trim($c->course_name));
+            if (count($words) >= 2) {
+                $code = strtoupper(substr($words[0], 0, 1) . substr($words[1], 0, 2));
+            } else {
+                $clean = preg_replace('/[^A-Za-z]/', '', $c->course_name);
+                $code = strtoupper(substr($clean, 0, 3));
+            }
+
+            return [
+                'id'          => $c->id,
+                'name'        => $c->course_name,
+                'course_name' => $c->course_name,
+                'code'        => $code ?: 'SUB',
+                'fm'          => $fm,
+                'pm'          => $pm,
+                'th_fm'       => $thFm,
+                'pr_fm'       => $prFm,
+                'course_type' => $c->course_type ?? 'theory',
+                'credit_hours'=> $c->credit_hours ?? 4,
+                'is_assigned' => $isAssigned,
+            ];
+        });
+
+        return response()->json([
+            'status'           => 'success',
+            'class_id'         => (int) $id,
+            'is_class_teacher' => $isClassTeacher || $isAdmin,
+            'subjects'         => $formatted,
+        ]);
+    }
+
+    /**
      * GET /api/teacher-app/classes/{id}/top-students
      */
     public function topStudents(Request $request, $id): JsonResponse

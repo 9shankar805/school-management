@@ -457,9 +457,11 @@
     }
 
     // Calculate Aggregate Totals & Normalization
-    $totalFullMarks = 0;
-    $totalPassMarks = 0;
-    $totalObtained  = 0;
+    $totalFullMarks  = 0;
+    $totalPassMarks  = 0;
+    $totalObtained   = 0;
+    $totalThObtained = 0;
+    $totalPrObtained = 0;
     
     foreach ($courses as $c) {
         $fm = (float)($c['full_marks'] ?? 100);
@@ -469,6 +471,12 @@
         $totalFullMarks += $fm;
         $totalPassMarks += $pm;
         $totalObtained  += $ob;
+
+        $hasPr   = !empty($c['has_practical']);
+        $thMarks = (float)($c['th_marks'] ?? ($hasPr ? round($ob * 0.75, 1) : $ob));
+        $prMarks = $hasPr ? (float)($c['pr_marks'] ?? round($ob * 0.25, 1)) : 0.0;
+        $totalThObtained += $thMarks;
+        $totalPrObtained += $prMarks;
     }
     
     $aggregatePct = $totalFullMarks > 0 ? round(($totalObtained / $totalFullMarks) * 100, 1) : 0;
@@ -644,19 +652,29 @@
         </tr>
     </table>
 
-    {{-- Academic Marks Table --}}
+    {{-- Academic Marks Table (CDC Standard Theory & Practical Component Breakdown) --}}
     <table class="marks-table">
         <thead>
             <tr>
-                <th style="width: 5%;">SN</th>
-                <th style="width: 33%;" class="th-left">Subject / Course Name</th>
-                <th style="width: 9%;">Type</th>
-                <th style="width: 9%;">Full</th>
-                <th style="width: 9%;">Pass</th>
-                <th style="width: 10%;">Obtained</th>
-                <th style="width: 8%;">%</th>
-                <th style="width: 9%;">Grade Point</th>
-                <th style="width: 8%;">Grade</th>
+                <th rowspan="2" style="width: 4%;">SN</th>
+                <th rowspan="2" style="width: 25%;" class="th-left">Subject / Course Name</th>
+                <th rowspan="2" style="width: 6%;">Credit</th>
+                <th colspan="3" style="width: 21%; background: #1a365d;">Theory (TH)</th>
+                <th colspan="3" style="width: 21%; background: #065f46;">Practical / CAS (PR)</th>
+                <th colspan="2" style="width: 15%; background: #854d0e;">Total &amp; Grade</th>
+                <th rowspan="2" style="width: 8%;">Status</th>
+            </tr>
+            <tr style="background: #f1f5f9; color: #1e293b; font-size: 8px;">
+                <th style="background: #2563eb; color: #ffffff; padding: 3px 2px;">FM</th>
+                <th style="background: #2563eb; color: #ffffff; padding: 3px 2px;">Obt</th>
+                <th style="background: #2563eb; color: #ffffff; padding: 3px 2px;">Grade</th>
+
+                <th style="background: #059669; color: #ffffff; padding: 3px 2px;">FM</th>
+                <th style="background: #059669; color: #ffffff; padding: 3px 2px;">Obt</th>
+                <th style="background: #059669; color: #ffffff; padding: 3px 2px;">Grade</th>
+
+                <th style="background: #a16207; color: #ffffff; padding: 3px 2px;">Obt</th>
+                <th style="background: #a16207; color: #ffffff; padding: 3px 2px;">Grade (GP)</th>
             </tr>
         </thead>
         <tbody>
@@ -669,38 +687,77 @@
                 $pm  = (float)($c['pass_marks'] ?? round($fm * 0.4, 0));
                 $pct = $fm > 0 ? round(($ob / $fm) * 100, 1) : $ob;
                 $passed = (bool)($c['passed'] ?? ($ob >= $pm));
+
+                $hasPr   = !empty($c['has_practical']);
+                $thFm    = (float)($c['th_fm'] ?? ($hasPr ? 75.0 : $fm));
+                $thMarks = (float)($c['th_marks'] ?? ($hasPr ? round($ob * 0.75, 1) : $ob));
+                $thGrade = $c['th_grade'] ?? $c['grade'];
+                $prFm    = $hasPr ? (float)($c['pr_fm'] ?? 25.0) : null;
+                $prMarks = $hasPr ? (float)($c['pr_marks'] ?? round($ob * 0.25, 1)) : null;
+                $prGrade = $hasPr ? ($c['pr_grade'] ?? 'A') : null;
+                $credit  = (float)($c['credit_hour'] ?? 4.0);
             @endphp
             <tr>
-                <td>{{ $sn++ }}</td>
-                <td class="td-left">{{ $c['course']?->course_name ?? '—' }}</td>
-                <td style="color: #64748b; font-size: 9.5px;">{{ $c['course']?->course_type ?? 'Theory' }}</td>
-                <td style="font-weight: bold; font-size: 11.5px;">{{ number_format($fm, 0) }}</td>
-                <td style="color: #475569; font-size: 11px;">{{ number_format($pm, 0) }}</td>
-                <td style="font-weight: bold; font-size: 13px; color: {{ $passed ? '#0f172a' : '#dc2626' }};">
+                <td style="font-size: 9.5px; color: #64748b;">{{ $sn++ }}</td>
+                <td class="td-left" style="font-size: 10px;">
+                    {{ $c['course']?->course_name ?? $c['course_name'] ?? '—' }}
+                    @if($hasPr)
+                        <span style="font-size: 7px; font-weight: bold; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; border-radius: 2px; padding: 0.5px 2px; margin-left: 2px;">TH+PR</span>
+                    @else
+                        <span style="font-size: 7px; font-weight: bold; background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; border-radius: 2px; padding: 0.5px 2px; margin-left: 2px;">TH</span>
+                    @endif
+                </td>
+                <td style="font-size: 9.5px; font-weight: bold; color: #475569;">{{ number_format($credit, 1) }}</td>
+
+                {{-- Theory (TH) --}}
+                <td style="font-size: 9.5px; color: #475569;">{{ number_format($thFm, 0) }}</td>
+                <td style="font-size: 10px; font-weight: bold; color: #1e3a8a;">{{ round($thMarks, 1) }}</td>
+                <td style="font-size: 9.5px; font-weight: bold; color: #1e3a8a;">{{ $thGrade }}</td>
+
+                {{-- Practical (PR) --}}
+                @if($hasPr)
+                    <td style="font-size: 9.5px; color: #475569;">{{ number_format($prFm, 0) }}</td>
+                    <td style="font-size: 10px; font-weight: bold; color: #065f46;">{{ round($prMarks, 1) }}</td>
+                    <td style="font-size: 9.5px; font-weight: bold; color: #065f46;">{{ $prGrade }}</td>
+                @else
+                    <td style="font-size: 9.5px; color: #cbd5e1;">—</td>
+                    <td style="font-size: 9.5px; color: #cbd5e1;">—</td>
+                    <td style="font-size: 8px; color: #94a3b8; font-style: italic;">No PR</td>
+                @endif
+
+                {{-- Total & Final Grade --}}
+                <td style="font-size: 10.5px; font-weight: bold; color: {{ $passed ? '#0f172a' : '#dc2626' }};">
                     {{ round($ob, 1) }}
                 </td>
-                <td style="color: #475569; font-size: 10.5px; font-weight: bold;">{{ $pct }}%</td>
-                <td style="font-weight: bold; font-size: 12px; color: #1a365d;">{{ number_format((float)$c['point'], 2) }}</td>
-                <td>
-                    <span style="font-weight: bold; font-size: 13.5px; color: {{ $passed ? '#15803d' : '#dc2626' }};">
-                        {{ $c['grade'] }}
-                    </span>
+                <td style="font-size: 10px; font-weight: bold; color: {{ $passed ? '#15803d' : '#dc2626' }};">
+                    {{ $c['grade'] }} ({{ number_format((float)$c['point'], 2) }})
+                </td>
+                <td style="font-size: 8.5px; font-weight: bold; color: {{ $passed ? '#15803d' : '#dc2626' }};">
+                    {{ $passed ? 'PASSED' : 'RETEST' }}
                 </td>
             </tr>
             @endforeach
 
             {{-- Total & Summary Row --}}
             <tr class="total-row">
-                <td colspan="3" style="text-align: right; padding-right: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
-                    Grand Total &amp; Summary:
+                <td colspan="2" style="text-align: right; padding-right: 6px; font-size: 9.5px; font-weight: bold; text-transform: uppercase;">
+                    Grand Total:
                 </td>
-                <td style="font-size: 12px;">{{ number_format($totalFullMarks, 0) }}</td>
-                <td style="font-size: 11.5px;">{{ number_format($totalPassMarks, 0) }}</td>
-                <td style="font-size: 14px; font-weight: bold; color: #1a365d;">{{ round($totalObtained, 1) }}</td>
-                <td style="font-size: 11.5px; font-weight: bold;">{{ $aggregatePct }}%</td>
-                <td style="font-size: 13px; font-weight: bold; color: #1a365d;">{{ number_format($gpa, 2) }}</td>
-                <td style="font-size: 14px; font-weight: bold; color: {{ $failedCount === 0 ? '#15803d' : '#dc2626' }};">
-                    {{ $overallGrade }}
+                <td style="font-size: 9.5px; font-weight: bold;">{{ count($courses) * 4.0 }}</td>
+                <td colspan="3" style="font-size: 9px; font-weight: bold; color: #1e3a8a;">
+                    TH: {{ round($totalThObtained, 1) }}
+                </td>
+                <td colspan="3" style="font-size: 9px; font-weight: bold; color: #065f46;">
+                    PR: {{ round($totalPrObtained, 1) }}
+                </td>
+                <td style="font-size: 11px; font-weight: bold; color: #1a365d;">
+                    {{ round($totalObtained, 1) }}
+                </td>
+                <td style="font-size: 10.5px; font-weight: bold; color: {{ $failedCount === 0 ? '#15803d' : '#dc2626' }};">
+                    {{ $overallGrade }} ({{ number_format($gpa, 2) }})
+                </td>
+                <td style="font-size: 8.5px; font-weight: bold; color: {{ $failedCount === 0 ? '#15803d' : '#dc2626' }};">
+                    {{ $failedCount === 0 ? 'PASSED' : 'RETEST' }}
                 </td>
             </tr>
         </tbody>

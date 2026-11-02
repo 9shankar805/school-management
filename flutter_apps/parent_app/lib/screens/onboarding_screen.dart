@@ -116,14 +116,14 @@ class _OnboardPage extends StatelessWidget {
                   Positioned(top: 20, right: 20,
                     child: Container(width: 60, height: 60,
                         decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
+                            color: Colors.white.withValues(alpha: 0.15),
                             shape: BoxShape.circle))),
                   Positioned(bottom: 30, left: 20,
                     child: Container(width: 40, height: 40,
                         decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withValues(alpha: 0.1),
                             shape: BoxShape.circle))),
-                  Icon(data.icon, size: 120, color: Colors.white.withOpacity(0.9)),
+                  Icon(data.icon, size: 120, color: Colors.white.withValues(alpha: 0.9)),
                 ],
               ),
             ).animate().scale(duration: 500.ms, curve: Curves.easeOut),
@@ -174,7 +174,7 @@ class _BottomControls extends StatelessWidget {
               decoration: BoxDecoration(
                 color: i == currentPage
                     ? AppTheme.primary
-                    : AppTheme.grey.withOpacity(0.3),
+                    : AppTheme.grey.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
             )),
@@ -189,7 +189,7 @@ class _BottomControls extends StatelessWidget {
                     colors: [AppTheme.primary, AppTheme.secondary]),
                 shape: BoxShape.circle,
                 boxShadow: [BoxShadow(
-                    color: AppTheme.primary.withOpacity(0.4),
+                    color: AppTheme.primary.withValues(alpha: 0.4),
                     blurRadius: 16, offset: const Offset(0, 6))],
               ),
               child: Icon(

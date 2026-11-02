@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../data/app_data.dart';
@@ -140,7 +139,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
               const SizedBox(height: 12),
               TextField(
                 controller: titleCtrl,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Discussion Topic / Subject',
                   filled: true,
                   fillColor: AppTheme.lightBg,
@@ -150,29 +149,71 @@ class _MeetingScreenState extends State<MeetingScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: AppTheme.lightBg, borderRadius: BorderRadius.circular(14)),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Date', style: TextStyle(fontSize: 10, color: AppTheme.grey)),
-                          Text(selectedDate, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-                        ],
+                    child: GestureDetector(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: ctx,
+                          initialDate: DateTime.now().add(const Duration(days: 1)),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 60)),
+                        );
+                        if (picked != null) {
+                          setSheetState(() {
+                            selectedDate = picked.toIso8601String().split('T').first;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: AppTheme.lightBg, borderRadius: BorderRadius.circular(14)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.calendar_today, size: 12, color: AppTheme.grey),
+                                SizedBox(width: 4),
+                                Text('Date', style: TextStyle(fontSize: 10, color: AppTheme.grey, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(selectedDate, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: AppTheme.lightBg, borderRadius: BorderRadius.circular(14)),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Time Slot', style: TextStyle(fontSize: 10, color: AppTheme.grey)),
-                          Text(selectedTime, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-                        ],
+                    child: GestureDetector(
+                      onTap: () async {
+                        final pickedTime = await showTimePicker(
+                          context: ctx,
+                          initialTime: const TimeOfDay(hour: 15, minute: 30),
+                        );
+                        if (pickedTime != null) {
+                          setSheetState(() {
+                            selectedTime = pickedTime.format(ctx);
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: AppTheme.lightBg, borderRadius: BorderRadius.circular(14)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.access_time, size: 12, color: AppTheme.grey),
+                                SizedBox(width: 4),
+                                Text('Time Slot', style: TextStyle(fontSize: 10, color: AppTheme.grey, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(selectedTime, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -182,7 +223,7 @@ class _MeetingScreenState extends State<MeetingScreen> {
               TextField(
                 controller: agendaCtrl,
                 maxLines: 2,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Specific Agenda or Questions (Optional)',
                   filled: true,
                   fillColor: AppTheme.lightBg,

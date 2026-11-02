@@ -7,7 +7,6 @@ import '../widgets/common_widgets.dart';
 import '../providers/teacher_provider.dart';
 import 'students_screen.dart';
 import 'attendance_screen.dart';
-import 'gradebook_screen.dart';
 import 'assignments_screen.dart';
 import 'marks_entry_screen.dart';
 
@@ -560,7 +559,12 @@ class _ClassesScreenState extends State<ClassesScreen> with SingleTickerProvider
                       color: AppTheme.purple,
                       onTap: () => Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const MarksEntryScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => MarksEntryScreen(
+                            initialClass: cls.section,
+                            initialSubject: cls.subject,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -827,6 +831,7 @@ class ClassDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final teacher = Provider.of<TeacherProvider>(context);
 
     return Scaffold(
       backgroundColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
@@ -925,7 +930,12 @@ class ClassDetailScreen extends StatelessWidget {
                   isDark: isDark,
                   onTap: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const MarksEntryScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => MarksEntryScreen(
+                        initialClass: cls.section,
+                        initialSubject: cls.subject,
+                      ),
+                    ),
                   ),
                 ),
                 _buildActionTile(

@@ -40,13 +40,19 @@
     }
 
     // Totals
-    $totalFullMarks = 0;
-    $totalPassMarks = 0;
+    $totalFullMarks  = 0;
+    $totalPassMarks  = 0;
+    $totalThObtained = 0;
+    $totalPrObtained = 0;
     foreach ($courses as $c) {
         $fm = (float)($c['full_marks'] ?? 100);
         $pm = (float)($c['pass_marks'] ?? round($fm * 0.4, 0));
         $totalFullMarks += $fm;
         $totalPassMarks += $pm;
+        $totalThObtained += (float)($c['th_marks'] ?? $c['final_marks']);
+        if (!empty($c['has_practical']) && isset($c['pr_marks'])) {
+            $totalPrObtained += (float)$c['pr_marks'];
+        }
     }
     $aggregatePct = $totalFullMarks > 0 ? round(($totalObtained / $totalFullMarks) * 100, 1) : 0;
 
@@ -228,20 +234,30 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm">
                 <thead>
-                    <tr class="text-xs font-bold text-slate-500 bg-slate-50 border-b border-slate-100 uppercase tracking-wider">
-                        <th class="px-5 py-3 text-center w-12">#</th>
-                        <th class="px-5 py-3 text-left">Subject / Course Name</th>
-                        <th class="px-4 py-3 text-center">Credit / Type</th>
-                        <th class="px-4 py-3 text-center">Full Marks</th>
-                        <th class="px-4 py-3 text-center">Pass Marks</th>
-                        <th class="px-4 py-3 text-center">Marks Obtained</th>
-                        <th class="px-4 py-3 text-center">% Score</th>
-                        <th class="px-4 py-3 text-center">Grade Point</th>
-                        <th class="px-4 py-3 text-center">Grade</th>
-                        <th class="px-4 py-3 text-center">Evaluation</th>
+                    <tr class="text-xs font-bold text-slate-600 bg-slate-100/90 border-b border-slate-200 uppercase tracking-wider text-center">
+                        <th rowspan="2" class="px-4 py-3 text-center w-12 border-r border-slate-200">#</th>
+                        <th rowspan="2" class="px-5 py-3 text-left border-r border-slate-200 min-w-[200px]">Subject / Course Name</th>
+                        <th rowspan="2" class="px-3 py-3 text-center border-r border-slate-200 w-20">Credit</th>
+                        <th colspan="3" class="px-4 py-2 text-center bg-indigo-50 text-indigo-900 border-r border-slate-200 font-extrabold">Theory (TH)</th>
+                        <th colspan="3" class="px-4 py-2 text-center bg-emerald-50 text-emerald-900 border-r border-slate-200 font-extrabold">Practical / Internal (PR)</th>
+                        <th colspan="3" class="px-4 py-2 text-center bg-amber-50 text-amber-900 border-r border-slate-200 font-extrabold">Total &amp; Grade</th>
+                        <th rowspan="2" class="px-4 py-3 text-center w-28">Status</th>
                         @if(auth()->user()->hasRole('student'))
-                        <th class="px-4 py-3 text-center">Re-Exam</th>
+                        <th rowspan="2" class="px-4 py-3 text-center w-20">Re-Exam</th>
                         @endif
+                    </tr>
+                    <tr class="text-[11px] font-bold text-slate-500 bg-slate-50 border-b border-slate-200 uppercase tracking-wider text-center">
+                        <th class="px-2.5 py-1.5 text-indigo-800 bg-indigo-50/50">FM</th>
+                        <th class="px-2.5 py-1.5 text-indigo-800 bg-indigo-50/50">Obt</th>
+                        <th class="px-2.5 py-1.5 text-indigo-800 bg-indigo-50/50 border-r border-slate-200">Grade</th>
+
+                        <th class="px-2.5 py-1.5 text-emerald-800 bg-emerald-50/50">FM</th>
+                        <th class="px-2.5 py-1.5 text-emerald-800 bg-emerald-50/50">Obt</th>
+                        <th class="px-2.5 py-1.5 text-emerald-800 bg-emerald-50/50 border-r border-slate-200">Grade</th>
+
+                        <th class="px-3 py-1.5 text-amber-900 bg-amber-50/50">Total</th>
+                        <th class="px-3 py-1.5 text-amber-900 bg-amber-50/50">GP</th>
+                        <th class="px-3 py-1.5 text-amber-900 bg-amber-50/50 border-r border-slate-200">Final</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -253,27 +269,80 @@
                         $ob  = (float)$c['final_marks'];
                         $pct = $fm > 0 ? round(($ob / $fm) * 100, 1) : $ob;
                         $passed = (bool)($c['passed'] ?? ($ob >= $pm));
+                        $hasPr  = !empty($c['has_practical']);
+                        $thFm   = $c['th_fm'] ?? ($hasPr ? 75.0 : $fm);
+                        $thMarks = $c['th_marks'] ?? ($hasPr ? round($ob * 0.75, 1) : $ob);
+                        $thGrade = $c['th_grade'] ?? $c['grade'];
+                        $prFm   = $c['pr_fm'] ?? ($hasPr ? 25.0 : null);
+                        $prMarks = $c['pr_marks'] ?? ($hasPr ? round($ob * 0.25, 1) : null);
+                        $prGrade = $c['pr_grade'] ?? ($hasPr ? 'A' : null);
+                        $credit  = $c['credit_hour'] ?? 4.0;
                     @endphp
                     <tr class="hover:bg-slate-50/80 transition {{ !$passed ? 'bg-rose-50/20' : '' }}">
-                        <td class="px-5 py-3.5 text-center text-xs font-bold text-slate-400">{{ $sn++ }}</td>
-                        <td class="px-5 py-3.5 font-bold text-slate-800">
-                            {{ $c['course']?->course_name ?? '—' }}
+                        <td class="px-4 py-3.5 text-center text-xs font-bold text-slate-400 border-r border-slate-100">{{ $sn++ }}</td>
+                        <td class="px-5 py-3.5 font-bold text-slate-800 border-r border-slate-100">
+                            {{ $c['course']?->course_name ?? $c['course_name'] ?? '—' }}
+                            @if($hasPr)
+                                <span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    TH+PR
+                                </span>
+                            @else
+                                <span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-500">
+                                    TH ONLY
+                                </span>
+                            @endif
                         </td>
-                        <td class="px-4 py-3.5 text-center text-xs text-slate-500">
-                            {{ $c['course']?->course_type ?? 'Theory' }}
+                        <td class="px-3 py-3.5 text-center text-xs font-semibold text-slate-600 border-r border-slate-100">
+                            {{ number_format($credit, 1) }}
                         </td>
-                        <td class="px-4 py-3.5 text-center text-slate-600 font-medium">{{ number_format($fm, 0) }}</td>
-                        <td class="px-4 py-3.5 text-center text-slate-500 font-medium">{{ number_format($pm, 0) }}</td>
-                        <td class="px-4 py-3.5 text-center font-bold text-base {{ $passed ? 'text-slate-800' : 'text-rose-600' }}">
+
+                        {{-- Theory (TH) Columns --}}
+                        <td class="px-2.5 py-3.5 text-center text-xs text-slate-500 font-medium bg-indigo-50/10">
+                            {{ number_format($thFm, 0) }}
+                        </td>
+                        <td class="px-2.5 py-3.5 text-center font-bold text-sm text-indigo-900 bg-indigo-50/10">
+                            {{ round($thMarks, 1) }}
+                        </td>
+                        <td class="px-2.5 py-3.5 text-center border-r border-slate-100 bg-indigo-50/10">
+                            <span class="inline-block px-2 py-0.5 rounded text-xs font-black bg-indigo-100 text-indigo-800">
+                                {{ $thGrade }}
+                            </span>
+                        </td>
+
+                        {{-- Practical (PR) Columns --}}
+                        @if($hasPr)
+                            <td class="px-2.5 py-3.5 text-center text-xs text-slate-500 font-medium bg-emerald-50/10">
+                                {{ number_format($prFm, 0) }}
+                            </td>
+                            <td class="px-2.5 py-3.5 text-center font-bold text-sm text-emerald-800 bg-emerald-50/10">
+                                {{ round($prMarks, 1) }}
+                            </td>
+                            <td class="px-2.5 py-3.5 text-center border-r border-slate-100 bg-emerald-50/10">
+                                <span class="inline-block px-2 py-0.5 rounded text-xs font-black bg-emerald-100 text-emerald-800">
+                                    {{ $prGrade }}
+                                </span>
+                            </td>
+                        @else
+                            <td class="px-2.5 py-3.5 text-center text-xs font-bold text-slate-300 bg-slate-50/50">—</td>
+                            <td class="px-2.5 py-3.5 text-center text-xs font-bold text-slate-300 bg-slate-50/50">—</td>
+                            <td class="px-2.5 py-3.5 text-center border-r border-slate-100 bg-slate-50/50">
+                                <span class="text-[11px] font-semibold text-slate-400 italic">No PR</span>
+                            </td>
+                        @endif
+
+                        {{-- Final Evaluation Columns --}}
+                        <td class="px-3 py-3.5 text-center font-black text-base bg-amber-50/10 {{ $passed ? 'text-slate-900' : 'text-rose-600' }}">
                             {{ round($ob, 1) }}
                         </td>
-                        <td class="px-4 py-3.5 text-center text-xs font-semibold text-slate-600">{{ $pct }}%</td>
-                        <td class="px-4 py-3.5 text-center font-bold text-indigo-700">{{ number_format((float)$c['point'], 2) }}</td>
-                        <td class="px-4 py-3.5 text-center">
+                        <td class="px-3 py-3.5 text-center font-bold text-indigo-700 bg-amber-50/10">
+                            {{ number_format((float)$c['point'], 2) }}
+                        </td>
+                        <td class="px-3 py-3.5 text-center border-r border-slate-100 bg-amber-50/10">
                             <span class="inline-block px-2.5 py-1 rounded-lg text-xs font-black {{ $passed ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' }}">
                                 {{ $c['grade'] }}
                             </span>
                         </td>
+
                         <td class="px-4 py-3.5 text-center">
                             <span class="text-xs font-bold {{ $passed ? 'text-emerald-700' : 'text-rose-600' }}">
                                 {{ $passed ? 'CLEARED' : 'NEEDS RETEST' }}
@@ -294,16 +363,26 @@
                     @endforeach
 
                     {{-- Total Grand Aggregate Row --}}
-                    <tr class="bg-indigo-50/50 font-bold text-slate-800 border-t-2 border-indigo-200">
-                        <td colspan="3" class="px-5 py-4 text-right text-xs uppercase tracking-wider text-indigo-900 font-black">
-                            Grand Total &amp; Aggregate Summary:
+                    <tr class="bg-indigo-50/60 font-bold text-slate-800 border-t-2 border-indigo-200">
+                        <td colspan="2" class="px-5 py-4 text-right text-xs uppercase tracking-wider text-indigo-900 font-black border-r border-indigo-100">
+                            Grand Total Summary:
                         </td>
-                        <td class="px-4 py-4 text-center text-slate-800">{{ number_format($totalFullMarks, 0) }}</td>
-                        <td class="px-4 py-4 text-center text-slate-600">{{ number_format($totalPassMarks, 0) }}</td>
-                        <td class="px-4 py-4 text-center text-base text-indigo-900 font-black">{{ round($totalObtained, 1) }}</td>
-                        <td class="px-4 py-4 text-center text-indigo-900">{{ $aggregatePct }}%</td>
-                        <td class="px-4 py-4 text-center text-base text-indigo-900 font-black">{{ number_format($gpa, 2) }}</td>
-                        <td class="px-4 py-4 text-center">
+                        <td class="px-3 py-4 text-center text-xs font-bold text-indigo-900 border-r border-indigo-100">
+                            {{ count($courses) * 4.0 }} Cr
+                        </td>
+                        <td colspan="3" class="px-4 py-4 text-center text-sm font-bold text-indigo-900 border-r border-indigo-100 bg-indigo-50/40">
+                            TH Total: {{ round($totalThObtained, 1) }}
+                        </td>
+                        <td colspan="3" class="px-4 py-4 text-center text-sm font-bold text-emerald-900 border-r border-indigo-100 bg-emerald-50/40">
+                            PR Total: {{ round($totalPrObtained, 1) }}
+                        </td>
+                        <td class="px-3 py-4 text-center text-base font-black text-indigo-950 bg-amber-50/50">
+                            {{ round($totalObtained, 1) }}
+                        </td>
+                        <td class="px-3 py-4 text-center text-base font-black text-indigo-950 bg-amber-50/50">
+                            {{ number_format($gpa, 2) }}
+                        </td>
+                        <td class="px-3 py-4 text-center border-r border-indigo-100 bg-amber-50/50">
                             <span class="inline-block px-3 py-1 rounded-lg text-xs font-black {{ $failedCount === 0 ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white' }}">
                                 {{ $overallGrade }}
                             </span>

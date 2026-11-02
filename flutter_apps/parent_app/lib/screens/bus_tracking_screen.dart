@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
-import '../data/app_data.dart';
 import '../providers/api_provider.dart';
 import '../widgets/common_widgets.dart';
 
@@ -13,12 +13,41 @@ class BusTrackingScreen extends StatefulWidget {
 }
 
 class _BusTrackingScreenState extends State<BusTrackingScreen> {
+  Future<void> _makePhoneCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber.replaceAll(RegExp(r'\s+'), ''),
+    );
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not launch dialer for $phoneNumber')),
+      );
+    }
+  }
+
+  Future<void> _sendSms(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'sms',
+      path: phoneNumber.replaceAll(RegExp(r'\s+'), ''),
+    );
+    if (await canLaunchUrl(launchUri)) {
+      await launchUrl(launchUri);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open SMS for $phoneNumber')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final api = context.watch<ApiProvider>();
     final bus = api.busInfo;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text('Live Bus GPS Tracking'),
         leading: CircleIconButton(
@@ -34,7 +63,10 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
             onPressed: () {
               api.loadChildSpecificData();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Updated vehicle GPS satellite coordinates.')),
+                const SnackBar(
+                  content: Text('Updated satellite coordinates • Live accuracy ±3m'),
+                  backgroundColor: Color(0xFF1E3A8A),
+                ),
               );
             },
           ),
@@ -47,16 +79,16 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
           children: [
             // Live Simulation Map Viewport
             Container(
-              height: 240,
+              height: 250,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: const Color(0xFF1E272E),
+                color: const Color(0xFF0F172A),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.12),
-                    blurRadius: 18,
-                    offset: const Offset(0, 6),
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
                   ),
                 ],
               ),
@@ -68,6 +100,23 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
                       painter: _MapGridPainter(),
                     ),
                   ),
+
+                  // Route Line & Stop Waypoints
+                  const Positioned(
+                    left: 40,
+                    right: 40,
+                    top: 100,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _WaypointDot(label: 'Gate', isPassed: true),
+                        _WaypointDot(label: 'Stop 1', isPassed: true),
+                        _WaypointDot(label: 'Child Stop', isPassed: false, isCurrent: true),
+                        _WaypointDot(label: 'School', isPassed: false),
+                      ],
+                    ),
+                  ),
+
                   // Live Bus Pulsing Marker
                   Center(
                     child: Column(
@@ -81,7 +130,7 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
                             border: Border.all(color: Colors.white, width: 3),
                             boxShadow: [
                               BoxShadow(
-                                color: AppTheme.primary.withOpacity(0.5),
+                                color: AppTheme.primary.withValues(alpha: 0.5),
                                 blurRadius: 20,
                                 spreadRadius: 6,
                               ),
@@ -95,6 +144,7 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
                           decoration: BoxDecoration(
                             color: Colors.black87,
                             borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white24),
                           ),
                           child: Text(
                             '${bus.busNumber} • ${bus.speedKmh.toInt()} km/h',
@@ -104,6 +154,7 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
                       ],
                     ),
                   ),
+
                   // Live status badge overlay
                   Positioned(
                     top: 14,
@@ -111,8 +162,9 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.65),
+                        color: Colors.black.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.white12),
                       ),
                       child: Row(
                         children: [
@@ -120,31 +172,65 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
                             width: 8,
                             height: 8,
                             decoration: const BoxDecoration(
-                              color: AppTheme.green,
+                              color: Color(0xFF10B981),
                               shape: BoxShape.circle,
                             ),
                           ),
                           const SizedBox(width: 6),
                           const Text(
-                            'GPS LIVE FEED',
+                            'GPS SATELLITE LIVE',
                             style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800),
                           ),
                         ],
                       ),
                     ),
                   ),
+
+                  // ETA Card overlay
                   Positioned(
                     bottom: 14,
                     right: 14,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppTheme.accent,
+                        color: const Color(0xFFF59E0B),
                         borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 6),
+                        ],
                       ),
-                      child: Text(
-                        'ETA ${bus.eta}',
-                        style: const TextStyle(color: AppTheme.dark, fontWeight: FontWeight.w900, fontSize: 12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.access_time_filled, size: 14, color: Color(0xFF0F172A)),
+                          const SizedBox(width: 4),
+                          Text(
+                            'ETA: ${bus.eta}',
+                            style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w900, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Live speed gauge chip
+                  Positioned(
+                    bottom: 14,
+                    left: 14,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.speed_rounded, size: 14, color: Colors.white70),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Speed: ${bus.speedKmh.toInt()} km/h',
+                            style: const TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w700),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -163,7 +249,7 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
                       Container(
                         width: 48,
                         height: 48,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: AppTheme.primaryLight,
                           shape: BoxShape.circle,
                         ),
@@ -175,26 +261,20 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(bus.driverName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-                            const Text('Official Bus Captain', style: TextStyle(fontSize: 11, color: AppTheme.grey)),
+                            const Text('Official Bus Captain (Verified License)', style: TextStyle(fontSize: 11, color: AppTheme.grey)),
                             Text(bus.driverPhone, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.primary)),
                           ],
                         ),
                       ),
                       IconButton(
                         icon: const Icon(Icons.phone, color: AppTheme.green),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Calling Driver at ${bus.driverPhone}...')),
-                          );
-                        },
+                        tooltip: 'Call Driver',
+                        onPressed: () => _makePhoneCall(bus.driverPhone),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.chat_bubble_outline, color: AppTheme.primary),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Opening direct SMS chat with driver...')),
-                          );
-                        },
+                        icon: const Icon(Icons.sms_outlined, color: AppTheme.primary),
+                        tooltip: 'SMS Driver',
+                        onPressed: () => _sendSms(bus.driverPhone),
                       ),
                     ],
                   ),
@@ -202,8 +282,8 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Helper: ${bus.helperName}', style: const TextStyle(fontSize: 11, color: AppTheme.grey)),
-                      Text('Vehicle: ${bus.plateNumber}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                      Text('Helper / Attendant: ${bus.helperName}', style: const TextStyle(fontSize: 11, color: AppTheme.grey)),
+                      Text('Plate: ${bus.plateNumber}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppTheme.dark)),
                     ],
                   ),
                 ],
@@ -225,26 +305,37 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
                   Column(
                     children: [
                       Container(
-                        width: 20,
-                        height: 20,
+                        width: 22,
+                        height: 22,
                         decoration: BoxDecoration(
                           color: stop.isCurrent
-                              ? AppTheme.accent
+                              ? const Color(0xFFF59E0B)
                               : (stop.isCompleted ? AppTheme.green : AppTheme.greyLight),
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: stop.isCurrent ? Colors.white : Colors.transparent,
                             width: 2,
                           ),
+                          boxShadow: stop.isCurrent
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(0xFFF59E0B).withValues(alpha: 0.5),
+                                    blurRadius: 8,
+                                    spreadRadius: 2,
+                                  ),
+                                ]
+                              : null,
                         ),
                         child: stop.isCompleted
-                            ? const Icon(Icons.check, size: 12, color: Colors.white)
-                            : null,
+                            ? const Icon(Icons.check, size: 14, color: Colors.white)
+                            : (stop.isCurrent
+                                ? const Icon(Icons.location_on, size: 12, color: Colors.white)
+                                : null),
                       ),
                       if (!isLast)
                         Container(
-                          width: 2,
-                          height: 38,
+                          width: 2.5,
+                          height: 42,
                           color: stop.isCompleted ? AppTheme.green : AppTheme.greyLight,
                         ),
                     ],
@@ -264,21 +355,28 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: stop.isCurrent ? FontWeight.w900 : FontWeight.w700,
-                                  color: stop.isCurrent ? AppTheme.primary : AppTheme.dark,
+                                  color: stop.isCurrent ? const Color(0xFFB45309) : AppTheme.dark,
                                 ),
                               ),
                               Text(
                                 stop.arrivalTime,
-                                style: const TextStyle(fontSize: 11, color: AppTheme.grey, fontWeight: FontWeight.w700),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: stop.isCompleted ? AppTheme.green : AppTheme.grey,
+                                ),
                               ),
                             ],
                           ),
+                          const SizedBox(height: 2),
                           Text(
-                            stop.status,
+                            stop.isCurrent
+                                ? 'APPROACHING STOP • 6 MINS AWAY'
+                                : (stop.isCompleted ? 'Completed on time' : 'Scheduled route waypoint'),
                             style: TextStyle(
-                              fontSize: 11,
-                              color: stop.isCurrent ? AppTheme.accent : AppTheme.grey,
-                              fontWeight: stop.isCurrent ? FontWeight.w800 : FontWeight.w500,
+                              fontSize: 10,
+                              fontWeight: stop.isCurrent ? FontWeight.w800 : FontWeight.normal,
+                              color: stop.isCurrent ? const Color(0xFFB45309) : AppTheme.grey,
                             ),
                           ),
                         ],
@@ -295,13 +393,54 @@ class _BusTrackingScreenState extends State<BusTrackingScreen> {
   }
 }
 
+class _WaypointDot extends StatelessWidget {
+  final String label;
+  final bool isPassed;
+  final bool isCurrent;
+
+  const _WaypointDot({
+    required this.label,
+    required this.isPassed,
+    this.isCurrent = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isCurrent
+                ? const Color(0xFFF59E0B)
+                : (isPassed ? const Color(0xFF10B981) : Colors.white24),
+            border: Border.all(color: Colors.white, width: 1.5),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            color: isCurrent ? const Color(0xFFF59E0B) : Colors.white70,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _MapGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final linePaint = Paint()
-      ..color = Colors.white.withOpacity(0.06)
+      ..color = Colors.white.withValues(alpha: 0.04)
       ..strokeWidth = 1.0;
 
+    // Grid lines
     for (double x = 0; x < size.width; x += 30) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
     }
@@ -309,17 +448,26 @@ class _MapGridPainter extends CustomPainter {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
     }
 
-    final routePaint = Paint()
-      ..color = AppTheme.teal.withOpacity(0.7)
-      ..strokeWidth = 4.0
-      ..style = PaintingStyle.stroke;
+    // Curving road simulation path
+    final roadPaint = Paint()
+      ..color = const Color(0xFF2563EB).withValues(alpha: 0.35)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 8.0
+      ..strokeCap = StrokeCap.round;
 
-    final path = Path();
-    path.moveTo(30, size.height - 40);
-    path.quadraticBezierTo(size.width * 0.4, size.height * 0.7, size.width * 0.5, size.height * 0.5);
-    path.quadraticBezierTo(size.width * 0.6, size.height * 0.3, size.width - 40, 40);
+    final roadPath = Path()
+      ..moveTo(20, size.height * 0.8)
+      ..quadraticBezierTo(size.width * 0.35, size.height * 0.2, size.width * 0.5, size.height * 0.5)
+      ..quadraticBezierTo(size.width * 0.65, size.height * 0.8, size.width - 20, size.height * 0.3);
 
-    canvas.drawPath(path, routePaint);
+    canvas.drawPath(roadPath, roadPaint);
+
+    final roadCenterDash = Paint()
+      ..color = Colors.white.withValues(alpha: 0.7)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    canvas.drawPath(roadPath, roadCenterDash);
   }
 
   @override

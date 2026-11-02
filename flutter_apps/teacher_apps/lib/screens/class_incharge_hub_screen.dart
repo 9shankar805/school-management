@@ -6,6 +6,8 @@ import '../widgets/common_widgets.dart';
 import '../services/api_service.dart';
 import '../providers/teacher_provider.dart';
 import '../data/app_data.dart';
+import 'seating_chart_screen.dart';
+import 'attendance_screen.dart';
 
 class ClassInchargeHubScreen extends StatefulWidget {
   const ClassInchargeHubScreen({super.key});
@@ -317,19 +319,29 @@ class _ClassInchargeHubScreenState extends State<ClassInchargeHubScreen>
               const SizedBox(width: 10),
               Expanded(
                 child: _ActionBox(
-                  icon: Icons.how_to_reg_rounded,
-                  label: 'Today Attendance',
-                  color: AppTheme.green,
-                  onTap: () {},
+                  icon: Icons.table_restaurant_rounded,
+                  label: 'Class Seating',
+                  color: const Color(0xFF6D28D9),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SeatingChartScreen()),
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _ActionBox(
-                  icon: Icons.campaign_outlined,
-                  label: 'Parent Alert',
-                  color: AppTheme.orange,
-                  onTap: () {},
+                  icon: Icons.how_to_reg_rounded,
+                  label: 'Haziri Portal',
+                  color: AppTheme.green,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AttendanceScreen()),
+                    );
+                  },
                 ),
               ),
             ],

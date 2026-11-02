@@ -70,19 +70,40 @@ class ProfileController extends Controller
         $user = $request->user();
         
         $validated = $request->validate([
-            'first_name' => ['sometimes', 'string', 'max:255'],
-            'last_name'  => ['sometimes', 'string', 'max:255'],
-            'phone'      => ['sometimes', 'string', 'max:50'],
-            'address'    => ['sometimes', 'string', 'max:255'],
-            'city'       => ['sometimes', 'string', 'max:255'],
+            'first_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'last_name'  => ['sometimes', 'nullable', 'string', 'max:255'],
+            'name'       => ['sometimes', 'nullable', 'string', 'max:255'],
+            'phone'      => ['sometimes', 'nullable', 'string', 'max:50'],
+            'address'    => ['sometimes', 'nullable', 'string', 'max:255'],
+            'city'       => ['sometimes', 'nullable', 'string', 'max:255'],
+            'blood_type' => ['sometimes', 'nullable', 'string', 'max:10'],
+            'gender'     => ['sometimes', 'nullable', 'string', 'max:20'],
         ]);
 
-        $user->update($validated);
+        if (!empty($validated['name']) && empty($validated['first_name'])) {
+            $parts = explode(' ', trim($validated['name']), 2);
+            $validated['first_name'] = $parts[0];
+            $validated['last_name'] = $parts[1] ?? '';
+        }
+        unset($validated['name']);
+
+        $user->update(array_filter($validated, fn($v) => $v !== null));
 
         return response()->json([
             'status'  => 'success',
             'message' => 'Profile updated successfully.',
-            'user'    => $user->only('id', 'first_name', 'last_name', 'phone', 'address', 'city'),
+            'user'    => [
+                'id'         => $user->id,
+                'first_name' => $user->first_name,
+                'last_name'  => $user->last_name,
+                'name'       => trim($user->first_name . ' ' . $user->last_name),
+                'email'      => $user->email,
+                'phone'      => $user->phone,
+                'address'    => $user->address,
+                'city'       => $user->city,
+                'blood_type' => $user->blood_type,
+                'gender'     => $user->gender,
+            ],
         ]);
     }
 

@@ -47,7 +47,7 @@ class _MainShellState extends State<MainShell> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(isDark ? 0.35 : 0.08),
+                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               ),
@@ -130,7 +130,7 @@ class _NavItem extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.primary.withOpacity(0.35),
+                color: AppTheme.primary.withValues(alpha: 0.35),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               )

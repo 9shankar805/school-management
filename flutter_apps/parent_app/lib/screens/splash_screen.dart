@@ -53,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(28),
                   border: Border.all(color: Colors.white38, width: 2),
                 ),
@@ -90,7 +90,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 width: 32,
                 height: 32,
                 child: CircularProgressIndicator(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   strokeWidth: 2.5,
                 ),
               ).animate().fadeIn(duration: 400.ms, delay: 600.ms),

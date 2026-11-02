@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../data/app_data.dart';
@@ -140,29 +139,73 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: AppTheme.lightBg, borderRadius: BorderRadius.circular(14)),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Start Date', style: TextStyle(fontSize: 10, color: AppTheme.grey)),
-                          Text(startDate, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-                        ],
+                    child: GestureDetector(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: ctx,
+                          initialDate: DateTime.now().add(const Duration(days: 1)),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 60)),
+                        );
+                        if (picked != null) {
+                          setSheetState(() {
+                            startDate = picked.toIso8601String().split('T').first;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: AppTheme.lightBg, borderRadius: BorderRadius.circular(14)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.calendar_today, size: 12, color: AppTheme.grey),
+                                SizedBox(width: 4),
+                                Text('Start Date', style: TextStyle(fontSize: 10, color: AppTheme.grey, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(startDate, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: AppTheme.lightBg, borderRadius: BorderRadius.circular(14)),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('End Date', style: TextStyle(fontSize: 10, color: AppTheme.grey)),
-                          Text(endDate, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-                        ],
+                    child: GestureDetector(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: ctx,
+                          initialDate: DateTime.now().add(const Duration(days: 2)),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(const Duration(days: 60)),
+                        );
+                        if (picked != null) {
+                          setSheetState(() {
+                            endDate = picked.toIso8601String().split('T').first;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: AppTheme.lightBg, borderRadius: BorderRadius.circular(14)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(Icons.event, size: 12, color: AppTheme.grey),
+                                SizedBox(width: 4),
+                                Text('End Date', style: TextStyle(fontSize: 10, color: AppTheme.grey, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(endDate, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -172,7 +215,7 @@ class _LeaveRequestScreenState extends State<LeaveRequestScreen> {
               TextField(
                 controller: reasonCtrl,
                 maxLines: 3,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Reason for absence & Doctor remarks',
                   filled: true,
                   fillColor: AppTheme.lightBg,

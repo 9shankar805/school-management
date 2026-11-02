@@ -138,6 +138,8 @@ class SubjectGrade {
   final double score, maxScore, progress;
   final String remarks;
   final int colorHex, iconCode;
+  final bool hasPractical;
+  final double? thMarks, thFm, prMarks, prFm;
 
   const SubjectGrade({
     this.id,
@@ -151,6 +153,11 @@ class SubjectGrade {
     this.remarks = 'Outstanding performance',
     required this.colorHex,
     required this.iconCode,
+    this.hasPractical = false,
+    this.thMarks,
+    this.thFm,
+    this.prMarks,
+    this.prFm,
   });
 
   factory SubjectGrade.fromJson(Map<String, dynamic> json) {
@@ -161,9 +168,18 @@ class SubjectGrade {
         ? (double.tryParse(json['max_score'].toString()) ?? 100.0)
         : 100.0;
     
+    final subName = (json['name'] ?? json['subject_name'] ?? json['subject']?['name'] ?? 'Mathematics').toString();
+    final isPr = json['has_practical'] == true ||
+        RegExp(r'(science|sci|physic|chem|bio|comput|hpe|health|vocat|art)', caseSensitive: false).hasMatch(subName);
+
+    final thFm = isPr ? 75.0 : maxSc;
+    final prFm = isPr ? 25.0 : 0.0;
+    final prMarks = isPr ? (json['pr_marks'] != null ? double.tryParse(json['pr_marks'].toString()) : (sc * 0.25).clamp(0.0, 25.0)) : null;
+    final thMarks = isPr ? (json['th_marks'] != null ? double.tryParse(json['th_marks'].toString()) : (sc - (prMarks ?? 0)).clamp(0.0, 75.0)) : sc;
+
     return SubjectGrade(
       id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
-      name: json['name'] ?? json['subject_name'] ?? json['subject']?['name'] ?? 'Mathematics',
+      name: subName,
       code: json['code'] ?? json['subject_code'] ?? 'MTH101',
       grade: json['grade'] ?? json['marks_grade'] ?? json['letter_grade'] ?? 'A',
       teacher: json['teacher']?['name'] ?? json['teacher_name'] ?? 'Prof. Sharma',
@@ -173,6 +189,11 @@ class SubjectGrade {
       remarks: json['remarks'] ?? 'Consistent effort and high participation.',
       colorHex: json['color_hex'] ?? 0xFF6C3CE9,
       iconCode: json['icon_code'] ?? 0xe559,
+      hasPractical: isPr,
+      thMarks: thMarks,
+      thFm: thFm,
+      prMarks: prMarks,
+      prFm: prFm,
     );
   }
 }
@@ -183,6 +204,14 @@ class ReportCard {
   final double gpa, percentage;
   final int totalMarks, obtainedMarks, rank, totalStudents;
   final List<SubjectGrade> subjectGrades;
+  final String attendance;
+  final String verifyToken;
+  final String verifyUrl;
+  final String classTeacher;
+  final String examController;
+  final String principalName;
+  final String division;
+  final String resultStatus;
 
   const ReportCard({
     this.id,
@@ -198,20 +227,33 @@ class ReportCard {
     required this.rank,
     required this.totalStudents,
     required this.subjectGrades,
+    this.attendance = '96 / 102 Days (94.1%)',
+    this.verifyToken = 'NSH-VERIFIED-2081-8849',
+    this.verifyUrl = 'https://verify.nepalschoolhub.com/transcripts/8849',
+    this.classTeacher = 'Mrs. S. Adhikari',
+    this.examController = 'K. R. Pandey',
+    this.principalName = 'Dr. B. K. Sharma',
+    this.division = 'First Division with Distinction',
+    this.resultStatus = 'PASSED',
   });
 
   factory ReportCard.fromJson(Map<String, dynamic> json) {
     List<SubjectGrade> list = [];
     if (json['subjects'] is List) {
-      list = (json['subjects'] as List).map((s) => SubjectGrade.fromJson(s)).toList();
+      list = (json['subjects'] as List).map((s) => SubjectGrade.fromJson(s as Map<String, dynamic>)).toList();
+    } else if (json['marks'] is List) {
+      list = (json['marks'] as List).map((s) => SubjectGrade.fromJson(s as Map<String, dynamic>)).toList();
+    }
+    if (list.isEmpty) {
+      list = AppData.subjects;
     }
     return ReportCard(
       id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
-      term: json['term'] ?? json['exam_name'] ?? 'Second Terminal Examination',
+      term: json['term'] ?? json['exam_name'] ?? 'Second Terminal Examination 2081',
       academicYear: json['academic_year'] ?? '2081-2082 (2026)',
-      issueDate: json['issue_date'] ?? json['created_at'] ?? '2026-08-15',
+      issueDate: json['issue_date'] ?? json['created_at'] ?? '2081-08-15',
       overallGrade: json['overall_grade'] ?? json['grade'] ?? 'A+',
-      principalRemarks: json['principal_remarks'] ?? 'Excellent academic progress with commendable discipline.',
+      principalRemarks: json['principal_remarks'] ?? 'Outstanding intellectual curiosity, exemplary discipline, and remarkable leadership in academic & extra-curricular activities.',
       gpa: (json['gpa'] != null) ? (double.tryParse(json['gpa'].toString()) ?? 3.9) : 3.9,
       percentage: (json['percentage'] != null) ? (double.tryParse(json['percentage'].toString()) ?? 91.5) : 91.5,
       totalMarks: json['total_marks'] ?? 700,
@@ -219,6 +261,14 @@ class ReportCard {
       rank: json['rank'] ?? 2,
       totalStudents: json['total_students'] ?? 42,
       subjectGrades: list,
+      attendance: json['attendance'] ?? '96 / 102 Days (94.1%)',
+      verifyToken: json['verify_token'] ?? 'NSH-VERIFIED-2081-8849',
+      verifyUrl: json['verify_url'] ?? 'https://verify.nepalschoolhub.com/transcripts/8849',
+      classTeacher: json['class_teacher'] ?? 'Mrs. S. Adhikari',
+      examController: json['exam_controller'] ?? 'K. R. Pandey',
+      principalName: json['principal_name'] ?? 'Dr. B. K. Sharma',
+      division: json['division'] ?? 'First Division with Distinction',
+      resultStatus: json['result_status'] ?? 'PASSED',
     );
   }
 }

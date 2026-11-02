@@ -13,6 +13,20 @@ class AuthProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   Map<String, dynamic>? get teacherProfile => _teacherProfile;
   bool get isAuthenticated => _apiService.isAuthenticated;
+  bool get isSessionExpired => _apiService.isSessionExpired();
+  Duration get sessionRemainingTime => _apiService.remainingSessionTime;
+  DateTime? get sessionExpiresAt => _apiService.sessionExpiresAt;
+
+  String get sessionRemainingFormatted {
+    if (!_apiService.isAuthenticated) return 'Signed Out';
+    final rem = _apiService.remainingSessionTime;
+    if (rem.inSeconds <= 0) return 'Expired (सत्र समाप्त)';
+    if (rem.inHours > 0) {
+      final m = rem.inMinutes.remainder(60);
+      return '${rem.inHours}h ${m}m remaining';
+    }
+    return '${rem.inMinutes}m remaining';
+  }
 
   String get teacherName {
     if (_teacherProfile?['name'] != null && _teacherProfile!['name'].toString().isNotEmpty) {
@@ -69,9 +83,53 @@ class AuthProvider extends ChangeNotifier {
   }
 
   String get teacherAvatar => _teacherProfile?['avatar_url']?.toString() ?? '';
+  String get teacherPhone => _teacherProfile?['phone']?.toString() ?? '';
+  String get teacherAddress => _teacherProfile?['address']?.toString() ?? '';
+  String get teacherCity => _teacherProfile?['city']?.toString() ?? '';
+  String get teacherId => _teacherProfile?['id']?.toString() ?? '2081-01';
+
+  bool get isAdminRole {
+    final roles = _teacherProfile?['roles'];
+    if (roles is List) {
+      return roles.any((r) => [
+            'admin',
+            'super-admin',
+            'principal',
+            'vice-principal',
+            'academic-coordinator'
+          ].contains(r.toString().toLowerCase().trim()));
+    }
+    return false;
+  }
+
+  bool get isClassTeacherRole {
+    final roles = _teacherProfile?['roles'];
+    if (roles is List) {
+      return roles.any((r) =>
+          r.toString().toLowerCase().contains('class-teacher') ||
+          r.toString().toLowerCase().contains('incharge'));
+    }
+    return _teacherProfile?['is_class_teacher'] == true ||
+        _teacherProfile?['is_class_teacher'] == 1 ||
+        _teacherProfile?['is_class_teacher'] == '1';
+  }
 
   Future<void> init() async {
+    ApiService.onSessionExpired = () {
+      _teacherProfile = null;
+      _errorMessage = 'Your 24-hour session expired. Please sign in again.';
+      notifyListeners();
+    };
+
     await _apiService.init();
+
+    if (_apiService.isSessionExpired()) {
+      _teacherProfile = null;
+      _errorMessage = 'Your 24-hour session has expired for security. Please sign in again.';
+      notifyListeners();
+      return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final cached = prefs.getString('teacher_profile_data');
     if (cached != null) {
@@ -80,6 +138,17 @@ class AuthProvider extends ChangeNotifier {
       } catch (_) {}
     }
     notifyListeners();
+  }
+
+  /// Check active 24-hour session status
+  bool checkSession() {
+    if (_apiService.isSessionExpired()) {
+      _teacherProfile = null;
+      _errorMessage = 'Your 24-hour session has expired for security. Please sign in again.';
+      notifyListeners();
+      return false;
+    }
+    return true;
   }
 
   Future<bool> login(String loginId, String password) async {
@@ -173,5 +242,44 @@ class AuthProvider extends ChangeNotifier {
       await prefs.setString('teacher_profile_data', jsonEncode(_teacherProfile));
       notifyListeners();
     }
+  }
+
+  Future<bool> updateProfile(Map<String, dynamic> data) async {
+    _isLoading = true;
+    notifyListeners();
+    final res = await _apiService.updateProfile(data);
+    _isLoading = false;
+    if (res.success) {
+      if (_teacherProfile != null) {
+        _teacherProfile!.addAll(data);
+        if (data.containsKey('first_name') || data.containsKey('last_name')) {
+          final fn = data['first_name'] ?? _teacherProfile!['first_name'] ?? '';
+          final ln = data['last_name'] ?? _teacherProfile!['last_name'] ?? '';
+          _teacherProfile!['name'] = '$fn $ln'.trim();
+        }
+      }
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('teacher_profile_data', jsonEncode(_teacherProfile));
+      notifyListeners();
+      return true;
+    }
+    notifyListeners();
+    return false;
+  }
+
+  Future<ApiResponse<dynamic>> changePassword(String currentPassword, String newPassword, String confirmPassword) async {
+    return _apiService.changePassword(currentPassword, newPassword, confirmPassword);
+  }
+
+  Future<List<dynamic>> getLeaves() async {
+    final res = await _apiService.getLeaves();
+    if (res.success && res.data != null) {
+      return res.data!;
+    }
+    return [];
+  }
+
+  Future<ApiResponse<dynamic>> applyLeave(Map<String, dynamic> data) async {
+    return _apiService.applyLeave(data);
   }
 }

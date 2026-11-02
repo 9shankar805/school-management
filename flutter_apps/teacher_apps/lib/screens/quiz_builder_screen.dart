@@ -148,13 +148,13 @@ class _QuizBuilderScreenState extends State<QuizBuilderScreen> {
                       borderSide: BorderSide.none))),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: Provider.of<TeacherProvider>(context, listen: false).teacherClasses.first.section,
+            value: Provider.of<TeacherProvider>(context, listen: false).teacherClasses.map((c) => c.section).toSet().first,
             decoration: InputDecoration(labelText: 'Assign to Class',
                 filled: true, fillColor: AppTheme.lightBg,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none)),
-            items: Provider.of<TeacherProvider>(context, listen: false).teacherClasses.map((c) => DropdownMenuItem(
-                value: c.section, child: Text(c.section))).toList(),
+            items: Provider.of<TeacherProvider>(context, listen: false).teacherClasses.map((c) => c.section).toSet().map((sec) => DropdownMenuItem(
+                value: sec, child: Text(sec))).toList(),
             onChanged: (_) {},
           ),
           const SizedBox(height: 20),

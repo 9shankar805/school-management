@@ -5,6 +5,7 @@ import '../theme/app_theme.dart';
 import '../data/app_data.dart';
 import '../widgets/common_widgets.dart';
 import '../providers/auth_provider.dart';
+import '../providers/teacher_provider.dart';
 
 class AnnouncementsScreen extends StatefulWidget {
   const AnnouncementsScreen({super.key});
@@ -760,6 +761,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                               .teacherClasses
                               .map((c) => c.section)
                         ]
+                            .toSet()
                             .map((s) =>
                                 DropdownMenuItem(value: s, child: Text(s)))
                             .toList(),
