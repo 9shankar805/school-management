@@ -305,16 +305,14 @@ class ResultRepository
         $failed      = 0;
 
         foreach ($marks as $mark) {
-            $courseName = $mark->course?->course_name ?? 'Subject';
-            $cleanName = strtolower(trim($courseName));
-
-            // Check if subject has practical evaluation (CDC Nepal & Global Standard)
-            $isPractical = (bool) preg_match('/(science|sci|physic|chem|bio|comput|hpe|health|vocat|art|social|account)/i', $cleanName)
-                || (isset($mark->course?->course_type) && stripos($mark->course->course_type, 'practical') !== false);
-
-            // ── FM/PM resolution (merged from both branches) ──────────────────
-            // Use resolveFmPm() for correct priority: transient > examRulesByCourse > 100/40
-            // This fixes the FM=100 bug where examRulesByCourse keyBy failed.
+            // Determine full_marks and pass_marks with correct priority:
+            // 1. Transient $mark->full_marks / $mark->pass_marks — set from the actual exam
+            //    rule during fallback-path construction.
+            // 2. examRulesByCourse keyed by course_id — correct for DB-backed FinalMark
+            //    records (primary path) where the transient property is null.
+            // 3. If the transient is the auto-created default (100/40) but the lookup
+            //    resolved a custom FM for this subject name, the custom one is authoritative.
+            // 4. Hard-coded 100 / 40% as a last resort.
             [$fullMarks, $passMarks] = self::resolveFmPm(
                 $mark->full_marks ?? null,
                 $mark->pass_marks ?? null,
@@ -326,70 +324,17 @@ class ResultRepository
                 $fullMarks = 100.0;
             }
 
-            // Pass BOTH fullMarks AND passMarks so pass/fail uses the correct
-            // subject-specific pass mark, not just the grade band.
+            // Always pass the resolved full_marks AND pass_marks into resolveGrade so
+            // the percentage normalisation uses the correct denominator (e.g. 40 for a
+            // 40-mark exam) and — critically — the pass/fail flag is decided by comparing
+            // obtained marks against THIS subject's configured pass mark, not the grade band.
             $resolved = $mark->resolveGrade($rules, $fullMarks, $passMarks);
-
             $totalPoints += $resolved['point'];
             $totalMarks  += $mark->final_marks;
             $resolved['passed'] ? $passed++ : $failed++;
 
-            // Split into Theory & Practical components
-            if ($isPractical) {
-                $thFm = 75.0;
-                $prFm = 25.0;
-                // If 50/50 subject like HPE / Computer Lab
-                if (preg_match('/(hpe|health|physic.*edu|vocat|art)/i', $cleanName)) {
-                    $thFm = 50.0;
-                    $prFm = 50.0;
-                }
-
-                $thPm = round($thFm * 0.35, 1); // 35% threshold for grade D
-                $prPm = round($prFm * 0.40, 1); // 40% threshold for grade C
-
-                $score = (float)$mark->final_marks;
-                if ($score <= 0) {
-                    $thMarks = 0.0;
-                    $prMarks = 0.0;
-                } else {
-                    $prRatio = $prFm / 100.0;
-                    $expectedPr = round($score * $prRatio, 1);
-                    $prMarks = min($prFm, max(0.0, $expectedPr));
-                    $thMarks = round($score - $prMarks, 1);
-                    if ($thMarks > $thFm) {
-                        $thMarks = $thFm;
-                        $prMarks = round($score - $thFm, 1);
-                    }
-                }
-
-                $thGrade = $this->calculateGradeFromScore($thMarks, $thFm, $rules);
-                $prGrade = $this->calculateGradeFromScore($prMarks, $prFm, $rules);
-                $creditHour = 4.0;
-            } else {
-                $thFm = $fullMarks;
-                $thPm = $passMarks;
-                $thMarks = (float)$mark->final_marks;
-                $thGrade = $resolved['grade'];
-                $prFm = null;
-                $prPm = null;
-                $prMarks = null;
-                $prGrade = null;
-                $creditHour = 4.0;
-            }
-
             $courses[] = [
                 'course'            => $mark->course,
-                'course_name'       => $courseName,
-                'credit_hour'       => $creditHour,
-                'has_practical'     => $isPractical,
-                'th_fm'             => $thFm,
-                'th_pm'             => $thPm,
-                'th_marks'          => $thMarks,
-                'th_grade'          => $thGrade,
-                'pr_fm'             => $prFm,
-                'pr_pm'             => $prPm,
-                'pr_marks'          => $prMarks,
-                'pr_grade'          => $prGrade,
                 'final_marks'       => $mark->final_marks,
                 'calculated_marks'  => $mark->calculated_marks,
                 'full_marks'        => $fullMarks,

@@ -5,26 +5,23 @@
 <title>Official Class Progress Report Cards — {{ $class->class_name }} ({{ $semester->semester_name }})</title>
 <style>
     @page {
-        size: A4 portrait;
-        margin: 7mm 9mm 7mm 9mm;
-    }
-    * {
+        size: 210mm 297mm portrait;
         margin: 0;
-        padding: 0;
-        box-sizing: border-box;
     }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-        font-family: DejaVu Sans, sans-serif;
-        font-size: 11px;
+        font-family: DejaVu Sans, Arial, sans-serif;
+        font-size: 9pt;
         color: #0f172a;
         background: #ffffff;
-        line-height: 1.25;
-        width: 100%;
+        line-height: 1;
+        margin: 8mm;
+        width: 194mm;
     }
     .sheet-page {
         width: 100%;
-        border: 3px solid #1a365d;
-        padding: 8px 12px 8px 12px;
+        border: 2pt solid #1a365d;
+        padding: 5pt 7pt;
         page-break-after: always;
         page-break-inside: avoid;
         background: #ffffff;
@@ -33,362 +30,167 @@
         page-break-after: avoid;
     }
 
-    /* ══ HEADER & INSTITUTION ══════════════════════════════════ */
-    .header-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 6px;
-    }
-    .header-table td {
-        vertical-align: middle;
-    }
-    .school-logo-td {
-        width: 16%;
-        text-align: left;
-    }
-    .school-info-td {
-        width: 68%;
-        text-align: center;
-        padding: 0 6px;
-    }
-    .school-qr-td {
-        width: 16%;
-        text-align: right;
-    }
-    .school-name {
-        font-size: 21px;
+    /* Header */
+    .header-table { width:100%; border-collapse:collapse; margin-bottom:3pt; }
+    .header-table td { vertical-align:middle; }
+    .school-logo-td { width:12%; text-align:left; }
+    .school-info-td { width:76%; text-align:center; padding:0 4pt; }
+    .school-qr-td   { width:12%; text-align:right; }
+
+    .school-title {
+        font-size: 17pt;
         font-weight: bold;
         color: #1a365d;
         text-transform: uppercase;
-        letter-spacing: 0.8px;
-        line-height: 1.15;
-        margin-bottom: 3px;
+        letter-spacing: 0.4pt;
+        line-height: 1.1;
+        margin-bottom: 2pt;
     }
-    .school-tagline {
-        font-size: 10px;
-        font-weight: bold;
-        color: #b45309;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 2px;
-    }
-    .school-address {
-        font-size: 10px;
-        color: #334155;
-        line-height: 1.3;
-    }
-    .school-contacts {
-        font-size: 9.5px;
-        color: #475569;
-        margin-top: 2px;
-    }
+    .school-affiliation { font-size:7.5pt; font-weight:bold; color:#b45309; text-transform:uppercase; margin-bottom:1pt; }
+    .school-address  { font-size:7.5pt; color:#334155; line-height:1.2; }
+    .school-contacts { font-size:7pt; color:#475569; margin-top:1pt; }
 
-    /* ══ DECORATIVE DUAL ACCENT BARS ══════════════════════════ */
-    .bar-navy {
-        width: 100%;
-        height: 3px;
-        background: #1a365d;
-        margin-bottom: 2px;
-    }
-    .bar-gold {
-        width: 100%;
-        height: 1.5px;
-        background: #d97706;
-        margin-bottom: 8px;
-    }
+    /* Ribbons */
+    .ribbon-bar { width:100%; height:2pt; background:#1a365d; margin-bottom:1pt; }
+    .ribbon-sub { width:100%; height:1pt; background:#d97706; margin-bottom:3pt; }
 
-    /* ══ DOCUMENT TITLE BANNER ═════════════════════════════════ */
-    .title-banner {
-        text-align: center;
-        margin-bottom: 8px;
-    }
+    /* Title */
+    .title-banner { text-align:center; margin-bottom:4pt; }
     .title-banner .badge {
-        display: inline-block;
-        background: #1a365d;
-        color: #ffffff;
-        font-size: 12.5px;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 1.5px;
-        padding: 5px 22px;
-        border-radius: 4px;
+        display:inline-block;
+        background:#1a365d;
+        color:#fff;
+        font-size:10.5pt;
+        font-weight:bold;
+        text-transform:uppercase;
+        letter-spacing:0.6pt;
+        padding:2.5pt 14pt;
     }
     .term-subtitle {
-        font-size: 11px;
-        font-weight: bold;
-        color: #1e293b;
-        margin-top: 3px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        font-size:8pt;
+        font-weight:bold;
+        color:#334155;
+        margin-top:1.5pt;
+        text-transform:uppercase;
+        letter-spacing:0.2pt;
     }
 
-    /* ══ STUDENT INFORMATION CARD ═════════════════════════════ */
-    .profile-card {
-        width: 100%;
-        border-collapse: collapse;
-        background: #f8fafc;
-        border: 1.5px solid #cbd5e1;
-        border-radius: 5px;
-        margin-bottom: 9px;
+    /* Student info */
+    .profile-table {
+        width:100%;
+        border-collapse:collapse;
+        border:1pt solid #94a3b8;
+        margin-bottom:4pt;
     }
-    .profile-card td {
-        padding: 4.5px 8px;
-        font-size: 10.5px;
-        vertical-align: middle;
-        border-bottom: 1px solid #e2e8f0;
+    .profile-table td {
+        padding:2.5pt 4pt;
+        font-size:8.5pt;
+        vertical-align:middle;
+        border-bottom:0.5pt solid #e2e8f0;
+        border-right:0.5pt solid #e2e8f0;
+        line-height:1.2;
     }
-    .profile-card tr:last-child td {
-        border-bottom: none;
-    }
-    .lbl {
-        color: #475569;
-        font-weight: bold;
-        width: 18%;
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-    }
-    .val {
-        color: #0f172a;
-        font-weight: bold;
-        width: 32%;
-        font-size: 11px;
-    }
-    .val-highlight {
-        color: #1a365d;
-        font-size: 12px;
-        font-weight: bold;
-    }
+    .profile-table tr:last-child td { border-bottom:none; }
+    .profile-table td:last-child    { border-right:none; }
+    .lbl { width:15%; font-size:7pt; font-weight:bold; color:#475569; text-transform:uppercase; background-color:#f1f5f9; }
+    .val { width:35%; font-size:8.5pt; font-weight:bold; color:#0f172a; }
 
-    /* ══ ACADEMIC MARKS TABLE ═════════════════════════════════ */
-    table.marks-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 9px;
-    }
+    /* Marks table */
+    table.marks-table { width:100%; border-collapse:collapse; table-layout:fixed; margin-bottom:4pt; border:1pt solid #1a365d; }
     table.marks-table th {
-        background: #1a365d;
-        color: #ffffff;
-        font-size: 10.5px;
-        font-weight: bold;
-        text-align: center;
-        padding: 6px 5px;
-        border: 1px solid #1a365d;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
+        background-color:#1a365d;
+        color:#fff;
+        font-size:7.5pt;
+        font-weight:bold;
+        text-align:center;
+        padding:3pt 2pt;
+        border:0.5pt solid #2d4a8a;
+        text-transform:uppercase;
+        letter-spacing:0.1pt;
+        line-height:1.2;
     }
-    table.marks-table th.th-left {
-        text-align: left;
-        padding-left: 10px;
-    }
+    table.marks-table th.th-left { text-align:left; padding-left:4pt; }
     table.marks-table td {
-        border: 1.2px solid #cbd5e1;
-        padding: 5px 5px;
-        font-size: 11px;
-        text-align: center;
-        vertical-align: middle;
-        color: #1e293b;
+        border:0.5pt solid #cbd5e1;
+        padding:3pt 2pt;
+        font-size:8.5pt;
+        text-align:center;
+        vertical-align:middle;
+        color:#1e293b;
+        line-height:1;
     }
-    table.marks-table td.td-left {
-        text-align: left;
-        padding-left: 10px;
-        font-weight: bold;
-        color: #0f172a;
-        font-size: 11.5px;
-    }
-    table.marks-table tbody tr:nth-child(even) {
-        background: #f8fafc;
-    }
+    table.marks-table td.td-left { text-align:left; padding-left:4pt; font-weight:bold; color:#0f172a; }
+    table.marks-table tbody tr td     { background-color:#ffffff; }
+    table.marks-table tbody tr.alt td { background-color:#f8fafc; }
     table.marks-table .total-row td {
-        background: #eff6ff;
-        font-weight: bold;
-        color: #1a365d;
-        font-size: 11.5px;
-        border-top: 2px solid #1a365d;
-        border-bottom: 2px solid #1a365d;
-        padding: 6px 5px;
+        background-color:#dbeafe;
+        font-weight:bold;
+        color:#1a365d;
+        font-size:8pt;
+        border-top:1.5pt solid #1a365d;
+        padding:3.5pt 2pt;
     }
 
-    /* ══ SUMMARY KPI RIBBON ════════════════════════════════════ */
-    .kpi-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 9px;
-    }
+    /* KPI */
+    .kpi-table { width:100%; border-collapse:collapse; table-layout:fixed; margin-bottom:4pt; border:1pt solid #93c5fd; }
     .kpi-table td {
-        padding: 6px 8px;
-        text-align: center;
-        vertical-align: middle;
-        background: #eff6ff;
-        border: 1.5px solid #bfdbfe;
-        width: 20%;
+        width:20%;
+        padding:4pt 3pt;
+        text-align:center;
+        vertical-align:middle;
+        background-color:#eff6ff;
+        border-right:0.5pt solid #93c5fd;
+        line-height:1.1;
     }
-    .kpi-table td.kpi-gold {
-        background: #fffbeb;
-        border-color: #fde68a;
-    }
-    .kpi-val {
-        font-size: 20px;
-        font-weight: bold;
-        color: #1a365d;
-        line-height: 1.1;
-    }
-    .kpi-val.gold {
-        color: #b45309;
-    }
-    .kpi-lbl {
-        font-size: 9px;
-        font-weight: bold;
-        color: #475569;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-top: 2px;
-    }
+    .kpi-table td:last-child { border-right:none; }
+    .kpi-table td.kpi-amber { background-color:#fffbeb; border-right-color:#fcd34d; }
+    .kpi-val  { font-size:14pt; font-weight:bold; color:#1a365d; }
+    .kpi-val.amber { color:#b45309; }
+    .kpi-val.green { color:#166534; }
+    .kpi-val.red   { color:#dc2626; }
+    .kpi-lbl  { font-size:6.5pt; font-weight:bold; color:#475569; text-transform:uppercase; letter-spacing:0.1pt; margin-top:1pt; }
 
-    /* ══ TEACHER EVALUATION & CONDUCT MATRIX ═══════════════════ */
-    .eval-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 9px;
+    /* Evaluation */
+    .evaluation-table { width:100%; border-collapse:collapse; margin-bottom:4pt; }
+    .evaluation-table td { vertical-align:top; padding:0; }
+    .eval-box { border:1pt solid #cbd5e1; padding:3.5pt 5pt; background-color:#fafafa; }
+    .eval-title {
+        font-size:7.5pt; font-weight:bold; color:#1a365d;
+        text-transform:uppercase; letter-spacing:0.1pt;
+        border-bottom:0.5pt solid #e2e8f0;
+        padding-bottom:2pt; margin-bottom:2.5pt; line-height:1;
     }
-    .eval-table td {
-        vertical-align: top;
-        padding: 0;
-    }
-    .eval-box {
-        border: 1.5px solid #cbd5e1;
-        border-radius: 5px;
-        padding: 6px 9px;
-        background: #fafafa;
-    }
-    .eval-header {
-        font-size: 10.5px;
-        font-weight: bold;
-        color: #1a365d;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        border-bottom: 1.5px solid #e2e8f0;
-        padding-bottom: 3px;
-        margin-bottom: 4px;
-    }
-    .eval-text {
-        font-size: 10px;
-        color: #1e293b;
-        line-height: 1.4;
-        font-style: italic;
-    }
-    .traits-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .traits-table td {
-        padding: 2.5px 4px;
-        font-size: 9.5px;
-        border-bottom: 1px solid #f1f5f9;
-    }
-    .traits-table tr:last-child td {
-        border-bottom: none;
-    }
-    .traits-lbl {
-        font-weight: bold;
-        color: #475569;
-        width: 55%;
-    }
-    .traits-val {
-        font-weight: bold;
-        color: #1a365d;
-        width: 45%;
-        text-align: right;
-    }
+    .eval-text { font-size:7.5pt; color:#1e293b; line-height:1.35; font-style:italic; margin-bottom:4pt; }
+    .note-label { font-size:7pt; font-weight:bold; color:#64748b; border-top:0.5pt dashed #cbd5e1; padding-top:2pt; margin-top:2pt; line-height:1; }
+    .note-line  { border-bottom:0.5pt dotted #94a3b8; height:11pt; margin-top:1.5pt; }
+    .traits-table { width:100%; border-collapse:collapse; }
+    .traits-table td { padding:1.5pt 2pt; font-size:7.5pt; border-bottom:0.5pt solid #f1f5f9; line-height:1.1; }
+    .traits-table tr:last-child td { border-bottom:none; }
+    .traits-lbl { font-weight:bold; color:#475569; width:60%; }
+    .traits-val { font-weight:bold; color:#1a365d; width:40%; text-align:right; }
 
-    /* ══ CDC GRADING SYSTEM KEY ════════════════════════════════ */
-    .scale-box {
-        margin-bottom: 9px;
-    }
-    .scale-title {
-        font-size: 9.5px;
-        font-weight: bold;
-        color: #334155;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-        margin-bottom: 3px;
-    }
-    .scale-table {
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: fixed;
-    }
-    .scale-table th {
-        background: #f1f5f9;
-        color: #1e293b;
-        font-size: 8.5px;
-        font-weight: bold;
-        border: 1px solid #cbd5e1;
-        padding: 3.5px 3px;
-        text-align: center;
-        width: 11.11%;
-    }
-    .scale-table td {
-        border: 1px solid #e2e8f0;
-        font-size: 8.5px;
-        padding: 3px 2px;
-        text-align: center;
-        width: 11.11%;
-    }
-    .scale-table tr.scale-grade td {
-        background: #f0fdf4;
-        font-weight: bold;
-        color: #166534;
-        font-size: 9.5px;
-    }
-    .scale-table tr.scale-point td {
-        background: #eff6ff;
-        font-weight: bold;
-        color: #1a365d;
-    }
+    /* Scale */
+    .scale-box   { margin-bottom:4pt; }
+    .scale-title { font-size:7pt; font-weight:bold; color:#475569; text-transform:uppercase; letter-spacing:0.1pt; margin-bottom:1.5pt; line-height:1; }
+    .scale-table { width:100%; border-collapse:collapse; table-layout:fixed; border:1pt solid #cbd5e1; }
+    .scale-table th { background-color:#f1f5f9; color:#334155; font-size:6.5pt; font-weight:bold; border:0.5pt solid #cbd5e1; padding:2pt; text-align:center; line-height:1.2; }
+    .scale-table td { border:0.5pt solid #e2e8f0; font-size:6.5pt; padding:2pt; text-align:center; line-height:1.2; }
+    .scale-table tr.scale-grade td { background-color:#f0fdf4; font-weight:bold; color:#166534; }
+    .scale-table tr.scale-point td { background-color:#eff6ff; font-weight:bold; color:#1a365d; }
 
-    /* ══ AUTHORIZED SIGNATURES ═════════════════════════════════ */
-    .sig-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 8px;
-        margin-bottom: 5px;
-    }
-    .sig-table td {
-        width: 25%;
-        text-align: center;
-        vertical-align: bottom;
-        padding: 0 6px;
-    }
-    .sig-space {
-        height: 30px;
-    }
-    .sig-line {
-        border-top: 1.5px solid #475569;
-        width: 85%;
-        margin: 0 auto 3px auto;
-    }
-    .sig-role {
-        font-size: 10px;
-        font-weight: bold;
-        color: #0f172a;
-    }
-    .sig-desc {
-        font-size: 8.5px;
-        color: #64748b;
-        margin-top: 1px;
-    }
+    /* Signatures */
+    .sig-table { width:100%; border-collapse:collapse; table-layout:fixed; margin-top:4pt; margin-bottom:3pt; }
+    .sig-table td { width:25%; text-align:center; vertical-align:bottom; padding:0 4pt; }
+    .sig-space { height:24pt; }
+    .sig-line  { border-top:0.8pt solid #475569; width:80%; margin:0 auto 1.5pt auto; }
+    .sig-title { font-size:7.5pt; font-weight:bold; color:#0f172a; line-height:1.1; }
+    .sig-sub   { font-size:6.5pt; color:#64748b; margin-top:0.5pt; line-height:1.1; }
 
-    /* ══ FOOTER & AUTHENTICITY ═════════════════════════════════ */
-    .footer-band {
-        width: 100%;
-        border-top: 1.5px solid #e2e8f0;
-        padding-top: 4px;
-        margin-top: 4px;
-        font-size: 8.5px;
-        color: #64748b;
-        text-align: center;
-        line-height: 1.35;
+    /* Footer */
+    .cert-footer {
+        border-top:0.5pt solid #e2e8f0;
+        padding-top:2pt; margin-top:2pt;
+        font-size:6.5pt; color:#64748b; text-align:center; line-height:1.3;
     }
 </style>
 </head>
@@ -456,33 +258,25 @@
         }
     }
 
-    // Calculate Aggregate Totals & Normalization
-    $totalFullMarks  = 0;
-    $totalPassMarks  = 0;
-    $totalObtained   = 0;
-    $totalThObtained = 0;
-    $totalPrObtained = 0;
+    // Calculate Aggregate Totals
+    $totalFullMarks = 0;
+    $totalPassMarks = 0;
+    $totalObtained  = (float)($result['totalMarks'] ?? 0);
     
     foreach ($courses as $c) {
         $fm = (float)($c['full_marks'] ?? 100);
-        $ob = (float)$c['final_marks'];
-        if ($fm < $ob && $ob <= 100) { $fm = 100.0; }
         $pm = (float)($c['pass_marks'] ?? round($fm * 0.4, 0));
         $totalFullMarks += $fm;
         $totalPassMarks += $pm;
-        $totalObtained  += $ob;
-
-        $hasPr   = !empty($c['has_practical']);
-        $thMarks = (float)($c['th_marks'] ?? ($hasPr ? round($ob * 0.75, 1) : $ob));
-        $prMarks = $hasPr ? (float)($c['pr_marks'] ?? round($ob * 0.25, 1)) : 0.0;
-        $totalThObtained += $thMarks;
-        $totalPrObtained += $prMarks;
     }
     
-    $aggregatePct = $totalFullMarks > 0 ? round(($totalObtained / $totalFullMarks) * 100, 1) : 0;
+    $aggregatePct = $totalFullMarks > 0 ? min(round(($totalObtained / $totalFullMarks) * 100, 1), 100.0) : 0;
     $gpa = (float)($result['gpa'] ?? 0);
     $failedCount = (int)($result['failed'] ?? 0);
     $passedCount = (int)($result['passed'] ?? count($courses));
+
+    // Show CDC scale only when subject count is 12 or fewer
+    $showCdcScale = count($courses) <= 12;
 
     // Resolve Overall Grade Letter & Division
     if ($failedCount > 0) {
@@ -521,15 +315,15 @@
 
     // Dynamic Class Teacher's Pedagogical Remark
     if ($failedCount > 0) {
-        $teacherRemark = "Shows active participation in classroom activities, but requires remedial revision and teacher guidance in subject(s) below passing mark. Dedicated daily practice strongly recommended.";
+        $teacherRemark = "Demonstrates good potential in interactive discussions, but requires remedial attention and structured revision in subject(s) below pass marks. Daily practice and subject teacher consultation strongly recommended.";
     } elseif ($gpa >= 3.75) {
-        $teacherRemark = "Outstanding academic performance! Demonstrates exceptional conceptual mastery, analytical precision, and commendable classroom leadership. Consistently dedicated to excellence.";
+        $teacherRemark = "Outstanding academic achievement! Demonstrates exceptional conceptual mastery, analytical precision, and commendable classroom leadership. Consistently dedicated to highest academic standards.";
     } elseif ($gpa >= 3.3) {
-        $teacherRemark = "Very good academic progress throughout the term! Diligent, responsive in discussions, and shows steady dedication. With continuous effort, higher distinction is well within reach.";
+        $teacherRemark = "Very good academic performance! Consistently attentive, diligent, and shows commendable analytical thinking and positive conduct in class discussions.";
     } elseif ($gpa >= 2.8) {
-        $teacherRemark = "Good overall performance. Participates constructively in class lessons; regular home practice and focus on challenging areas will help elevate future semester grades.";
+        $teacherRemark = "Good performance overall. Participates constructively in class; regular home practice and focus on challenging areas will help achieve higher distinction.";
     } elseif ($gpa >= 2.2) {
-        $teacherRemark = "Satisfactory progress. Possesses solid foundational abilities; higher regularity in homework completion and attentive classroom focus will yield even better marks.";
+        $teacherRemark = "Satisfactory progress. Possesses solid foundational ability; higher consistency in homework completion and attentive class focus will yield even better marks.";
     } else {
         $teacherRemark = "Basic pass. Regular attendance, structured homework schedule, and targeted revision in core subjects are encouraged for the upcoming term.";
     }
@@ -560,350 +354,231 @@
 
 <div class="sheet-page">
 
-    {{-- Institutional Header --}}
+    {{-- Header --}}
     <table class="header-table">
         <tr>
             <td class="school-logo-td">
                 @if(!empty($logoSrc))
-                    <img src="{{ $logoSrc }}" style="max-height: 62px; max-width: 90px;" alt="Logo">
+                    <img src="{{ $logoSrc }}" style="max-height:64pt; max-width:80pt;" alt="Logo">
                 @else
-                    <div style="font-size: 15px; font-weight: bold; color: #1a365d; border: 2.5px solid #1a365d; border-radius: 5px; padding: 7px 10px; text-align: center; display: inline-block;">
-                        {{ strtoupper(substr($school?->name ?? config('app.name'), 0, 4)) }}
+                    <div style="width:56pt; height:56pt; border:2pt solid #1e3a8a; border-radius:3pt; font-size:14pt; font-weight:bold; color:#1e3a8a; text-align:center; padding-top:14pt;">
+                        {{ strtoupper(substr($school?->name ?? 'S', 0, 3)) }}
                     </div>
                 @endif
             </td>
             <td class="school-info-td">
-                <h1 class="school-name">{{ $school?->name ?? config('app.name') }}</h1>
+                <h1 class="school-title">{{ $school?->name ?? config('app.name') }}</h1>
                 @if($school?->iemis_code)
-                <p class="school-tagline">Approved by Government of Nepal &bull; CEHRD / EMIS Code: {{ $school->iemis_code }}</p>
+                    <p class="school-affiliation">Gov. of Nepal Approved &bull; EMIS: {{ $school->iemis_code }}</p>
                 @else
-                <p class="school-tagline">Recognized Academic Institution of Excellence</p>
+                    <p class="school-affiliation">Recognised Academic Institution</p>
                 @endif
-                <p class="school-address">
-                    {{ $school?->address ?? 'Kathmandu, Bagmati Province, Nepal' }}
-                    @if(!empty($school?->city) && !str_contains($school?->address ?? '', $school->city)), {{ $school->city }}@endif
-                </p>
+                <p class="school-address">{{ $school?->address ?? 'Kathmandu, Bagmati Province, Nepal' }}</p>
                 <p class="school-contacts">
-                    @if($school?->phone)Tel: <strong>{{ $school->phone }}</strong> &bull; @endif
-                    @if($school?->email)Email: {{ $school->email }} &bull; @endif
-                    Web: {{ $school?->website ?? 'www.nepalschoolhub.com' }}
+                    @if($school?->phone)Tel: {{ $school->phone }} @endif
+                    @if($school?->email)| Email: {{ $school->email }} @endif
+                    | Web: {{ $school?->website ?? 'www.nepalschoolhub.com' }}
                 </p>
             </td>
             <td class="school-qr-td">
                 @if(isset($qrSrc) && !empty($qrSrc))
-                <div style="display: inline-block; text-align: center;">
-                    <img src="{{ $qrSrc }}" style="width: 58px; height: 58px; border: 1.5px solid #cbd5e1; padding: 2px; background: #fff;" alt="Verify QR">
-                    <div style="font-size: 6.5px; color: #1a365d; font-weight: bold; margin-top: 1px; letter-spacing: 0.5px;">SCAN TO VERIFY</div>
-                </div>
+                    <div style="text-align:center; display:inline-block;">
+                        <img src="{{ $qrSrc }}" style="width:56pt; height:56pt; border:1pt solid #cbd5e1; padding:2pt; background:#fff;" alt="QR">
+                        <div style="font-size:6pt; color:#1e3a8a; font-weight:bold; margin-top:1pt;">SCAN TO VERIFY</div>
+                    </div>
                 @else
-                <div style="display: inline-block; width: 56px; height: 56px; border: 1.5px dashed #cbd5e1; border-radius: 4px; text-align: center; padding-top: 12px; font-size: 7.5px; color: #64748b; line-height: 1.2;">
-                    OFFICIAL<br>VERIFIED
-                </div>
+                    <div style="width:56pt; height:56pt; border:1pt dashed #cbd5e1; border-radius:3pt; text-align:center; padding-top:16pt; font-size:7pt; color:#64748b; line-height:1.3;">OFFICIAL<br>VERIFIED</div>
                 @endif
             </td>
         </tr>
     </table>
 
-    {{-- Decorative Accent Bar --}}
-    <div class="bar-navy"></div>
-    <div class="bar-gold"></div>
+    <div class="ribbon-bar"></div>
+    <div class="ribbon-sub"></div>
 
-    {{-- Title Banner --}}
     <div class="title-banner">
         <span class="badge">Official Academic Progress Report Card</span>
         <div class="term-subtitle">
-            {{ $cardSem?->semester_name ?? 'Terminal Examination' }} &bull; Academic Session {{ $school?->current_session_name ?? (date('Y') . '/' . (date('Y') + 1)) }}
+            {{ $cardSem?->semester_name ?? 'Terminal Examination' }} &bull; Academic Session 2083
         </div>
     </div>
 
-    {{-- Student Information Details --}}
-    <table class="profile-card">
+    {{-- Student info --}}
+    <table class="profile-table">
         <tr>
-            <td class="lbl">Student Name:</td>
-            <td class="val val-highlight">{{ $student?->full_name }}</td>
-            <td class="lbl">Student ID / Reg:</td>
-            <td class="val">{{ $student?->admission_no ?? $student?->academic_info?->board_reg_no ?? sprintf('STD-%05d', $student?->id ?? 0) }}</td>
+            <td class="lbl">Student Name</td>
+            <td class="val" style="font-size:10pt; color:#1a365d;" colspan="3">{{ $student?->full_name ?? '—' }}</td>
         </tr>
         <tr>
-            <td class="lbl">Roll Number:</td>
-            <td class="val">
-                <span style="font-size: 13px; color: #1a365d; font-weight: bold;">{{ $promotion?->roll_no ?? $student?->roll_no ?? $student?->academic_info?->roll_number ?? '—' }}</span>
-            </td>
-            <td class="lbl">Class &amp; Section:</td>
-            <td class="val val-highlight">{{ $cardClass?->class_name ?? '—' }} &bull; Sec {{ $cardSec?->section_name ?? 'All' }}</td>
+            <td class="lbl">Roll No.</td>
+            <td class="val" style="font-size:10pt; color:#1e3a8a;">{{ $promotion?->roll_no ?? $student?->roll_no ?? '—' }}</td>
+            <td class="lbl">Class &amp; Section</td>
+            <td class="val">{{ $cardClass?->class_name ?? '—' }} &bull; Sec {{ $cardSec?->section_name ?? 'All' }}</td>
         </tr>
         <tr>
-            <td class="lbl">Father / Guardian:</td>
-            <td class="val">{{ $student?->guardian?->full_name ?? $student?->parents?->first()?->full_name ?? 'Parent / Guardian' }}</td>
-            <td class="lbl">Attendance Record:</td>
-            <td class="val">
-                @if(!empty($attendance) && ($attendance['total'] ?? 0) > 0)
-                    <strong>{{ $attendance['present'] }}</strong> / {{ $attendance['total'] }} Days (<strong>{{ $attendance['percentage'] }}%</strong>)
-                @else
-                    Regular (100% Verified)
-                @endif
-            </td>
+            <td class="lbl">Student ID</td>
+            <td class="val" colspan="3">{{ $student?->admission_no ?? sprintf('STD-%05d', $student?->id ?? 0) }}</td>
         </tr>
         <tr>
-            <td class="lbl">Date of Birth:</td>
-            <td class="val">{{ $student?->birthday ? date('d M Y', strtotime($student->birthday)) : '—' }}</td>
-            <td class="lbl">Date of Issue:</td>
-            <td class="val">{{ now()->format('d M Y') }} (@bsDateEn(now()->toDateString()))</td>
+            <td class="lbl">Date of Issue</td>
+            <td class="val" colspan="3">{{ now()->format('d M Y') }} <span style="font-size:8pt; font-weight:normal; color:#475569;">(@bsDateEn(now()->toDateString()))</span></td>
         </tr>
     </table>
 
-    {{-- Academic Marks Table (CDC Standard Theory & Practical Component Breakdown) --}}
+    {{-- Marks table --}}
     <table class="marks-table">
         <thead>
             <tr>
-                <th rowspan="2" style="width: 4%;">SN</th>
-                <th rowspan="2" style="width: 25%;" class="th-left">Subject / Course Name</th>
-                <th rowspan="2" style="width: 6%;">Credit</th>
-                <th colspan="3" style="width: 21%; background: #1a365d;">Theory (TH)</th>
-                <th colspan="3" style="width: 21%; background: #065f46;">Practical / CAS (PR)</th>
-                <th colspan="2" style="width: 15%; background: #854d0e;">Total &amp; Grade</th>
-                <th rowspan="2" style="width: 8%;">Status</th>
-            </tr>
-            <tr style="background: #f1f5f9; color: #1e293b; font-size: 8px;">
-                <th style="background: #2563eb; color: #ffffff; padding: 3px 2px;">FM</th>
-                <th style="background: #2563eb; color: #ffffff; padding: 3px 2px;">Obt</th>
-                <th style="background: #2563eb; color: #ffffff; padding: 3px 2px;">Grade</th>
-
-                <th style="background: #059669; color: #ffffff; padding: 3px 2px;">FM</th>
-                <th style="background: #059669; color: #ffffff; padding: 3px 2px;">Obt</th>
-                <th style="background: #059669; color: #ffffff; padding: 3px 2px;">Grade</th>
-
-                <th style="background: #a16207; color: #ffffff; padding: 3px 2px;">Obt</th>
-                <th style="background: #a16207; color: #ffffff; padding: 3px 2px;">Grade (GP)</th>
+                <th style="width:4%;">SN</th>
+                <th class="th-left" style="width:40%;">Subject / Course Name</th>
+                <th style="width:10%;">Full<br>Marks</th>
+                <th style="width:10%;">Pass<br>Marks</th>
+                <th style="width:10%;">Marks<br>Obtained</th>
+                <th style="width:8%;">%</th>
+                <th style="width:10%;">Grade<br>Point</th>
+                <th style="width:8%;">Letter<br>Grade</th>
             </tr>
         </thead>
         <tbody>
             @php $sn = 1; @endphp
-            @foreach($courses as $c)
+            @foreach($courses as $idx => $c)
             @php
                 $fm  = (float)($c['full_marks'] ?? 100);
-                $ob  = (float)$c['final_marks'];
-                if ($fm < $ob && $ob <= 100) { $fm = 100.0; }
                 $pm  = (float)($c['pass_marks'] ?? round($fm * 0.4, 0));
-                $pct = $fm > 0 ? round(($ob / $fm) * 100, 1) : $ob;
+                $ob  = (float)$c['final_marks'];
+                $pct = min($fm > 0 ? round(($ob / $fm) * 100, 1) : $ob, 100.0);
                 $passed = (bool)($c['passed'] ?? ($ob >= $pm));
-
-                $hasPr   = !empty($c['has_practical']);
-                $thFm    = (float)($c['th_fm'] ?? ($hasPr ? 75.0 : $fm));
-                $thMarks = (float)($c['th_marks'] ?? ($hasPr ? round($ob * 0.75, 1) : $ob));
-                $thGrade = $c['th_grade'] ?? $c['grade'];
-                $prFm    = $hasPr ? (float)($c['pr_fm'] ?? 25.0) : null;
-                $prMarks = $hasPr ? (float)($c['pr_marks'] ?? round($ob * 0.25, 1)) : null;
-                $prGrade = $hasPr ? ($c['pr_grade'] ?? 'A') : null;
-                $credit  = (float)($c['credit_hour'] ?? 4.0);
+                $rowClass = ($idx % 2 === 1) ? 'alt' : '';
+                $gradeColor = match(true) {
+                    in_array($c['grade'], ['A+','A'])   => '#166534',
+                    in_array($c['grade'], ['B+','B'])   => '#1e40af',
+                    in_array($c['grade'], ['C+','C'])   => '#b45309',
+                    in_array($c['grade'], ['D'])        => '#7c3aed',
+                    default                             => '#dc2626',
+                };
             @endphp
-            <tr>
-                <td style="font-size: 9.5px; color: #64748b;">{{ $sn++ }}</td>
-                <td class="td-left" style="font-size: 10px;">
-                    {{ $c['course']?->course_name ?? $c['course_name'] ?? '—' }}
-                    @if($hasPr)
-                        <span style="font-size: 7px; font-weight: bold; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; border-radius: 2px; padding: 0.5px 2px; margin-left: 2px;">TH+PR</span>
-                    @else
-                        <span style="font-size: 7px; font-weight: bold; background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; border-radius: 2px; padding: 0.5px 2px; margin-left: 2px;">TH</span>
-                    @endif
-                </td>
-                <td style="font-size: 9.5px; font-weight: bold; color: #475569;">{{ number_format($credit, 1) }}</td>
-
-                {{-- Theory (TH) --}}
-                <td style="font-size: 9.5px; color: #475569;">{{ number_format($thFm, 0) }}</td>
-                <td style="font-size: 10px; font-weight: bold; color: #1e3a8a;">{{ round($thMarks, 1) }}</td>
-                <td style="font-size: 9.5px; font-weight: bold; color: #1e3a8a;">{{ $thGrade }}</td>
-
-                {{-- Practical (PR) --}}
-                @if($hasPr)
-                    <td style="font-size: 9.5px; color: #475569;">{{ number_format($prFm, 0) }}</td>
-                    <td style="font-size: 10px; font-weight: bold; color: #065f46;">{{ round($prMarks, 1) }}</td>
-                    <td style="font-size: 9.5px; font-weight: bold; color: #065f46;">{{ $prGrade }}</td>
-                @else
-                    <td style="font-size: 9.5px; color: #cbd5e1;">—</td>
-                    <td style="font-size: 9.5px; color: #cbd5e1;">—</td>
-                    <td style="font-size: 8px; color: #94a3b8; font-style: italic;">No PR</td>
-                @endif
-
-                {{-- Total & Final Grade --}}
-                <td style="font-size: 10.5px; font-weight: bold; color: {{ $passed ? '#0f172a' : '#dc2626' }};">
-                    {{ round($ob, 1) }}
-                </td>
-                <td style="font-size: 10px; font-weight: bold; color: {{ $passed ? '#15803d' : '#dc2626' }};">
-                    {{ $c['grade'] }} ({{ number_format((float)$c['point'], 2) }})
-                </td>
-                <td style="font-size: 8.5px; font-weight: bold; color: {{ $passed ? '#15803d' : '#dc2626' }};">
-                    {{ $passed ? 'PASSED' : 'RETEST' }}
-                </td>
+            <tr class="{{ $rowClass }}">
+                <td>{{ $sn++ }}</td>
+                <td class="td-left">{{ $c['course']?->course_name ?? '—' }}</td>
+                <td style="font-weight:bold;">{{ number_format($fm, 0) }}</td>
+                <td style="color:#475569;">{{ number_format($pm, 0) }}</td>
+                <td style="font-weight:bold; font-size:10.5pt; color:{{ $passed ? '#0f172a' : '#dc2626' }};">{{ round($ob, 1) }}</td>
+                <td style="color:#64748b;">{{ $pct }}%</td>
+                <td style="font-weight:bold; color:#1e3a8a;">{{ number_format((float)$c['point'], 2) }}</td>
+                <td style="font-weight:bold; font-size:11pt; color:{{ $passed ? $gradeColor : '#dc2626' }};">{{ $c['grade'] }}</td>
             </tr>
             @endforeach
 
-            {{-- Total & Summary Row --}}
             <tr class="total-row">
-                <td colspan="2" style="text-align: right; padding-right: 6px; font-size: 9.5px; font-weight: bold; text-transform: uppercase;">
-                    Grand Total:
-                </td>
-                <td style="font-size: 9.5px; font-weight: bold;">{{ count($courses) * 4.0 }}</td>
-                <td colspan="3" style="font-size: 9px; font-weight: bold; color: #1e3a8a;">
-                    TH: {{ round($totalThObtained, 1) }}
-                </td>
-                <td colspan="3" style="font-size: 9px; font-weight: bold; color: #065f46;">
-                    PR: {{ round($totalPrObtained, 1) }}
-                </td>
-                <td style="font-size: 11px; font-weight: bold; color: #1a365d;">
-                    {{ round($totalObtained, 1) }}
-                </td>
-                <td style="font-size: 10.5px; font-weight: bold; color: {{ $failedCount === 0 ? '#15803d' : '#dc2626' }};">
-                    {{ $overallGrade }} ({{ number_format($gpa, 2) }})
-                </td>
-                <td style="font-size: 8.5px; font-weight: bold; color: {{ $failedCount === 0 ? '#15803d' : '#dc2626' }};">
-                    {{ $failedCount === 0 ? 'PASSED' : 'RETEST' }}
-                </td>
+                <td colspan="2" style="text-align:right; padding-right:8pt; text-transform:uppercase; letter-spacing:0.2pt;">Grand Total &amp; Aggregate:</td>
+                <td>{{ number_format($totalFullMarks, 0) }}</td>
+                <td>{{ number_format($totalPassMarks, 0) }}</td>
+                <td style="font-size:10pt; font-weight:bold;">{{ round($totalObtained, 1) }}</td>
+                <td>{{ $aggregatePct }}%</td>
+                <td style="font-size:10pt; font-weight:bold;">{{ number_format($gpa, 2) }}</td>
+                <td style="font-size:11pt; font-weight:bold; color:{{ $failedCount === 0 ? '#166534' : '#dc2626' }};">{{ $overallGrade }}</td>
             </tr>
         </tbody>
     </table>
 
-    {{-- Executive Summary KPI Cards --}}
+    {{-- KPI band --}}
     <table class="kpi-table">
         <tr>
-            <td>
-                <div class="kpi-val">{{ round($totalObtained, 1) }} <span style="font-size: 11px; font-weight: normal; color: #64748b;">/ {{ number_format($totalFullMarks, 0) }}</span></div>
+            <td class="kpi-blue">
+                <div class="kpi-val">{{ round($totalObtained, 0) }}<span style="font-size:9pt; font-weight:normal; color:#64748b;"> / {{ number_format($totalFullMarks, 0) }}</span></div>
                 <div class="kpi-lbl">Total Marks</div>
             </td>
-            <td>
+            <td class="kpi-blue">
                 <div class="kpi-val">{{ $aggregatePct }}%</div>
-                <div class="kpi-lbl">Aggregate Score</div>
+                <div class="kpi-lbl">Percentage</div>
             </td>
-            <td>
-                <div class="kpi-val" style="color: #1a365d;">{{ number_format($gpa, 2) }}</div>
-                <div class="kpi-lbl">Grade Point (GPA)</div>
+            <td class="kpi-blue">
+                <div class="kpi-val">{{ number_format($gpa, 2) }}</div>
+                <div class="kpi-lbl">GPA</div>
             </td>
-            <td class="kpi-gold">
-                <div class="kpi-val gold">{{ $overallGrade }} <span style="font-size: 12px; font-weight: bold;">({{ $division }})</span></div>
-                <div class="kpi-lbl">Division / Result</div>
+            <td class="kpi-amber">
+                <div class="kpi-val amber">{{ $overallGrade }} <span style="font-size:9pt; font-weight:bold;">({{ $division }})</span></div>
+                <div class="kpi-lbl">Division</div>
             </td>
-            <td class="kpi-gold">
+            <td class="kpi-amber">
                 @if(!empty($result['rank']))
-                    <div class="kpi-val gold">{{ ordinal((int)$result['rank']) }}</div>
+                    <div class="kpi-val amber">{{ ordinal((int)$result['rank']) }}</div>
                     <div class="kpi-lbl">Class Rank</div>
                 @else
-                    <div class="kpi-val" style="color: {{ $failedCount === 0 ? '#15803d' : '#dc2626' }}; font-size: 13px;">
-                        {{ $resultStatus }}
-                    </div>
-                    <div class="kpi-lbl">Status</div>
+                    <div class="kpi-val {{ $failedCount === 0 ? 'green' : 'red' }}" style="font-size:11pt;">{{ $resultStatus }}</div>
+                    <div class="kpi-lbl">Standing</div>
                 @endif
             </td>
         </tr>
     </table>
 
-    {{-- Teacher Evaluation & Behavioral Matrix --}}
-    <table class="eval-table">
-        <tr>
-            <td style="width: 58%; padding-right: 6px;">
-                <div class="eval-box">
-                    <div class="eval-header">Class Teacher's Evaluative Assessment &amp; Remarks</div>
-                    <p class="eval-text">
-                        "{{ $teacherRemark }}"
-                    </p>
-                    <div style="margin-top: 5px; padding-top: 3px; border-top: 1px dashed #cbd5e1; font-size: 9px; color: #475569;">
-                        <strong>Teacher's Personal Note:</strong>
-                        <div style="border-bottom: 1.2px dotted #94a3b8; height: 14px; margin-top: 2px;"></div>
-                    </div>
-                </div>
-            </td>
-            <td style="width: 42%; padding-left: 6px;">
-                <div class="eval-box">
-                    <div class="eval-header">Co-Curricular &amp; Behavioral Matrix</div>
-                    <table class="traits-table">
-                        <tr>
-                            <td class="traits-lbl">Discipline &amp; Decorum:</td>
-                            <td class="traits-val">{{ $traitDiscipline }}</td>
-                        </tr>
-                        <tr>
-                            <td class="traits-lbl">Classroom Participation:</td>
-                            <td class="traits-val">{{ $traitParticipation }}</td>
-                        </tr>
-                        <tr>
-                            <td class="traits-lbl">Homework Regularity:</td>
-                            <td class="traits-val">{{ $traitHomework }}</td>
-                        </tr>
-                        <tr>
-                            <td class="traits-lbl">Teamwork &amp; Conduct:</td>
-                            <td class="traits-val">{{ $traitTeamwork }}</td>
-                        </tr>
-                    </table>
-                </div>
-            </td>
-        </tr>
-    </table>
-
-    {{-- Official National CDC Grading Scale --}}
+    {{-- Evaluation --}}
+    {{-- CDC scale (shown only when content fits on one page) --}}
+    @if($showCdcScale)
     <div class="scale-box">
-        <div class="scale-title">Curriculum Development Centre (CDC) &bull; National Grading Scale Reference</div>
+        <div class="scale-title">CDC National Grading Scale Reference (Nepal Curriculum Development Centre)</div>
         <table class="scale-table">
             <tr>
-                <th>Score Range</th>
-                <td>90%–100%</td><td>80%–89%</td><td>70%–79%</td><td>60%–69%</td>
-                <td>50%–59%</td><td>40%–49%</td><td>35%–39%</td><td>Below 35%</td>
+                <th>Interval</th>
+                <td>90–100%</td><td>80–89%</td><td>70–79%</td><td>60–69%</td>
+                <td>50–59%</td><td>40–49%</td><td>35–39%</td><td>&lt;35%</td>
             </tr>
             <tr class="scale-grade">
-                <th>Letter Grade</th>
+                <th>Grade</th>
                 <td>A+</td><td>A</td><td>B+</td><td>B</td>
                 <td>C+</td><td>C</td><td>D</td><td>NG</td>
             </tr>
             <tr class="scale-point">
-                <th>Grade Point</th>
+                <th>Points</th>
                 <td>4.0</td><td>3.6</td><td>3.2</td><td>2.8</td>
                 <td>2.4</td><td>2.0</td><td>1.6</td><td>0.0</td>
             </tr>
             <tr>
-                <th>Descriptor</th>
+                <th>Level</th>
                 <td>Outstanding</td><td>Excellent</td><td>Very Good</td><td>Good</td>
                 <td>Satisfactory</td><td>Acceptable</td><td>Basic</td><td>Non-Graded</td>
             </tr>
         </table>
     </div>
+    @endif
 
-    {{-- Authorized Institutional Signatures --}}
+    {{-- Signatures --}}
     <table class="sig-table">
         <tr>
             <td>
                 <div class="sig-space"></div>
                 <div class="sig-line"></div>
-                <div class="sig-role">{{ $cTeacher?->full_name ?? 'Class Teacher' }}</div>
-                <div class="sig-desc">Class In-Charge Signature</div>
+                <div class="sig-title">{{ $cTeacher?->full_name ?? 'Class Teacher' }}</div>
+                <div class="sig-sub">Class In-Charge</div>
             </td>
             <td>
                 <div class="sig-space"></div>
                 <div class="sig-line"></div>
-                <div class="sig-role">Exam Controller</div>
-                <div class="sig-desc">Controller of Examinations</div>
+                <div class="sig-title">Exam Controller</div>
+                <div class="sig-sub">Controller of Examinations</div>
             </td>
             <td>
-                <div class="sig-space" style="text-align: center;">
-                    <div style="display: block; width: 30px; height: 30px; margin: 0 auto; border: 1.5px dashed #94a3b8; border-radius: 50%; line-height: 30px; font-size: 7px; color: #94a3b8; text-align: center;">SEAL</div>
+                <div class="sig-space" style="text-align:center;">
+                    <div style="display:block; width:28pt; height:28pt; margin:0 auto; border:1pt dashed #94a3b8; border-radius:50%; font-size:6pt; color:#94a3b8; text-align:center; padding-top:8pt;">SEAL</div>
                 </div>
                 <div class="sig-line"></div>
-                <div class="sig-role">Principal / Headmaster</div>
-                <div class="sig-desc">Official Institutional Seal</div>
+                <div class="sig-title">Principal / Headmaster</div>
+                <div class="sig-sub">Official Seal &amp; Signature</div>
             </td>
             <td>
                 <div class="sig-space"></div>
                 <div class="sig-line"></div>
-                <div class="sig-role">Parent / Guardian</div>
-                <div class="sig-desc">Acknowledgment Signature</div>
+                <div class="sig-title">Parent / Guardian</div>
+                <div class="sig-sub">Acknowledgment Signature</div>
             </td>
         </tr>
     </table>
 
-    {{-- Security Footer --}}
-    <div class="footer-band">
-        <span>This certified Academic Report Card is an authentic legal record issued by <strong>{{ $school?->name ?? config('app.name') }}</strong>. Unauthorized alteration is invalid.</span>
+    {{-- Footer --}}
+    <div class="cert-footer">
+        This certified Academic Report Card is an official legal record issued by <strong>{{ $school?->name ?? config('app.name') }}</strong>. Any alteration invalidates this document.
         @if(isset($verifyToken))
-        <br>
-        <span style="font-family: monospace; font-size: 8px; color: #334155; font-weight: bold;">
-            Verification Code: {{ $verifyToken }} &bull; Scan QR Code or visit {{ route('results.verify', ['token' => $verifyToken]) }}
-        </span>
+        <br><span style="font-family:monospace; font-size:6.5pt; color:#475569;">Token: {{ $verifyToken }} &bull; Verify at: {{ route('results.verify', ['token' => $verifyToken]) }}</span>
         @endif
     </div>
 
