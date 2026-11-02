@@ -30,4 +30,12 @@ class Section extends Model
     public function promotions() {
         return $this->hasMany(Promotion::class, 'section_id', 'id');
     }
+
+    /**
+     * Get the assigned teachers (subject / class-teacher assignments) for this section.
+     */
+    public function assignedTeachers()
+    {
+        return $this->hasMany(AssignedTeacher::class, 'section_id', 'id');
+    }
 }

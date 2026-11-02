@@ -130,7 +130,7 @@
         <span class="sidebar-link-icon"><i class="bi bi-gear-wide-connected text-amber-500"></i></span>
         <span class="sidebar-link-text">School Setup</span>
     </a>
-    @role('admin|principal')
+    @canany(['edit academic settings','view system settings','edit system settings'])
     <a href="{{ route('school.profile.edit') }}" class="sidebar-link {{ request()->is('school/profile') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-building-fill"></i></span>
         <span class="sidebar-link-text">School Profile</span>
@@ -139,23 +139,25 @@
         <span class="sidebar-link-icon"><i class="bi bi-qr-code-scan"></i></span>
         <span class="sidebar-link-text">Payment QR Codes</span>
     </a>
-    @endrole
-    @role('admin|principal')
+    @endcanany
+    @can('view analytics')
     <a href="{{ route('central_analytics.index') }}" class="sidebar-link {{ request()->is('analytics*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-pie-chart-fill"></i></span>
         <span class="sidebar-link-text">Analytics</span>
     </a>
+    @endcan
+    @can('view reports')
     <a href="{{ route('reports.index') }}" class="sidebar-link {{ request()->is('reports*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-file-earmark-bar-graph-fill"></i></span>
         <span class="sidebar-link-text">Reports</span>
     </a>
+    @endcan
     @can('view students')
     <a href="{{ route('iemis.export') }}" class="sidebar-link {{ request()->is('iemis/export*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-file-earmark-spreadsheet-fill"></i></span>
         <span class="sidebar-link-text">IEMIS Export</span>
     </a>
     @endcan
-    @endrole
     <a href="{{ route('notifications.index') }}" class="sidebar-link {{ request()->is('notifications*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-bell-fill"></i></span>
         <span class="sidebar-link-text">Notifications</span>
@@ -165,8 +167,7 @@
         @endif
     </a>
 
-    {{-- Students (Admin / Admissions only) --}}
-    @unlessrole('student|parent|teacher|class-teacher')
+    {{-- Students — permission-gated via matrix --}}
     @canany(['view students','create students'])
     <p class="sidebar-section-label">Students & Admissions</p>
     <a href="{{ route('student.list.show') }}" class="sidebar-link {{ request()->is('students/view*') ? 'active' : '' }}">
@@ -210,16 +211,15 @@
         <span class="sidebar-link-text">Student Leaderboard</span>
     </a>
     @endcanany
-    @endunlessrole
 
-    {{-- Parents --}}
-    @unlessrole('student|parent|teacher|class-teacher')
+    {{-- Parents — permission-gated via matrix --}}
+    @canany(['view students','create students'])
     <p class="sidebar-section-label">Parents</p>
     <a href="{{ route('parents.index') }}" class="sidebar-link {{ request()->is('parents*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-people"></i></span>
         <span class="sidebar-link-text">Manage Parents</span>
     </a>
-    @endunlessrole
+    @endcanany
 
     {{-- Student self --}}
     @role('student')
@@ -470,8 +470,7 @@
     </a>
     @endrole
 
-    {{-- Teachers (Admin / HR only) --}}
-    @unlessrole('student|parent|teacher|class-teacher')
+    {{-- Teachers — permission-gated via matrix --}}
     @canany(['view teachers','create teachers'])
     <p class="sidebar-section-label">Teachers</p>
     <a href="{{ route('teacher.list.show') }}" class="sidebar-link {{ request()->is('teachers/view/list') ? 'active' : '' }}">
@@ -495,7 +494,6 @@
     @endunless
     @endcan
     @endcanany
-    @endunlessrole
 
     {{-- Teacher self --}}
     @role('teacher|class-teacher')
@@ -649,8 +647,7 @@
     </a>
     @endrole
 
-    {{-- Academic — hide for teacher/class-teacher/student/parent --}}
-    @unlessrole('teacher|class-teacher|student|parent')
+    {{-- Academic — permission-gated via matrix --}}
     @canany(['view classes','view courses','view routines','view syllabi','view academic settings'])
     <p class="sidebar-section-label">Academic</p>
     <a href="{{ route('events.show') }}" class="sidebar-link {{ request()->is('calendar-event*') ? 'active' : '' }}">
@@ -709,10 +706,8 @@
     </a>
     @endcan
     @endcanany
-    @endunlessrole
 
-    {{-- Attendance — hide for teacher/class-teacher/student/parent --}}
-    @unlessrole('teacher|class-teacher|student|parent')
+    {{-- Attendance — permission-gated via matrix --}}
     @canany(['take attendances','view attendances'])
     <p class="sidebar-section-label">Attendance</p>
     @can('take attendances')
@@ -736,10 +731,8 @@
     </a>
     @endcan
     @endcanany
-    @endunlessrole
 
-    {{-- Exams & Marks — hide for teacher/class-teacher/student/parent --}}
-    @unlessrole('teacher|class-teacher|student|parent')
+    {{-- Exams & Marks — permission-gated via matrix --}}
     @canany(['view exams','create exams','save marks','view marks'])
     <p class="sidebar-section-label">Exams & Marks</p>
     @can('view exams')
@@ -802,10 +795,8 @@
     </a>
     @endcanany
     @endcanany
-    @endunlessrole
 
-    {{-- Finance --}}
-    @unlessrole('student|parent|teacher|class-teacher')
+    {{-- Finance — permission-gated via matrix --}}
     @canany(['manage finance','view invoices','create invoices','view payments','view own invoices'])
     <p class="sidebar-section-label">Finance</p>
     @can('manage finance')
@@ -846,7 +837,7 @@
         <span class="sidebar-link-icon"><i class="bi bi-receipt-cutoff"></i></span>
         <span class="sidebar-link-text">Invoices & Payments</span>
     </a>
-    @role('admin|principal|accountant')
+    @can('manage finance')
     <a href="{{ route('school.profile.payment-qr') }}" class="sidebar-link {{ request()->is('school/profile/payment-qr*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-qr-code-scan"></i></span>
         <span class="sidebar-link-text">Payment QR Codes</span>
@@ -863,7 +854,7 @@
         <span class="sidebar-badge">{{ $pendingProofCount }}</span>
         @endif
     </a>
-    @endrole
+    @endcan
     @can('manage finance')
     <a href="{{ route('finance.expenses') }}" class="sidebar-link {{ request()->is('finance/expenses*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-arrow-up-circle-fill"></i></span>
@@ -911,10 +902,8 @@
     </a>
     @endcan
     @endcanany
-    @endunlessrole
 
-    {{-- Library --}}
-    @unlessrole('student|parent|teacher|class-teacher')
+    {{-- Library — permission-gated via matrix --}}
     @canany(['view books','create books','issue books','return books'])
     <p class="sidebar-section-label">Library</p>
     <a href="{{ route('library.index') }}" class="sidebar-link {{ request()->is('library') ? 'active' : '' }}">
@@ -934,10 +923,9 @@
     </a>
     @endcan
     @endcanany
-    @endunlessrole
 
-    {{-- Hostel --}}
-    @unlessrole('student|parent|teacher|class-teacher')
+    {{-- Hostel — permission-gated via matrix --}}
+    @canany(['manage hostel','view hostel'])
     <p class="sidebar-section-label">Hostel Management</p>
     <a href="{{ route('hostel.hostels.index') }}" class="sidebar-link {{ request()->is('hostel/hostels*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-building-fill"></i></span>
@@ -967,10 +955,10 @@
         <span class="sidebar-link-icon"><i class="bi bi-tools"></i></span>
         <span class="sidebar-link-text">Maintenance Requests</span>
     </a>
-    @endunlessrole
+    @endcanany
 
-    {{-- Transport --}}
-    @unlessrole('student|parent|teacher|class-teacher')
+    {{-- Transport — permission-gated via matrix --}}
+    @canany(['manage transport','view transport'])
     <p class="sidebar-section-label">Transport Management</p>
     <a href="{{ route('transport.index') }}" class="sidebar-link {{ request()->is('transport') && !request()->is('transport/*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-speedometer2"></i></span>
@@ -1004,10 +992,9 @@
         <span class="sidebar-link-icon"><i class="bi bi-file-earmark-bar-graph-fill"></i></span>
         <span class="sidebar-link-text">Transport Reports</span>
     </a>
-    @endunlessrole
+    @endcanany
 
-    {{-- Certificates --}}
-    @unlessrole('student|parent|teacher|class-teacher')
+    {{-- Certificates — permission-gated via matrix --}}
     @canany(['view students','create students'])
     <p class="sidebar-section-label">Certificates &amp; ID Cards</p>
     <a href="{{ route('certificates.index') }}" class="sidebar-link {{ request()->is('certificates') ? 'active' : '' }}">
@@ -1022,17 +1009,15 @@
         <span class="sidebar-link-icon"><i class="bi bi-people-fill"></i></span>
         <span class="sidebar-link-text">Bulk Issue</span>
     </a>
-    @role('admin|principal')
+    @can('edit academic settings')
     <a href="{{ route('id-card-templates.index') }}" class="sidebar-link {{ request()->is('id-card-templates*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-credit-card-2-front-fill"></i></span>
         <span class="sidebar-link-text">ID Card Designer</span>
     </a>
-    @endrole
+    @endcan
     @endcanany
-    @endunlessrole
 
-    {{-- HR --}}
-    @unlessrole('student|parent|teacher|class-teacher')
+    {{-- HR & Staff — permission-gated via matrix --}}
     @canany(['view staff','create staff'])
     <p class="sidebar-section-label">HR & Staff</p>
     <a href="{{ route('hr.dashboard') }}" class="sidebar-link {{ request()->is('hr') ? 'active' : '' }}">
@@ -1078,10 +1063,8 @@
         <span class="sidebar-link-text">Staff Offboarding</span>
     </a>
     @endcanany
-    @endunlessrole
 
-    {{-- Reception & Front Desk --}}
-    @unlessrole('student|parent|teacher|class-teacher')
+    {{-- Reception & Front Desk — permission-gated via matrix --}}
     @canany(['view staff','create staff','view academic settings'])
     <p class="sidebar-section-label">Reception & Front Desk</p>
     <a href="{{ route('visitors.index') }}" class="sidebar-link {{ request()->is('visitors*') ? 'active' : '' }}">
@@ -1089,10 +1072,8 @@
         <span class="sidebar-link-text">Visitor Log & Passes</span>
     </a>
     @endcanany
-    @endunlessrole
 
-    {{-- Inventory --}}
-    @unlessrole('student|parent|teacher|class-teacher')
+    {{-- Inventory & Assets — permission-gated via matrix --}}
     @canany(['view inventory','manage inventory'])
     <p class="sidebar-section-label">Inventory & Assets</p>
     <a href="{{ route('inventory.dashboard') }}" class="sidebar-link {{ request()->is('inventory') ? 'active' : '' }}">
@@ -1116,10 +1097,8 @@
         <span class="sidebar-link-text">Purchase Orders</span>
     </a>
     @endcanany
-    @endunlessrole
 
-    {{-- Communication --}}
-    @unlessrole('student|parent|teacher|class-teacher')
+    {{-- Communication — permission-gated via matrix --}}
     @canany(['view notices','create notices','view events'])
     <p class="sidebar-section-label">Communication</p>
     @can('create notices')
@@ -1153,7 +1132,6 @@
     </a>
     @endcan
     @endcanany
-    @endunlessrole
 
     {{-- AI (for admin/principal only - teachers have it in their own section) --}}
     @role('admin|principal')
@@ -1164,8 +1142,7 @@
     </a>
     @endrole
 
-    {{-- Administration --}}
-    @unlessrole('student|parent|teacher|class-teacher')
+    {{-- Administration — permission-gated via matrix --}}
     @canany(['view academic settings','manage roles','promote students'])
     <p class="sidebar-section-label">Administration</p>
     @can('view academic settings')
@@ -1189,7 +1166,6 @@
     </a>
     @endcan
     @endcanany
-    @endunlessrole
 
 @endrole
 

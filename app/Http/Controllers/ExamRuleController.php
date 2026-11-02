@@ -119,6 +119,18 @@ class ExamRuleController extends Controller
             $examId    = (int) $request->exam_id;
             $courseId  = (int) $request->course_id;
 
+            $totalMarks = (float) $request->total_marks;
+            $passMarks  = (float) $request->pass_marks;
+
+            // Pass Marks must never exceed Full Marks (requirement #7)
+            if ($passMarks > $totalMarks) {
+                $msg = 'Pass Marks cannot be greater than Full Marks.';
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['status' => 'error', 'message' => $msg], 422);
+                }
+                return back()->with('error', $msg);
+            }
+
             // No rule yet — create exam + rule
             if ($ruleId === 0) {
                 // Find or create exam for this course
@@ -143,21 +155,36 @@ class ExamRuleController extends Controller
                     'school_id'               => $schoolId,
                     'exam_id'                 => $examId,
                     'session_id'              => $sessionId,
-                    'total_marks'             => $request->total_marks,
-                    'pass_marks'              => $request->pass_marks,
+                    'total_marks'             => $totalMarks,
+                    'pass_marks'              => $passMarks,
                     'marks_distribution_note' => '{}',
                 ]);
-                return back()->with('status', 'Exam rule created!');
+                $msg = 'Exam rule created!';
+                if ($request->ajax() || $request->wantsJson()) {
+                    return response()->json(['status' => 'success', 'message' => $msg, 'full_marks' => $totalMarks, 'pass_marks' => $passMarks]);
+                }
+                return back()->with('status', $msg);
             }
 
             // Rule exists — update it
             \App\Models\ExamRule::where('id', $ruleId)->update([
-                'total_marks' => $request->total_marks,
-                'pass_marks'  => $request->pass_marks,
+                'total_marks' => $totalMarks,
+                'pass_marks'  => $passMarks,
             ]);
 
-            return back()->with('status', 'Exam rule updated!');
+            // Clamp any existing marks that now exceed the new full marks so no
+            // stored value is mathematically impossible (e.g. 60 out of 50).
+            \App\Models\ExamRule::clampMarksToFullMarks($examId, $totalMarks);
+
+            $msg = 'Exam rule updated!';
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'success', 'message' => $msg, 'full_marks' => $totalMarks, 'pass_marks' => $passMarks]);
+            }
+            return back()->with('status', $msg);
         } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+            }
             return back()->with('error', $e->getMessage());
         }
     }

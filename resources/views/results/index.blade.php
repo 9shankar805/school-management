@@ -116,6 +116,37 @@
         </div>
     </div>
 
+    {{-- Student Quick Search --}}
+    <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="p-6">
+            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-2">
+                <i class="bi bi-person-search text-indigo-500"></i> Quick Student Search
+            </h3>
+            <p class="text-xs text-slate-400 mb-4">Search any student by name to jump directly to their individual result</p>
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 pointer-events-none">
+                        <i class="bi bi-search text-sm"></i>
+                    </span>
+                    <input
+                        type="text"
+                        id="quickStudentSearch"
+                        placeholder="Type student name…"
+                        autocomplete="off"
+                        class="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    >
+                </div>
+                <button type="button" id="quickSearchBtn"
+                    class="px-4 py-2.5 text-sm font-bold text-white rounded-xl transition shadow-sm"
+                    style="background-color:#4f46e5;">
+                    Search
+                </button>
+            </div>
+            {{-- Results dropdown --}}
+            <div id="quickSearchResults" class="mt-2 hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800"></div>
+        </div>
+    </div>
+
 </div>
 
 @push('scripts')
@@ -169,6 +200,70 @@ function go(type) {
         window.open(urls[type], '_blank');
     }
 }
+
+// ── Quick Student Search ─────────────────────────────────────────────────────
+(function () {
+    const input   = document.getElementById('quickStudentSearch');
+    const btn     = document.getElementById('quickSearchBtn');
+    const box     = document.getElementById('quickSearchResults');
+    const semSel  = document.getElementById('rSemId');
+
+    if (!input || !btn || !box) return;
+
+    let debounce;
+
+    function doSearch() {
+        const query = input.value.trim();
+        if (query.length < 2) { box.innerHTML = ''; box.classList.add('hidden'); return; }
+
+        const semId = semSel.value || '';
+
+        fetch(`/results/students/search?q=${encodeURIComponent(query)}`)
+            .then(r => r.json())
+            .then(data => {
+                const students = data.students || data || [];
+                if (!students.length) {
+                    box.innerHTML = '<p class="px-4 py-3 text-xs text-slate-400">No students found.</p>';
+                    box.classList.remove('hidden');
+                    return;
+                }
+                box.innerHTML = students.map(s => {
+                    const url = `/results/student/${s.id}` + (semId ? `?semester_id=${semId}` : '');
+                    return `<a href="${url}" class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 dark:hover:bg-slate-800 transition group">
+                        <img src="${s.avatar || '/imgs/default-avatar.png'}" class="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-slate-200" onerror="this.src='/imgs/default-avatar.png'" alt="">
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 truncate">${s.name || s.full_name}</p>
+                            <p class="text-xs text-slate-400 truncate">${s.class_name || ''} ${s.section_name ? '· Sec ' + s.section_name : ''}</p>
+                        </div>
+                        <i class="bi bi-arrow-right-short ml-auto text-slate-300 group-hover:text-indigo-500 text-lg flex-shrink-0"></i>
+                    </a>`;
+                }).join('');
+                box.classList.remove('hidden');
+            })
+            .catch(() => {
+                box.innerHTML = '<p class="px-4 py-3 text-xs text-rose-400">Search failed. Please try again.</p>';
+                box.classList.remove('hidden');
+            });
+    }
+
+    input.addEventListener('input', function () {
+        clearTimeout(debounce);
+        debounce = setTimeout(doSearch, 300);
+    });
+
+    btn.addEventListener('click', doSearch);
+
+    input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') doSearch();
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function (e) {
+        if (!input.contains(e.target) && !box.contains(e.target) && !btn.contains(e.target)) {
+            box.classList.add('hidden');
+        }
+    });
+})();
 </script>
 @endpush
 @endsection

@@ -122,10 +122,19 @@ class ResultSheetController extends Controller
         $section   = $sectionId > 0 ? Section::find($sectionId) : null;
         $semester  = Semester::find($semesterId);
 
-        // Course names for the table header (from all students' courses)
-        $courses   = $results->flatMap(function($r) {
-            return collect($r['courses'] ?? [])->pluck('course');
-        })->unique('id')->filter()->values();
+        // Course columns for the table header — built from the COURSES TABLE (the
+        // configured subject list for the class), NOT from students' entered marks.
+        // This ensures subjects with no marks entered at all (e.g. Math, Math Pr.)
+        // still appear as columns with blank cells, rather than disappearing
+        // entirely. Deduplicated by course_name and sorted by position.
+        $courses = \App\Models\Course::where('class_id', $classId)
+            ->where(function ($q) use ($sessionId) {
+                $q->where('session_id', $sessionId)->orWhereNull('session_id');
+            })
+            ->get(['id', 'course_name', 'course_type', 'position', 'semester_id'])
+            ->unique('course_name')
+            ->sortBy('position')
+            ->values();
 
         return view('results.class', compact(
             'results', 'class', 'section', 'semester',
@@ -232,9 +241,14 @@ class ResultSheetController extends Controller
         $class    = SchoolClass::find($classId);
         $section  = $sectionId > 0 ? Section::find($sectionId) : null;
         $semester = Semester::find($semesterId);
-        $courses  = $results->flatMap(function($r) {
-            return collect($r['courses'] ?? [])->pluck('course');
-        })->unique('id')->filter()->values();
+        $courses  = \App\Models\Course::where('class_id', $classId)
+            ->where(function ($q) use ($sessionId) {
+                $q->where('session_id', $sessionId)->orWhereNull('session_id');
+            })
+            ->get(['id', 'course_name', 'course_type', 'position', 'semester_id'])
+            ->unique('course_name')
+            ->sortBy('position')
+            ->values();
 
         $pdf = Pdf::loadView('results.pdf.class-sheet', compact(
             'results', 'class', 'section', 'semester', 'courses', 'school', 'logoSrc'
@@ -317,7 +331,14 @@ class ResultSheetController extends Controller
 
         $pdf = Pdf::loadView('results.pdf.report-card', compact('result', 'verifyUrl', 'qrSrc', 'verifyToken', 'school', 'logoSrc', 'attendance', 'classTeacher'))
             ->setPaper('A4', 'portrait')
-            ->setOptions(['defaultFont' => 'DejaVu Sans', 'dpi' => 150, 'isRemoteEnabled' => true, 'chroot' => public_path(), 'isHtml5ParserEnabled' => true]);
+            ->setOptions([
+                'defaultFont'        => 'DejaVu Sans',
+                'dpi'                => 96,
+                'isRemoteEnabled'    => true,
+                'chroot'             => public_path(),
+                'isHtml5ParserEnabled' => true,
+                'isFontSubsettingEnabled' => true,
+            ]);
 
         $stuName = $result['student']?->full_name ?? 'Student';
         if ($request->query('stream') == '1') {
@@ -395,7 +416,14 @@ class ResultSheetController extends Controller
 
         $pdf = Pdf::loadView('results.pdf.class-report-cards', compact('cards', 'class', 'section', 'semester', 'school', 'logoSrc', 'classTeacher'))
             ->setPaper('A4', 'portrait')
-            ->setOptions(['defaultFont' => 'DejaVu Sans', 'dpi' => 150, 'isRemoteEnabled' => true, 'chroot' => public_path(), 'isHtml5ParserEnabled' => true]);
+            ->setOptions([
+                'defaultFont'        => 'DejaVu Sans',
+                'dpi'                => 96,
+                'isRemoteEnabled'    => true,
+                'chroot'             => public_path(),
+                'isHtml5ParserEnabled' => true,
+                'isFontSubsettingEnabled' => true,
+            ]);
 
         $secName = $section ? '-' . $section->section_name : '';
         $filename = "all-report-cards-{$class->class_name}{$secName}-{$semester->semester_name}.pdf";
@@ -575,5 +603,52 @@ class ResultSheetController extends Controller
             'subjectAverages', 'gradeDistribution',
             'topStudents', 'avgGpa', 'sessionId'
         ));
+    }
+
+    /**
+     * GET /results/students/search?q=...
+     * JSON endpoint for the quick student search box on the results portal.
+     */
+    public function studentSearch(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $q         = trim($request->query('q', ''));
+        $sessionId = $this->getSchoolCurrentSession();
+
+        if (strlen($q) < 2) {
+            return response()->json(['students' => []]);
+        }
+
+        $students = \App\Models\User::with('academic_info')
+            ->where(function ($query) use ($q) {
+                $query->where('first_name', 'like', "%{$q}%")
+                      ->orWhere('last_name',  'like', "%{$q}%")
+                      ->orWhereRaw("CONCAT(first_name, ' ', last_name) like ?", ["%{$q}%"])
+                      ->orWhere('email',        'like', "%{$q}%")
+                      ->orWhere('admission_no', 'like', "%{$q}%");
+            })
+            ->whereHas('roles', fn($r) => $r->where('name', 'student'))
+            ->when(auth()->user()?->school_id, fn($query, $sid) => $query->where('school_id', $sid))
+            ->limit(12)
+            ->get()
+            ->map(function ($s) use ($sessionId) {
+                $promo = \App\Models\Promotion::where('student_id', $s->id)
+                    ->where('session_id', $sessionId)
+                    ->latest('id')
+                    ->first();
+                $classId   = $promo?->class_id   ?? $s->academic_info?->class_id;
+                $sectionId = $promo?->section_id ?? $s->academic_info?->section_id;
+                $className   = $classId   ? (\App\Models\SchoolClass::find($classId)?->class_name   ?? '') : '';
+                $sectionName = $sectionId ? (\App\Models\Section::find($sectionId)?->section_name ?? '') : '';
+                return [
+                    'id'           => $s->id,
+                    'name'         => $s->full_name,
+                    'avatar'       => $s->avatar,
+                    'admission_no' => $s->admission_no,
+                    'class_name'   => $className,
+                    'section_name' => $sectionName,
+                ];
+            });
+
+        return response()->json(['students' => $students]);
     }
 }

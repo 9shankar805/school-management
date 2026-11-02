@@ -50,36 +50,48 @@
     }
     $aggregatePct = $totalFullMarks > 0 ? round(($totalObtained / $totalFullMarks) * 100, 1) : 0;
 
-    // Division / Status
-    if ($failedCount > 0) {
-        $overallGrade = 'NG';
-        $division = 'Needs Retest';
-        $resultStatus = 'RE-EXAM REQUIRED';
+    // Missing marks detection from ResultRepository
+    $missingCount   = (int)($result['missingCount'] ?? 0);
+    $missingNames   = $result['missingNames'] ?? [];
+    $resultStatusComputed = $result['resultStatus'] ?? ($failedCount > 0 ? 'FAIL' : 'PASS');
+
+    // Division / Status — NG takes priority over FAIL, which takes priority over PASS
+    if ($missingCount > 0) {
+        $overallGrade = '';
+        $division = '';
+        $resultStatus = '';
+    } elseif ($failedCount > 0) {
+        $overallGrade = '';
+        $division = '';
+        $resultStatus = '';
     } elseif ($gpa >= 3.6) {
         $overallGrade = 'A+';
         $division = 'Distinction';
-        $resultStatus = 'PASSED WITH DISTINCTION';
+        $resultStatus = 'PASS';
     } elseif ($gpa >= 3.2) {
         $overallGrade = 'A';
         $division = 'First Division';
-        $resultStatus = 'PASSED';
+        $resultStatus = 'PASS';
     } elseif ($gpa >= 2.8) {
         $overallGrade = 'B+';
         $division = 'First Division';
-        $resultStatus = 'PASSED';
+        $resultStatus = 'PASS';
     } elseif ($gpa >= 2.4) {
         $overallGrade = 'B';
         $division = 'Second Division';
-        $resultStatus = 'PASSED';
+        $resultStatus = 'PASS';
     } elseif ($gpa >= 2.0) {
         $overallGrade = 'C+';
         $division = 'Third Division';
-        $resultStatus = 'PASSED';
+        $resultStatus = 'PASS';
     } else {
         $overallGrade = 'C';
         $division = 'Pass';
-        $resultStatus = 'PASSED';
+        $resultStatus = 'PASS';
     }
+
+    // When marks are missing, GPA is not meaningful — show blank
+    $displayGpa = $missingCount > 0 ? '' : number_format($gpa, 2);
 
     // Dynamic Teacher Qualitative Assessment
     if ($failedCount > 0) {
@@ -151,9 +163,11 @@
                 <div>
                     <div class="flex items-center gap-2 flex-wrap">
                         <h1 class="text-xl font-bold text-slate-800">{{ $student->full_name }}</h1>
-                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold {{ $failedCount === 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' }}">
+                        @if($resultStatus)
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
                             {{ $resultStatus }}
                         </span>
+                        @endif
                     </div>
                     <p class="text-xs text-slate-500 font-medium mt-1">
                         {{ $semester?->semester_name ?? 'Terminal Examination' }} &bull; Class: <strong class="text-slate-700">{{ $class?->class_name ?? '—' }}</strong> (Sec: <strong class="text-slate-700">{{ $section?->section_name ?? 'All' }}</strong>)
@@ -188,7 +202,7 @@
         {{-- Executive KPI Metrics Ribbon --}}
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 pt-6">
             <div class="bg-indigo-50/60 border border-indigo-100/80 rounded-xl p-3.5 text-center">
-                <p class="text-2xl font-black text-indigo-700">{{ number_format($gpa, 2) }}</p>
+                <p class="text-2xl font-black text-indigo-700">{{ $displayGpa }}</p>
                 <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">GPA Point</p>
             </div>
             <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 text-center">

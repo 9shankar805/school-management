@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Models\Course;
 use App\Models\SchoolClass;
 use App\Models\Semester;
 use Maatwebsite\Excel\Concerns\FromArray;
@@ -19,12 +20,49 @@ class MarksReportExport implements FromArray, WithHeadings, WithTitle, WithColum
     private SchoolClass $class;
     private Semester    $semester;
 
+    /**
+     * Ordered list of course names used for the header columns.
+     * Computed from the UNION of all students' courses, deduplicated by NAME
+     * (not id) because each semester has its own course row with a different
+     * id for the same subject. This prevents duplicate columns.
+     */
+    private array $headerCourseNames = [];
+
     /** $results is the Collection->toArray() from ResultRepository::getClassResults() */
     public function __construct(array $results, SchoolClass $class, Semester $semester)
     {
         $this->results  = $results;
         $this->class    = $class;
         $this->semester = $semester;
+
+        // Build the canonical course column order from the COURSES TABLE (the
+        // configured subject list), NOT from students' results. This ensures
+        // subjects with zero marks entered still appear as columns with blank
+        // cells. Deduplicated by course_name (each semester has its own row).
+        // Also includes any subjects found in student results as a safety net.
+        $dbNames = Course::where('class_id', $class->id)
+            ->distinct()
+            ->pluck('course_name')
+            ->toArray();
+
+        $resultNames = collect($results)
+            ->flatMap(function ($r) {
+                return collect($r['courses'] ?? [])->map(function ($c) {
+                    $course = $c['course'] ?? null;
+                    if (is_array($course)) return $course['course_name'] ?? null;
+                    return $course?->course_name ?? null;
+                });
+            })
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        $this->headerCourseNames = collect(array_merge($dbNames, $resultNames))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
     }
 
     public function title(): string
@@ -34,20 +72,19 @@ class MarksReportExport implements FromArray, WithHeadings, WithTitle, WithColum
 
     public function headings(): array
     {
-        // Dynamic course columns — derive from first student's course list
+        // Dynamic course columns — derived from the deduplicated course name list
+        // so each subject appears exactly once regardless of how many semester
+        // course rows exist for it.
         $courseCols = [];
-        if (! empty($this->results)) {
-            foreach ($this->results[0]['courses'] as $c) {
-                $name = $c['course']?->course_name ?? 'Course';
-                $courseCols[] = $name . ' (FM)';
-                $courseCols[] = $name . ' (Grade)';
-            }
+        foreach ($this->headerCourseNames as $name) {
+            $courseCols[] = $name . ' (FM)';
+            $courseCols[] = $name . ' (Grade)';
         }
 
         return array_merge(
             ['Rank', 'Student Name'],
             $courseCols,
-            ['GPA', 'Total Marks', 'Passed', 'Failed', 'Result']
+            ['Total GPA', 'Total Marks', 'Passed', 'Failed', 'Result']
         );
     }
 
@@ -62,16 +99,26 @@ class MarksReportExport implements FromArray, WithHeadings, WithTitle, WithColum
                 $student?->full_name ?? '—',
             ];
 
-            foreach ($row['courses'] as $c) {
-                $line[] = $c['final_marks'];
-                $line[] = $c['grade'];
+            // Index this student's courses by course_name so we can align with
+            // the header (deduplicated by name). Missing courses get blank cells
+            // so the summary columns never drift left.
+            $studentCourses = collect($row['courses'] ?? [])->keyBy(function ($c) {
+                $course = $c['course'] ?? null;
+                if (is_array($course)) return $course['course_name'] ?? '';
+                return $course?->course_name ?? '';
+            });
+
+            foreach ($this->headerCourseNames as $name) {
+                $c = $studentCourses->get($name);
+                $line[] = $c ? $c['final_marks'] : '';
+                $line[] = $c ? $c['grade'] : '';
             }
 
             $line[] = $row['gpa'];
             $line[] = round($row['totalMarks'], 1);
             $line[] = $row['passed'];
             $line[] = $row['failed'];
-            $line[] = $row['failed'] === 0 ? 'PASS' : 'FAIL';
+            $line[] = ($row['resultStatus'] ?? '') === 'PASS' ? 'PASS' : '';
 
             $rows[] = $line;
         }

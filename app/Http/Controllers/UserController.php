@@ -375,6 +375,55 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * DELETE /students/{id}
+     * Permanently soft-deletes a student and cleans up core related records.
+     * Restricted to super-admin, organization-owner, admin, and principal.
+     */
+    public function destroyStudent(int $id)
+    {
+        $authUser = auth()->user();
+        if (!$authUser || !$authUser->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal'])) {
+            abort(403, 'Unauthorized to delete student records.');
+        }
+
+        $student = \App\Models\User::find($id);
+
+        if (!$student) {
+            return redirect()->back()->with('error', 'Student not found.');
+        }
+
+        // Ensure we only delete actual student users, not staff/admin accounts.
+        if (!$student->hasRole('student')) {
+            return redirect()->back()->with('error', 'The specified user is not a student record.');
+        }
+
+        // Prevent an admin from accidentally deleting themselves.
+        if ($student->id === $authUser->id) {
+            return redirect()->back()->with('error', 'You cannot delete your own account.');
+        }
+
+        try {
+            $studentName = trim($student->first_name . ' ' . $student->last_name);
+
+            // Remove promotion / enrollment records so class counts stay accurate.
+            \App\Models\Promotion::where('student_id', $id)->delete();
+
+            // Remove parent-info link (orphaned parent records are kept intact).
+            \App\Models\StudentParentInfo::where('student_id', $id)->delete();
+
+            // Soft-delete the User record (SoftDeletes trait sets deleted_at).
+            $student->delete();
+
+            return redirect()
+                ->route('students.index', request()->only(['class_id', 'section_id']))
+                ->with('status', "Student \"{$studentName}\" has been deleted successfully.");
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete student: ' . $e->getMessage());
+        }
+    }
+
     public function editTeacher($teacher_id) {
         $authUser = auth()->user();
         if (!$authUser || !$authUser->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'hr-manager', 'hr'])) {
@@ -405,6 +454,98 @@ class UserController extends Controller
             return back()->with('status', 'Teacher update was successful!');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * DELETE /teachers/{id}
+     * Soft-deletes a teacher. All related tables with cascadeOnDelete use the
+     * users.deleted_at soft-delete pattern — DB-level cascades only fire on
+     * hard delete, so historical payroll/attendance/contract records are safe.
+     * The assigned_teachers table has no FK constraint, so those rows are
+     * left in place (they become orphaned but do not corrupt historical data).
+     */
+    public function destroyTeacher(int $id)
+    {
+        $authUser = auth()->user();
+        if (!$authUser || !$authUser->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'hr-manager', 'hr'])) {
+            abort(403, 'Unauthorized to delete teacher records.');
+        }
+
+        $teacher = \App\Models\User::find($id);
+
+        if (!$teacher) {
+            return redirect()->back()->with('error', 'Teacher not found.');
+        }
+
+        // Guard: only delete users who actually hold a teacher role.
+        if (!$teacher->hasAnyRole(['teacher', 'class-teacher', 'hod'])) {
+            return redirect()->back()->with('error', 'The specified user is not a teacher record.');
+        }
+
+        // Prevent self-deletion.
+        if ($teacher->id === $authUser->id) {
+            return redirect()->back()->with('error', 'You cannot delete your own account.');
+        }
+
+        try {
+            $teacherName = trim($teacher->first_name . ' ' . $teacher->last_name);
+
+            // Soft-delete: sets deleted_at on the users row.
+            // Historical payroll, attendance, contract, qualification records remain
+            // intact because SoftDeletes does not trigger DB-level cascades.
+            $teacher->delete();
+
+            return redirect()
+                ->route('teacher.list.show')
+                ->with('status', "Teacher \"{$teacherName}\" has been deactivated and removed from the directory.");
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to delete teacher: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * DELETE /teachers/{id}/photo
+     * Removes a teacher's profile photo and restores the initials avatar.
+     * Does not delete or modify any other teacher data.
+     */
+    public function removeTeacherPhoto(int $id)
+    {
+        $authUser = auth()->user();
+        if (!$authUser || !$authUser->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'hr-manager', 'hr'])) {
+            abort(403, 'Unauthorized to remove teacher photo.');
+        }
+
+        $teacher = \App\Models\User::find($id);
+
+        if (!$teacher) {
+            return redirect()->back()->with('error', 'Teacher not found.');
+        }
+
+        if (!$teacher->hasAnyRole(['teacher', 'class-teacher', 'hod'])) {
+            return redirect()->back()->with('error', 'The specified user is not a teacher record.');
+        }
+
+        if (empty($teacher->photo)) {
+            return redirect()->back()->with('status', 'No profile photo to remove.');
+        }
+
+        try {
+            // Delete the actual file from storage.
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($teacher->photo)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($teacher->photo);
+            }
+
+            // Clear the photo column — avatar accessor will now return initials avatar.
+            $teacher->update(['photo' => null]);
+
+            return redirect()
+                ->route('teacher.edit.show', $id)
+                ->with('status', 'Profile photo removed successfully. The default avatar is now displayed.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to remove photo: ' . $e->getMessage());
         }
     }
 

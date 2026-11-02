@@ -41,6 +41,13 @@ class SchoolClassController extends Controller
         $data = $this->schoolClassRepository->getClassesAndSections($current_school_session_id);
         $data['current_school_session_id'] = $current_school_session_id;
 
+        // Deleted sections for the current session — shown in the audit panel on the view
+        $data['deleted_sections'] = \App\Models\Section::onlyTrashed()
+            ->where('session_id', $current_school_session_id)
+            ->with('schoolClass')
+            ->orderByDesc('deleted_at')
+            ->get();
+
         return view('classes.index', $data);
     }
 

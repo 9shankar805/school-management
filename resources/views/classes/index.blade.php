@@ -91,6 +91,67 @@
         </div>
     </div>
 
+    {{-- Deleted Sections Audit Panel --}}
+    @if(isset($deleted_sections) && $deleted_sections->isNotEmpty())
+    <div class="mb-6 bg-white dark:bg-slate-900 rounded-2xl border border-rose-200/70 dark:border-rose-900/50 shadow-xs overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-3 bg-rose-50/60 dark:bg-rose-950/30 border-b border-rose-100 dark:border-rose-900/40">
+            <div class="flex items-center gap-2.5">
+                <span class="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-sm">
+                    <i class="bi bi-trash3"></i>
+                </span>
+                <div>
+                    <h3 class="text-xs font-bold text-rose-700 dark:text-rose-300">Deleted Sections</h3>
+                    <p class="text-[10px] text-rose-400 dark:text-rose-500">{{ $deleted_sections->count() }} section(s) removed in this session</p>
+                </div>
+            </div>
+            <button onclick="this.closest('.mb-6').classList.toggle('collapsed-panel'); document.getElementById('deletedSecTable').classList.toggle('hidden')"
+                class="text-[10px] font-semibold text-rose-500 hover:text-rose-700 flex items-center gap-1 transition">
+                <i class="bi bi-chevron-up" id="deletedSecChevron"></i> <span id="deletedSecToggleLabel">Hide</span>
+            </button>
+        </div>
+        <div id="deletedSecTable" class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="bg-slate-50 dark:bg-slate-800/40 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        <th class="px-4 py-2.5 text-left">#</th>
+                        <th class="px-4 py-2.5 text-left">Section Name</th>
+                        <th class="px-4 py-2.5 text-left">Class</th>
+                        <th class="px-4 py-2.5 text-left">Room</th>
+                        <th class="px-4 py-2.5 text-left">Deleted At</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                    @foreach($deleted_sections as $i => $ds)
+                    <tr class="hover:bg-rose-50/40 dark:hover:bg-rose-950/10 transition-colors">
+                        <td class="px-4 py-2.5 text-slate-400 font-medium">{{ $i + 1 }}</td>
+                        <td class="px-4 py-2.5">
+                            <span class="inline-flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-200">
+                                <span class="w-5 h-5 rounded-md bg-rose-100 dark:bg-rose-950/60 text-rose-500 flex items-center justify-center text-[9px] font-bold">
+                                    {{ substr($ds->section_name, 0, 1) }}
+                                </span>
+                                {{ $ds->section_name }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-2.5 text-slate-500 dark:text-slate-400">
+                            {{ $ds->schoolClass?->class_name ?? '—' }}
+                        </td>
+                        <td class="px-4 py-2.5 text-slate-400">
+                            {{ $ds->room_no ?: '—' }}
+                        </td>
+                        <td class="px-4 py-2.5 text-slate-400">
+                            <span class="inline-flex items-center gap-1">
+                                <i class="bi bi-clock-history text-rose-400"></i>
+                                {{ $ds->deleted_at->format('d M Y, h:i A') }}
+                            </span>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
+
     {{-- Filter Search & Bulk Actions Bar --}}
     <div class="mb-6 space-y-3">
         <div class="flex items-center justify-between gap-4 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800">

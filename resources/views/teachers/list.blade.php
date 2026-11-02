@@ -52,7 +52,8 @@
                     <div class="flex items-start gap-3.5 mb-4">
                         <div class="relative flex-shrink-0">
                             <img src="{{ $t->avatar }}" 
-                                 class="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl object-cover ring-2 ring-slate-100 dark:ring-slate-800 shadow-sm group-hover:scale-105 transition-transform duration-200" 
+                                 class="rounded-2xl object-cover object-center ring-2 ring-slate-100 dark:ring-slate-800 shadow-sm group-hover:scale-105 transition-transform duration-200" 
+                                 style="width:52px;height:52px;min-width:52px;min-height:52px;max-width:52px;max-height:52px;"
                                  alt="{{ $t->full_name }}">
                             <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" title="Active Staff"></span>
                         </div>
@@ -135,6 +136,15 @@
                         <i class="bi bi-pencil"></i>
                     </a>
                     @endcan
+
+                    @can('delete teachers')
+                    <button type="button"
+                            class="w-8 h-8 inline-flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 text-xs transition"
+                            title="Delete Teacher"
+                            onclick="openTeacherDeleteModal({{ $t->id }}, '{{ addslashes(trim($t->first_name . ' ' . $t->last_name)) }}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                    @endcan
                 </div>
 
             </div>
@@ -147,6 +157,51 @@
                 <p class="text-sm text-slate-400 mt-1">Try changing your search or department filter criteria.</p>
             </div>
             @endforelse
+        </div>
+    </div>
+</div>
+
+{{-- ── Delete Teacher Confirmation Modal ────────────────────────────── --}}
+<div id="teacherDeleteModal"
+     class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+     role="dialog" aria-modal="true" aria-labelledby="teacherDeleteModalTitle">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+
+        {{-- Header --}}
+        <div class="p-6 pb-4 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center flex-shrink-0">
+                <i class="bi bi-person-dash text-xl text-rose-600"></i>
+            </div>
+            <div class="flex-1">
+                <h3 id="teacherDeleteModalTitle" class="text-base font-bold text-slate-800 dark:text-slate-100">
+                    Delete Teacher
+                </h3>
+                <p class="text-sm mt-1 text-slate-500 dark:text-slate-400">
+                    Are you sure you want to delete
+                    <strong id="teacherDeleteName" class="font-semibold text-slate-800 dark:text-slate-100"></strong>?
+                    This action may affect associated records.
+                </p>
+                <p class="text-xs mt-2 text-rose-600 dark:text-rose-400 font-medium">
+                    The teacher will be deactivated and removed from the directory. Historical attendance, payroll, and contract records will be preserved.
+                </p>
+            </div>
+        </div>
+
+        {{-- Action Buttons --}}
+        <div class="px-6 pb-6 flex items-center justify-end gap-3">
+            <button type="button"
+                    onclick="closeTeacherDeleteModal()"
+                    class="px-5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                Cancel
+            </button>
+            <form id="teacherDeleteForm" method="POST" style="display:inline;">
+                @csrf
+                @method('DELETE')
+                <button type="submit"
+                        class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold shadow-sm shadow-rose-600/25 transition flex items-center gap-2">
+                    <i class="bi bi-person-dash"></i> Confirm Delete
+                </button>
+            </form>
         </div>
     </div>
 </div>
@@ -268,6 +323,34 @@
 
 @push('scripts')
 <script>
+// ── Delete Teacher Modal ──────────────────────────────────────
+function openTeacherDeleteModal(teacherId, teacherName) {
+    var modal = document.getElementById('teacherDeleteModal');
+    var form  = document.getElementById('teacherDeleteForm');
+    var label = document.getElementById('teacherDeleteName');
+    if (!modal || !form || !label) return;
+
+    label.textContent = teacherName;
+    form.action = '/teachers/' + teacherId;
+
+    modal.classList.remove('hidden');
+}
+
+function closeTeacherDeleteModal() {
+    var modal = document.getElementById('teacherDeleteModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+// Close on backdrop click
+document.addEventListener('DOMContentLoaded', function () {
+    var modal = document.getElementById('teacherDeleteModal');
+    if (modal) {
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) closeTeacherDeleteModal();
+        });
+    }
+});
+
 function openTeacherBulkIdModal() {
     var modal = document.getElementById('teacherBulkIdModal');
     if (modal) modal.classList.remove('hidden');

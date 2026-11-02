@@ -42,7 +42,12 @@ class Exam extends Model
 
     public function examRule()
     {
-        return $this->hasOne(ExamRule::class, 'exam_id');
+        // Prefer a custom (non-default) rule over the auto-created 100/40 shadow.
+        // MarkController auto-creates ExamRule(FM=100/PM=40) at marks-entry time, so
+        // duplicate rules commonly coexist. The non-default one is the school's
+        // real configuration and must be returned by this hasOne relation.
+        return $this->hasOne(ExamRule::class, 'exam_id')
+            ->orderByRaw('(total_marks = 100 AND pass_marks = 40), id');
     }
 
     public function schedules()

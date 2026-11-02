@@ -33,6 +33,24 @@
             </div>
         </div>
 
+        {{-- Search bar --}}
+        @if(!$results->isEmpty())
+        <div class="mb-4">
+            <div class="relative max-w-sm">
+                <span class="absolute inset-y-0 left-3 flex items-center text-slate-400 pointer-events-none">
+                    <i class="bi bi-search text-sm"></i>
+                </span>
+                <input
+                    type="text"
+                    id="studentSearch"
+                    placeholder="Search student by name…"
+                    class="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300 shadow-sm"
+                    autocomplete="off"
+                >
+            </div>
+        </div>
+        @endif
+
         @if($results->isEmpty())
         <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-10 text-center text-slate-400">
             <i class="bi bi-clipboard-x text-5xl mb-3 block"></i>
@@ -55,7 +73,16 @@
                     </tr></thead>
                     <tbody class="divide-y divide-slate-50">
                         @foreach($results as $row)
-                        <tr class="hover:bg-slate-50">
+                        @php
+                            // Index this student's courses by course_NAME (not id) so we can
+                            // align with the header columns. Each semester has its own course
+                            // row with a different id for the same subject, so matching by id
+                            // would fail for students whose marks are stored under a different
+                            // semester's course row. Matching by name ensures every student's
+                            // marks land under the correct subject column.
+                            $studentCourses = collect($row['courses'] ?? [])->keyBy(fn($c) => $c['course']?->course_name ?? '');
+                        @endphp
+                        <tr class="hover:bg-slate-50 student-row" data-student-name="{{ strtolower($row['student']?->full_name ?? '') }}">
                             <td class="px-4 py-3 text-center">
                                 @if($row['rank'] <= 3)
                                 <span class="text-lg">{{ ['🥇','🥈','🥉'][$row['rank']-1] }}</span>
@@ -70,18 +97,29 @@
                                        class="font-medium text-slate-700 hover:text-indigo-600">{{ $row['student']?->full_name }}</a>
                                 </div>
                             </td>
-                            @foreach($row['courses'] as $c)
+                            {{-- Iterate over the HEADER's course set (deduplicated by name) so
+                                 columns always align. Missing courses show a placeholder dash. --}}
+                            @foreach($courses as $headerCourse)
+                            @php $c = $studentCourses->get($headerCourse->course_name); @endphp
                             <td class="px-3 py-3 text-center">
+                                @if($c)
                                 <p class="font-semibold {{ $c['passed'] ? 'text-slate-700' : 'text-rose-600' }}">{{ $c['final_marks'] }}</p>
                                 <p class="text-xs {{ $c['passed'] ? 'text-emerald-600' : 'text-rose-400' }}">{{ $c['grade'] }}</p>
+                                @else
+                                <p class="text-slate-300">—</p>
+                                @endif
                             </td>
                             @endforeach
+                            {{-- Summary columns — always aligned because course columns above
+                                 match the header exactly. --}}
                             <td class="px-4 py-3 text-center font-bold text-indigo-600">{{ $row['gpa'] }}</td>
                             <td class="px-4 py-3 text-center text-slate-600">{{ round($row['totalMarks'], 1) }}</td>
                             <td class="px-4 py-3 text-center">
-                                <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold {{ $row['failed'] === 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
-                                    {{ $row['failed'] === 0 ? 'PASS' : 'FAIL' }}
+                                @if(($row['resultStatus'] ?? '') === 'PASS')
+                                <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">
+                                    PASS
                                 </span>
+                                @endif
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <a href="{{ route('results.report-card', $row['student']->id) . '?' . http_build_query(array_merge(request()->query(), ['stream' => '1'])) }}"
@@ -99,3 +137,20 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('studentSearch');
+    if (!input) return;
+
+    input.addEventListener('input', function () {
+        const query = this.value.toLowerCase().trim();
+        document.querySelectorAll('tr.student-row').forEach(function (row) {
+            const name = row.dataset.studentName || '';
+            row.style.display = name.includes(query) ? '' : 'none';
+        });
+    });
+});
+</script>
+@endpush

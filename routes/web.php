@@ -253,6 +253,8 @@ Route::middleware(['auth'])->group(function () {
         return view('teachers.add');
     })->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('teacher.create.show');
     Route::get('/teachers/edit/{id}', [UserController::class, 'editTeacher'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|hr-manager|hr'])->name('teacher.edit.show');
+    Route::delete('/teachers/{id}', [UserController::class, 'destroyTeacher'])->middleware(['role:super-admin|organization-owner|admin|principal|hr-manager|hr'])->name('teachers.destroy');
+    Route::delete('/teachers/{id}/photo', [UserController::class, 'removeTeacherPhoto'])->middleware(['role:super-admin|organization-owner|admin|principal|hr-manager|hr'])->name('teachers.photo.remove');
     Route::get('/teachers/view/list', [UserController::class, 'getTeacherList'])->name('teacher.list.show');
     Route::get('/teachers/view/profile/{id}', [UserController::class, 'showTeacherProfile'])->name('teacher.profile.show');
     Route::get('/teachers/view/{id}', [UserController::class, 'showTeacherProfile']);
@@ -280,18 +282,19 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/students/view/{id}', [UserController::class, 'showStudentProfile']);
     Route::get('/students/{id}', [UserController::class, 'showStudentProfile'])->where('id', '[0-9]+');
     Route::get('/students/view/attendance/{id}', [AttendanceController::class, 'showStudentAttendance'])->name('student.attendance.show');
+    Route::delete('/students/{id}', [UserController::class, 'destroyStudent'])->middleware(['role:super-admin|organization-owner|admin|principal'])->name('students.destroy');
 
     // Marks
     Route::get('/marks/create', [MarkController::class, 'create'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher'])->name('course.mark.create');
     Route::post('/marks/store', [MarkController::class, 'store'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher'])->name('course.mark.store');
     Route::get('/marks/results', [MarkController::class, 'index'])->name('course.mark.list.show');
     Route::get('/marks', [MarkController::class, 'index'])->name('course.mark.index');
-    // Route::get('/marks/view', function () {
-    //     return view('marks.view');
-    // });
     Route::get('/marks/view', [MarkController::class, 'showCourseMark'])->name('course.mark.show');
     Route::get('/marks/final/submit', [MarkController::class, 'showFinalMark'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher'])->name('course.final.mark.submit.show');
     Route::post('/marks/final/submit', [MarkController::class, 'storeFinalMark'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher'])->name('course.final.mark.submit.store');
+    // Bulk Excel marks import / template download
+    Route::get('/marks/template-download', [MarkController::class, 'downloadTemplate'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher'])->name('marks.template.download');
+    Route::post('/marks/import', [MarkController::class, 'importExcel'])->middleware(['role:super-admin|organization-owner|admin|principal|vice-principal|academic-coordinator|teacher|class-teacher'])->name('marks.import');
 
     // Exams
     Route::get('/exams/view', [ExamController::class, 'index'])->name('exam.list.show');
@@ -1101,6 +1104,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/student/{studentId}/report-card',    [ResultSheetController::class, 'reportCard'])->name('report-card');
         Route::get('/transcript/{studentId}',             [TranscriptController::class, 'show'])->name('transcript');
         Route::get('/transcript/{studentId}/pdf',         [TranscriptController::class, 'pdf'])->name('transcript.pdf');
+        // Student quick-search JSON endpoint used by the results portal search box
+        Route::get('/students/search',                    [ResultSheetController::class, 'studentSearch'])->name('students.search');
     });
 
     // ── MODULE 9: QUESTION PAPER TEMPLATES ───────────────────────────────────

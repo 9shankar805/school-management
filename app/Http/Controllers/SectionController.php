@@ -321,9 +321,12 @@ class SectionController extends Controller
         try {
             $section = Section::findOrFail($id);
             $secName = $section->section_name;
+
+            $studentCount = $this->cascadeDeleteSectionStudents($section->id);
+
             $section->delete();
 
-            return back()->with('status', 'Section "' . $secName . '" deleted successfully!');
+            return back()->with('status', "Section \"{$secName}\" and {$studentCount} student(s) deleted successfully.");
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to delete section. ' . $e->getMessage());
         }
@@ -343,11 +346,59 @@ class SectionController extends Controller
                 return back()->with('error', 'No sections were selected for deletion.');
             }
 
+            $totalStudents = 0;
+            foreach ($sectionIds as $secId) {
+                $totalStudents += $this->cascadeDeleteSectionStudents((int) $secId);
+            }
+
             $count = Section::whereIn('id', $sectionIds)->delete();
 
-            return back()->with('status', "Successfully deleted {$count} selected section(s)!");
+            return back()->with('status', "Deleted {$count} section(s) and {$totalStudents} student(s) successfully.");
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to delete selected sections: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Soft-delete all students (and their records) belonging to the given section.
+     * Covers: Promotion, Mark, FinalMark, Attendance, and the User account itself.
+     *
+     * Returns the number of student accounts deleted.
+     */
+    private function cascadeDeleteSectionStudents(int $sectionId): int
+    {
+        // Collect student IDs in this section
+        $studentIds = \App\Models\Promotion::where('section_id', $sectionId)
+            ->pluck('student_id')
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($studentIds)) {
+            return 0;
+        }
+
+        // Soft-delete per-student academic records
+        \App\Models\Mark::whereIn('student_id', $studentIds)
+            ->where('section_id', $sectionId)
+            ->delete();
+
+        \App\Models\FinalMark::whereIn('student_id', $studentIds)
+            ->where('section_id', $sectionId)
+            ->delete();
+
+        \App\Models\Attendance::whereIn('student_id', $studentIds)
+            ->where('section_id', $sectionId)
+            ->delete();
+
+        // Soft-delete the enrollment (promotion) row
+        \App\Models\Promotion::whereIn('student_id', $studentIds)
+            ->where('section_id', $sectionId)
+            ->delete();
+
+        // Soft-delete the student User accounts
+        \App\Models\User::whereIn('id', $studentIds)->delete();
+
+        return count($studentIds);
     }
 }

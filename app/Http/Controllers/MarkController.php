@@ -321,15 +321,39 @@ class MarkController extends Controller
                     ->ordered()
                     ->get();
             } else {
-                // Admin/ClassTeacher: deduplicated courses for this class + semester
-                $classCourses = Course::uniqueByName()
-                    ->where('class_id', $class_id)
-                    ->when($semester_id > 0, fn($q) => $q->where('semester_id', $semester_id))
-                    ->where(function($q) use ($current_school_session_id) {
-                        $q->where('session_id', $current_school_session_id)->orWhereNull('session_id');
-                    })
-                    ->ordered()
-                    ->get();
+                // Admin/ClassTeacher: load courses for this class + semester.
+                // When courses are stored per-semester (one row per subject per term),
+                // uniqueByName (MIN id) would always pick the FIRST semester's row, causing
+                // a course-ID mismatch with exams and marks created under the correct semester row.
+                // Fix: prefer courses that match the selected semester; fall back to uniqueByName
+                // only when no semester-specific courses exist at all.
+                if ($semester_id > 0) {
+                    // Pick the course row that belongs to this specific semester
+                    $classCourses = Course::where('class_id', $class_id)
+                        ->where('semester_id', $semester_id)
+                        ->where(function($q) use ($current_school_session_id) {
+                            $q->where('session_id', $current_school_session_id)->orWhereNull('session_id');
+                        })
+                        ->ordered()
+                        ->get()
+                        // De-duplicate by name in case there are still duplicates within the same semester
+                        ->unique('course_name')
+                        ->values();
+                } else {
+                    $classCourses = collect();
+                }
+
+                if ($classCourses->isEmpty()) {
+                    // No semester-specific courses: fall back to uniqueByName (MIN id) across all semesters
+                    $classCourses = Course::uniqueByName()
+                        ->where('class_id', $class_id)
+                        ->where(function($q) use ($current_school_session_id) {
+                            $q->where('session_id', $current_school_session_id)->orWhereNull('session_id');
+                        })
+                        ->ordered()
+                        ->get();
+                }
+
                 if ($classCourses->isEmpty()) {
                     $classCourses = Course::uniqueByName()->where('class_id', $class_id)->ordered()->get();
                 }
@@ -362,44 +386,164 @@ class MarkController extends Controller
                 if (!$isAdmin) {
                     $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
                 }
-                // Single query for exams
+
+                // ── Fetch all exams for this class/session/semester ───────────
                 $exams = Exam::where('session_id', $current_school_session_id)
                     ->when($semester_id > 0, fn($q) => $q->where('semester_id', $semester_id))
                     ->where('class_id', $class_id)
                     ->get();
                 $examIds = $exams->pluck('id');
-                // Load full exam rules (total_marks + pass_marks) keyed by exam_id
+
+                // ── Exam rules keyed by exam_id ───────────────────────────────
                 $examRulesFullByExamId = ExamRule::whereIn('exam_id', $examIds)
                     ->get(['exam_id', 'total_marks', 'pass_marks', 'id'])
                     ->keyBy('exam_id');
                 $examRulesByExamId = $examRulesFullByExamId->pluck('total_marks', 'exam_id');
-                $examsByCourse = $exams->keyBy('course_id');
-                // Build per-course: max marks, pass marks, exam id, rule id
+
+                // ── All course IDs that have marks for this class (any section) ─
+                // Some schools store one course row per semester, so the marks may be stored
+                // under a semester-12 course_id while the canonical display row is semester-13.
+                // We collect ALL course IDs for each subject name so nothing is missed.
+                $allClassCourseIds = Course::where('class_id', $class_id)
+                    ->where(function($q) use ($current_school_session_id) {
+                        $q->where('session_id', $current_school_session_id)->orWhereNull('session_id');
+                    })
+                    ->pluck('id')
+                    ->toArray();
+
+                // courseNameToCourseIds: 'Nepali' => [801, 802, 803, 804]
+                $allCoursesForClass = Course::whereIn('id', $allClassCourseIds)->get(['id', 'course_name']);
+                $courseNameToIds = [];
+                foreach ($allCoursesForClass as $c) {
+                    $courseNameToIds[$c->course_name][] = $c->id;
+                }
+
+                // ── Pre-fetch exam_ids that have marks (for smart duplicate resolution) ─
+                $examIdsWithMarks = Mark::where('session_id', $current_school_session_id)
+                    ->where('class_id', $class_id)
+                    ->when($section_id > 0, fn($q) => $q->where('section_id', $section_id))
+                    ->whereIn('exam_id', $examIds)
+                    ->distinct()
+                    ->pluck('exam_id')
+                    ->flip(); // set for O(1) lookup
+
+                // ── Build examsByCourse: prefer exam with marks, then custom FM/PM ───
+                // When duplicate exams exist for the same course_id, keep the best one.
+                $examsByCourse = [];
+                foreach ($exams as $exam) {
+                    $cId = $exam->course_id;
+                    if (!isset($examsByCourse[$cId])) {
+                        $examsByCourse[$cId] = $exam;
+                        continue;
+                    }
+                    $currentHasMarks   = isset($examIdsWithMarks[$examsByCourse[$cId]->id]);
+                    $candidateHasMarks = isset($examIdsWithMarks[$exam->id]);
+                    if ($candidateHasMarks && !$currentHasMarks) {
+                        $examsByCourse[$cId] = $exam;
+                        continue;
+                    }
+                    if (!$candidateHasMarks && $currentHasMarks) {
+                        continue;
+                    }
+                    $currentRule        = $examRulesFullByExamId[$examsByCourse[$cId]->id] ?? null;
+                    $candidateRule      = $examRulesFullByExamId[$exam->id] ?? null;
+                    $currentIsDefault   = !$currentRule   || ((float)$currentRule->total_marks   === 100.0 && (float)$currentRule->pass_marks   === 40.0);
+                    $candidateIsDefault = !$candidateRule || ((float)$candidateRule->total_marks === 100.0 && (float)$candidateRule->pass_marks === 40.0);
+                    if (!$candidateIsDefault && $currentIsDefault) {
+                        $examsByCourse[$cId] = $exam;
+                    }
+                }
+
+                // ── Per-course FM/PM, exam id, rule id ────────────────────────
+                // For each canonical course, gather ALL exam candidates across all alias
+                // course IDs (same name, different semester rows), then pick the best one:
+                // priority = (1) has marks in this section, (2) custom FM/PM, (3) newest id.
                 $courseMaxMarks  = [];
                 $coursePassMarks = [];
                 $courseExamIds   = [];
                 $courseRuleIds   = [];
+                // courseAliasMap: canonical course_id => [all same-name course_ids]
+                $courseAliasMap  = [];
+
                 foreach ($classCourses as $crs) {
-                    $ex = $examsByCourse->get($crs->id);
-                    $rule = $ex ? ($examRulesFullByExamId[$ex->id] ?? null) : null;
+                    $aliases = $courseNameToIds[$crs->course_name] ?? [$crs->id];
+                    $courseAliasMap[$crs->id] = $aliases;
+
+                    // Collect every exam candidate across all alias course IDs
+                    $candidates = [];
+                    foreach ($aliases as $aliasId) {
+                        if (isset($examsByCourse[$aliasId])) {
+                            $candidates[] = $examsByCourse[$aliasId];
+                        }
+                    }
+
+                    // Pick the best candidate:
+                    // 1. Prefer exam that has marks for this section
+                    // 2. Then prefer exam with custom (non-default) FM/PM
+                    // 3. Fall back to the last one
+                    $best = null;
+                    foreach ($candidates as $candidate) {
+                        if ($best === null) {
+                            $best = $candidate;
+                            continue;
+                        }
+                        $bestHasMarks      = isset($examIdsWithMarks[$best->id]);
+                        $candidateHasMarks = isset($examIdsWithMarks[$candidate->id]);
+
+                        if ($candidateHasMarks && !$bestHasMarks) {
+                            $best = $candidate;
+                            continue;
+                        }
+                        if (!$candidateHasMarks && $bestHasMarks) {
+                            continue;
+                        }
+                        // Both or neither have marks — prefer custom FM/PM
+                        $bestRule          = $examRulesFullByExamId[$best->id] ?? null;
+                        $candidateRule     = $examRulesFullByExamId[$candidate->id] ?? null;
+                        $bestIsDefault     = !$bestRule      || ((float)$bestRule->total_marks      === 100.0 && (float)$bestRule->pass_marks      === 40.0);
+                        $candidateIsDefault = !$candidateRule || ((float)$candidateRule->total_marks === 100.0 && (float)$candidateRule->pass_marks === 40.0);
+                        if (!$candidateIsDefault && $bestIsDefault) {
+                            $best = $candidate;
+                        }
+                    }
+
+                    $rule = $best ? ($examRulesFullByExamId[$best->id] ?? null) : null;
                     $courseMaxMarks[$crs->id]  = $rule ? (float)$rule->total_marks : 100;
                     $coursePassMarks[$crs->id] = $rule ? (float)$rule->pass_marks  : 40;
-                    $courseExamIds[$crs->id]   = $ex?->id;
+                    $courseExamIds[$crs->id]   = $best?->id;
                     $courseRuleIds[$crs->id]   = $rule?->id;
                 }
-                // Single optimized marks query (only needed columns)
-                $studentIds = $sectionStudents->map(fn($item) => $item->student_id ?? optional($item->student)->id)->filter()->unique()->values()->toArray();
+
+                // ── Load existing marks ───────────────────────────────────────
+                // Query uses ALL alias course IDs so marks stored under any semester's
+                // course row for the same subject are found and mapped to the canonical id.
+                $studentIds = $sectionStudents
+                    ->map(fn($item) => $item->student_id ?? optional($item->student)->id)
+                    ->filter()->unique()->values()->toArray();
+
+                // Collect all alias course IDs for every canonical course shown
+                $allAliasIds = collect($courseAliasMap)->flatten()->unique()->values()->toArray();
+
                 $existingMarks = Mark::where('session_id', $current_school_session_id)
                     ->where('class_id', $class_id)
                     ->whereIn('student_id', $studentIds)
-                    ->whereIn('course_id', $classCourses->pluck('id'))
-                    ->whereIn('exam_id', $examIds)
+                    ->whereIn('course_id', $allAliasIds)
                     ->orderByDesc('updated_at')
                     ->get(['student_id', 'course_id', 'marks']);
+
+                // Build reverse map: alias_course_id => canonical_course_id
+                $aliasToCanoical = [];
+                foreach ($courseAliasMap as $canonicalId => $aliases) {
+                    foreach ($aliases as $aliasId) {
+                        $aliasToCanoical[$aliasId] = $canonicalId;
+                    }
+                }
+
                 $marksMatrix = [];
                 foreach ($existingMarks as $m) {
-                    if (!isset($marksMatrix[$m->student_id][$m->course_id])) {
-                        $marksMatrix[$m->student_id][$m->course_id] = $m->marks;
+                    $canonicalId = $aliasToCanoical[$m->course_id] ?? $m->course_id;
+                    if (!isset($marksMatrix[$m->student_id][$canonicalId])) {
+                        $marksMatrix[$m->student_id][$canonicalId] = $m->marks;
                     }
                 }
                 return view('marks.create', [
@@ -439,13 +583,41 @@ class MarkController extends Controller
                     $this->checkIfLoggedInUserIsAssignedTeacher($request, $current_school_session_id);
                 }
 
+                // ── Load exams for this subject/semester ──────────────────────
+                // Use only the selected semester so we never mix e.g. a Second-Term
+                // exam (100/40) with a Terminal exam (75/30) for the same course_id.
                 $examRepository = new ExamRepository();
                 $exams = $examRepository->getAll($current_school_session_id, $semester_id, $class_id, (int)$course_id);
 
-                // If no exams found specifically for this course, check for class-level exams
+                // Also gather alias course IDs (same name, different semester rows) and
+                // pull their exams for the selected semester — mirrors master mode's
+                // alias-aware resolution so FM/PM is always consistent between modes.
+                // Gather alias course IDs (same subject name, different semester rows)
+                // to collect their exam IDs. These are used ONLY to look up marks saved
+                // under alias course rows — they are NOT added to $exams so they never
+                // create extra columns in the table.
+                $aliasExamIds = [];
+                if ($class_id && $course_id) {
+                    $thisCourse = Course::find((int)$course_id);
+                    if ($thisCourse) {
+                        $aliasCourseIds = Course::where('class_id', $class_id)
+                            ->where('course_name', $thisCourse->course_name)
+                            ->where('id', '!=', (int)$course_id)
+                            ->pluck('id')->toArray();
+                        if (!empty($aliasCourseIds)) {
+                            $aliasExamIds = Exam::where('session_id', $current_school_session_id)
+                                ->when($semester_id > 0, fn($q) => $q->where('semester_id', $semester_id))
+                                ->where('class_id', $class_id)
+                                ->whereIn('course_id', $aliasCourseIds)
+                                ->pluck('id')->toArray();
+                        }
+                    }
+                }
+
+                // If still empty, fall back to class-level exams (course_id = 0 / null)
                 if ($exams->isEmpty()) {
                     $exams = Exam::where('session_id', $current_school_session_id)
-                        ->where('semester_id', $semester_id)
+                        ->when($semester_id > 0, fn($q) => $q->where('semester_id', $semester_id))
                         ->where('class_id', $class_id)
                         ->where(function($q) use ($course_id) {
                             $q->where('course_id', (int)$course_id)
@@ -479,12 +651,38 @@ class MarkController extends Controller
                     $exams = collect([$newExam]);
                 }
 
-                $examRulesByExamId = ExamRule::where('session_id', $current_school_session_id)
+                // Fetch the full exam-rule rows (id + total_marks + pass_marks) so the
+                // Single Subject view can show FM/PM and expose the per-exam edit button,
+                // mirroring the Master Grade Ledger. Kept as keyed collections for the view.
+                $examRulesFullByExamId = ExamRule::where('session_id', $current_school_session_id)
                     ->whereIn('exam_id', $exams->pluck('id')->toArray())
-                    ->pluck('total_marks', 'exam_id');
+                    ->get(['id', 'exam_id', 'total_marks', 'pass_marks'])
+                    ->keyBy('exam_id');
+                $examRulesByExamId     = $examRulesFullByExamId->pluck('total_marks', 'exam_id');
+                $examPassMarksByExamId = $examRulesFullByExamId->pluck('pass_marks',  'exam_id');
+                $examRuleIdsByExamId   = $examRulesFullByExamId->pluck('id',          'exam_id');
 
                 $markRepository = new MarkRepository();
                 $studentsWithMarks = $markRepository->getAll($current_school_session_id, $semester_id, $class_id, $section_id, (int)$course_id);
+
+                // Also pull marks saved under alias course IDs (same subject name, different
+                // semester row) — mirrors master mode so marks entered there always appear here.
+                if (!empty($aliasExamIds)) {
+                    $aliasMarks = \App\Models\Mark::with('student', 'exam')
+                        ->where('session_id', $current_school_session_id)
+                        ->where('class_id', $class_id)
+                        ->whereIn('exam_id', $aliasExamIds)
+                        ->when($section_id > 0, fn($q) => $q->where('section_id', $section_id))
+                        ->get();
+                    // Merge, avoiding duplicate student+exam combos
+                    $existingKeys = $studentsWithMarks->map(fn($m) => $m->student_id.'_'.$m->exam_id)->flip();
+                    foreach ($aliasMarks as $am) {
+                        $key = $am->student_id.'_'.$am->exam_id;
+                        if (!isset($existingKeys[$key])) {
+                            $studentsWithMarks->push($am);
+                        }
+                    }
+                }
 
                 // Build a structured lookup map: student_id => [ exam_id => mark ]
                 $marksByStudentAndExam = [];
@@ -514,6 +712,8 @@ class MarkController extends Controller
                     'final_marks_submitted'     => $final_marks_submitted,
                     'sectionStudents'           => $sectionStudents,
                     'exam_rules_by_exam_id'     => $examRulesByExamId,
+                    'exam_pass_marks_by_exam_id'=> $examPassMarksByExamId,
+                    'exam_rule_ids_by_exam_id'  => $examRuleIdsByExamId,
                     'current_school_session_id' => $current_school_session_id,
                     'isAllSubjectsMode'         => false,
                     'classCourses'              => $classCourses,
@@ -689,6 +889,12 @@ class MarkController extends Controller
                 $examCache[$cId] = $exam;
             }
 
+            // Load Full Marks (total_marks) per exam so entered marks are validated against
+            // the real configured FM. Previously $examRulesMap was undefined here and silently
+            // fell back to 100, which let marks exceed the configured Full Marks.
+            $examRulesMap = ExamRule::whereIn('exam_id', collect($examCache)->pluck('id'))
+                ->pluck('total_marks', 'exam_id');
+
             $studentSectionMap = \App\Models\Promotion::where('session_id', $current_school_session_id)
                 ->where('class_id', $class_id)
                 ->whereIn('student_id', array_keys($studentCourseMarks))
@@ -704,11 +910,16 @@ class MarkController extends Controller
                     if (isset($examCache[$cId])) {
                         $examId   = $examCache[$cId]->id;
                         $maxMarks = (float)($examRulesMap[$examId] ?? 100);
+                        $markVal  = (float)$mark;
+                        // Never store more than the configured Full Marks (requirement #6).
+                        if ($maxMarks > 0 && $markVal > $maxMarks) {
+                            $markVal = $maxMarks;
+                        }
                         $rows[] = [
                             'school_id'  => auth()->user()->school_id ?? null,
                             'class_id'   => $class_id,
                             'student_id' => (int)$studentId,
-                            'marks'      => (float)$mark,
+                            'marks'      => $markVal,
                             'section_id' => $actualSectionId,
                             'course_id'  => (int)$cId,
                             'session_id' => $current_school_session_id,
@@ -985,5 +1196,224 @@ class MarkController extends Controller
     public function destroy(Mark $mark)
     {
         //
+    }
+
+    // ── Bulk Excel Import / Template Download ─────────────────────────────────
+
+    /**
+     * GET /marks/template-download
+     * Download a pre-filled marks ledger template.
+     *
+     * Query params:
+     *   class_id, section_id, semester_id, course_id  — context
+     *   format  — 'csv' (default) or 'xlsx'
+     */
+    public function downloadTemplate(Request $request)
+    {
+        $request->validate([
+            'class_id'    => 'required|integer',
+            'section_id'  => 'nullable|integer',
+            'semester_id' => 'required|integer',
+            'course_id'   => 'nullable|string',
+            'format'      => 'nullable|in:csv,xlsx',
+        ]);
+
+        $sessionId  = $this->getSchoolCurrentSession();
+        $classId    = (int) $request->class_id;
+        $sectionId  = (int) $request->query('section_id', 0);
+        $semesterId = (int) $request->semester_id;
+        $courseId   = $request->query('course_id', 'all');
+        $format     = $request->query('format', 'csv'); // default CSV
+
+        $class    = \App\Models\SchoolClass::find($classId);
+        $section  = $sectionId > 0 ? \App\Models\Section::find($sectionId) : null;
+        $semester = \App\Models\Semester::find($semesterId);
+
+        // ── Students ─────────────────────────────────────────────────────
+        $promoQuery = \App\Models\Promotion::with('student')
+            ->where('session_id', $sessionId)
+            ->where('class_id', $classId);
+        if ($sectionId > 0) {
+            $promoQuery->where('section_id', $sectionId);
+        }
+        $promotions = $promoQuery->orderByRaw('CAST(roll_no AS UNSIGNED) ASC, roll_no ASC')->get();
+
+        $students = $promotions->map(function ($p) {
+            $stu  = $p->student;
+            $name = trim(($stu?->first_name ?? '') . ' ' . ($stu?->last_name ?? ''));
+            return [
+                'student_id' => $p->student_id,
+                'roll_no'    => $p->roll_no ?? '',
+                'name'       => $name ?: 'Student #' . $p->student_id,
+            ];
+        })->values()->all();
+
+        // ── Subjects / Exams ─────────────────────────────────────────────
+        $examQuery = Exam::with('examRule', 'course')
+            ->where('session_id', $sessionId)
+            ->where('class_id', $classId)
+            ->when($semesterId > 0, fn($q) => $q->where('semester_id', $semesterId));
+
+        if ($courseId !== 'all' && is_numeric($courseId)) {
+            $examQuery->where('course_id', (int) $courseId);
+        }
+
+        $exams = $examQuery->get();
+
+        $subjects = $exams->map(function ($exam) {
+            return [
+                'course_id' => $exam->course_id,
+                'exam_id'   => $exam->id,
+                'name'      => $exam->course?->course_name ?? $exam->exam_name,
+                'fm'        => (float)($exam->examRule?->total_marks ?? 100),
+                'pm'        => (float)($exam->examRule?->pass_marks ?? 40),
+            ];
+        })->values()->all();
+
+        $baseName = 'marks-template-' . ($class?->class_name ?? $classId)
+                  . '-' . ($section?->section_name ?? 'all')
+                  . '-' . ($semester?->session_name ?? $semesterId);
+        $baseName = preg_replace('/[^a-zA-Z0-9\-_]/', '-', $baseName);
+
+        // ── CSV format ────────────────────────────────────────────────────
+        if ($format === 'csv') {
+            return $this->streamCsvTemplate($students, $subjects, $baseName, $class, $section, $semester);
+        }
+
+        // ── XLSX format ───────────────────────────────────────────────────
+        $isAllSubjectsMode = ($courseId === 'all' || !is_numeric($courseId));
+        $export = new \App\Exports\MarksTemplateExport(
+            $students,
+            $subjects,
+            $isAllSubjectsMode,
+            $class?->class_name ?? 'Class',
+            $section?->section_name ?? 'All Sections',
+            $semester?->semester_name ?? 'Term'
+        );
+
+        return \Maatwebsite\Excel\Facades\Excel::download($export, $baseName . '.xlsx');
+    }
+
+    /**
+     * Stream a plain CSV marks template — no library needed.
+     * Format:
+     *   Row 1: metadata comment (# …)
+     *   Row 2: instructions comment
+     *   Row 3: blank
+     *   Row 4: headings  → student_id, roll_no, student_name, Subject1 (FM:75), …
+     *   Row 5+: one row per student, mark columns blank
+     */
+    private function streamCsvTemplate(
+        array $students,
+        array $subjects,
+        string $baseName,
+        $class,
+        $section,
+        $semester
+    ) {
+        $filename = $baseName . '.csv';
+
+        $headers = [
+            'Content-Type'              => 'text/csv; charset=UTF-8',
+            'Content-Disposition'       => 'attachment; filename="' . $filename . '"',
+            'Cache-Control'             => 'no-store, no-cache',
+            'Pragma'                    => 'no-cache',
+        ];
+
+        $callback = function () use ($students, $subjects, $class, $section, $semester) {
+            $out = fopen('php://output', 'w');
+
+            // UTF-8 BOM so Excel opens it correctly without encoding garble
+            fwrite($out, "\xEF\xBB\xBF");
+
+            // Row 1 — metadata
+            fputcsv($out, [
+                '# MARKS ENTRY LEDGER'
+                . ' | Class: ' . ($class?->class_name ?? '?')
+                . ' | Section: ' . ($section?->section_name ?? 'All')
+                . ' | Term: ' . ($semester?->semester_name ?? '?'),
+            ]);
+
+            // Row 2 — instruction
+            fputcsv($out, [
+                '# DO NOT modify student_id, roll_no or student_name. '
+                . 'Enter marks only in subject columns. Leave blank for absent.',
+            ]);
+
+            // Row 3 — blank separator
+            fputcsv($out, []);
+
+            // Row 4 — headings
+            $headingRow = ['student_id', 'roll_no', 'student_name'];
+            foreach ($subjects as $sub) {
+                $headingRow[] = $sub['name'] . ' (FM:' . $sub['fm'] . ')';
+            }
+            fputcsv($out, $headingRow);
+
+            // Rows 5+ — one per student, mark columns blank
+            foreach ($students as $stu) {
+                $row = [
+                    $stu['student_id'],
+                    $stu['roll_no'],
+                    $stu['name'],
+                ];
+                foreach ($subjects as $sub) {
+                    $row[] = ''; // blank — teacher fills in
+                }
+                fputcsv($out, $row);
+            }
+
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * POST /marks/import
+     * Accept an uploaded Excel file (the downloaded template, filled in by the teacher)
+     * and bulk-upsert all marks via the existing MarkRepository::create() logic.
+     */
+    public function importExcel(Request $request)
+    {
+        $request->validate([
+            'marks_file'  => 'required|file|mimes:xlsx,xls,csv|max:10240',
+            'class_id'    => 'required|integer',
+            'section_id'  => 'nullable|integer',
+            'semester_id' => 'required|integer',
+            'course_id'   => 'nullable|string',
+        ]);
+
+        $sessionId  = $this->getSchoolCurrentSession();
+        $classId    = (int) $request->class_id;
+        $sectionId  = (int) $request->input('section_id', 0);
+        $semesterId = (int) $request->semester_id;
+        $courseId   = $request->input('course_id', 'all');
+        $schoolId   = auth()->user()->school_id ?? 0;
+
+        $importer = new \App\Imports\MarksImport(
+            $classId,
+            $sectionId,
+            $semesterId,
+            $sessionId,
+            $courseId,
+            $schoolId
+        );
+
+        try {
+            // Skip the 3 title rows + 1 heading row = start reading from row 5
+            \Maatwebsite\Excel\Facades\Excel::import($importer, $request->file('marks_file'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to process the file: ' . $e->getMessage());
+        }
+
+        $msg = "✅ Successfully imported {$importer->imported} mark entries from the Excel file.";
+
+        if (!empty($importer->warnings)) {
+            $warnText = implode(' | ', array_map(fn($w) => "Row {$w['row']}: {$w['msg']}", $importer->warnings));
+            $msg .= " ⚠ Warnings: {$warnText}";
+        }
+
+        return back()->with('status', $msg);
     }
 }

@@ -20,6 +20,7 @@ tbody td { padding:5px 8px; border-bottom:1px solid #e2e8f0; text-align:center; 
 tbody td:first-child, tbody td:nth-child(2) { text-align:left; }
 .pass  { background:#d1fae5; color:#065f46; padding:1px 6px; border-radius:999px; font-weight:700; font-size:8px; }
 .fail  { background:#fee2e2; color:#991b1b; padding:1px 6px; border-radius:999px; font-weight:700; font-size:8px; }
+.ng    { background:#fef3c7; color:#92400e; padding:1px 6px; border-radius:999px; font-weight:700; font-size:8px; }
 .rank1 { color:#d97706; font-weight:700; }
 .footer { text-align:center; font-size:8px; color:#94a3b8; border-top:1px solid #e2e8f0; padding-top:6px; margin-top:12px; }
 </style>
@@ -62,15 +63,42 @@ tbody td:first-child, tbody td:nth-child(2) { text-align:left; }
     </thead>
     <tbody>
         @foreach($results as $row)
+        @php
+            // Index this student's courses by course_NAME (not id) so the columns
+            // align with the header (deduplicated by name). Each semester has its
+            // own course row with a different id for the same subject, so matching
+            // by name is the only reliable way to ensure marks land under the
+            // correct subject column.
+            $studentCoursesPdf = collect($row['courses'] ?? [])->keyBy(fn($c) => $c['course']?->course_name ?? '');
+        @endphp
         <tr>
             <td class="{{ $row['rank'] <= 3 ? 'rank1' : '' }}">#{{ $row['rank'] }}</td>
             <td>{{ $row['student']?->full_name ?? '—' }}</td>
-            @foreach($row['courses'] as $c)
-            <td>{{ $c['final_marks'] }} | <b style="color:{{ $c['passed'] ? '#059669' : '#dc2626' }}">{{ $c['grade'] }}</b></td>
+            {{-- Iterate over the header's course set (deduplicated by name) for alignment --}}
+            @foreach($courses as $headerCourse)
+            @php $c = $studentCoursesPdf->get($headerCourse->course_name); @endphp
+            <td>
+                @if($c)
+                    {{ $c['final_marks'] }} | <b style="color:{{ $c['passed'] ? '#059669' : '#dc2626' }}">{{ $c['grade'] }}</b>
+                @else
+                    —
+                @endif
+            </td>
             @endforeach
             <td><b style="color:#4f46e5">{{ $row['gpa'] }}</b></td>
             <td>{{ round($row['totalMarks'], 1) }}</td>
-            <td><span class="{{ $row['failed'] === 0 ? 'pass' : 'fail' }}">{{ $row['failed'] === 0 ? 'PASS' : 'FAIL' }}</span></td>
+            <td>
+                @php $rs = $row['resultStatus'] ?? ''; @endphp
+                @if($rs === 'PASS')
+                    <b style="color:#059669">PASS</b>
+                @elseif($rs === 'FAIL')
+                    <b style="color:#dc2626">FAIL</b>
+                @elseif($rs === 'NG')
+                    <b style="color:#d97706">NG</b>
+                @elseif($rs !== '')
+                    <b style="color:#6b7280">{{ $rs }}</b>
+                @endif
+            </td>
         </tr>
         @endforeach
     </tbody>

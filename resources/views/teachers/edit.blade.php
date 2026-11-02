@@ -50,11 +50,17 @@
                     
                     @if($teacher->photo)
                     <div class="mb-3 flex items-center gap-3 p-2 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                        <img src="{{ asset('storage/' . $teacher->photo) }}" class="w-12 h-12 rounded-xl object-cover border" alt="Current Photo">
-                        <div>
+                        <img src="{{ asset('storage/' . $teacher->photo) }}" class="w-12 h-12 rounded-xl object-cover object-center border flex-shrink-0" style="width:48px;height:48px;min-width:48px;min-height:48px;max-width:48px;max-height:48px;" alt="Current Photo">
+                        <div class="flex-1 min-w-0">
                             <p class="text-xs font-semibold text-slate-700 dark:text-slate-200 mb-0">Current Photo</p>
                             <p class="text-[10px] text-slate-400 mb-0">Select new image below to replace</p>
                         </div>
+                        <button type="button"
+                                onclick="openRemovePhotoModal()"
+                                class="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 text-[11px] font-semibold hover:bg-rose-100 dark:hover:bg-rose-900/50 transition"
+                                title="Remove current photo">
+                            <i class="bi bi-trash3 text-xs"></i> Remove
+                        </button>
                     </div>
                     @endif
 
@@ -174,4 +180,68 @@
 </div>
 
 @include('components.photos.photo-input')
+
+{{-- ── Remove Photo Confirmation Modal ──────────────────────── --}}
+<div id="removePhotoModal"
+     class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+     role="dialog" aria-modal="true" aria-labelledby="removePhotoModalTitle">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-sm w-full overflow-hidden">
+
+        {{-- Header --}}
+        <div class="p-6 pb-4 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 flex items-center justify-center flex-shrink-0">
+                <i class="bi bi-image text-xl text-amber-600"></i>
+            </div>
+            <div class="flex-1">
+                <h3 id="removePhotoModalTitle" class="text-base font-bold text-slate-800 dark:text-slate-100">
+                    Remove Profile Photo
+                </h3>
+                <p class="text-sm mt-1 text-slate-500 dark:text-slate-400">
+                    Are you sure you want to remove this teacher's profile picture?
+                </p>
+                <p class="text-xs mt-2 text-amber-600 dark:text-amber-400 font-medium">
+                    The default initials avatar will be displayed. All other teacher information remains unchanged.
+                </p>
+            </div>
+        </div>
+
+        {{-- Action Buttons --}}
+        <div class="px-6 pb-6 flex items-center justify-end gap-3">
+            <button type="button"
+                    onclick="closeRemovePhotoModal()"
+                    class="px-5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                Cancel
+            </button>
+            <form method="POST" action="{{ route('teachers.photo.remove', $teacher->id) }}" style="display:inline;">
+                @csrf
+                @method('DELETE')
+                <button type="submit"
+                        class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold shadow-sm shadow-amber-500/25 transition flex items-center gap-2">
+                    <i class="bi bi-trash3"></i> Confirm Remove
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+function openRemovePhotoModal() {
+    var modal = document.getElementById('removePhotoModal');
+    if (modal) modal.classList.remove('hidden');
+}
+function closeRemovePhotoModal() {
+    var modal = document.getElementById('removePhotoModal');
+    if (modal) modal.classList.add('hidden');
+}
+document.addEventListener('DOMContentLoaded', function () {
+    var modal = document.getElementById('removePhotoModal');
+    if (modal) {
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) closeRemovePhotoModal();
+        });
+    }
+});
+</script>
+@endpush
 @endsection

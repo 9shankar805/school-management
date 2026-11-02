@@ -58,6 +58,31 @@
     </div>
     @endif
 
+    {{-- ── Global student search ───────────────────────────────── --}}
+    <div class="card-modern mb-5">
+        <div class="card-body-modern">
+            <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:var(--text-muted)">
+                <i class="bi bi-person-search me-1 text-indigo-500"></i> Quick Student Search — search across all classes
+            </p>
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:var(--text-muted)"></i>
+                    <input
+                        type="text"
+                        id="globalStudentSearch"
+                        placeholder="Type student name, admission no or email…"
+                        autocomplete="off"
+                        class="input-modern pl-8 py-2 text-sm w-full"
+                    >
+                </div>
+                <button type="button" id="globalSearchBtn" class="btn-primary text-sm px-4">
+                    Search
+                </button>
+            </div>
+            <div id="globalSearchResults" class="mt-2 hidden rounded-xl border overflow-hidden shadow-lg max-h-72 overflow-y-auto divide-y" style="border-color:var(--border-card);background:var(--bg-surface)"></div>
+        </div>
+    </div>
+
     {{-- ── Filter form ────────────────────────────────────────── --}}
     <div class="card-modern mb-6">
         <div class="card-header-modern">
@@ -232,6 +257,14 @@
                                         <i class="bi bi-pencil text-xs"></i>
                                     </a>
                                     @endcan
+                                    @can('delete students')
+                                    <button type="button"
+                                            class="btn-icon text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                                            data-tooltip="Delete Student"
+                                            onclick="openDeleteModal({{ $student->student->id }}, '{{ addslashes($student->student->first_name . ' ' . $student->student->last_name) }}')">
+                                        <i class="bi bi-trash text-xs"></i>
+                                    </button>
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
@@ -307,6 +340,14 @@
                         <i class="bi bi-pencil text-xs"></i>
                     </a>
                     @endcan
+                    @can('delete students')
+                    <button type="button"
+                            class="btn-icon flex-shrink-0 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                            data-tooltip="Delete Student"
+                            onclick="openDeleteModal({{ $student->student->id }}, '{{ addslashes($student->student->first_name . ' ' . $student->student->last_name) }}')">
+                        <i class="bi bi-trash text-xs"></i>
+                    </button>
+                    @endcan
                 </div>
             </div>
             @endforeach
@@ -315,7 +356,6 @@
     </div>{{-- /students-view --}}
 
     @else
-
     {{-- Empty state --}}
     @if(request('class_id'))
     <div class="card-modern p-16 text-center">
@@ -342,8 +382,52 @@
 
     @endif
 
-    {{-- ── Bulk ID Card Export Modal ─────────────────────────────── --}}
-    <div id="bulkIdModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    {{-- ── Delete Student Confirmation Modal ───────────────────── --}}
+    <div id="deleteStudentModal"
+         class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+         role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+
+            {{-- Modal Header --}}
+            <div class="p-6 pb-4 flex items-start gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center flex-shrink-0">
+                    <i class="bi bi-trash3 text-xl text-rose-600"></i>
+                </div>
+                <div class="flex-1">
+                    <h3 id="deleteModalTitle" class="text-base font-bold" style="color:var(--text-heading)">
+                        Delete Student
+                    </h3>
+                    <p class="text-sm mt-1" style="color:var(--text-muted)">
+                        Are you sure you want to permanently delete
+                        <strong id="deleteStudentName" class="font-semibold" style="color:var(--text-heading)"></strong>?
+                    </p>
+                    <p class="text-xs mt-2 text-rose-600 dark:text-rose-400 font-medium">
+                        This action cannot be undone. All enrollment and parent-link records for this student will also be removed.
+                    </p>
+                </div>
+            </div>
+
+            {{-- Action Buttons --}}
+            <div class="px-6 pb-6 flex items-center justify-end gap-3">
+                <button type="button"
+                        onclick="closeDeleteModal()"
+                        class="px-5 py-2 rounded-xl border text-sm font-semibold transition"
+                        style="border-color:var(--border-card);color:var(--text-muted);background:var(--bg-card)">
+                    Cancel
+                </button>
+                <form id="deleteStudentForm" method="POST" style="display:inline;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                            class="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold shadow-sm shadow-rose-600/30 transition flex items-center gap-2">
+                        <i class="bi bi-trash3"></i> Delete Student
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Bulk ID Card Export Modal ─────────────────────────────── --}}    <div id="bulkIdModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden transform transition-all">
             
             {{-- Modal Header --}}
@@ -466,6 +550,37 @@
 
 @push('scripts')
 <script>
+// ── Delete Student Modal ──────────────────────────────────────
+function openDeleteModal(studentId, studentName) {
+    var modal = document.getElementById('deleteStudentModal');
+    var form  = document.getElementById('deleteStudentForm');
+    var label = document.getElementById('deleteStudentName');
+    if (!modal || !form || !label) return;
+
+    // Set the student name in the confirmation message
+    label.textContent = studentName;
+
+    // Point the form's action at the correct destroy route
+    form.action = '/students/' + studentId;
+
+    modal.classList.remove('hidden');
+}
+
+function closeDeleteModal() {
+    var modal = document.getElementById('deleteStudentModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+// Close on backdrop click
+document.addEventListener('DOMContentLoaded', function () {
+    var modal = document.getElementById('deleteStudentModal');
+    if (modal) {
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) closeDeleteModal();
+        });
+    }
+});
+
 // ── Section loader ────────────────────────────────────────────
 function getSections(obj) {
     var class_id = obj.options[obj.selectedIndex].value;
@@ -578,6 +693,58 @@ function submitBulkForm(format) {
     });
 
     setView(saved);
+})();
+
+// ── Global student search ─────────────────────────────────────
+(function () {
+    var input  = document.getElementById('globalStudentSearch');
+    var btn    = document.getElementById('globalSearchBtn');
+    var box    = document.getElementById('globalSearchResults');
+    if (!input || !btn || !box) return;
+
+    var debounce;
+
+    function doSearch() {
+        var q = input.value.trim();
+        if (q.length < 2) { box.innerHTML = ''; box.classList.add('hidden'); return; }
+
+        fetch('/results/students/search?q=' + encodeURIComponent(q))
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                var students = data.students || [];
+                if (!students.length) {
+                    box.innerHTML = '<p class="px-4 py-3 text-xs" style="color:var(--text-muted)">No students found.</p>';
+                    box.classList.remove('hidden');
+                    return;
+                }
+                box.innerHTML = students.map(function(s) {
+                    var classSection = [s.class_name, s.section_name ? 'Sec ' + s.section_name : ''].filter(Boolean).join(' · ');
+                    var admNo = s.admission_no ? '<span class="font-mono text-indigo-500">' + s.admission_no + '</span>' : '';
+                    return '<a href="/students/view/profile/' + s.id + '" class="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 dark:hover:bg-slate-800 transition group">'
+                         + '<img src="' + (s.avatar || '/imgs/default-avatar.png') + '" class="w-9 h-9 rounded-xl object-cover flex-shrink-0 border" style="border-color:var(--border-card)" onerror="this.src=\'/imgs/default-avatar.png\'" alt="">'
+                         + '<div class="flex-1 min-w-0">'
+                         +   '<p class="text-sm font-semibold truncate group-hover:text-indigo-600" style="color:var(--text-heading)">' + s.name + '</p>'
+                         +   '<p class="text-xs truncate" style="color:var(--text-muted)">' + classSection + (admNo ? '&nbsp;&bull;&nbsp;' + admNo : '') + '</p>'
+                         + '</div>'
+                         + '<i class="bi bi-arrow-right-short text-lg flex-shrink-0" style="color:var(--border-card)"></i>'
+                         + '</a>';
+                }).join('');
+                box.classList.remove('hidden');
+            })
+            .catch(function() {
+                box.innerHTML = '<p class="px-4 py-3 text-xs text-rose-500">Search failed. Please try again.</p>';
+                box.classList.remove('hidden');
+            });
+    }
+
+    input.addEventListener('input', function() { clearTimeout(debounce); debounce = setTimeout(doSearch, 300); });
+    btn.addEventListener('click', doSearch);
+    input.addEventListener('keydown', function(e) { if (e.key === 'Enter') doSearch(); });
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !box.contains(e.target) && !btn.contains(e.target)) {
+            box.classList.add('hidden');
+        }
+    });
 })();
 </script>
 @endpush

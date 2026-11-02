@@ -17,6 +17,8 @@ class ExamRuleRepository implements ExamRuleInterface {
     public function update($request) {
         try {
             $existing = ExamRule::where('id', $request->exam_rule_id)->first();
+            $newTotal = (float) $request->total_marks;
+
             ExamRule::where('id', $request->exam_rule_id)->update([
                 'total_marks'              => $request->total_marks,
                 'pass_marks'               => $request->pass_marks,
@@ -24,6 +26,12 @@ class ExamRuleRepository implements ExamRuleInterface {
                     ?? $existing?->marks_distribution_note
                     ?? '{}',
             ]);
+
+            // When full marks are reduced, clamp any existing marks that now exceed
+            // the new maximum — otherwise they become impossible values (e.g. 60/50).
+            if ($existing && $newTotal > 0) {
+                ExamRule::clampMarksToFullMarks((int) $existing->exam_id, $newTotal);
+            }
         } catch (\Exception $e) {
             throw new \Exception('Failed to update exam rule. '.$e->getMessage());
         }

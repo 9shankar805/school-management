@@ -45,14 +45,12 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        // Super-admin and school admins/teachers bypass permission gates so buttons are always visible
+        // Only super-admin bypasses all permission checks (wildcard role).
+        // All other roles are governed by Spatie permission checks, which the
+        // permission matrix (roles/matrix) is designed to control.
         Gate::before(function ($user) {
-            $role = strtolower($user->role ?? '');
-            if (in_array($role, ['super-admin', 'admin', 'principal', 'vice-principal', 'accountant', 'teacher', 'class-teacher'])) {
-                return true;
-            }
             try {
-                if ($user->hasAnyRole(['super-admin', 'admin', 'principal', 'vice-principal', 'accountant', 'teacher', 'class-teacher'])) {
+                if ($user->hasRole('super-admin')) {
                     return true;
                 }
             } catch (\Throwable $e) {
