@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Course;
 use App\Traits\SchoolSession;
 use App\Interfaces\SemesterInterface;
 use App\Interfaces\SchoolSessionInterface;
@@ -257,8 +258,35 @@ class AssignedTeacherController extends Controller
             ->orderBy('section_name')
             ->get(['id', 'section_name', 'room_no']);
 
+        // Auto-reconcile subjects for this semester:
+        // Secondary/K-12 schools use the same subjects across all terms/semesters.
+        // Ensure every unique subject already defined for this class in this session
+        // exists for the requested semester.
+        if ($classId > 0 && $semesterId > 0) {
+            $classSubjects = \App\Models\Course::where('class_id', $classId)
+                ->where('session_id', $sessionId)
+                ->orderBy('position', 'asc')
+                ->orderBy('id', 'asc')
+                ->get()
+                ->unique('course_name');
+
+            foreach ($classSubjects as $subj) {
+                \App\Models\Course::firstOrCreate([
+                    'course_name' => $subj->course_name,
+                    'class_id'    => $classId,
+                    'semester_id' => $semesterId,
+                    'session_id'  => $sessionId,
+                ], [
+                    'course_type' => $subj->course_type,
+                    'position'    => $subj->position ?? 0,
+                    'school_id'   => $subj->school_id ?? null,
+                ]);
+            }
+        }
+
         $coursesQuery = \App\Models\Course::where('class_id', $classId)
-            ->orderBy('course_name');
+            ->orderBy('position', 'asc')
+            ->orderBy('course_name', 'asc');
 
         // If a semester is selected, filter to only courses for that semester.
         // This prevents the same subject appearing once per semester in the grid.
@@ -276,6 +304,17 @@ class AssignedTeacherController extends Controller
             ->unique('course_name')
             ->values();
 
+        // Fallback: If still empty for this semester, grab all subjects for this class in session
+        if ($courses->isEmpty() && $classId > 0) {
+            $courses = \App\Models\Course::where('class_id', $classId)
+                ->where('session_id', $sessionId)
+                ->orderBy('position', 'asc')
+                ->orderBy('course_name', 'asc')
+                ->get(['id', 'course_name', 'course_type', 'semester_id'])
+                ->unique('course_name')
+                ->values();
+        }
+
         $assignments = \App\Models\AssignedTeacher::where('session_id', $sessionId)
             ->where('class_id', $classId)
             ->where('semester_id', $semesterId)
@@ -283,11 +322,14 @@ class AssignedTeacherController extends Controller
 
         $assignmentMap = [];
         foreach ($assignments as $a) {
-            $assignmentMap[$a->section_id . '_' . $a->course_id] = [
+            $val = [
                 'id' => $a->id,
                 'teacher_id' => $a->teacher_id,
                 'is_class_teacher' => (bool) $a->is_class_teacher,
             ];
+            // Support both lookup key formats (section_course and course_section)
+            $assignmentMap[$a->section_id . '_' . $a->course_id] = $val;
+            $assignmentMap[$a->course_id . '_' . $a->section_id] = $val;
         }
 
         return response()->json([
@@ -462,16 +504,34 @@ class AssignedTeacherController extends Controller
 
             $cloned = 0;
             foreach ($sourceAssignments as $src) {
+                $destCourseId = $src->course_id;
+                if ($src->course_id) {
+                    $sourceCourse = Course::find($src->course_id);
+                    if ($sourceCourse) {
+                        $destCourse = Course::firstOrCreate([
+                            'course_name' => $sourceCourse->course_name,
+                            'class_id'    => $src->class_id,
+                            'semester_id' => $toSem,
+                            'session_id'  => $sessionId,
+                        ], [
+                            'course_type' => $sourceCourse->course_type,
+                            'position'    => $sourceCourse->position ?? 0,
+                            'school_id'   => $sourceCourse->school_id ?? null,
+                        ]);
+                        $destCourseId = $destCourse->id;
+                    }
+                }
+
                 \App\Models\AssignedTeacher::updateOrCreate(
                     [
-                        'session_id' => $sessionId,
+                        'session_id'  => $sessionId,
                         'semester_id' => $toSem,
-                        'class_id' => $src->class_id,
-                        'section_id' => $src->section_id,
-                        'course_id' => $src->course_id,
+                        'class_id'    => $src->class_id,
+                        'section_id'  => $src->section_id,
+                        'course_id'   => $destCourseId,
                     ],
                     [
-                        'teacher_id' => $src->teacher_id,
+                        'teacher_id'       => $src->teacher_id,
                         'is_class_teacher' => $src->is_class_teacher,
                     ]
                 );

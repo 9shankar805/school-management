@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../theme/app_theme.dart';
 import '../data/app_data.dart';
 import '../providers/api_provider.dart';
@@ -18,6 +19,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
   String _searchQuery = '';
 
   @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final api = context.watch<ApiProvider>();
     final convs = api.conversations.where((c) {
@@ -27,6 +34,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     }).toList();
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text('Faculty Messages'),
         automaticallyImplyLeading: false,
@@ -82,7 +90,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                                   Container(
                                     width: 48,
                                     height: 48,
-                                    decoration: BoxDecoration(
+                                    decoration: const BoxDecoration(
                                       color: AppTheme.primaryLight,
                                       shape: BoxShape.circle,
                                     ),
@@ -191,6 +199,13 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     _loadMessages();
   }
 
+  @override
+  void dispose() {
+    _msgCtrl.dispose();
+    _scrollCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadMessages() async {
     setState(() => _loading = true);
     final msgs = await ApiService.getMessages(widget.conversation.id);
@@ -215,10 +230,10 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     });
   }
 
-  void _sendMessage() async {
-    final text = _msgCtrl.text.trim();
+  void _sendMessage([String? quickText]) async {
+    final text = quickText ?? _msgCtrl.text.trim();
     if (text.isEmpty) return;
-    _msgCtrl.clear();
+    if (quickText == null) _msgCtrl.clear();
 
     final sent = ChatMessage(sender: 'Parent', message: text, time: 'Just now', isMe: true);
     setState(() => _messages.add(sent));
@@ -227,9 +242,21 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
     await ApiService.sendMessage(widget.conversation.id, text);
   }
 
+  Future<void> _callTeacher() async {
+    final uri = Uri(scheme: 'tel', path: '+9779841000000');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Starting call with ${widget.conversation.teacherName}...')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         leading: CircleIconButton(
           icon: Icons.arrow_back_ios_new,
@@ -242,7 +269,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
             Container(
               width: 36,
               height: 36,
-              decoration: BoxDecoration(color: AppTheme.primaryLight, shape: BoxShape.circle),
+              decoration: const BoxDecoration(color: AppTheme.primaryLight, shape: BoxShape.circle),
               child: Center(
                 child: Text(
                   widget.conversation.teacherAvatar,
@@ -256,7 +283,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(widget.conversation.teacherName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-                  Text('${widget.conversation.subject} • Active', style: const TextStyle(fontSize: 10, color: AppTheme.green, fontWeight: FontWeight.w700)),
+                  Text('${widget.conversation.subject} • Online', style: const TextStyle(fontSize: 10, color: AppTheme.green, fontWeight: FontWeight.w700)),
                 ],
               ),
             ),
@@ -264,12 +291,9 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.call_outlined),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Starting audio call with ${widget.conversation.teacherName}...')),
-              );
-            },
+            icon: const Icon(Icons.phone_outlined),
+            tooltip: 'Call Faculty',
+            onPressed: _callTeacher,
           ),
         ],
       ),
@@ -287,6 +311,20 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
               },
             ),
           ),
+          // Quick inquiry pill suggestions
+          Container(
+            height: 38,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                _QuickPill(text: 'How is my child performing?', onTap: () => _sendMessage('How is my child performing in class?')),
+                _QuickPill(text: 'Question about homework', onTap: () => _sendMessage('I have an inquiry regarding recent homework.')),
+                _QuickPill(text: 'Request 1-on-1 meeting', onTap: () => _sendMessage('Can we schedule a 1-on-1 parent meeting?')),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
           _buildInputBar(),
         ],
       ),
@@ -301,7 +339,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -313,7 +351,7 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
               icon: const Icon(Icons.attach_file_rounded, color: AppTheme.grey),
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Attach assignment or photo...')),
+                  const SnackBar(content: Text('Attach homework solution or image...')),
                 );
               },
             ),
@@ -337,10 +375,40 @@ class _ChatConversationScreenState extends State<ChatConversationScreen> {
               decoration: const BoxDecoration(color: AppTheme.primary, shape: BoxShape.circle),
               child: IconButton(
                 icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
-                onPressed: _sendMessage,
+                onPressed: () => _sendMessage(),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuickPill extends StatelessWidget {
+  final String text;
+  final VoidCallback onTap;
+
+  const _QuickPill({required this.text, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 4),
+          ],
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF1E3A8A)),
         ),
       ),
     );
@@ -372,7 +440,7 @@ class _MessageBubble extends StatelessWidget {
           border: isMe ? null : Border.all(color: const Color(0xFFE5E9F0)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -390,12 +458,21 @@ class _MessageBubble extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(
-              message.time,
-              style: TextStyle(
-                color: isMe ? Colors.white70 : AppTheme.grey,
-                fontSize: 9,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  message.time,
+                  style: TextStyle(
+                    color: isMe ? Colors.white70 : AppTheme.grey,
+                    fontSize: 9,
+                  ),
+                ),
+                if (isMe) ...[
+                  const SizedBox(width: 4),
+                  const Icon(Icons.done_all, size: 12, color: Color(0xFF93C5FD)),
+                ],
+              ],
             ),
           ],
         ),

@@ -141,7 +141,10 @@ class AttendanceController extends Controller
         // Fetch students promoted to this class/section in the current session
         $query = Promotion::where('class_id', $classId)
             ->where('session_id', $sessionId)
-            ->with(['student' => fn($q) => $q->select('id', 'first_name', 'last_name', 'photo', 'gender', 'roll_no')])
+            ->with([
+                'student' => fn($q) => $q->select('id', 'first_name', 'last_name', 'photo', 'gender', 'roll_no', 'phone')
+                    ->with(['parent_info', 'parents:id,name,phone'])
+            ])
             ->when($sectionId, fn($q) => $q->where('section_id', $sectionId));
 
         $promotions = $query->get();
@@ -167,12 +170,25 @@ class AttendanceController extends Controller
                 default => 'not_marked',
             };
 
+            $parentPhone = $s->parent_info?->father_phone
+                ?: $s->parent_info?->mother_phone
+                ?: $s->parents->first()?->phone
+                ?: $s->phone;
+
+            $parentName = $s->parent_info?->father_name
+                ?: $s->parent_info?->mother_name
+                ?: $s->parents->first()?->name
+                ?: ('Parent of ' . $s->first_name);
+
             return [
                 'id'            => $s->id,
                 'name'          => $s->full_name,
                 'roll_no'       => $promo->roll_no ?? $s->roll_no,
                 'photo'         => $s->avatar,
                 'gender'        => $s->gender,
+                'phone'         => $s->phone,
+                'parent_phone'  => $parentPhone,
+                'parent_name'   => $parentName,
                 'section_id'    => $promo->section_id,
                 'status'        => $displayStatus,
                 'already_saved' => $dbStatus !== null,

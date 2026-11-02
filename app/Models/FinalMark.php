@@ -61,14 +61,17 @@ class FinalMark extends Model
         $total = $fullMarks ?? (float)($this->full_marks ?? 0);
 
         if ($total > 0 && $total != 100) {
-            $score = round(($fm / $total) * 100, 4);
+            // Guard: if marks were entered out of 100 but total was recorded lower than obtained
+            if ($fm > $total && $fm <= 100) {
+                $score = $fm;
+            } else {
+                $score = round(($fm / $total) * 100, 4);
+            }
         } else {
             $score = $fm;
         }
-
-        // Cap at 100 — prevents data-entry overruns (e.g. 80 entered on a 40-mark exam)
-        // from falling outside all rule intervals and defaulting to NG.
-        $score = min($score, 100.0);
+        // Normalize score between 0 and 100 for rule matching
+        $score = min(100.0, max(0.0, $score));
 
         foreach ($gradeRules as $rule) {
             if ($score >= $rule->start_at && $score <= $rule->end_at) {

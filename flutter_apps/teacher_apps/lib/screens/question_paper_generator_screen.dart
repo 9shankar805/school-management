@@ -361,7 +361,7 @@ class _QuestionPaperGeneratorScreenState
         ),
         const SizedBox(height: 4),
         DropdownButtonFormField<String>(
-          value: items.contains(value) ? value : items.first,
+          value: items.contains(value) ? value : (items.isNotEmpty ? items.first : null),
           decoration: InputDecoration(
             filled: true,
             fillColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
@@ -372,6 +372,7 @@ class _QuestionPaperGeneratorScreenState
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           ),
           items: items
+              .toSet()
               .map((item) => DropdownMenuItem(
                     value: item,
                     child: Text(item, style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700)),

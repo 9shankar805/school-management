@@ -35,7 +35,77 @@ class ApiProvider extends ChangeNotifier {
   List<ExamItem> get exams => _exams.isNotEmpty ? _exams : AppData.exams;
   List<FeeRecord> get fees => _fees.isNotEmpty ? _fees : AppData.fees;
   List<SubjectGrade> get subjects => _subjects.isNotEmpty ? _subjects : AppData.subjects;
-  List<ReportCard> get reportCards => _reportCards;
+  List<ReportCard> get reportCards => _reportCards.isNotEmpty ? _reportCards : const [
+    ReportCard(
+      id: 1,
+      term: 'Second Terminal Examination 2081',
+      academicYear: '2081-2082 (2026)',
+      issueDate: '2081-08-15 (Dec 2026)',
+      overallGrade: 'A+',
+      principalRemarks: 'Outstanding intellectual curiosity, exemplary discipline, and remarkable leadership in academic & extra-curricular activities.',
+      gpa: 3.90,
+      percentage: 91.5,
+      totalMarks: 700,
+      obtainedMarks: 641,
+      rank: 2,
+      totalStudents: 42,
+      attendance: '96 / 102 Days (94.1%)',
+      verifyToken: 'NSH-VERIFIED-2081-8849',
+      verifyUrl: 'https://verify.nepalschoolhub.com/transcripts/1',
+      classTeacher: 'Mrs. S. Adhikari',
+      examController: 'K. R. Pandey',
+      principalName: 'Dr. B. K. Sharma',
+      division: 'First Division with Distinction',
+      resultStatus: 'PASSED',
+      subjectGrades: AppData.subjects,
+    ),
+    ReportCard(
+      id: 2,
+      term: 'First Terminal Examination 2081',
+      academicYear: '2081-2082 (2026)',
+      issueDate: '2081-04-20 (Aug 2026)',
+      overallGrade: 'A',
+      principalRemarks: 'Very good intellectual start to the session. Keep striving for distinction in all subjects.',
+      gpa: 3.75,
+      percentage: 88.0,
+      totalMarks: 700,
+      obtainedMarks: 616,
+      rank: 4,
+      totalStudents: 42,
+      attendance: '48 / 50 Days (96.0%)',
+      verifyToken: 'NSH-VERIFIED-2081-8848',
+      verifyUrl: 'https://verify.nepalschoolhub.com/transcripts/2',
+      classTeacher: 'Mrs. S. Adhikari',
+      examController: 'K. R. Pandey',
+      principalName: 'Dr. B. K. Sharma',
+      division: 'First Division',
+      resultStatus: 'PASSED',
+      subjectGrades: AppData.subjects,
+    ),
+    ReportCard(
+      id: 3,
+      term: 'Annual / Final Terminal Examination 2080',
+      academicYear: '2080-2081 (2025)',
+      issueDate: '2081-01-05 (April 2026)',
+      overallGrade: 'A+',
+      principalRemarks: 'Promoted to Grade 8 with Outstanding Distinction. Exemplary academic standard and moral character.',
+      gpa: 3.92,
+      percentage: 92.4,
+      totalMarks: 700,
+      obtainedMarks: 647,
+      rank: 1,
+      totalStudents: 40,
+      attendance: '198 / 205 Days (96.5%)',
+      verifyToken: 'NSH-VERIFIED-2080-7712',
+      verifyUrl: 'https://verify.nepalschoolhub.com/transcripts/3',
+      classTeacher: 'Mrs. S. Adhikari',
+      examController: 'K. R. Pandey',
+      principalName: 'Dr. B. K. Sharma',
+      division: 'First Division with Distinction',
+      resultStatus: 'PROMOTED',
+      subjectGrades: AppData.subjects,
+    ),
+  ];
   List<AppNotification> get notifications => _notifications.isNotEmpty ? _notifications : AppData.notifications;
   List<TeacherContact> get teachers => _teachers;
   List<MeetingItem> get meetings => _meetings;
@@ -123,5 +193,16 @@ class ApiProvider extends ChangeNotifier {
       _documents = results[11] as List<DocumentItem>;
     } catch (_) {}
     notifyListeners();
+  }
+
+  Future<void> refreshReportCards() async {
+    try {
+      final childId = selectedChild.id;
+      final cards = await ApiService.getReportCards(childId: childId);
+      if (cards.isNotEmpty) {
+        _reportCards = cards;
+        notifyListeners();
+      }
+    } catch (_) {}
   }
 }

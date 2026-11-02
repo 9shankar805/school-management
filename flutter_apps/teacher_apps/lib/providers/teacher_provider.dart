@@ -36,50 +36,63 @@ class TeacherProvider extends ChangeNotifier {
   List<dynamic> get todos => _todos;
   Map<String, dynamic>? get nextClass => _nextClass;
 
+  List<TeacherClass>? _cachedTeacherClasses;
+  List<Student>? _cachedStudents;
+  List<TeacherAssignment>? _cachedAssignments;
+  List<TeacherExam>? _cachedExams;
+
   List<TeacherClass> get teacherClasses {
+    if (_cachedTeacherClasses != null) return _cachedTeacherClasses!;
     if (_classes.isNotEmpty) {
-      return _classes.asMap().entries.map((e) {
+      _cachedTeacherClasses = _classes.asMap().entries.map((e) {
         if (e.value is TeacherClass) return e.value as TeacherClass;
         if (e.value is Map<String, dynamic>) return TeacherClass.fromJson(e.value as Map<String, dynamic>, e.key);
         if (e.value is Map) return TeacherClass.fromJson(Map<String, dynamic>.from(e.value as Map), e.key);
         return AppData.classes[e.key % AppData.classes.length];
       }).toList();
+      return _cachedTeacherClasses!;
     }
     return AppData.classes;
   }
 
   List<Student> get studentList {
+    if (_cachedStudents != null) return _cachedStudents!;
     if (_students.isNotEmpty) {
-      return _students.asMap().entries.map((e) {
+      _cachedStudents = _students.asMap().entries.map((e) {
         if (e.value is Student) return e.value as Student;
         if (e.value is Map<String, dynamic>) return Student.fromJson(e.value as Map<String, dynamic>, e.key);
         if (e.value is Map) return Student.fromJson(Map<String, dynamic>.from(e.value as Map), e.key);
         return AppData.students[e.key % AppData.students.length];
       }).toList();
+      return _cachedStudents!;
     }
     return AppData.students;
   }
 
   List<TeacherAssignment> get assignmentList {
+    if (_cachedAssignments != null) return _cachedAssignments!;
     if (_assignments.isNotEmpty) {
-      return _assignments.asMap().entries.map((e) {
+      _cachedAssignments = _assignments.asMap().entries.map((e) {
         if (e.value is TeacherAssignment) return e.value as TeacherAssignment;
         if (e.value is Map<String, dynamic>) return TeacherAssignment.fromJson(e.value as Map<String, dynamic>, e.key);
         if (e.value is Map) return TeacherAssignment.fromJson(Map<String, dynamic>.from(e.value as Map), e.key);
         return AppData.assignments[e.key % AppData.assignments.length];
       }).toList();
+      return _cachedAssignments!;
     }
     return AppData.assignments;
   }
 
   List<TeacherExam> get examList {
+    if (_cachedExams != null) return _cachedExams!;
     if (_exams.isNotEmpty) {
-      return _exams.asMap().entries.map((e) {
+      _cachedExams = _exams.asMap().entries.map((e) {
         if (e.value is TeacherExam) return e.value as TeacherExam;
         if (e.value is Map<String, dynamic>) return TeacherExam.fromJson(e.value as Map<String, dynamic>, e.key);
         if (e.value is Map) return TeacherExam.fromJson(Map<String, dynamic>.from(e.value as Map), e.key);
         return AppData.exams[e.key % AppData.exams.length];
       }).toList();
+      return _cachedExams!;
     }
     return AppData.exams;
   }
@@ -109,17 +122,23 @@ class TeacherProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void addAssignment(TeacherAssignment assignment) {
+    _assignments.insert(0, assignment);
+    _cachedAssignments = null;
+    notifyListeners();
+  }
+
   Future<void> fetchDashboardData() async {
     try {
       final res = await _apiService.getDashboardStats();
       if (res.success && res.data != null) {
         final d = res.data!;
-        _stats = d is Map<String, dynamic> ? (d['stats'] is Map<String, dynamic> ? d['stats'] : d) : _stats;
+        _stats = d['stats'] is Map<String, dynamic> ? d['stats'] : d;
       }
       final nextRes = await _apiService.getNextClass();
       if (nextRes.success && nextRes.data != null) {
         final nd = nextRes.data!;
-        _nextClass = nd is Map<String, dynamic> ? (nd['next_class'] is Map<String, dynamic> ? nd['next_class'] : nd) : null;
+        _nextClass = nd['next_class'] is Map<String, dynamic> ? nd['next_class'] : nd;
       }
     } catch (_) {}
     notifyListeners();
@@ -129,11 +148,8 @@ class TeacherProvider extends ChangeNotifier {
     try {
       final res = await _apiService.getClassesSummary();
       if (res.success && res.data != null) {
-        if (res.data is List) {
-          _classes = res.data as List;
-        } else if (res.data is Map && res.data['classes'] is List) {
-          _classes = res.data['classes'];
-        }
+        _classes = res.data!;
+        _cachedTeacherClasses = null;
       }
     } catch (_) {}
     notifyListeners();
@@ -143,11 +159,8 @@ class TeacherProvider extends ChangeNotifier {
     try {
       final res = await _apiService.getStudents();
       if (res.success && res.data != null) {
-        if (res.data is List) {
-          _students = res.data as List;
-        } else if (res.data is Map && res.data['students'] is List) {
-          _students = res.data['students'];
-        }
+        _students = res.data!;
+        _cachedStudents = null;
       }
     } catch (_) {}
     notifyListeners();
@@ -157,11 +170,7 @@ class TeacherProvider extends ChangeNotifier {
     try {
       final res = await _apiService.getDashboardTimeline();
       if (res.success && res.data != null) {
-        if (res.data is List) {
-          _timeline = res.data as List;
-        } else if (res.data is Map && res.data['timeline'] is List) {
-          _timeline = res.data['timeline'];
-        }
+        _timeline = res.data!;
       }
     } catch (_) {}
     notifyListeners();
@@ -171,11 +180,8 @@ class TeacherProvider extends ChangeNotifier {
     try {
       final res = await _apiService.getAssignments();
       if (res.success && res.data != null) {
-        if (res.data is List) {
-          _assignments = res.data as List;
-        } else if (res.data is Map && res.data['assignments'] is List) {
-          _assignments = res.data['assignments'];
-        }
+        _assignments = res.data!;
+        _cachedAssignments = null;
       }
     } catch (_) {}
     notifyListeners();
@@ -185,11 +191,8 @@ class TeacherProvider extends ChangeNotifier {
     try {
       final res = await _apiService.getExams();
       if (res.success && res.data != null) {
-        if (res.data is List) {
-          _exams = res.data as List;
-        } else if (res.data is Map && res.data['exams'] is List) {
-          _exams = res.data['exams'];
-        }
+        _exams = res.data!;
+        _cachedExams = null;
       }
     } catch (_) {}
     notifyListeners();
@@ -199,11 +202,7 @@ class TeacherProvider extends ChangeNotifier {
     try {
       final res = await _apiService.getNotifications();
       if (res.success && res.data != null) {
-        if (res.data is List) {
-          _notifications = res.data as List;
-        } else if (res.data is Map && res.data['notifications'] is List) {
-          _notifications = res.data['notifications'];
-        }
+        _notifications = res.data!;
       }
     } catch (_) {}
     notifyListeners();
@@ -213,11 +212,7 @@ class TeacherProvider extends ChangeNotifier {
     try {
       final res = await _apiService.getAnnouncements();
       if (res.success && res.data != null) {
-        if (res.data is List) {
-          _announcements = res.data as List;
-        } else if (res.data is Map && res.data['announcements'] is List) {
-          _announcements = res.data['announcements'];
-        }
+        _announcements = res.data!;
       }
     } catch (_) {}
     notifyListeners();
@@ -227,11 +222,7 @@ class TeacherProvider extends ChangeNotifier {
     try {
       final res = await _apiService.getTodos();
       if (res.success && res.data != null) {
-        if (res.data is List) {
-          _todos = res.data as List;
-        } else if (res.data is Map && res.data['todos'] is List) {
-          _todos = res.data['todos'];
-        }
+        _todos = res.data!;
       }
     } catch (_) {}
     notifyListeners();

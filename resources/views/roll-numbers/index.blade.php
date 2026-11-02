@@ -21,18 +21,28 @@
                 </span>
                 <div>
                     <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">Roll Number Management</h1>
-                    <p class="text-xs text-slate-500 dark:text-slate-400">Assign, sequence, and update student roll numbers by class and section</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Assign, sequence, and update student roll numbers by class, section, and term</p>
                 </div>
             </div>
         </div>
 
-        @if($promotions->count())
-        <div class="flex items-center gap-2">
-            <button type="button" onclick="document.getElementById('autoAssignModal').classList.remove('hidden')" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-bold shadow-md hover:shadow-indigo-500/25 transition flex items-center gap-2">
-                <i class="bi bi-magic text-sm"></i> Auto-Generate Roll Numbers
+        <div class="flex items-center gap-2 flex-wrap">
+            <a href="{{ route('school.setup', ['step' => 7]) }}" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition {{ $rollNumberMode === 'terminal' ? 'bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200' }}" title="Click to change roll assignment mode in School Setup">
+                <i class="bi {{ $rollNumberMode === 'terminal' ? 'bi-arrow-repeat text-purple-600' : 'bi-calendar-event text-slate-500' }}"></i>
+                <span>Mode: <strong>{{ $rollNumberMode === 'terminal' ? 'Terminal-wise' : 'Yearly' }}</strong></span>
+                <i class="bi bi-pencil-square text-[10px] opacity-60"></i>
+            </a>
+
+            <a href="{{ route('roll-numbers.reassign', ['class_id' => $classId, 'section_id' => $sectionId]) }}" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md hover:shadow-purple-500/25 transition flex items-center gap-2">
+                <i class="bi bi-trophy text-sm"></i> Reassign by Exam Rank
+            </a>
+
+            @if($promotions->count())
+            <button type="button" onclick="document.getElementById('autoAssignModal').classList.remove('hidden')" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white text-xs font-bold shadow-xs transition flex items-center gap-2">
+                <i class="bi bi-magic text-sm"></i> Auto-Generate
             </button>
+            @endif
         </div>
-        @endif
     </div>
 
     @include('session-messages')
@@ -40,7 +50,7 @@
     {{-- Filter Panel --}}
     <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-xs p-6">
         <form action="{{ route('roll-numbers.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-            <div class="md:col-span-5">
+            <div class="{{ $rollNumberMode === 'terminal' ? 'md:col-span-4' : 'md:col-span-5' }}">
                 <label for="class_id" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     Select Class <span class="text-rose-500">*</span>
                 </label>
@@ -54,7 +64,7 @@
                 </select>
             </div>
 
-            <div class="md:col-span-5">
+            <div class="{{ $rollNumberMode === 'terminal' ? 'md:col-span-3' : 'md:col-span-5' }}">
                 <label for="section_id" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     Select Section <span class="text-rose-500">*</span>
                 </label>
@@ -67,6 +77,23 @@
                     @endforeach
                 </select>
             </div>
+
+            @if($rollNumberMode === 'terminal')
+            <div class="md:col-span-3">
+                <label for="semester_id" class="block text-xs font-semibold text-purple-700 dark:text-purple-300 mb-1.5 flex items-center justify-between">
+                    <span>Terminal / Semester</span>
+                    <span class="text-[10px] text-purple-500 font-bold">Dynamic Mode</span>
+                </label>
+                <select name="semester_id" id="semester_id" onchange="this.form.submit()" class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/20 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all">
+                    <option value="0">Overall Active Roster</option>
+                    @foreach($semesters as $sem)
+                        <option value="{{ $sem->id }}" {{ $semesterId == $sem->id ? 'selected' : '' }}>
+                            {{ $sem->semester_name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
 
             <div class="md:col-span-2 flex gap-2">
                 <button type="submit" class="w-full px-4 py-2.5 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white text-xs font-bold shadow-xs transition flex items-center justify-center gap-1.5">
@@ -90,13 +117,18 @@
                         <span class="px-3 py-1 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
                             Section {{ $selectedSection->section_name }}
                         </span>
+                        @if($rollNumberMode === 'terminal' && $selectedSemester)
+                        <span class="px-3 py-1 rounded-xl text-xs font-bold bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+                            {{ $selectedSemester->semester_name }}
+                        </span>
+                        @endif
                         <span class="px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                             {{ $promotions->count() }} Students
                         </span>
                     </div>
                     <p class="text-xs text-slate-500 dark:text-slate-400">
-                        Assigned: <span class="font-semibold text-emerald-600 dark:text-emerald-400">{{ $promotions->whereNotNull('roll_no')->where('roll_no', '!=', '')->count() }}</span> | 
-                        Unassigned: <span class="font-semibold text-rose-500 dark:text-rose-400">{{ $promotions->filter(fn($p) => empty($p->roll_no))->count() }}</span>
+                        Assigned: <span class="font-semibold text-emerald-600 dark:text-emerald-400">{{ $promotions->whereNotNull('effective_roll')->where('effective_roll', '!=', '')->count() }}</span> |
+                        Unassigned: <span class="font-semibold text-rose-500 dark:text-rose-400">{{ $promotions->filter(fn($p) => empty($p->effective_roll))->count() }}</span>
                     </p>
                 </div>
 
@@ -117,6 +149,9 @@
                 @csrf
                 <input type="hidden" name="class_id" value="{{ $classId }}">
                 <input type="hidden" name="section_id" value="{{ $sectionId }}">
+                @if($rollNumberMode === 'terminal' && $semesterId > 0)
+                <input type="hidden" name="semester_id" value="{{ $semesterId }}">
+                @endif
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs">
@@ -139,12 +174,17 @@
                                     {{ $index + 1 }}
                                 </td>
                                 <td class="py-3 px-4">
-                                    <div class="relative max-w-[160px]">
-                                        <input type="text" 
-                                               name="roll_no[{{ $promo->student_id }}]" 
-                                               value="{{ old("roll_no.{$promo->student_id}", $promo->roll_no ?? $student?->roll_no) }}" 
+                                    <div class="flex items-center gap-2 max-w-[180px]">
+                                        <input type="text"
+                                               name="roll_no[{{ $promo->student_id }}]"
+                                               value="{{ old("roll_no.{$promo->student_id}", $promo->effective_roll ?? $promo->roll_no ?? $student?->roll_no) }}"
                                                placeholder="e.g. 1 or 01"
                                                class="roll-input w-full text-xs font-mono font-bold px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all">
+                                        @if(isset($promo->source_rank) && $promo->source_rank)
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 shrink-0" title="Ranked from {{ $promo->source_terminal ?? 'exam' }}">
+                                            #{{ $promo->source_rank }}
+                                        </span>
+                                        @endif
                                     </div>
                                 </td>
                                 <td class="py-3 px-4">
@@ -231,6 +271,9 @@
             @csrf
             <input type="hidden" name="class_id" value="{{ $classId }}">
             <input type="hidden" name="section_id" value="{{ $sectionId }}">
+            @if($rollNumberMode === 'terminal' && $semesterId > 0)
+            <input type="hidden" name="semester_id" value="{{ $semesterId }}">
+            @endif
 
             <div>
                 <label for="sort_by" class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">

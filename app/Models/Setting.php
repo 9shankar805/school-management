@@ -29,6 +29,7 @@ class Setting extends Model
      */
     public static function get(string $key, mixed $default = null, ?int $schoolId = null): mixed
     {
+        $schoolId = $schoolId ?? config('tenant.school_id') ?? (auth()->check() ? auth()->user()?->school_id : null);
         $cacheKey = "settings:{$schoolId}:{$key}";
 
         return Cache::remember($cacheKey, 3600, function () use ($key, $default, $schoolId) {
@@ -37,6 +38,12 @@ class Setting extends Model
                 ->first();
 
             if (! $setting) {
+                if ($key === 'roll_number_mode') {
+                    $academicSetting = AcademicSetting::withoutGlobalScopes()->find(1);
+                    if (!empty($academicSetting?->roll_number_mode)) {
+                        return $academicSetting->roll_number_mode;
+                    }
+                }
                 return $default;
             }
 
@@ -49,6 +56,8 @@ class Setting extends Model
      */
     public static function set(string $key, mixed $value, string $group = 'general', ?int $schoolId = null): void
     {
+        $schoolId = $schoolId ?? config('tenant.school_id') ?? (auth()->check() ? auth()->user()?->school_id : null);
+
         static::updateOrCreate(
             ['key' => $key, 'school_id' => $schoolId],
             ['group' => $group, 'value' => is_array($value) ? json_encode($value) : $value]

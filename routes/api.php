@@ -182,8 +182,7 @@ use App\Http\Controllers\Api\ParentsApp\SettingController as ParentSettingContro
 use App\Http\Controllers\Api\ParentsApp\DashboardController as ParentDashboardController;
 use App\Http\Controllers\Api\ParentsApp\DocumentController as ParentDocumentController;
 
-Route::name('parents.')->group(function () {
-    
+$parentRoutes = function () {
     // Public Authentication Routes
     Route::prefix('auth')->name('auth.')->group(function () {
         Route::post('login', [ParentAuthController::class, 'login']);
@@ -221,6 +220,7 @@ Route::name('parents.')->group(function () {
     Route::get('report-cards', [ParentAcademicController::class, 'reportCards']);
     Route::get('report-cards/child/{childId}', [ParentAcademicController::class, 'reportCardsByChild']);
     Route::get('report-cards/{id}', [ParentAcademicController::class, 'reportCardShow']);
+    Route::get('report-cards/{id}/pdf', [ParentAcademicController::class, 'reportCardPdf']);
     Route::get('report-cards/term/{term}', [ParentAcademicController::class, 'reportCardsByTerm']);
     
     Route::get('subjects', [ParentAcademicController::class, 'subjects']);
@@ -427,7 +427,10 @@ Route::name('parents.')->group(function () {
 
     }); // End auth:sanctum middleware
 
-});
+};
+
+Route::name('parents.')->group($parentRoutes);
+Route::prefix('parent-app')->name('parent_app.')->group($parentRoutes);
 
 /*
 |--------------------------------------------------------------------------
@@ -458,6 +461,7 @@ use App\Http\Controllers\Api\TeacherApp\AppInfoController as TeacherAppInfoContr
 use App\Http\Controllers\Api\TeacherApp\SupportController as TeacherSupportController;
 use App\Http\Controllers\Api\TeacherApp\QuestionPaperController as TeacherQuestionPaperController;
 use App\Http\Controllers\Api\TeacherApp\ClassTeacherController as TeacherClassTeacherController;
+use App\Http\Controllers\Api\TeacherApp\PayrollController as TeacherPayrollController;
 
 Route::prefix('teacher-app')->name('teacher_app.')->group(function () {
     
@@ -508,6 +512,7 @@ Route::prefix('teacher-app')->name('teacher_app.')->group(function () {
         Route::prefix('classes')->group(function () {
             Route::get('summary', [TeacherClassController::class, 'summary']);
             Route::get('{id}', [TeacherClassController::class, 'show']);
+            Route::get('{id}/subjects', [TeacherClassController::class, 'subjects']);
             Route::get('{id}/top-students', [TeacherClassController::class, 'topStudents']);
             Route::post('{id}/sections/{sectionId}/class-teacher', [TeacherClassController::class, 'assignClassTeacher']);
         });
@@ -543,6 +548,10 @@ Route::prefix('teacher-app')->name('teacher_app.')->group(function () {
         Route::prefix('schedule')->group(function () {
             Route::get('weekly', [TeacherScheduleController::class, 'weekly']);
             Route::get('daily/{date}', [TeacherScheduleController::class, 'daily']);
+            Route::get('class-routine', [TeacherScheduleController::class, 'classRoutine']);
+            Route::get('available-teachers', [TeacherScheduleController::class, 'availableTeachers']);
+            Route::get('substitutions', [TeacherScheduleController::class, 'substitutions']);
+            Route::post('substitution-request', [TeacherScheduleController::class, 'requestSubstitution']);
             Route::get('monthly/{month}', [TeacherScheduleController::class, 'monthly']);
             Route::get('stats/{date}', [TeacherScheduleController::class, 'stats']);
         });
@@ -572,6 +581,8 @@ Route::prefix('teacher-app')->name('teacher_app.')->group(function () {
             Route::put('{id}', [TeacherAssignmentController::class, 'update']);
             Route::delete('{id}', [TeacherAssignmentController::class, 'destroy']);
             Route::get('{id}/submissions', [TeacherAssignmentController::class, 'submissions']);
+            Route::post('{id}/submissions/{submissionId}/grade', [TeacherAssignmentController::class, 'gradeSubmission']);
+            Route::post('{id}/remind', [TeacherAssignmentController::class, 'remindDefaulters']);
         });
 
         // 7. Gradebook
@@ -587,10 +598,13 @@ Route::prefix('teacher-app')->name('teacher_app.')->group(function () {
         Route::prefix('exams')->group(function () {
             Route::get('/', [TeacherExamController::class, 'index']);
             Route::post('/', [TeacherExamController::class, 'store']);
+            Route::get('marks', [TeacherExamController::class, 'getMarks']);
+            Route::post('marks', [TeacherExamController::class, 'submitMarks']);
             Route::get('{id}', [TeacherExamController::class, 'show']);
             Route::put('{id}', [TeacherExamController::class, 'update']);
             Route::delete('{id}', [TeacherExamController::class, 'destroy']);
             Route::get('{id}/results', [TeacherExamController::class, 'results']);
+            Route::get('{id}/marks', [TeacherExamController::class, 'getMarks']);
             Route::put('{id}/marks', [TeacherExamController::class, 'submitMarks']);
         });
 
@@ -621,24 +635,43 @@ Route::prefix('teacher-app')->name('teacher_app.')->group(function () {
             Route::get('detail/{id}', [TeacherLessonPlanController::class, 'show']);
             Route::get('{date}', [TeacherLessonPlanController::class, 'byDate']);
             Route::put('{id}', [TeacherLessonPlanController::class, 'update']);
+            Route::post('{id}/complete', [TeacherLessonPlanController::class, 'markCompleted']);
             Route::delete('{id}', [TeacherLessonPlanController::class, 'destroy']);
         });
 
-        // 8. Messages
+        // 8. Messages & Parent-Teacher Chat
         Route::prefix('messages')->group(function () {
             Route::get('/', [TeacherMessageController::class, 'index']);
+            Route::get('conversations', [TeacherMessageController::class, 'conversations']);
+            Route::post('conversations', [TeacherMessageController::class, 'startConversation']);
+            Route::get('conversations/{id}/messages', [TeacherMessageController::class, 'conversationMessages']);
+            Route::post('conversations/{id}/messages', [TeacherMessageController::class, 'sendChatMessage']);
+            Route::put('conversations/{id}/read', [TeacherMessageController::class, 'markConversationAsRead']);
+            Route::get('parent-contacts', [TeacherMessageController::class, 'parentContacts']);
             Route::post('/', [TeacherMessageController::class, 'store']);
             Route::get('{id}', [TeacherMessageController::class, 'show']);
             Route::put('{id}/read', [TeacherMessageController::class, 'markAsRead']);
             Route::delete('{id}', [TeacherMessageController::class, 'destroy']);
         });
 
+        Route::prefix('chat')->group(function () {
+            Route::get('conversations', [TeacherMessageController::class, 'conversations']);
+            Route::post('conversations', [TeacherMessageController::class, 'startConversation']);
+            Route::get('conversations/{id}/messages', [TeacherMessageController::class, 'conversationMessages']);
+            Route::post('conversations/{id}/messages', [TeacherMessageController::class, 'sendChatMessage']);
+            Route::put('conversations/{id}/read', [TeacherMessageController::class, 'markConversationAsRead']);
+            Route::get('parent-contacts', [TeacherMessageController::class, 'parentContacts']);
+        });
+
         // 11. Leaves
         Route::prefix('leaves')->group(function () {
             Route::get('/', [TeacherLeaveController::class, 'index']);
+            Route::get('types', [TeacherLeaveController::class, 'types']);
+            Route::get('substitutes', [TeacherLeaveController::class, 'substitutes']);
             Route::post('/', [TeacherLeaveController::class, 'store']);
             Route::get('{id}', [TeacherLeaveController::class, 'show']);
             Route::put('{id}/status', [TeacherLeaveController::class, 'updateStatus']);
+            Route::delete('{id}', [TeacherLeaveController::class, 'destroy']);
         });
 
         // 14. Announcements
@@ -655,6 +688,15 @@ Route::prefix('teacher-app')->name('teacher_app.')->group(function () {
             Route::get('unread-count', [TeacherNotificationController::class, 'unreadCount']);
             Route::put('{id}/read', [TeacherNotificationController::class, 'markAsRead']);
             Route::delete('{id}', [TeacherNotificationController::class, 'destroy']);
+        });
+
+        // 20. Salary & Payroll (तलब तथा तलब भौचर)
+        Route::prefix('payroll')->group(function () {
+            Route::get('/', [TeacherPayrollController::class, 'index']);
+            Route::get('latest', [TeacherPayrollController::class, 'latest']);
+            Route::get('{id}', [TeacherPayrollController::class, 'show']);
+            Route::post('request-advance', [TeacherPayrollController::class, 'requestAdvance']);
+            Route::get('tax-statement', [TeacherPayrollController::class, 'taxStatement']);
         });
 
         // 16. Settings

@@ -70,7 +70,7 @@ class _DayRoutineView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final periods = AppData.schedule;
+    const periods = AppData.schedule;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),

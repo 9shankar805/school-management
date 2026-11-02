@@ -30,6 +30,8 @@ class AppTheme {
   static const Color red = Color(0xFFFF3838);
   static const Color redLight = Color(0xFFFFECEC);
   static const Color amber = Color(0xFFFFC048);
+  static const Color coral = Color(0xFFFF6F61);
+  static const Color coralLight = Color(0xFFFFECE9);
 
   // Dark Mode Palette
   static const Color darkBg = Color(0xFF0A0A16);
@@ -94,7 +96,7 @@ class AppTheme {
         ),
         iconTheme: const IconThemeData(color: dark),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: cardBg,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -155,7 +157,7 @@ class AppTheme {
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: darkCard,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

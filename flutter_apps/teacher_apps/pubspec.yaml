@@ -16,7 +16,7 @@ dependencies:
   google_fonts: ^6.1.0
   flutter_animate: ^4.5.0
   fl_chart: ^0.66.0
-  intl: ^0.19.0
+  intl: ^0.20.2
   cached_network_image: ^3.3.1
   
   # State Management & Providers
@@ -25,6 +25,7 @@ dependencies:
   # Networking & Storage
   http: ^1.2.0
   shared_preferences: ^2.2.2
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:

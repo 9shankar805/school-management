@@ -148,7 +148,7 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
         ),
         const SizedBox(height: 12),
         Expanded(
-          child: _filtered.isEmpty
+          child: filtered.isEmpty
               ? const Center(child: Column(
                   mainAxisAlignment: MainAxisAlignment.center, children: [
                   Icon(Icons.folder_open_outlined, size: 64, color: AppTheme.grey),
@@ -157,9 +157,9 @@ class _ResourcesScreenState extends State<ResourcesScreen> {
                 ]))
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                  itemCount: _filtered.length,
+                  itemCount: filtered.length,
                   itemBuilder: (_, i) {
-                    final r = _filtered[i];
+                    final r = filtered[i];
                     final typeColor = _colorForType(r['type'] as String);
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),

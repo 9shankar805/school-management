@@ -52,10 +52,12 @@ class AuthController extends Controller
         AuditLog::record('teacher_login', $user);
 
         return response()->json([
-            'status'  => 'success',
-            'token'   => $token,
+            'status'     => 'success',
+            'token'      => $token,
             'token_type' => 'Bearer',
-            'user'    => [
+            'expires_in' => 86400, // 24 hours in seconds
+            'expires_at' => now()->addHours(24)->toIso8601String(),
+            'user'       => [
                 'id'         => $user->id,
                 'name'       => trim($user->first_name . ' ' . $user->last_name),
                 'email'      => $user->email,

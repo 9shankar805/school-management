@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class TeacherClass {
   final String name, section, room, time, subject, period;
   final int students, colorHex, iconCode;
@@ -9,16 +11,19 @@ class TeacherClass {
   final int? courseId;
   final bool isClassTeacher;
 
+  int get studentsCount => students;
+
   const TeacherClass({
     required this.name,
     required this.section,
     required this.room,
     required this.time,
     required this.subject,
-    required this.students,
-    required this.colorHex,
-    required this.iconCode,
-    required this.avgGrade,
+    int? students,
+    int? studentsCount,
+    this.colorHex = 0xFF0F4C81,
+    this.iconCode = 0xe3e9,
+    this.avgGrade = 3.6,
     this.period = 'Period 1',
     this.isOngoing = false,
     this.id,
@@ -26,7 +31,7 @@ class TeacherClass {
     this.sectionId,
     this.courseId,
     this.isClassTeacher = false,
-  });
+  }) : students = students ?? studentsCount ?? 0;
 
   factory TeacherClass.fromJson(Map<String, dynamic> json, [int index = 0]) {
     final palette = [0xFFE0F2FE, 0xFFEDE9FE, 0xFFDCFCE7, 0xFFFEF3C7, 0xFFFFEDD5, 0xFFFCE7F3];
@@ -55,7 +60,10 @@ class TeacherClass {
       iconCode: json['iconCode'] is int ? json['iconCode'] as int : 0xe3e9,
       avgGrade: (json['avgGrade'] is num) ? (json['avgGrade'] as num).toDouble() : 3.6,
       isOngoing: json['isOngoing'] == true,
-      isClassTeacher: json['is_class_teacher'] == true,
+      isClassTeacher: json['is_class_teacher'] == true ||
+          json['is_class_teacher'] == 1 ||
+          json['is_class_teacher'] == '1' ||
+          json['is_class_teacher'] == 'true',
     );
   }
 }
@@ -70,6 +78,13 @@ class Student {
   final int? sectionId;
   final int? classId;
   final String? photoUrl;
+  final String? _parentName;
+  final String? _parentPhone;
+
+  String get rollNumber => rollNo;
+  double get attendanceRate => attendance;
+  String get parentName => _parentName ?? 'Parent of $name';
+  String get parentPhone => _parentPhone ?? '+977 9841000000';
 
   const Student({
     required this.name,
@@ -85,7 +100,10 @@ class Student {
     this.sectionId,
     this.classId,
     this.photoUrl,
-  });
+    String? parentName,
+    String? parentPhone,
+  })  : _parentName = parentName,
+        _parentPhone = parentPhone;
 
   factory Student.fromJson(Map<String, dynamic> json, [int index = 0]) {
     final name = json['name']?.toString() ??
@@ -117,6 +135,8 @@ class Student {
       sectionId: json['section_id'] is int ? json['section_id'] : int.tryParse(json['section_id']?.toString() ?? ''),
       classId: json['class_id'] is int ? json['class_id'] : int.tryParse(json['class_id']?.toString() ?? ''),
       photoUrl: json['photo']?.toString() ?? json['photo_url']?.toString() ?? json['avatar_url']?.toString(),
+      parentName: json['parent_name']?.toString() ?? json['guardian_name']?.toString(),
+      parentPhone: json['parent_phone']?.toString() ?? json['guardian_phone']?.toString() ?? json['phone']?.toString(),
     );
   }
 
@@ -265,18 +285,18 @@ class AppData {
   ];
 
   static const List<Student> students = [
-    Student(name: 'Aayush Shrestha', grade: 'A+', avatar: 'AS', gpa: 4.0, attendance: 0.98, rank: 1, rollNo: '01'),
-    Student(name: 'Sneha Adhikari', grade: 'A+', avatar: 'SA', gpa: 3.95, attendance: 0.95, rank: 2, rollNo: '02'),
-    Student(name: 'Bibek Thapa', grade: 'A', avatar: 'BT', gpa: 3.90, attendance: 0.92, rank: 3, rollNo: '03'),
-    Student(name: 'Prashant Karki', grade: 'A', avatar: 'PK', gpa: 3.85, attendance: 0.90, rank: 4, rollNo: '04'),
-    Student(name: 'Pooja Sharma', grade: 'A', avatar: 'PS', gpa: 3.80, attendance: 0.88, rank: 5, rollNo: '05'),
-    Student(name: 'Rohan Gurung', grade: 'A-', avatar: 'RG', gpa: 3.75, attendance: 0.85, rank: 6, rollNo: '06'),
-    Student(name: 'Anjali Tamang', grade: 'A-', avatar: 'AT', gpa: 3.72, attendance: 0.87, rank: 7, rollNo: '07'),
-    Student(name: 'Sujan Maharjan', grade: 'B+', avatar: 'SM', gpa: 3.68, attendance: 0.80, rank: 8, rollNo: '08'),
-    Student(name: 'Bipana Rai', grade: 'B+', avatar: 'BR', gpa: 3.65, attendance: 0.82, rank: 9, rollNo: '09'),
-    Student(name: 'Kushal Neupane', grade: 'B+', avatar: 'KN', gpa: 3.62, attendance: 0.78, rank: 10, rollNo: '10'),
-    Student(name: 'Suman Dahal', grade: 'B', avatar: 'SD', gpa: 3.40, attendance: 0.75, rank: 11, rollNo: '11'),
-    Student(name: 'Saroj Poudel', grade: 'B', avatar: 'SP', gpa: 3.30, attendance: 0.71, rank: 12, rollNo: '12'),
+    Student(name: 'Aayush Shrestha', grade: 'A+', avatar: 'AS', gpa: 4.0, attendance: 0.98, rank: 1, rollNo: '01', parentName: 'Hari Shrestha (Father)', parentPhone: '9841234567'),
+    Student(name: 'Sneha Adhikari', grade: 'A+', avatar: 'SA', gpa: 3.95, attendance: 0.95, rank: 2, rollNo: '02', parentName: 'Gita Adhikari (Mother)', parentPhone: '9851098765'),
+    Student(name: 'Bibek Thapa', grade: 'A', avatar: 'BT', gpa: 3.90, attendance: 0.92, rank: 3, rollNo: '03', parentName: 'Kamal Thapa (Father)', parentPhone: '9813456789'),
+    Student(name: 'Prashant Karki', grade: 'A', avatar: 'PK', gpa: 3.85, attendance: 0.90, rank: 4, rollNo: '04', parentName: 'Sita Karki (Mother)', parentPhone: '9801234567'),
+    Student(name: 'Pooja Sharma', grade: 'A', avatar: 'PS', gpa: 3.80, attendance: 0.88, rank: 5, rollNo: '05', parentName: 'Bishnu Sharma (Father)', parentPhone: '9849876543'),
+    Student(name: 'Rohan Gurung', grade: 'A-', avatar: 'RG', gpa: 3.75, attendance: 0.85, rank: 6, rollNo: '06', parentName: 'Maya Gurung (Mother)', parentPhone: '9860123456'),
+    Student(name: 'Anjali Tamang', grade: 'A-', avatar: 'AT', gpa: 3.72, attendance: 0.87, rank: 7, rollNo: '07', parentName: 'Dawa Tamang (Father)', parentPhone: '9818765432'),
+    Student(name: 'Sujan Maharjan', grade: 'B+', avatar: 'SM', gpa: 3.68, attendance: 0.80, rank: 8, rollNo: '08', parentName: 'Krishna Maharjan (Father)', parentPhone: '9841876543'),
+    Student(name: 'Bipana Rai', grade: 'B+', avatar: 'BR', gpa: 3.65, attendance: 0.82, rank: 9, rollNo: '09', parentName: 'Ramesh Rai (Father)', parentPhone: '9803456789'),
+    Student(name: 'Kushal Neupane', grade: 'B+', avatar: 'KN', gpa: 3.62, attendance: 0.78, rank: 10, rollNo: '10', parentName: 'Laxmi Neupane (Mother)', parentPhone: '9851123456'),
+    Student(name: 'Suman Dahal', grade: 'B', avatar: 'SD', gpa: 3.40, attendance: 0.75, rank: 11, rollNo: '11', parentName: 'Dipak Dahal (Father)', parentPhone: '9843210987'),
+    Student(name: 'Saroj Poudel', grade: 'B', avatar: 'SP', gpa: 3.30, attendance: 0.71, rank: 12, rollNo: '12', parentName: 'Prakash Poudel (Father)', parentPhone: '9861234567'),
   ];
 
   static const List<TeacherAssignment> assignments = [
@@ -449,9 +469,9 @@ class AppData {
   ];
 
   static const List<Map<String, dynamic>> teachingTips = [
-    {'tip': 'Use practical Nepal curriculum real-world examples in geometry and mensuration.', 'icon': 0xe873},
-    {'tip': 'Continuous Assessment System (CAS) marks should be logged weekly for accuracy.', 'icon': 0xe7fd},
-    {'tip': 'Encourage active student problem solving on the interactive digital smart-board.', 'icon': 0xe40a},
-    {'tip': 'Provide constructive feedback within 48 hours to maximize student retention.', 'icon': 0xe422},
+    {'tip': 'Use practical Nepal curriculum real-world examples in geometry and mensuration.', 'icon': Icons.lightbulb_outline_rounded},
+    {'tip': 'Continuous Assessment System (CAS) marks should be logged weekly for accuracy.', 'icon': Icons.fact_check_outlined},
+    {'tip': 'Encourage active student problem solving on the interactive digital smart-board.', 'icon': Icons.psychology_outlined},
+    {'tip': 'Provide constructive feedback within 48 hours to maximize student retention.', 'icon': Icons.feedback_outlined},
   ];
 }

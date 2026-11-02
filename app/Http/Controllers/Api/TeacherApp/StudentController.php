@@ -19,7 +19,7 @@ class StudentController extends Controller
         $sessionId = \App\Models\SchoolSession::current()?->id ?? \App\Models\SchoolSession::latest('id')->value('id') ?? 1;
 
         $promoQuery = \App\Models\Promotion::where('session_id', $sessionId)
-            ->with(['student', 'schoolClass', 'section']);
+            ->with(['student.parent_info', 'student.parents', 'schoolClass', 'section']);
 
         if ($request->filled('class_id') || $request->filled('class')) {
             $classId = $request->input('class_id', $request->input('class'));
@@ -36,13 +36,24 @@ class StudentController extends Controller
         }
 
         $students = $promoQuery->get()->map(function($p) {
+            $s = $p->student;
+            $parentPhone = $s?->parent_info?->father_phone
+                ?: $s?->parent_info?->mother_phone
+                ?: $s?->parents?->first()?->phone
+                ?: $s?->phone;
+
+            $parentName = $s?->parent_info?->father_name
+                ?: $s?->parent_info?->mother_name
+                ?: $s?->parents?->first()?->name
+                ?: ('Parent of ' . ($s?->first_name ?? 'Student'));
+
             return [
-                'id'          => $p->student?->id ?? $p->id,
-                'name'        => trim(($p->student?->first_name ?? '') . ' ' . ($p->student?->last_name ?? '')),
-                'first_name'  => $p->student?->first_name ?? '',
-                'last_name'   => $p->student?->last_name ?? '',
-                'email'       => $p->student?->email ?? '',
-                'photo'       => $p->student?->photo,
+                'id'          => $s?->id ?? $p->id,
+                'name'        => trim(($s?->first_name ?? '') . ' ' . ($s?->last_name ?? '')),
+                'first_name'  => $s?->first_name ?? '',
+                'last_name'   => $s?->last_name ?? '',
+                'email'       => $s?->email ?? '',
+                'photo'       => $s?->photo,
                 'roll_no'     => $p->roll_no ?? '01',
                 'class_id'    => $p->class_id,
                 'section_id'  => $p->section_id,
@@ -52,6 +63,8 @@ class StudentController extends Controller
                 'gpa'         => 3.6,
                 'attendance'  => 0.95,
                 'rank'        => 1,
+                'parent_phone'=> $parentPhone,
+                'parent_name' => $parentName,
             ];
         });
 

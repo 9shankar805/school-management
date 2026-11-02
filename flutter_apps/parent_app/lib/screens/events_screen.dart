@@ -124,7 +124,7 @@ class _EventCardState extends State<_EventCard> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Color(e.colorHex).withOpacity(0.12),
+                    color: Color(e.colorHex).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(

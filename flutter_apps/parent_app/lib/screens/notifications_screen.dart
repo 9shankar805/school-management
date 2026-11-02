@@ -150,7 +150,7 @@ class _NotificationCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       child: AppCard(
         padding: const EdgeInsets.all(14),
-        border: !notification.isRead ? Border.all(color: _color.withOpacity(0.4), width: 1.5) : null,
+        border: !notification.isRead ? Border.all(color: _color.withValues(alpha: 0.4), width: 1.5) : null,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -158,7 +158,7 @@ class _NotificationCard extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: _color.withOpacity(0.12),
+                color: _color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(_icon, color: _color, size: 22),

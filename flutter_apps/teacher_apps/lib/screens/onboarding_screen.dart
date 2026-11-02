@@ -46,6 +46,47 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Image.asset('assets/icons/app_icon.png', fit: BoxFit.cover),
+                ),
+                const SizedBox(width: 10),
+                const Text(
+                  'Nepal School Hub',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                    color: AppTheme.dark,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => Navigator.pushReplacement(context,
+                      MaterialPageRoute(builder: (_) => const LoginScreen())),
+                  child: const Text('Skip',
+                      style: TextStyle(color: AppTheme.grey, fontWeight: FontWeight.w600)),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: PageView.builder(
               controller: _controller,
@@ -94,7 +135,7 @@ class _OnboardPage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 28),
       child: Column(children: [
-        const SizedBox(height: 40),
+        const SizedBox(height: 16),
         Expanded(
           child: Container(
             decoration: BoxDecoration(

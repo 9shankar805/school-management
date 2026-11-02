@@ -40,17 +40,28 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
     final double totalPending = pendingList.fold(0.0, (sum, f) => sum + f.dueAmount);
     final double totalPaid = paidList.fold(0.0, (sum, f) => sum + f.paidAmount);
 
+    final canPop = Navigator.canPop(context);
+
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text('Fee Ledger & Payments'),
         automaticallyImplyLeading: false,
+        leading: canPop
+            ? CircleIconButton(
+                icon: Icons.arrow_back_ios_new,
+                onTap: () => Navigator.pop(context),
+                size: 38,
+              )
+            : null,
+        leadingWidth: canPop ? 60 : null,
       ),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
             child: GradientCard(
-              colors: const [Color(0xFF6C3CE9), Color(0xFF2E86DE)],
+              colors: const [Color(0xFF4F46E5), Color(0xFF2563EB)],
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -62,13 +73,14 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
                         style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white30),
                         ),
                         child: Text(
-                          totalPending > 0 ? 'Payment Due' : 'All Clear ✅',
+                          totalPending > 0 ? 'Payment Due' : 'All Settled ✅',
                           style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
                         ),
                       ),
@@ -93,15 +105,17 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
                         ],
                       ),
                       if (totalPending > 0)
-                        ElevatedButton(
+                        ElevatedButton.icon(
                           onPressed: () => _showPaymentSheet(context, pendingList.first),
+                          icon: const Icon(Icons.payment, size: 16),
+                          label: const Text('Pay Dues', style: TextStyle(fontWeight: FontWeight.w900)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
-                            foregroundColor: AppTheme.primary,
+                            foregroundColor: const Color(0xFF4F46E5),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            elevation: 0,
                           ),
-                          child: const Text('Pay Now', style: TextStyle(fontWeight: FontWeight.w900)),
                         ),
                     ],
                   ),
@@ -177,49 +191,56 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Payment Gateway', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                  const Text('Payment Gateway (Nepal)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
                   IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(ctx)),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(fee.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.dark)),
               Text('Invoice: ${fee.invoiceNumber} • Due: ${fee.dueDate}', style: const TextStyle(fontSize: 12, color: AppTheme.grey)),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppTheme.lightBg,
+                  color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Payable Amount:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                    Text('NPR ${fee.amount.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.primary)),
+                    const Text('Total Amount Payable:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                    Text(
+                      'NPR ${fee.amount.toStringAsFixed(2)}',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppTheme.primary),
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
-              const Text('Select Payment Option:', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+              const Text('Select Instant Payment Option:', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
               const SizedBox(height: 8),
               _PaymentOption(
                 name: 'eSewa Mobile Wallet',
                 subtitle: 'Direct instant merchant payment',
-                iconColor: const Color(0xFF60BB46),
+                brandColor: const Color(0xFF60BB46),
+                badgeText: 'Instant',
                 isSelected: selectedMethod == 'eSewa',
                 onTap: () => setSheetState(() => selectedMethod = 'eSewa'),
               ),
               _PaymentOption(
                 name: 'Khalti Digital Wallet',
-                subtitle: 'Pay via Khalti PIN or banking',
-                iconColor: const Color(0xFF5D2E8E),
+                subtitle: 'Pay via Khalti PIN or mobile banking',
+                brandColor: const Color(0xFF5D2E8E),
+                badgeText: 'Cashback 2%',
                 isSelected: selectedMethod == 'Khalti',
                 onTap: () => setSheetState(() => selectedMethod = 'Khalti'),
               ),
               _PaymentOption(
-                name: 'Fonepay Interbank QR',
-                subtitle: 'Scan and pay via any Nepal bank app',
-                iconColor: const Color(0xFFDC143C),
+                name: 'Fonepay Dynamic QR',
+                subtitle: 'Scan with Global IME, Nabil, NIC Asia & 50+ banks',
+                brandColor: const Color(0xFFDC2626),
+                badgeText: 'All Nepal Banks',
                 isSelected: selectedMethod == 'Fonepay',
                 onTap: () => setSheetState(() => selectedMethod = 'Fonepay'),
               ),
@@ -228,20 +249,30 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: selectedMethod == 'eSewa'
+                        ? const Color(0xFF60BB46)
+                        : (selectedMethod == 'Khalti' ? const Color(0xFF5D2E8E) : const Color(0xFFDC2626)),
+                    foregroundColor: Colors.white,
+                  ),
                   onPressed: () async {
                     Navigator.pop(ctx);
-                    await ApiService.payFee(fee.id ?? 1, method: selectedMethod, amount: fee.amount);
-                    if (context.mounted) {
-                      context.read<ApiProvider>().loadChildSpecificData();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Payment of NPR ${fee.amount.toInt()} via $selectedMethod successful!'),
-                          backgroundColor: AppTheme.green,
-                        ),
-                      );
+                    if (selectedMethod == 'Fonepay') {
+                      _showFonepayQrModal(context, fee);
+                    } else {
+                      await ApiService.payFee(fee.id ?? 1, method: selectedMethod, amount: fee.amount);
+                      if (context.mounted) {
+                        context.read<ApiProvider>().loadChildSpecificData();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Payment of NPR ${fee.amount.toInt()} via $selectedMethod successful!'),
+                            backgroundColor: AppTheme.green,
+                          ),
+                        );
+                      }
                     }
                   },
-                  child: Text('Proceed with $selectedMethod'),
+                  child: Text('Pay with $selectedMethod', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
                 ),
               ),
             ],
@@ -251,43 +282,143 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
     );
   }
 
-  void _showReceiptDialog(BuildContext context, FeeRecord fee) {
+  void _showFonepayQrModal(BuildContext context, FeeRecord fee) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text('Payment Receipt', style: TextStyle(fontWeight: FontWeight.w900)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.qr_code_scanner, color: Color(0xFFDC2626)),
+                    SizedBox(width: 8),
+                    Text('Fonepay Scan & Pay', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                  ],
+                ),
+                IconButton(icon: const Icon(Icons.close, size: 20), onPressed: () => Navigator.pop(context)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFCBD5E1), width: 1.5),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 170,
+                    height: 170,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.qr_code_2_rounded, size: 140, color: Color(0xFF0F172A)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text('Nepal School Hub • Fee Payment', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                  Text('NPR ${fee.amount.toStringAsFixed(2)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Color(0xFFDC2626))),
+                  const SizedBox(height: 4),
+                  const Text('Scan with Mobile Banking or Fonepay App', style: TextStyle(fontSize: 10, color: AppTheme.grey)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF047857)),
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await ApiService.payFee(fee.id ?? 1, method: 'Fonepay QR', amount: fee.amount);
+                  if (context.mounted) {
+                    context.read<ApiProvider>().loadChildSpecificData();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Fonepay QR payment of NPR ${fee.amount.toInt()} confirmed!'),
+                        backgroundColor: AppTheme.green,
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.check_circle, size: 18),
+                label: const Text('Simulate Scan Confirmation'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showReceiptDialog(BuildContext context, FeeRecord fee) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.all(20),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFDCFCE7),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.verified, color: Color(0xFF047857), size: 26),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Official Fee Receipt', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
+                      Text('Tax Invoice • Nepal School Hub', style: TextStyle(fontSize: 10, color: AppTheme.grey)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
             Center(
               child: Container(
-                width: 48,
-                height: 48,
-                decoration: const BoxDecoration(
-                  color: AppTheme.greenLight,
-                  shape: BoxShape.circle,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.check_circle, color: AppTheme.green, size: 28),
+                child: Text(
+                  'NPR ${fee.amount.toStringAsFixed(2)}',
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Color(0xFF047857)),
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Center(
-              child: Text(
-                'NPR ${fee.amount.toStringAsFixed(2)}',
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppTheme.green),
-              ),
-            ),
-            const Center(
-              child: Text('Payment Verified', style: TextStyle(fontSize: 11, color: AppTheme.grey)),
             ),
             const Divider(height: 24),
-            _ReceiptLine(label: 'Invoice No', value: fee.invoiceNumber),
+            _ReceiptLine(label: 'Invoice Number', value: fee.invoiceNumber),
             _ReceiptLine(label: 'Description', value: fee.title),
             _ReceiptLine(label: 'Paid Date', value: fee.paidDate.isNotEmpty ? fee.paidDate : '2026-08-25'),
             _ReceiptLine(label: 'Payment Method', value: fee.paymentMethod),
-            _ReceiptLine(label: 'Transaction Ref', value: 'TXN-98472910'),
+            const _ReceiptLine(label: 'Transaction ID', value: 'TXN-NSH-98472910'),
+            const _ReceiptLine(label: 'Status', value: 'Settled & Verified ✅'),
           ],
         ),
         actions: [
@@ -296,11 +427,14 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Downloading verified fee receipt PDF...')),
+                const SnackBar(
+                  content: Text('Downloading verified fee receipt PDF with tax stamp...'),
+                  backgroundColor: Color(0xFF047857),
+                ),
               );
             },
-            icon: const Icon(Icons.file_download_outlined, size: 16),
-            label: const Text('Save PDF'),
+            icon: const Icon(Icons.download, size: 16),
+            label: const Text('Save PDF Receipt'),
           ),
         ],
       ),
@@ -310,13 +444,14 @@ class _FeesScreenState extends State<FeesScreen> with SingleTickerProviderStateM
 
 class _FeeCard extends StatelessWidget {
   final FeeRecord fee;
-  final VoidCallback onPay, onReceipt;
+  final VoidCallback onPay;
+  final VoidCallback onReceipt;
 
   const _FeeCard({required this.fee, required this.onPay, required this.onReceipt});
 
   @override
   Widget build(BuildContext context) {
-    final isPaid = fee.status.toLowerCase() == 'paid';
+    final isPending = fee.status.toLowerCase() == 'pending';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -326,35 +461,35 @@ class _FeeCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isPaid ? AppTheme.greenLight : AppTheme.orangeLight,
-                    borderRadius: BorderRadius.circular(14),
+                    color: isPending ? AppTheme.redLight : AppTheme.greenLight,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(
-                    isPaid ? Icons.receipt_rounded : Icons.pending_actions_rounded,
-                    color: isPaid ? AppTheme.green : AppTheme.orange,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(fee.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
-                      Text(fee.invoiceNumber, style: const TextStyle(fontSize: 11, color: AppTheme.grey)),
-                    ],
+                  child: Text(
+                    fee.invoiceNumber,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: isPending ? AppTheme.red : AppTheme.green,
+                    ),
                   ),
                 ),
                 StatusBadge(
-                  label: isPaid ? 'PAID' : 'PENDING',
-                  color: isPaid ? AppTheme.green : AppTheme.orange,
+                  label: fee.status.toUpperCase(),
+                  color: isPending ? AppTheme.red : AppTheme.green,
                 ),
               ],
+            ),
+            const SizedBox(height: 10),
+            Text(fee.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 2),
+            Text(
+              isPending ? 'Due by ${fee.dueDate}' : 'Paid on ${fee.paidDate} via ${fee.paymentMethod}',
+              style: const TextStyle(fontSize: 11, color: AppTheme.grey),
             ),
             const Divider(height: 20),
             Row(
@@ -363,31 +498,30 @@ class _FeeCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(isPaid ? 'Amount Paid' : 'Due Date: ${fee.dueDate}', style: const TextStyle(fontSize: 11, color: AppTheme.grey)),
+                    const Text('Amount', style: TextStyle(fontSize: 10, color: AppTheme.grey)),
                     Text(
                       'NPR ${fee.amount.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w900,
-                        color: isPaid ? AppTheme.green : AppTheme.dark,
-                      ),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppTheme.dark),
                     ),
                   ],
                 ),
-                if (isPaid)
-                  TextButton.icon(
-                    onPressed: onReceipt,
-                    icon: const Icon(Icons.receipt_outlined, size: 16),
-                    label: const Text('Receipt'),
-                  )
-                else
+                if (isPending)
                   ElevatedButton(
                     onPressed: onPay,
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      minimumSize: const Size(80, 36),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    child: const Text('Pay Now', style: TextStyle(fontSize: 12)),
+                    child: const Text('Pay Now', style: TextStyle(fontWeight: FontWeight.w800)),
+                  )
+                else
+                  OutlinedButton.icon(
+                    onPressed: onReceipt,
+                    icon: const Icon(Icons.receipt_outlined, size: 14),
+                    label: const Text('Receipt', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                   ),
               ],
             ),
@@ -399,15 +533,16 @@ class _FeeCard extends StatelessWidget {
 }
 
 class _PaymentOption extends StatelessWidget {
-  final String name, subtitle;
-  final Color iconColor;
+  final String name, subtitle, badgeText;
+  final Color brandColor;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _PaymentOption({
     required this.name,
     required this.subtitle,
-    required this.iconColor,
+    required this.brandColor,
+    required this.badgeText,
     required this.isSelected,
     required this.onTap,
   });
@@ -418,37 +553,49 @@ class _PaymentOption extends StatelessWidget {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryLight.withOpacity(0.5) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? AppTheme.primary : const Color(0xFFE5E9F0),
-            width: isSelected ? 1.5 : 1,
-          ),
+          color: isSelected ? brandColor.withValues(alpha: 0.08) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: isSelected ? brandColor : const Color(0xFFE2E8F0), width: isSelected ? 2 : 1),
         ),
         child: Row(
           children: [
             Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(color: iconColor.withOpacity(0.15), shape: BoxShape.circle),
-              child: Icon(Icons.account_balance_wallet, color: iconColor, size: 20),
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: brandColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.account_balance_wallet_rounded, color: brandColor, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-                  Text(subtitle, style: const TextStyle(fontSize: 10, color: AppTheme.grey)),
+                  Row(
+                    children: [
+                      Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: brandColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(badgeText, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: brandColor)),
+                      ),
+                    ],
+                  ),
+                  Text(subtitle, style: const TextStyle(fontSize: 11, color: AppTheme.grey)),
                 ],
               ),
             ),
             Icon(
-              isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
-              color: isSelected ? AppTheme.primary : AppTheme.grey,
-              size: 20,
+              isSelected ? Icons.check_circle_rounded : Icons.radio_button_off_rounded,
+              color: isSelected ? brandColor : AppTheme.grey,
             ),
           ],
         ),
@@ -468,8 +615,8 @@ class _ReceiptLine extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 11, color: AppTheme.grey)),
-          Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+          Text(label, style: const TextStyle(fontSize: 11.5, color: AppTheme.grey, fontWeight: FontWeight.w600)),
+          Text(value, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w800)),
         ],
       ),
     );

@@ -331,8 +331,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSchoolLogoBadge(String? logoUrl, String schoolName) {
     if (logoUrl != null && logoUrl.isNotEmpty && logoUrl.startsWith('http')) {
       return Container(
-        width: 20,
-        height: 20,
+        width: 22,
+        height: 22,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.white,
@@ -342,20 +342,20 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Image.network(
           logoUrl,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Icon(Icons.school_rounded, size: 13, color: AppTheme.primary),
+          errorBuilder: (_, __, ___) => Image.asset('assets/icons/app_icon.png', fit: BoxFit.cover),
         ),
       );
     }
     return Container(
-      width: 20,
-      height: 20,
+      width: 22,
+      height: 22,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: AppTheme.primary.withOpacity(0.12),
+        color: Colors.white,
+        border: Border.all(color: AppTheme.primary.withOpacity(0.2), width: 1),
       ),
-      child: const Center(
-        child: Icon(Icons.school_rounded, size: 12, color: AppTheme.primary),
-      ),
+      clipBehavior: Clip.antiAlias,
+      child: Image.asset('assets/icons/app_icon.png', fit: BoxFit.cover),
     );
   }
 
@@ -505,7 +505,7 @@ class _HomeScreenState extends State<HomeScreen> {
             actionLabel: 'All Routine',
             onAction: () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const ClassesScreen()),
+              MaterialPageRoute(builder: (_) => const ScheduleScreen()),
             ),
           ),
           const SizedBox(height: 10),
@@ -618,7 +618,35 @@ class _HomeScreenState extends State<HomeScreen> {
                 Row(
                   children: [
                     Expanded(
-                      flex: 6,
+                      flex: 5,
+                      child: ElevatedButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AttendanceScreen(startInSpeedCall: true),
+                          ),
+                        ),
+                        icon: const Icon(Icons.bolt_rounded, size: 17, color: Colors.amber),
+                        label: const Text(
+                          '⚡ Speed Call',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F172A),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 5,
                       child: ElevatedButton.icon(
                         onPressed: () => Navigator.push(
                           context,
@@ -626,11 +654,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         icon: const Icon(Icons.fact_check_rounded, size: 16, color: Color(0xFF0F4C81)),
                         label: const Text(
-                          'Take Haziri',
+                          'Haziri Portal',
                           style: TextStyle(
                             color: Color(0xFF0F4C81),
                             fontWeight: FontWeight.w800,
-                            fontSize: 13,
+                            fontSize: 12.5,
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
@@ -638,30 +666,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           foregroundColor: const Color(0xFF0F4C81),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      flex: 4,
-                      child: OutlinedButton.icon(
-                        onPressed: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const ClassesScreen()),
-                        ),
-                        icon: const Icon(Icons.cast_for_education_rounded, size: 15, color: Colors.white),
-                        label: const Text(
-                          'Smart Class',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.white.withOpacity(0.5), width: 1.2),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
@@ -896,9 +900,9 @@ class _HomeScreenState extends State<HomeScreen> {
         'screen': const NepaliCalendarScreen(),
       },
       {
-        'label': 'Seating Grid',
-        'sub': 'Arrangement',
-        'icon': Icons.grid_view_rounded,
+        'label': 'Class Seating',
+        'sub': 'कक्षा बेन्च बसाइ',
+        'icon': Icons.table_restaurant_rounded,
         'color': const Color(0xFF6D28D9),
         'screen': const SeatingChartScreen(),
       },
@@ -1396,7 +1400,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     children: [
                       Icon(
-                        IconData(tip['icon'] as int, fontFamily: 'MaterialIcons'),
+                        _getTipIcon(tip['icon']),
                         color: AppTheme.primary,
                         size: 24,
                       ),
@@ -1433,5 +1437,21 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
     );
+  }
+
+  IconData _getTipIcon(dynamic icon) {
+    if (icon is IconData) return icon;
+    switch (icon) {
+      case 0xe873:
+        return Icons.lightbulb_outline_rounded;
+      case 0xe7fd:
+        return Icons.fact_check_outlined;
+      case 0xe40a:
+        return Icons.psychology_outlined;
+      case 0xe422:
+        return Icons.feedback_outlined;
+      default:
+        return Icons.school_rounded;
+    }
   }
 }

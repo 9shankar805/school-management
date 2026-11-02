@@ -8,4 +8,6 @@ interface AcademicSettingInterface {
     public function updateAttendanceType($request);
 
     public function updateFinalMarksSubmissionStatus($request);
+
+    public function updateRollNumberMode($request);
 }

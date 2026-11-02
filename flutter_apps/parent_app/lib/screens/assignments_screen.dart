@@ -35,6 +35,7 @@ class _AssignmentsScreenState extends State<AssignmentsScreen> with SingleTicker
     final completed = api.assignments.where((a) => a.isCompleted).toList();
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text('Homework & Assignments'),
         leading: CircleIconButton(
@@ -82,21 +83,174 @@ class _AssignmentsScreenState extends State<AssignmentsScreen> with SingleTicker
         final a = list[idx];
         return _AssignmentCard(
           assignment: a,
-          onToggleStatus: () async {
-            final newStatus = a.isCompleted ? 'pending' : 'completed';
-            await ApiService.updateAssignmentStatus(a.id ?? 1, newStatus);
-            if (context.mounted) {
-              context.read<ApiProvider>().loadChildSpecificData();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(a.isCompleted ? 'Marked as pending' : 'Assignment marked completed!'),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            }
-          },
+          onToggleStatus: () => _toggleAssignment(a),
+          onTapDetail: () => _showDetailSheet(context, a),
         ).animate().fadeIn(delay: (idx * 50).ms).slideY(begin: 0.05);
       },
+    );
+  }
+
+  Future<void> _toggleAssignment(Assignment a) async {
+    final newStatus = a.isCompleted ? 'pending' : 'completed';
+    await ApiService.updateAssignmentStatus(a.id ?? 1, newStatus);
+    if (mounted) {
+      context.read<ApiProvider>().loadChildSpecificData();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(a.isCompleted ? 'Marked assignment as pending' : 'Assignment marked as completed!'),
+          backgroundColor: a.isCompleted ? AppTheme.primary : const Color(0xFF047857),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  void _showDetailSheet(BuildContext context, Assignment a) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(24, 20, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Color(a.colorHex).withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    a.subject,
+                    style: TextStyle(fontSize: 12, color: Color(a.colorHex), fontWeight: FontWeight.w800),
+                  ),
+                ),
+                StatusBadge(
+                  label: a.isCompleted ? 'SUBMITTED' : 'DUE SOON',
+                  color: a.isCompleted ? AppTheme.green : AppTheme.orange,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(a.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 14),
+
+            // Instructions Box
+            const Text('Assignment Instructions:', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Text(
+                a.description,
+                style: const TextStyle(fontSize: 13, color: Color(0xFF0F172A), height: 1.35),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Meta Details
+            Row(
+              children: [
+                const Icon(Icons.calendar_today_outlined, size: 16, color: AppTheme.grey),
+                const SizedBox(width: 8),
+                Text('Submission Due Date: ${a.dueDate}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Attached Worksheet Simulation
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.picture_as_pdf, color: Color(0xFFDC2626), size: 24),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Reference_Worksheet.pdf', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                        Text('1.4 MB • Official Lesson Material', style: TextStyle(fontSize: 10, color: AppTheme.grey)),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.download, size: 20, color: AppTheme.primary),
+                    tooltip: 'Download Worksheet',
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Downloading Reference_Worksheet.pdf...')),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            if (a.isCompleted) ...[
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0FDF4),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFBBF7D0)),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Teacher Evaluation: 9.5 / 10 (A+)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Color(0xFF166534))),
+                    SizedBox(height: 2),
+                    Text('"Exemplary accuracy and neat problem-solving presentation."', style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic, color: Color(0xFF14532D))),
+                  ],
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                if (!a.isCompleted)
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Selected solution photo from camera/gallery!')),
+                        );
+                      },
+                      icon: const Icon(Icons.attach_file, size: 16),
+                      label: const Text('Attach File'),
+                    ),
+                  ),
+                if (!a.isCompleted) const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _toggleAssignment(a);
+                    },
+                    child: Text(a.isCompleted ? 'Re-open Assignment' : 'Submit as Completed'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -104,8 +258,13 @@ class _AssignmentsScreenState extends State<AssignmentsScreen> with SingleTicker
 class _AssignmentCard extends StatelessWidget {
   final Assignment assignment;
   final VoidCallback onToggleStatus;
+  final VoidCallback onTapDetail;
 
-  const _AssignmentCard({required this.assignment, required this.onToggleStatus});
+  const _AssignmentCard({
+    required this.assignment,
+    required this.onToggleStatus,
+    required this.onTapDetail,
+  });
 
   Color get _priorityColor {
     switch (assignment.priority.toLowerCase()) {
@@ -124,7 +283,7 @@ class _AssignmentCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: AppCard(
         padding: const EdgeInsets.all(16),
-        onTap: () => _showDetailSheet(context),
+        onTap: onTapDetail,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -134,7 +293,7 @@ class _AssignmentCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: Color(assignment.colorHex).withOpacity(0.12),
+                    color: Color(assignment.colorHex).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -207,55 +366,6 @@ class _AssignmentCard extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showDetailSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(assignment.subject, style: const TextStyle(fontSize: 12, color: AppTheme.primary, fontWeight: FontWeight.w800)),
-                StatusBadge(label: assignment.isCompleted ? 'Submitted' : 'Pending', color: assignment.isCompleted ? AppTheme.green : AppTheme.orange),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(assignment.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 12),
-            const Text('Instructions & Questions:', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-            const SizedBox(height: 4),
-            Text(assignment.description, style: const TextStyle(fontSize: 13, color: AppTheme.dark)),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Icon(Icons.calendar_today_outlined, size: 16, color: AppTheme.grey),
-                const SizedBox(width: 8),
-                Text('Due Date: ${assignment.dueDate}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-              ],
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  onToggleStatus();
-                },
-                child: Text(assignment.isCompleted ? 'Re-open Assignment' : 'Mark as Completed'),
-              ),
             ),
           ],
         ),

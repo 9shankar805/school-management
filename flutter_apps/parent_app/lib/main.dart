@@ -17,14 +17,14 @@ void main() async {
 class ParentsApp extends StatefulWidget {
   const ParentsApp({super.key});
 
-  static _ParentsAppState? of(BuildContext context) =>
-      context.findAncestorStateOfType<_ParentsAppState>();
+  static ParentsAppState? of(BuildContext context) =>
+      context.findAncestorStateOfType<ParentsAppState>();
 
   @override
-  State<ParentsApp> createState() => _ParentsAppState();
+  State<ParentsApp> createState() => ParentsAppState();
 }
 
-class _ParentsAppState extends State<ParentsApp> {
+class ParentsAppState extends State<ParentsApp> {
   final ThemeProvider _themeProvider = ThemeProvider();
 
   ThemeProvider get themeProvider => _themeProvider;
@@ -36,9 +36,16 @@ class _ParentsAppState extends State<ParentsApp> {
   }
 
   @override
+  void dispose() {
+    _themeProvider.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider.value(value: _themeProvider),
         ChangeNotifierProvider(create: (_) => ApiProvider()),
       ],
       child: MaterialApp(

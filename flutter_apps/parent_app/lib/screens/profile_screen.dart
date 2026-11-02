@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
-import '../data/app_data.dart';
 import '../providers/api_provider.dart';
 import '../widgets/common_widgets.dart';
 import '../main.dart';
@@ -116,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         _ProfileStat(label: 'Children', value: '${children.length} Registered'),
-                        Container(width: 1, height: 24, color: AppTheme.grey.withOpacity(0.3)),
+                        Container(width: 1, height: 24, color: AppTheme.grey.withValues(alpha: 0.3)),
                         _ProfileStat(label: 'Pending Fees', value: 'NPR ${totalPending.toInt()}'),
                       ],
                     ),
@@ -143,7 +142,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         height: 44,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Color(c.colorHex).withOpacity(0.15),
+                          color: Color(c.colorHex).withValues(alpha: 0.15),
                         ),
                         child: Center(
                           child: Text(
@@ -313,7 +312,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             TextField(
               controller: nameCtrl,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Full Name',
                 filled: true,
                 fillColor: AppTheme.lightBg,
@@ -322,7 +321,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 12),
             TextField(
               controller: emailCtrl,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Email Address',
                 filled: true,
                 fillColor: AppTheme.lightBg,
@@ -387,9 +386,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text('School Helpdesk Support', style: TextStyle(fontWeight: FontWeight.w900)),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
-          children: const [
+          children: [
             ListTile(
               leading: Icon(Icons.phone, color: AppTheme.primary),
               title: Text('Admin Hotline'),
@@ -420,10 +419,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: const Text('Nepal School Hub', style: TextStyle(fontWeight: FontWeight.w900)),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             Text('ParentLink Mobile Application v1.0.0', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
             SizedBox(height: 6),
             Text('Connected to complete School Management Cloud Backend.', style: TextStyle(fontSize: 12, color: AppTheme.grey)),

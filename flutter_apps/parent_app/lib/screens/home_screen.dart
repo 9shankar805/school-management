@@ -117,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.primary.withOpacity(0.3),
+                  color: AppTheme.primary.withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 3),
                 ),
@@ -146,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppTheme.green.withOpacity(0.12),
+                        color: AppTheme.green.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: const Row(
@@ -212,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: isSelected ? AppTheme.primary.withOpacity(0.25) : Colors.black.withOpacity(0.03),
+                    color: isSelected ? AppTheme.primary.withValues(alpha: 0.25) : Colors.black.withValues(alpha: 0.03),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -225,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     height: 24,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: isSelected ? Colors.white24 : AppTheme.primary.withOpacity(0.12),
+                      color: isSelected ? Colors.white24 : AppTheme.primary.withValues(alpha: 0.12),
                     ),
                     child: Center(
                       child: Text(
@@ -273,7 +273,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
@@ -314,7 +314,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     border: Border.all(color: Colors.white, width: 2.5),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -337,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.15),
+                color: Colors.black.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
@@ -378,7 +378,7 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: AppTheme.teal.withOpacity(0.12),
+                color: AppTheme.teal.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: const Icon(Icons.directions_bus_rounded, color: AppTheme.teal, size: 26),
@@ -455,9 +455,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: 64,
                       height: 64,
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.12),
+                        color: color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: color.withOpacity(0.2), width: 1),
+                        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
                       ),
                       child: Icon(a['icon'] as IconData, color: color, size: 28),
                     ),
@@ -523,14 +523,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         Text(
                           '${item['teacher']} • ${item['room']}',
-                          style: TextStyle(fontSize: 11, color: AppTheme.dark.withOpacity(0.6), fontWeight: FontWeight.w600),
+                          style: TextStyle(fontSize: 11, color: AppTheme.dark.withValues(alpha: 0.6), fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
                   ),
                   Text(
                     item['duration'] as String,
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.dark.withOpacity(0.5)),
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppTheme.dark.withValues(alpha: 0.5)),
                   ),
                 ],
               ),
@@ -571,7 +571,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         width: 52,
                         height: 52,
                         decoration: BoxDecoration(
-                          color: AppTheme.orange.withOpacity(0.12),
+                          color: AppTheme.orange.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: const Icon(Icons.quiz_rounded, color: AppTheme.orange, size: 26),
@@ -600,7 +600,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         decoration: BoxDecoration(
-                          color: AppTheme.orange.withOpacity(0.12),
+                          color: AppTheme.orange.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Column(
@@ -646,9 +646,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.04),
+                  color: AppTheme.primary.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
+                  border: Border.all(color: AppTheme.primary.withValues(alpha: 0.1)),
                 ),
                 child: Row(
                   children: [
@@ -656,7 +656,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withOpacity(0.1),
+                        color: AppTheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(Icons.campaign_rounded, color: AppTheme.primary, size: 18),
@@ -729,9 +729,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: 54,
                       height: 54,
                       decoration: BoxDecoration(
-                        color: color.withOpacity(0.12),
+                        color: color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(18),
-                        border: Border.all(color: color.withOpacity(0.2), width: 1),
+                        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
                       ),
                       child: Icon(s['icon'] as IconData, color: color, size: 24),
                     ),

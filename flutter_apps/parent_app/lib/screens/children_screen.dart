@@ -69,7 +69,7 @@ class _ChildrenScreenState extends State<ChildrenScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: isSelected ? AppTheme.primary.withOpacity(0.3) : Colors.black.withOpacity(0.04),
+                              color: isSelected ? AppTheme.primary.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.04),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -149,7 +149,7 @@ class _ChildrenScreenState extends State<ChildrenScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.15),
+                      color: Colors.black.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Row(
@@ -227,6 +227,13 @@ class _ChildrenScreenState extends State<ChildrenScreen> {
               color: AppTheme.primary,
               onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AssignmentsScreen())),
             ).animate().fadeIn(delay: 240.ms),
+            _AcademicTile(
+              icon: Icons.quiz_outlined,
+              label: 'Exams & Term Schedules',
+              subtitle: '${api.exams.length} scheduled tests & examinations',
+              color: AppTheme.coral,
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ExamsScreen())),
+            ).animate().fadeIn(delay: 260.ms),
             _AcademicTile(
               icon: Icons.calendar_month_rounded,
               label: 'Weekly Class Routine',
@@ -337,14 +344,14 @@ class _ChildrenScreenState extends State<ChildrenScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         Text('Blood: ${child.bloodGroup}', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
-                        Text('Valid: 2081-2082', style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                        const Text('Valid: 2081-2082', style: TextStyle(color: Colors.white70, fontSize: 11)),
                       ],
                     ),
                   ),
@@ -414,7 +421,7 @@ class _AcademicTile extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(icon, color: color, size: 22),
@@ -459,7 +466,7 @@ class _SubjectRow extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: Color(subject.colorHex).withOpacity(0.12),
+                color: Color(subject.colorHex).withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(subjectIcon(subject.iconCode), size: 22, color: Color(subject.colorHex)),

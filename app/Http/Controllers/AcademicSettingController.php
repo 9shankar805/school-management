@@ -122,4 +122,19 @@ class AcademicSettingController extends Controller
             return back()->with('error', $e->getMessage());
         }
     }
+
+    public function updateRollNumberMode(Request $request)
+    {
+        $request->validate([
+            'roll_number_mode' => 'required|in:yearly,terminal',
+        ]);
+
+        try {
+            $this->academicSettingRepository->updateRollNumberMode($request->all());
+
+            return back()->with('status', 'Roll number assignment mode update was successful!');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
 }
