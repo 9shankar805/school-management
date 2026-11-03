@@ -260,4 +260,145 @@ class ClassTeacherController extends Controller
             'data'    => $notice,
         ], 201);
     }
+
+    /**
+     * PUT /api/teacher-app/class-teacher/students/{id}
+     * Class In-Charge or Administrator updates student details (name, roll_no, parent info, phone, address).
+     */
+    public function updateStudent(Request $request, $id): JsonResponse
+    {
+        $user = $request->user();
+        $sessionId = SchoolSession::current()?->id ?? SchoolSession::latest('id')->value('id') ?? 1;
+
+        $student = \App\Models\User::role('student')->find($id);
+        if (!$student) {
+            $student = \App\Models\User::find($id);
+        }
+        if (!$student) {
+            return response()->json(['status' => 'error', 'message' => 'Student record not found.'], 404);
+        }
+
+        // Find student promotion in current session
+        $promo = Promotion::where('student_id', $student->id)
+            ->where('session_id', $sessionId)
+            ->first();
+
+        // Check if caller is class teacher for this student's class/section or admin/principal
+        $isAdmin = $user && $user->hasAnyRole(['super-admin', 'organization-owner', 'admin', 'principal', 'vice-principal', 'academic-coordinator']);
+        $isClassTeacherOfStudent = false;
+
+        if ($promo && $user) {
+            $isClassTeacherOfStudent = AssignedTeacher::where('teacher_id', $user->id)
+                ->where('class_id', $promo->class_id)
+                ->where('section_id', $promo->section_id)
+                ->where('session_id', $sessionId)
+                ->where('is_class_teacher', true)
+                ->exists();
+        }
+
+        if (!$isAdmin && !$isClassTeacherOfStudent) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Only the assigned Class In-Charge or School Administrator can edit student details.'
+            ], 403);
+        }
+
+        $request->validate([
+            'first_name'   => 'nullable|string|max:100',
+            'last_name'    => 'nullable|string|max:100',
+            'name'         => 'nullable|string|max:200',
+            'roll_no'      => 'nullable|string|max:50',
+            'phone'        => 'nullable|string|max:50',
+            'email'        => 'nullable|email|max:150',
+            'gender'       => 'nullable|string|max:20',
+            'address'      => 'nullable|string|max:255',
+            'parent_name'  => 'nullable|string|max:150',
+            'parent_phone' => 'nullable|string|max:50',
+            'father_name'  => 'nullable|string|max:150',
+            'father_phone' => 'nullable|string|max:50',
+            'mother_name'  => 'nullable|string|max:150',
+            'mother_phone' => 'nullable|string|max:50',
+        ]);
+
+        // Update student names and basic details
+        if ($request->filled('first_name')) {
+            $student->first_name = $request->first_name;
+        }
+        if ($request->filled('last_name')) {
+            $student->last_name = $request->last_name;
+        }
+        if ($request->filled('name') && !$request->filled('first_name')) {
+            $parts = explode(' ', trim($request->name), 2);
+            $student->first_name = $parts[0];
+            $student->last_name  = $parts[1] ?? '';
+        }
+        if ($request->has('phone')) {
+            $student->phone = $request->phone;
+        }
+        if ($request->has('email') && $request->email) {
+            $student->email = $request->email;
+        }
+        if ($request->has('address')) {
+            $student->address = $request->address;
+        }
+        if ($request->has('gender')) {
+            $student->gender = $request->gender;
+        }
+        $student->save();
+
+        // Update roll number in promotion
+        if ($promo && $request->has('roll_no')) {
+            $promo->roll_no = $request->roll_no;
+            $promo->save();
+        }
+
+        // Update parent info
+        $parentName = $request->parent_name ?: $request->father_name;
+        $parentPhone = $request->parent_phone ?: $request->father_phone;
+
+        if ($parentName || $parentPhone || $request->has('mother_name') || $request->has('mother_phone') || $request->has('address')) {
+            \App\Models\StudentParentInfo::updateOrCreate(
+                ['student_id' => $student->id],
+                [
+                    'father_name'    => $parentName ?: '',
+                    'father_phone'   => $parentPhone ?: '',
+                    'mother_name'    => $request->mother_name ?: '',
+                    'mother_phone'   => $request->mother_phone ?: '',
+                    'parent_address' => $request->address ?: '',
+                    'school_id'      => $student->school_id ?? 1,
+                ]
+            );
+
+            // Also update linked parent user account if exists
+            $parentUser = $student->parents()->first();
+            if ($parentUser) {
+                if ($parentName) {
+                    $parts = explode(' ', trim($parentName), 2);
+                    $parentUser->first_name = $parts[0];
+                    $parentUser->last_name  = $parts[1] ?? '';
+                }
+                if ($parentPhone) {
+                    $parentUser->phone = $parentPhone;
+                }
+                $parentUser->save();
+            }
+        }
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Student details updated successfully.',
+            'student' => [
+                'id'           => $student->id,
+                'name'         => trim($student->first_name . ' ' . $student->last_name),
+                'first_name'   => $student->first_name,
+                'last_name'    => $student->last_name,
+                'roll_no'      => $promo?->roll_no ?? $request->roll_no,
+                'phone'        => $student->phone,
+                'parent_name'  => $parentName,
+                'parent_phone' => $parentPhone,
+                'address'      => $student->address,
+                'gender'       => $student->gender,
+            ]
+        ]);
+    }
 }

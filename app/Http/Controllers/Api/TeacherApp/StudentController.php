@@ -208,4 +208,13 @@ class StudentController extends Controller
             'assignments' => $assignments,
         ]);
     }
+
+    /**
+     * PUT /api/teacher-app/students/{id}
+     * Update student details (delegates to ClassTeacherController logic).
+     */
+    public function update(Request $request, $id): JsonResponse
+    {
+        return app(ClassTeacherController::class)->updateStudent($request, $id);
+    }
 }

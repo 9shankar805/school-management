@@ -44,6 +44,9 @@
                     <span><i class="bi bi-card-text me-1"></i>ID: {{ $promotion_info->id_card_number ?? '—' }}</span>
                     @endif
                     <span><i class="bi bi-envelope me-1"></i>{{ $student->email }}</span>
+                    @if($student->google_workspace_email)
+                    <span class="text-indigo-600 font-semibold" title="Google Education Workspace Account"><i class="bi bi-google text-indigo-500 me-1"></i>{{ $student->google_workspace_email }}</span>
+                    @endif
                     @if($student->phone)<span><i class="bi bi-telephone me-1"></i>{{ $student->phone }}</span>@endif
                 </div>
                 <div class="flex flex-wrap gap-3 mt-3">

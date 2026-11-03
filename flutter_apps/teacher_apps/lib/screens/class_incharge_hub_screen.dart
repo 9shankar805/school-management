@@ -115,6 +115,272 @@ class _ClassInchargeHubScreenState extends State<ClassInchargeHubScreen>
     super.dispose();
   }
 
+  void _showEditStudentModal(BuildContext context, dynamic student) {
+    final String initialName = student is Student
+        ? student.name
+        : (student['name']?.toString() ?? '');
+    final String initialRoll = student is Student
+        ? student.rollNo
+        : (student['roll']?.toString() ?? student['roll_no']?.toString() ?? '');
+    final String initialParent = student is Student
+        ? student.parentName
+        : (student['parent']?.toString() ?? student['parent_name']?.toString() ?? '');
+    final String initialPhone = student is Student
+        ? student.parentPhone
+        : (student['phone']?.toString() ?? student['parent_phone']?.toString() ?? '');
+    final dynamic studentId = student is Student ? student.id : student['id'];
+
+    final nameCtrl = TextEditingController(text: initialName);
+    final rollCtrl = TextEditingController(text: initialRoll);
+    final parentCtrl = TextEditingController(text: initialParent);
+    final phoneCtrl = TextEditingController(text: initialPhone);
+    bool isSaving = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+
+          return Container(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              16,
+              20,
+              MediaQuery.of(ctx).viewInsets.bottom + 24,
+            ),
+            decoration: BoxDecoration(
+              color: isDark ? AppTheme.darkCard : Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 16,
+                  offset: const Offset(0, -4),
+                ),
+              ],
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.manage_accounts_rounded, color: AppTheme.primary, size: 22),
+                      ),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Edit Student Details (विद्यार्थी सम्पादन)',
+                              style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w900),
+                            ),
+                            Text(
+                              'Class In-Charge Authority',
+                              style: TextStyle(fontSize: 11, color: AppTheme.darkSubtext, fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.pop(sheetCtx),
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 20),
+
+                  // Roll No & Name
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 90,
+                        child: TextField(
+                          controller: rollCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: 'Roll No',
+                            labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                            prefixIcon: const Icon(Icons.numbers_rounded, size: 16),
+                            filled: true,
+                            fillColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: TextField(
+                          controller: nameCtrl,
+                          decoration: InputDecoration(
+                            labelText: 'Student Full Name',
+                            labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                            prefixIcon: const Icon(Icons.person_rounded, size: 16),
+                            filled: true,
+                            fillColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Parent / Guardian Name
+                  TextField(
+                    controller: parentCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'Parent / Guardian Name',
+                      labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                      prefixIcon: const Icon(Icons.escalator_warning_rounded, size: 16),
+                      filled: true,
+                      fillColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Parent Phone Number
+                  TextField(
+                    controller: phoneCtrl,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      labelText: 'Parent Mobile Phone',
+                      labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                      prefixIcon: const Icon(Icons.phone_rounded, size: 16),
+                      filled: true,
+                      fillColor: isDark ? AppTheme.darkBg : AppTheme.lightBg,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Save Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      onPressed: isSaving
+                          ? null
+                          : () async {
+                              final newName = nameCtrl.text.trim();
+                              final newRoll = rollCtrl.text.trim();
+                              final newParent = parentCtrl.text.trim();
+                              final newPhone = phoneCtrl.text.trim();
+
+                              if (newName.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Please enter student name')),
+                                );
+                                return;
+                              }
+
+                              setModalState(() => isSaving = true);
+
+                              try {
+                                if (studentId != null) {
+                                  await _apiService.updateStudent(
+                                    studentId.toString(),
+                                    {
+                                      'name': newName,
+                                      'roll_no': newRoll,
+                                      'parent_name': newParent,
+                                      'parent_phone': newPhone,
+                                    },
+                                  );
+                                }
+
+                                if (mounted) {
+                                  final teacher = Provider.of<TeacherProvider>(context, listen: false);
+                                  teacher.fetchStudents();
+                                  Navigator.pop(sheetCtx);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: AppTheme.green,
+                                      content: Row(
+                                        children: [
+                                          const Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+                                          const SizedBox(width: 8),
+                                          Text('Details for "$newName" updated successfully!'),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  setModalState(() => isSaving = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Error saving changes: $e')),
+                                  );
+                                }
+                              }
+                            },
+                      icon: isSaving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Icon(Icons.save_rounded, size: 18),
+                      label: Text(
+                        isSaving ? 'Saving Changes...' : 'Save Student Details',
+                        style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   void _postDiaryModal() {
     final topicCtrl = TextEditingController();
     final homeworkCtrl = TextEditingController();
@@ -509,6 +775,7 @@ class _ClassInchargeHubScreenState extends State<ClassInchargeHubScreen>
 
           return AppCard(
             padding: const EdgeInsets.all(14),
+            onTap: () => _showEditStudentModal(context, s),
             child: Row(
               children: [
                 Container(
@@ -550,6 +817,30 @@ class _ClassInchargeHubScreenState extends State<ClassInchargeHubScreen>
                             fontWeight: FontWeight.w600)),
                   ],
                 ),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: () => _showEditStudentModal(context, s),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.edit_rounded, size: 12, color: AppTheme.primary),
+                        SizedBox(width: 3),
+                        Text(
+                          'Edit',
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppTheme.primary),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ).animate().fadeIn(delay: (i * 40).ms);
@@ -558,6 +849,7 @@ class _ClassInchargeHubScreenState extends State<ClassInchargeHubScreen>
         final s = _mySectionStudents[i];
         return AppCard(
           padding: const EdgeInsets.all(14),
+          onTap: () => _showEditStudentModal(context, s),
           child: Row(
             children: [
               Container(
@@ -598,6 +890,30 @@ class _ClassInchargeHubScreenState extends State<ClassInchargeHubScreen>
                           color: s['feeStatus'] == 'Paid' ? AppTheme.grey : Colors.orange,
                           fontWeight: FontWeight.w600)),
                 ],
+              ),
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: () => _showEditStudentModal(context, s),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppTheme.primary.withOpacity(0.2)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.edit_rounded, size: 12, color: AppTheme.primary),
+                      SizedBox(width: 3),
+                      Text(
+                        'Edit',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppTheme.primary),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),

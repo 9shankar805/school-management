@@ -221,6 +221,43 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Instant offline demo login for testing and when server is unreachable
+  Future<bool> loginInDemoMode([String? loginId]) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final email = (loginId != null && loginId.isNotEmpty) ? loginId : 'kunti.yadav@school.edu';
+    final parts = email.split('@').first.split('.');
+    final name = parts.map((p) => p.isNotEmpty ? p[0].toUpperCase() + p.substring(1) : '').join(' ');
+
+    _teacherProfile = {
+      'id': 'NSH-T-2081',
+      'name': name.isNotEmpty ? name : 'Kunti Yadav',
+      'email': email,
+      'phone': '+977 9841234567',
+      'designation': 'Senior Faculty / Class Teacher',
+      'is_class_teacher': true,
+      'roles': ['teacher', 'class-teacher'],
+      'school': {
+        'name': 'Nepal School Hub (NSHLMS)',
+        'code': 'NSH-2081',
+        'address': 'Kathmandu, Lalitpur, Nepal',
+      },
+      'school_name': 'Nepal School Hub (NSHLMS)',
+      'school_logo': 'assets/images/logo.png',
+    };
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('teacher_profile_data', jsonEncode(_teacherProfile));
+    await prefs.setString('auth_token', 'demo_offline_token_${DateTime.now().millisecondsSinceEpoch}');
+    await prefs.setInt('session_login_timestamp', DateTime.now().millisecondsSinceEpoch);
+
+    _isLoading = false;
+    notifyListeners();
+    return true;
+  }
+
   Future<void> logout() async {
     _isLoading = true;
     notifyListeners();

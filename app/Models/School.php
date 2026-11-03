@@ -450,4 +450,9 @@ class School extends Model
             'enterprise' => ['students' => 9999, 'teachers' => 999, 'staff' => 500, 'ai' => true,  'whatsapp' => 9999, 'price_npr' => 19999],
         ];
     }
+
+    public function googleConfig(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(SchoolGoogleConfig::class);
+    }
 }

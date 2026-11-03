@@ -157,36 +157,7 @@ class _ClassesScreenState extends State<ClassesScreen> with SingleTickerProvider
   // --- TAB 1: Assigned Classes List ---
   Widget _buildClassesListTab(bool isDark) {
     final teacher = Provider.of<TeacherProvider>(context);
-
-    List<TeacherClass> classList = [];
-    if (teacher.classes.isNotEmpty) {
-      classList = teacher.classes.asMap().entries.map((entry) {
-        final idx = entry.key;
-        final c = entry.value;
-        if (c is TeacherClass) return c;
-        final name = c is Map ? (c['name'] ?? c['subject'] ?? 'Subject') : 'Subject';
-        final section = c is Map ? (c['section'] ?? c['class_name'] ?? 'Grade 10') : 'Grade 10';
-        final room = c is Map ? (c['room'] ?? 'Room 101') : 'Room 101';
-        final time = c is Map ? (c['time'] ?? '09:00 AM') : '09:00 AM';
-        final students = c is Map ? (c['students'] ?? 25) : 25;
-        final colorHex = c is Map ? (c['colorHex'] ?? 0xFFE0F2FE) : 0xFFE0F2FE;
-        final isOngoing = idx == 0;
-        return TeacherClass(
-          name: name.toString(),
-          section: section.toString(),
-          room: room.toString(),
-          time: time.toString(),
-          subject: name.toString(),
-          students: students is int ? students : 25,
-          colorHex: colorHex is int ? colorHex : 0xFFE0F2FE,
-          iconCode: 0xe3e9,
-          avgGrade: 3.6,
-          isOngoing: isOngoing,
-        );
-      }).toList();
-    } else {
-      classList = AppData.classes;
-    }
+    final classList = teacher.teacherClasses.isNotEmpty ? teacher.teacherClasses : AppData.classes;
 
     final filtered = classList.where((c) {
       if (_searchQuery.isEmpty) return true;

@@ -521,6 +521,7 @@ Route::prefix('teacher-app')->name('teacher_app.')->group(function () {
         Route::prefix('class-teacher')->name('class_teacher.')->group(function () {
             Route::get('overview',            [TeacherClassTeacherController::class, 'overview']);
             Route::get('students',            [TeacherClassTeacherController::class, 'students']);
+            Route::put('students/{id}',       [TeacherClassTeacherController::class, 'updateStudent']);
             Route::get('leaves',              [TeacherClassTeacherController::class, 'leaves']);
             Route::post('leaves/{id}/action', [TeacherClassTeacherController::class, 'handleLeave']);
             Route::post('diary',              [TeacherClassTeacherController::class, 'postDiary']);
@@ -531,6 +532,7 @@ Route::prefix('teacher-app')->name('teacher_app.')->group(function () {
             Route::get('/', [TeacherStudentController::class, 'index']);
             Route::get('search', [TeacherStudentController::class, 'search']);
             Route::get('{id}', [TeacherStudentController::class, 'show']);
+            Route::put('{id}', [TeacherStudentController::class, 'update']);
             Route::get('{id}/performance', [TeacherStudentController::class, 'performance']);
             Route::get('{id}/assignments', [TeacherStudentController::class, 'assignments']);
         });

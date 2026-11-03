@@ -36,6 +36,25 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final PageController _tipController = PageController();
   int _tipIndex = 0;
+  String? _navigatingModule;
+
+  Future<void> _handleModuleTap(String label, Widget screen) async {
+    if (_navigatingModule != null) return;
+    setState(() => _navigatingModule = label);
+    // Yield 1 frame so Flutter renders the rotating indicator on screen immediately
+    await Future.delayed(const Duration(milliseconds: 16));
+    if (!mounted) return;
+    try {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => screen),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _navigatingModule = null);
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -863,17 +882,17 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             itemBuilder: (context, idx) {
               final m = modules[idx];
+              final label = m['label'] as String;
               final color = m['color'] as Color;
+              final isOpening = _navigatingModule == label;
               return _buildSquircleModuleCard(
-                label: m['label'] as String,
+                label: label,
                 sub: m['sub'] as String,
                 icon: m['icon'] as IconData,
                 color: color,
                 isDark: isDark,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => m['screen'] as Widget),
-                ),
+                isLoading: isOpening,
+                onTap: () => _handleModuleTap(label, m['screen'] as Widget),
               );
             },
           ),
@@ -951,17 +970,17 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             itemBuilder: (context, idx) {
               final t = tools[idx];
+              final label = t['label'] as String;
               final color = t['color'] as Color;
+              final isOpening = _navigatingModule == label;
               return _buildSquircleModuleCard(
-                label: t['label'] as String,
+                label: label,
                 sub: t['sub'] as String,
                 icon: t['icon'] as IconData,
                 color: color,
                 isDark: isDark,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => t['screen'] as Widget),
-                ),
+                isLoading: isOpening,
+                onTap: () => _handleModuleTap(label, t['screen'] as Widget),
               );
             },
           ),
@@ -977,11 +996,12 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color color,
     required bool isDark,
     required VoidCallback onTap,
+    bool isLoading = false,
   }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: isLoading ? null : onTap,
         borderRadius: BorderRadius.circular(18),
         child: Ink(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
@@ -989,13 +1009,17 @@ class _HomeScreenState extends State<HomeScreen> {
             color: isDark ? AppTheme.darkCard : Colors.white,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: isDark ? AppTheme.darkCardBorder : AppTheme.cardBorder,
-              width: 1,
+              color: isLoading
+                  ? color
+                  : (isDark ? AppTheme.darkCardBorder : AppTheme.cardBorder),
+              width: isLoading ? 1.6 : 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF0F172A).withOpacity(isDark ? 0.2 : 0.03),
-                blurRadius: 10,
+                color: isLoading
+                    ? color.withOpacity(0.25)
+                    : const Color(0xFF0F172A).withOpacity(isDark ? 0.2 : 0.03),
+                blurRadius: isLoading ? 14 : 10,
                 offset: const Offset(0, 3),
               ),
             ],
@@ -1010,7 +1034,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: color.withOpacity(isDark ? 0.22 : 0.12),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child: isLoading
+                    ? Center(
+                        child: SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            valueColor: AlwaysStoppedAnimation<Color>(color),
+                          ),
+                        ),
+                      )
+                    : Icon(icon, color: color, size: 20),
               ),
               const SizedBox(height: 6),
               Text(
@@ -1024,11 +1059,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                sub,
-                style: const TextStyle(
+                isLoading ? 'Opening...' : sub,
+                style: TextStyle(
                   fontSize: 9.5,
-                  color: AppTheme.darkSubtext,
-                  fontWeight: FontWeight.w600,
+                  color: isLoading ? color : AppTheme.darkSubtext,
+                  fontWeight: isLoading ? FontWeight.w700 : FontWeight.w600,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

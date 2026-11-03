@@ -36,6 +36,9 @@
                 </div>
                 <div class="flex flex-wrap gap-4 text-xs text-slate-500 mt-1">
                     <span><i class="bi bi-envelope me-1"></i>{{ $teacher->email }}</span>
+                    @if($teacher->google_workspace_email)
+                    <span class="text-indigo-600 font-semibold" title="Google Education Workspace Account"><i class="bi bi-google text-indigo-500 me-1"></i>{{ $teacher->google_workspace_email }}</span>
+                    @endif
                     @if($teacher->phone)<span><i class="bi bi-telephone me-1"></i>{{ $teacher->phone }}</span>@endif
                     @if($activeContract)<span><i class="bi bi-briefcase me-1"></i>{{ ucfirst($activeContract->position ?? $activeContract->contract_type) }} · Rs. {{ number_format($activeContract->basic_salary) }}/mo</span>@endif
                 </div>
@@ -149,6 +152,17 @@
                                     @endif
                                     @if($ac->section)
                                     <span class="text-[10px] bg-slate-100 text-slate-600 font-medium px-2 py-0.5 rounded-full">Sec {{ $ac->section->section_name }}</span>
+                                    @endif
+                                    @php
+                                        $gClass = \App\Models\GoogleClassroomCourse::where('class_id', $ac->class_id)
+                                            ->where('section_id', $ac->section_id)
+                                            ->where('course_id', $ac->course_id)
+                                            ->first();
+                                    @endphp
+                                    @if($gClass && $gClass->alternate_link)
+                                    <a href="{{ $gClass->alternate_link }}" target="_blank" rel="noopener" class="text-[10px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-semibold transition inline-flex items-center gap-1" title="Open Google Classroom">
+                                        <i class="bi bi-google"></i> Classroom
+                                    </a>
                                     @endif
                                     @can('assign teachers')
                                     <form action="{{ route('teacher.toggle-class-teacher', $ac->id) }}" method="POST" class="inline">

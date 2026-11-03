@@ -21,8 +21,14 @@ class ApiService {
   factory ApiService() => _instance;
   ApiService._internal();
 
-  // Production base URL - connects to Nepal School Hub Teacher App API
-  static const String _defaultBaseUrl = 'https://nshlms.com/api/teacher-app';
+  // Production & Preset base URLs - connects to Nepal School Hub Teacher App API
+  static const String liveProductionUrl = 'https://nshlms.com/api/teacher-app';
+  static const String fallbackLiveUrl = 'https://nepalschoolhub.techprocod.com.np/api/teacher-app';
+  static const String localLanUrl = 'http://192.168.1.70:8000/api/teacher-app';
+  static const String androidEmulatorUrl = 'http://10.0.2.2:8000/api/teacher-app';
+  static const String localhostUrl = 'http://127.0.0.1:8000/api/teacher-app';
+
+  static const String _defaultBaseUrl = liveProductionUrl;
   static const String _tokenKey = 'auth_token';
   static const String _teacherDataKey = 'teacher_profile_data';
   static const String _serverUrlKey = 'custom_server_url';
@@ -54,7 +60,7 @@ class ApiService {
       return Duration.zero;
     }
     final ageMs = DateTime.now().millisecondsSinceEpoch - _sessionTimestamp!;
-    final totalMs = sessionTimeoutHours * 60 * 60 * 1000;
+    const totalMs = sessionTimeoutHours * 60 * 60 * 1000;
     final diff = totalMs - ageMs;
     return diff > 0 ? Duration(milliseconds: diff) : Duration.zero;
   }
@@ -93,6 +99,7 @@ class ApiService {
     final headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'User-Agent': 'NepalSchoolHub-TeacherApp/1.0 (Mobile; Android/iOS)',
     };
     if (requiresAuth && _token != null) {
       headers['Authorization'] = 'Bearer $_token';
@@ -153,9 +160,14 @@ class ApiService {
         );
       }
     } catch (e) {
+      final errStr = e.toString();
+      final isDnsFail = errStr.contains('Failed host lookup') || errStr.contains('SocketException');
+      final cleanMsg = isDnsFail
+          ? 'Network error: Unable to reach school server at $_baseUrl. Host lookup failed (check internet connection or switch server endpoint in DNS settings).'
+          : 'Network error: Unable to reach school server ($e)';
       return ApiResponse(
         success: false,
-        message: 'Network error: Unable to reach school server ($e)',
+        message: cleanMsg,
         statusCode: 500,
       );
     }
@@ -169,7 +181,7 @@ class ApiService {
     try {
       if (_token != null) {
         await http.post(
-          Uri.parse('$_baseUrl/auth/logout'),
+          Uri.parse('$_baseUrl/teacher/logout'),
           headers: _headers(),
         ).timeout(const Duration(seconds: 6));
       }
@@ -299,6 +311,10 @@ class ApiService {
 
   Future<ApiResponse<Map<String, dynamic>>> getStudentPerformance(String studentId) async {
     return _get<Map<String, dynamic>>('$_baseUrl/students/$studentId/performance');
+  }
+
+  Future<ApiResponse<dynamic>> updateStudent(String studentId, Map<String, dynamic> data) async {
+    return _put('$_baseUrl/students/$studentId', data);
   }
 
   // ==========================================

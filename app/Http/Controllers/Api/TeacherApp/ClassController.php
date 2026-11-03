@@ -186,32 +186,45 @@ class ClassController extends Controller
             ->with(['schoolClass', 'section', 'course'])
             ->get();
 
-        $classesSummary = $assigned->map(function ($item, $idx) use ($sessionId) {
-            $studentsCount = \App\Models\Promotion::where('class_id', $item->class_id)
-                ->where('section_id', $item->section_id)
+        // Group by class_id and section_id so each class section appears exactly ONCE
+        $grouped = $assigned->groupBy(fn($item) => $item->class_id . '_' . $item->section_id);
+
+        $palette = [0xFFE0F2FE, 0xFFEDE9FE, 0xFFDCFCE7, 0xFFFEF3C7, 0xFFFFEDD5, 0xFFFCE7F3];
+
+        $classesSummary = $grouped->values()->map(function ($items, $idx) use ($sessionId, $palette) {
+            $first = $items->first();
+            $studentsCount = \App\Models\Promotion::where('class_id', $first->class_id)
+                ->where('section_id', $first->section_id)
                 ->where('session_id', $sessionId)
                 ->count();
 
-            $palette = [0xFFE0F2FE, 0xFFEDE9FE, 0xFFDCFCE7, 0xFFFEF3C7, 0xFFFFEDD5, 0xFFFCE7F3];
             $color = $palette[$idx % count($palette)];
 
+            $courseNames = $items->map(fn($it) => $it->course?->course_name)->filter()->unique()->values();
+            $isClassTeacher = $items->contains(fn($it) => (bool)$it->is_class_teacher);
+
+            $primaryName = $courseNames->isNotEmpty()
+                ? ($courseNames->count() > 1 ? ($courseNames->first() . ' (+' . ($courseNames->count() - 1) . ' subjects)') : $courseNames->first())
+                : 'General Studies';
+
             return [
-                'id'          => $item->id,
-                'class_id'    => $item->class_id,
-                'section_id'  => $item->section_id,
-                'course_id'   => $item->course_id,
-                'name'        => $item->course?->course_name ?? 'General Studies',
-                'section'     => ($item->schoolClass?->class_name ?? 'Grade') . ' — ' . ($item->section?->section_name ?? 'A'),
-                'class_name'  => $item->schoolClass?->class_name ?? 'Grade',
-                'section_name'=> $item->section?->section_name ?? 'Section A',
-                'subject'     => $item->course?->course_name ?? 'Subject',
-                'room'        => 'Room ' . (101 + $idx),
-                'time'        => '09:' . sprintf('%02d', ($idx * 45) % 60) . ' AM',
-                'students'    => $studentsCount > 0 ? $studentsCount : 25,
-                'colorHex'    => $color,
-                'iconCode'    => 0xe3e9,
-                'avgGrade'    => 3.6,
-                'is_class_teacher' => (bool) $item->is_class_teacher,
+                'id'               => $first->id,
+                'class_id'         => $first->class_id,
+                'section_id'       => $first->section_id,
+                'course_id'        => $first->course_id,
+                'name'             => $primaryName,
+                'section'          => ($first->schoolClass?->class_name ?? 'Grade') . ' — ' . ($first->section?->section_name ?? 'A'),
+                'class_name'       => $first->schoolClass?->class_name ?? 'Grade',
+                'section_name'     => $first->section?->section_name ?? 'Section A',
+                'subject'          => $courseNames->isNotEmpty() ? $courseNames->implode(', ') : 'General Studies',
+                'courses'          => $courseNames->all(),
+                'room'             => 'Room ' . (101 + $idx),
+                'time'             => '09:' . sprintf('%02d', ($idx * 45) % 60) . ' AM',
+                'students'         => $studentsCount > 0 ? $studentsCount : 25,
+                'colorHex'         => $color,
+                'iconCode'         => 0xe3e9,
+                'avgGrade'         => 3.6,
+                'is_class_teacher' => $isClassTeacher,
             ];
         });
 
@@ -219,7 +232,7 @@ class ClassController extends Controller
             'status'  => 'success',
             'classes' => $classesSummary,
             'summary' => [
-                'total_classes'      => $assigned->count(),
+                'total_classes'      => $classesSummary->count(),
                 'total_students'     => $classesSummary->sum('students'),
                 'average_gpa'        => 3.5,
                 'average_attendance' => '94%'
