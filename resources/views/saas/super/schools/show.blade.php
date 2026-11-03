@@ -230,7 +230,7 @@ $activeTab = request()->routeIs('super.schools.committee') ? 'governance' : 'ove
                         ['label'=>'Compliant (No Party)', 'value'=>$compliant,       'icon'=>'bi-shield-check',    'color'=>$compliant===$total && $total>0 ? 'emerald' : 'amber'],
                         ['label'=>'With Documents',  'value'=>$withDocs,              'icon'=>'bi-file-earmark-pdf','color'=>'blue'],
                         ['label'=>'Compliance %',    'value'=>$total>0 ? round($compliant/$total*100).'%' : '—', 'icon'=>'bi-graph-up',      'color'=>$total>0 && $compliant===$total ? 'emerald' : 'violet'],
-                    ] as [$lbl, $val, $ico, $col])
+                    ] as ['label' => $lbl, 'value' => $val, 'icon' => $ico, 'color' => $col])
                     <div class="p-3 rounded-lg border" style="border-color:var(--border-card)">
                         <div class="flex items-center gap-2 mb-1">
                             <i class="bi {{ $ico }} text-{{ $col }}-500"></i>
