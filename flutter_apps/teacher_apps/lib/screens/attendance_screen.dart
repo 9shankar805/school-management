@@ -639,7 +639,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 250),
                         width: double.infinity,
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         decoration: BoxDecoration(
                           color: isDark ? AppTheme.darkBg : const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(24),
@@ -664,13 +664,13 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                           ],
                         ),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            // 1. Top Roll & Status Header
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                                   decoration: BoxDecoration(
                                     color: AppTheme.primary,
                                     borderRadius: BorderRadius.circular(12),
@@ -687,7 +687,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w900,
-                                      fontSize: 13,
+                                      fontSize: 12.5,
                                       letterSpacing: 0.5,
                                     ),
                                   ),
@@ -695,152 +695,177 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                                 _buildCurrentStatusChip(currentStatus),
                               ],
                             ),
-                            const Spacer(),
 
-                            Container(
-                              width: 86,
-                              height: 86,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: LinearGradient(
-                                  colors: currentStatus == 0
-                                      ? [AppTheme.green, const Color(0xFF059669)]
-                                      : (currentStatus == 1
-                                          ? [AppTheme.red, const Color(0xFFDC2626)]
-                                          : (currentStatus == 2
-                                              ? [AppTheme.orange, const Color(0xFFD97706)]
-                                              : [const Color(0xFF0F4C81), const Color(0xFF2563EB)])),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: (currentStatus == 0 ? AppTheme.green : AppTheme.primary).withOpacity(0.3),
-                                    blurRadius: 14,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
+                            // 2. Center Content (Avatar, Name, Details - Scrollable if compact, centered if large)
+                            Expanded(
                               child: Center(
-                                child: Text(
-                                  s.name.isNotEmpty
-                                      ? s.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join()
-                                      : 'ST',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 26,
-                                    letterSpacing: 1,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 14),
+                                child: SingleChildScrollView(
+                                  physics: const BouncingScrollPhysics(),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // Student Avatar
+                                        Container(
+                                          width: 70,
+                                          height: 70,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            gradient: LinearGradient(
+                                              colors: currentStatus == 0
+                                                  ? [AppTheme.green, const Color(0xFF059669)]
+                                                  : (currentStatus == 1
+                                                      ? [AppTheme.red, const Color(0xFFDC2626)]
+                                                      : (currentStatus == 2
+                                                          ? [AppTheme.orange, const Color(0xFFD97706)]
+                                                          : [const Color(0xFF0F4C81), const Color(0xFF2563EB)])),
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: (currentStatus == 0 ? AppTheme.green : AppTheme.primary).withOpacity(0.25),
+                                                blurRadius: 10,
+                                                offset: const Offset(0, 3),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              s.name.isNotEmpty
+                                                  ? s.name.split(' ').map((e) => e.isNotEmpty ? e[0] : '').take(2).join()
+                                                  : 'ST',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w900,
+                                                fontSize: 20,
+                                                letterSpacing: 1,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
 
-                            Text(
-                              s.name,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w900,
-                                color: isDark ? Colors.white : AppTheme.dark,
-                                letterSpacing: -0.3,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
+                                        // Student Name
+                                        Text(
+                                          s.name,
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.w900,
+                                            color: isDark ? Colors.white : AppTheme.dark,
+                                            letterSpacing: -0.3,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 3),
 
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Class ${cls.section} • ID: ${s.id ?? (currentIndex + 1)}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.darkSubtext,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: (s.attendance >= 0.85 ? AppTheme.green : AppTheme.orange).withOpacity(0.12),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    '${(s.attendance * 100).toInt()}% Attendance',
-                                    style: TextStyle(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: s.attendance >= 0.85 ? AppTheme.green : AppTheme.orange,
+                                        // Class & Attendance
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              'Class ${cls.section} • ID: ${s.id ?? (currentIndex + 1)}',
+                                              style: const TextStyle(
+                                                fontSize: 11.5,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppTheme.darkSubtext,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: (s.attendance >= 0.85 ? AppTheme.green : AppTheme.orange).withOpacity(0.12),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                '${(s.attendance * 100).toInt()}% Attendance',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: s.attendance >= 0.85 ? AppTheme.green : AppTheme.orange,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+
+                                        // Parent contact
+                                        if (s.parentPhone.isNotEmpty && s.parentPhone != '-') ...[
+                                          const SizedBox(height: 6),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                            decoration: BoxDecoration(
+                                              color: isDark ? AppTheme.darkCard : Colors.white,
+                                              borderRadius: BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: isDark ? AppTheme.darkCardBorder : AppTheme.cardBorder,
+                                                width: 0.8,
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Icon(Icons.person_pin_circle_rounded, size: 13, color: AppTheme.primary),
+                                                const SizedBox(width: 5),
+                                                Flexible(
+                                                  child: Text(
+                                                    '${s.parentName.isNotEmpty ? s.parentName : "Parent"} (${s.parentPhone})',
+                                                    style: const TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: AppTheme.darkSubtext,
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                InkWell(
+                                                  onTap: () => _makePhoneCall(s.parentPhone),
+                                                  child: Container(
+                                                    padding: const EdgeInsets.all(4),
+                                                    decoration: BoxDecoration(
+                                                      color: AppTheme.green.withOpacity(0.12),
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                    child: const Icon(Icons.phone_rounded, size: 11, color: AppTheme.green),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+
+                                        if (currentRemark != null && currentRemark.isNotEmpty) ...[
+                                          const SizedBox(height: 5),
+                                          Text(
+                                            'Note: $currentRemark',
+                                            style: const TextStyle(
+                                              fontSize: 10.5,
+                                              color: AppTheme.orange,
+                                              fontStyle: FontStyle.italic,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ),
                                 ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: isDark ? AppTheme.darkCard : Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: isDark ? AppTheme.darkCardBorder : AppTheme.cardBorder,
-                                  width: 0.8,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.person_pin_circle_rounded, size: 14, color: AppTheme.primary),
-                                  const SizedBox(width: 6),
-                                  Flexible(
-                                    child: Text(
-                                      '${s.parentName} (${s.parentPhone})',
-                                      style: const TextStyle(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppTheme.darkSubtext,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  InkWell(
-                                    onTap: () => _makePhoneCall(s.parentPhone),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.green.withOpacity(0.12),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: const Icon(Icons.phone_rounded, size: 12, color: AppTheme.green),
-                                    ),
-                                  ),
-                                ],
                               ),
                             ),
-                            if (currentRemark != null && currentRemark.isNotEmpty) ...[
-                              const SizedBox(height: 6),
-                              Text(
-                                'Note: $currentRemark',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: AppTheme.orange,
-                                  fontStyle: FontStyle.italic,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                            const Spacer(),
 
-                            const Text(
-                              '👉 Swipe Right for Present • 👈 Swipe Left for Absent',
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                color: AppTheme.darkSubtext,
-                                fontWeight: FontWeight.w600,
+                            // 3. Swipe hints
+                            const Padding(
+                              padding: EdgeInsets.only(top: 4),
+                              child: Text(
+                                '👉 Swipe Right for Present • 👈 Swipe Left for Absent',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: AppTheme.darkSubtext,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ],
@@ -849,7 +874,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
 
                 // Speed Action Pad (Big Thumb Buttons)
                 Padding(
@@ -906,11 +931,11 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
 
                 // Bottom Navigation Bar
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 20),
+                  padding: const EdgeInsets.fromLTRB(18, 0, 18, 14),
                   child: Row(
                     children: [
                       Expanded(
@@ -1075,7 +1100,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         borderRadius: BorderRadius.circular(16),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
           decoration: BoxDecoration(
             gradient: isSelected
                 ? LinearGradient(

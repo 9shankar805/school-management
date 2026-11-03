@@ -48,6 +48,10 @@
         @php try { $saasPending = \App\Models\School::where('status','pending')->count(); } catch(\Throwable $e) { $saasPending = 0; } @endphp
         @if($saasPending > 0)<span class="sidebar-badge">{{ $saasPending }}</span>@endif
     </a>
+    <a href="{{ route('super.google.index') }}" class="sidebar-link {{ request()->is('super/google*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-google text-indigo-400"></i></span>
+        <span class="sidebar-link-text">Google Workspace Hub</span>
+    </a>
 
     <p class="sidebar-section-label">Finance</p>
     <a href="{{ route('finance.overview') }}" class="sidebar-link {{ request()->is('finance') ? 'active' : '' }}">
@@ -130,6 +134,13 @@
         <span class="sidebar-link-icon"><i class="bi bi-gear-wide-connected text-amber-500"></i></span>
         <span class="sidebar-link-text">School Setup</span>
     </a>
+    @role('admin|principal')
+    <a href="{{ route('school.google.plugin') }}" class="sidebar-link {{ request()->is('school/google-workspace*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-google text-indigo-500"></i></span>
+        <span class="sidebar-link-text">Google Education</span>
+        <span class="sidebar-badge" style="background:#e0e7ff;color:#4338ca;font-size:9px;font-weight:700;">PLUGIN</span>
+    </a>
+    @endrole
     @canany(['edit academic settings','view system settings','edit system settings'])
     <a href="{{ route('school.profile.edit') }}" class="sidebar-link {{ request()->is('school/profile') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-building-fill"></i></span>

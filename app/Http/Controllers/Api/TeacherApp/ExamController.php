@@ -98,6 +98,12 @@ class ExamController extends Controller
         $courseId  = $request->input('course_id');
         $examId    = $id && $id !== 'marks' && is_numeric($id) ? (int)$id : $request->input('exam_id');
 
+        if (!$examId && $request->filled('exam_name')) {
+            $examId = Exam::where('session_id', $sessionId)
+                ->where('exam_name', $request->input('exam_name'))
+                ->value('id');
+        }
+
         $marksQuery = Mark::where('session_id', $sessionId);
 
         if ($classId) $marksQuery->where('class_id', $classId);
@@ -105,16 +111,24 @@ class ExamController extends Controller
         if ($courseId) $marksQuery->where('course_id', $courseId);
         if ($examId) $marksQuery->where('exam_id', $examId);
 
-        $marks = $marksQuery->with('student')->get()->map(function ($m) {
+        $marks = $marksQuery->with(['student', 'course'])->get()->map(function ($m) {
+            $courseName = $m->course?->course_name ?? '';
+            $isPractical = (bool) preg_match('/(science|sci|physic|chem|bio|comput|hpe|health|vocat|art)/i', $courseName);
+            $th = $isPractical ? round($m->marks * 0.75, 1) : (float)$m->marks;
+            $pr = $isPractical ? round($m->marks * 0.25, 1) : 0.0;
             return [
-                'id'         => $m->id,
-                'student_id' => $m->student_id,
-                'marks'      => (float)$m->marks,
-                'score'      => (float)$m->marks,
-                'class_id'   => $m->class_id,
-                'section_id' => $m->section_id,
-                'course_id'  => $m->course_id,
-                'exam_id'    => $m->exam_id,
+                'id'            => $m->id,
+                'student_id'    => $m->student_id,
+                'marks'         => (float)$m->marks,
+                'score'         => (float)$m->marks,
+                'theory'        => (float)$th,
+                'practical'     => (float)$pr,
+                'has_practical' => $isPractical,
+                'class_id'      => $m->class_id,
+                'section_id'    => $m->section_id,
+                'course_id'     => $m->course_id,
+                'course_name'   => $courseName,
+                'exam_id'       => $m->exam_id,
             ];
         });
 

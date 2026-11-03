@@ -340,6 +340,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/school/setup', [AcademicSettingController::class, 'index'])->name('school.setup');
     Route::get('/academics/settings', [AcademicSettingController::class, 'index'])->name('academic.settings');
 
+    // School-level Google Education Workspace Plugin Box
+    Route::get('/school/google-workspace',               [\App\Http\Controllers\SchoolGooglePluginController::class, 'index'])->name('school.google.plugin');
+    Route::post('/school/google-workspace/sync-rosters', [\App\Http\Controllers\SchoolGooglePluginController::class, 'syncRosters'])->name('school.google.sync-rosters');
+    Route::post('/school/google-workspace/test',         [\App\Http\Controllers\SchoolGooglePluginController::class, 'testConnection'])->name('school.google.test');
+    Route::get('/school/google-workspace/classroom/{googleCourseId}/stream',                      [\App\Http\Controllers\SchoolGooglePluginController::class, 'stream'])->name('school.google.classroom.stream');
+    Route::get('/school/google-workspace/classroom/{googleCourseId}/submissions/{courseWorkId}',  [\App\Http\Controllers\SchoolGooglePluginController::class, 'submissions'])->name('school.google.classroom.submissions');
+    Route::post('/school/google-workspace/archive-report-cards',                                   [\App\Http\Controllers\SchoolGooglePluginController::class, 'archiveReportCards'])->name('school.google.archive-report-cards');
+
     // Calendar & Academic Events
     Route::get('calendar-event', [EventController::class, 'index'])->name('events.show');
     Route::post('calendar-crud-ajax', [EventController::class, 'calendarEvents'])->name('events.crud');
@@ -1786,6 +1794,13 @@ Route::middleware(['auth', 'role:super-admin'])
          Route::patch('/contact-messages/{contactMessage}/status',          [\App\Http\Controllers\ContactMessagesController::class, 'updateStatus'])->name('contact-messages.status');
          Route::patch('/contact-messages/{contactMessage}/notes',           [\App\Http\Controllers\ContactMessagesController::class, 'saveNotes'])->name('contact-messages.notes');
          Route::delete('/contact-messages/{contactMessage}',                [\App\Http\Controllers\ContactMessagesController::class, 'destroy'])->name('contact-messages.destroy');
+
+         // ── Google Education Workspace Management ─────────────────────────
+         Route::get('/google-workspace',                            [\App\Http\Controllers\SuperAdmin\GoogleWorkspaceController::class, 'index'])->name('google.index');
+         Route::get('/schools/{school}/google',                     [\App\Http\Controllers\SuperAdmin\GoogleWorkspaceController::class, 'show'])->name('schools.google');
+         Route::post('/schools/{school}/google/config',              [\App\Http\Controllers\SuperAdmin\GoogleWorkspaceController::class, 'saveConfig'])->name('schools.google.config');
+         Route::post('/schools/{school}/google/test',                [\App\Http\Controllers\SuperAdmin\GoogleWorkspaceController::class, 'testConnection'])->name('schools.google.test');
+         Route::post('/schools/{school}/google/migrate',             [\App\Http\Controllers\SuperAdmin\GoogleWorkspaceController::class, 'migrate'])->name('schools.google.migrate');
      });
 
 

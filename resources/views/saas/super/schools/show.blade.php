@@ -79,6 +79,14 @@ $activeTab = request()->routeIs('super.schools.committee') ? 'governance' : 'ove
                     </span>
                 @endif
             </a>
+            <a href="{{ route('super.schools.google', $school) }}"
+               class="flex items-center gap-2 px-5 py-3 border-b-2 transition {{ $activeTab==='google' ? 'border-indigo-500 text-indigo-600' : 'border-transparent hover:text-indigo-500' }}"
+               style="color:{{ $activeTab==='google' ? '' : 'var(--text-muted)' }}">
+                <i class="bi bi-google text-indigo-500"></i> Google Education
+                @if($school->googleConfig?->connection_status === 'connected')
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                @endif
+            </a>
         </div>
     </div>
 

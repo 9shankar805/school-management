@@ -44,12 +44,49 @@ class TeacherProvider extends ChangeNotifier {
   List<TeacherClass> get teacherClasses {
     if (_cachedTeacherClasses != null) return _cachedTeacherClasses!;
     if (_classes.isNotEmpty) {
-      _cachedTeacherClasses = _classes.asMap().entries.map((e) {
-        if (e.value is TeacherClass) return e.value as TeacherClass;
-        if (e.value is Map<String, dynamic>) return TeacherClass.fromJson(e.value as Map<String, dynamic>, e.key);
-        if (e.value is Map) return TeacherClass.fromJson(Map<String, dynamic>.from(e.value as Map), e.key);
-        return AppData.classes[e.key % AppData.classes.length];
-      }).toList();
+      final Map<String, TeacherClass> uniqueMap = {};
+      for (var i = 0; i < _classes.length; i++) {
+        final val = _classes[i];
+        TeacherClass tc;
+        if (val is TeacherClass) {
+          tc = val;
+        } else if (val is Map<String, dynamic>) {
+          tc = TeacherClass.fromJson(val, i);
+        } else if (val is Map) {
+          tc = TeacherClass.fromJson(Map<String, dynamic>.from(val), i);
+        } else {
+          tc = AppData.classes[i % AppData.classes.length];
+        }
+
+        final key = '${tc.classId ?? 0}_${tc.sectionId ?? 0}_${tc.section.trim().toLowerCase()}';
+        if (!uniqueMap.containsKey(key)) {
+          uniqueMap[key] = tc;
+        } else {
+          // If any duplicate entry has isClassTeacher = true, preserve isClassTeacher
+          final existing = uniqueMap[key]!;
+          if (!existing.isClassTeacher && tc.isClassTeacher) {
+            uniqueMap[key] = TeacherClass(
+              name: existing.name,
+              section: existing.section,
+              room: existing.room,
+              time: existing.time,
+              subject: existing.subject,
+              students: existing.students,
+              colorHex: existing.colorHex,
+              iconCode: existing.iconCode,
+              avgGrade: existing.avgGrade,
+              period: existing.period,
+              isOngoing: existing.isOngoing,
+              id: existing.id,
+              classId: existing.classId,
+              sectionId: existing.sectionId,
+              courseId: existing.courseId,
+              isClassTeacher: true,
+            );
+          }
+        }
+      }
+      _cachedTeacherClasses = uniqueMap.values.toList();
       return _cachedTeacherClasses!;
     }
     return AppData.classes;

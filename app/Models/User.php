@@ -67,6 +67,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'bank_name',
         'bank_account_no',
         'basic_salary',
+        // Google Workspace fields
+        'google_id',
+        'google_workspace_email',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -98,6 +101,16 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasOne(StudentParentInfo::class, 'student_id')
                     ->withoutGlobalScopes();
+    }
+
+    public function googleWorkspaceAccount(): HasOne
+    {
+        return $this->hasOne(\App\Models\GoogleWorkspaceAccount::class, 'user_id');
+    }
+
+    public function classroomRosters(): HasMany
+    {
+        return $this->hasMany(\App\Models\GoogleClassroomRoster::class, 'user_id');
     }
 
     public function academic_info(): HasOne

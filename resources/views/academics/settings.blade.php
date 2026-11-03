@@ -25,6 +25,10 @@
             </p>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
+            <a href="{{ route('school.google.plugin') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-indigo-400 rounded-xl text-xs font-bold transition shadow-xs" title="Manage Google Classroom & Workspace Sync">
+                <i class="bi bi-google text-indigo-500"></i> Google Workspace Plugin
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            </a>
             <span class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800/80 text-indigo-700 dark:text-indigo-300 rounded-xl text-xs font-bold shadow-xs">
                 <i class="bi bi-calendar-check text-indigo-500"></i> Active Session ID: #{{ $current_school_session_id }}
             </span>
