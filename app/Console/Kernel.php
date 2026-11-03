@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\CheckAttendanceShortage::class,
         \App\Console\Commands\SendFeeReminders::class,
         \App\Console\Commands\GenerateMonthlyInvoices::class,
+        \App\Console\Commands\SyncCustomDomains::class,
     ];
 
     /**
@@ -80,6 +81,14 @@ class Kernel extends ConsoleKernel
         $schedule->command('backup:monitor')
                  ->dailyAt('09:00')
                  ->appendOutputTo(storage_path('logs/backup.log'));
+
+        // ── Custom Domains: auto-register verified domains with nginx + Apache ──
+        // Runs every minute so a newly verified domain is live within ~60 seconds.
+        $schedule->command('custom-domain:sync')
+                 ->everyMinute()
+                 ->withoutOverlapping()
+                 ->runInBackground()
+                 ->appendOutputTo(storage_path('logs/custom-domain-sync.log'));
     }
 
     /**

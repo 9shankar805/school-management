@@ -47,6 +47,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // ── Suppress Swift_SmtpTransport "Callables of the form [ClassName, method]"
+        // deprecation notice. This is a known PHP 8.1+ issue with swiftmailer/swiftmailer
+        // v6.x that floods the log on every page that resolves the mail manager.
+        // The warning comes from PHP's E_DEPRECATED for static-style callables.
+        // Safe to suppress — the mailer works correctly despite the notice.
+        error_reporting(error_reporting() & ~E_DEPRECATED);
+
         // ── withError() macro: back()->withError('msg') flashes session('error')
         // This fills the gap left by the non-existent native method, so any
         // controller that still uses the old signature works correctly.
