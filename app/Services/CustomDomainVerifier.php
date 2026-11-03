@@ -43,20 +43,39 @@ class CustomDomainVerifier
         $aRecords = @dns_get_record($domain, DNS_A) ?: [];
         $resolvedIps = collect($aRecords)->pluck('ip')->filter()->unique()->values()->all();
 
-        if (! empty($serverIp) && in_array($serverIp, $resolvedIps, true)) {
+        // Get ALL IPs the platform domain resolves to (may be multiple behind a CDN)
+        $platformIps = [];
+        foreach ((@dns_get_record(config('app.domain', 'nshlms.com'), DNS_A) ?: []) as $pr) {
+            if (!empty($pr['ip'])) $platformIps[] = $pr['ip'];
+        }
+        if (!empty($serverIp)) $platformIps[] = $serverIp;
+        $platformIps = array_unique($platformIps);
+
+        // Exact IP match?
+        $exactMatch = !empty($resolvedIps) && !empty(array_intersect($resolvedIps, $platformIps));
+
+        if ($exactMatch) {
             $pointsOk = true;
-            $pointingDetail = "A record resolves to {$serverIp}.";
+            $matched = array_intersect($resolvedIps, $platformIps);
+            $pointingDetail = "A record resolves to " . implode(', ', $matched) . " (matches server).";
         } else {
+            // Check CNAME
             $cnameRecords = @dns_get_record($domain, DNS_CNAME) ?: [];
             $cnameTargets = collect($cnameRecords)->pluck('target')->map(fn ($t) => strtolower(rtrim($t, '.')))->all();
             if (in_array($cnameTarget, $cnameTargets, true)) {
                 $pointsOk = true;
                 $pointingDetail = "CNAME points to {$cnameTarget}.";
-            } elseif (! empty($resolvedIps)) {
-                $pointingDetail = 'A record resolves to ' . implode(', ', $resolvedIps)
-                    . ($serverIp ? " (expected {$serverIp})." : '.');
+            } elseif ($this->isSameCloudflareRange($resolvedIps, $platformIps)) {
+                // Both behind Cloudflare but different IPs from the same pool — same infra
+                $pointsOk = true;
+                $pointingDetail = "A record resolves to " . implode(', ', $resolvedIps)
+                    . " — same Cloudflare infrastructure as server ("
+                    . implode(', ', $platformIps) . ").";
             } else {
-                $pointingDetail = 'No A or CNAME record found yet (DNS may still be propagating).';
+                $pointingDetail = ! empty($resolvedIps)
+                    ? 'A record resolves to ' . implode(', ', $resolvedIps)
+                        . ($serverIp ? " (expected {$serverIp})." : '.')
+                    : 'No A or CNAME record found yet (DNS may still be propagating).';
             }
         }
 
@@ -112,5 +131,47 @@ class CustomDomainVerifier
             'message' => $message,
             'checks' => $checks,
         ];
+    }
+
+    /**
+     * Check whether the custom domain's IPs and the platform's IPs are
+     * both in the same Cloudflare IP range — meaning the custom domain is
+     * proxied through the same CDN infrastructure as the server.
+     *
+     * Cloudflare uses these ranges: 104.21.0.0/16, 172.67.0.0/16,
+     * 104.16.0.0/13, 141.101.64.0/18, 108.162.192.0/18, 188.114.96.0/20, etc.
+     * For simplicity we check the two common /16 prefixes.
+     */
+    private function isSameCloudflareRange(array $domainIps, array $serverIps): bool
+    {
+        if (empty($domainIps) || empty($serverIps)) {
+            return false;
+        }
+
+        // Cloudflare /16 prefixes commonly used for A records
+        $cloudflareRanges = ['104.21.', '172.67.', '104.16.', '104.17.', '104.18.', '104.19.', '104.20.'];
+
+        $domainIsCloudflare = false;
+        $serverIsCloudflare  = false;
+
+        foreach ($domainIps as $ip) {
+            foreach ($cloudflareRanges as $range) {
+                if (str_starts_with($ip, $range)) {
+                    $domainIsCloudflare = true;
+                    break 2;
+                }
+            }
+        }
+
+        foreach ($serverIps as $ip) {
+            foreach ($cloudflareRanges as $range) {
+                if (str_starts_with($ip, $range)) {
+                    $serverIsCloudflare = true;
+                    break 2;
+                }
+            }
+        }
+
+        return $domainIsCloudflare && $serverIsCloudflare;
     }
 }
