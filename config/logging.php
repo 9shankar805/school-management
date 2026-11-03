@@ -21,6 +21,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Deprecations Log Channel
+    |--------------------------------------------------------------------------
+    | Route PHP and package deprecation notices to the 'null' channel so they
+    | are silently discarded instead of flooding the application log.
+    | This suppresses the Swift_SmtpTransport "Callables of the form" warning
+    | from swiftmailer/swiftmailer v6.x on PHP 8.1+.
+    */
+    'deprecations' => env('LOG_DEPRECATIONS_CHANNEL', 'null'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Log Channels
     |--------------------------------------------------------------------------
     |
