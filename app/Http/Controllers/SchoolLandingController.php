@@ -63,7 +63,11 @@ class SchoolLandingController extends Controller
         $classes = \App\Models\SchoolClass::where('school_id', $school->id)->with(['sections', 'courses'])->take(20)->get();
 
         // Smart Multi-Page Link Generator
-        $isSubdomain = request()->routeIs('school.subdomain*') || !str_contains(request()->path(), 'school/');
+        // Subdomain AND custom-domain requests use root-relative links (e.g. /about);
+        // slug-based requests use /school/{slug}/about.
+        $isSubdomain = request()->routeIs('school.subdomain*')
+            || request()->routeIs('school.customdomain*')
+            || !str_contains(request()->path(), 'school/');
         $pageUrl = function(string $page = '') use ($school, $isSubdomain): string {
             $page = ltrim($page, '/');
             if ($isSubdomain) {
@@ -203,17 +207,101 @@ class SchoolLandingController extends Controller
         return view('school-landing.contact', $this->getSchoolData($school));
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // CUSTOM-DOMAIN-BASED MULTI-PAGE ROUTES (principal-configured domain)
+    // The principal saves their own domain in the school profile; it is accepted
+    // automatically and the school portal is served at that domain's root paths.
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Resolve an active school by its principal-configured custom domain
+     * (regardless of verification status — the pending page is shown when
+     * the domain has not been verified yet).
+     */
+    private function resolveSchoolByCustomDomain(string $host): School
+    {
+        $customDomain = strtolower(trim($host));
+        $customDomain = preg_replace('/^www\./', '', $customDomain);   // strip leading www.
+        $customDomain = preg_replace('/:\d+$/', '', $customDomain);    // strip port
+
+        return School::where('custom_domain', $customDomain)
+            ->where('status', 'active')
+            ->firstOrFail();
+    }
+
+    /**
+     * Render a custom-domain page. Unverified domains show a branded
+     * "preparing your domain" page instead of the full portal.
+     */
+    private function customDomainResponse(string $host, string $view)
+    {
+        $school = $this->resolveSchoolByCustomDomain($host);
+
+        if (! $school->custom_domain_verified_at) {
+            return view('school-landing.domain-pending', ['school' => $school]);
+        }
+
+        return view($view, $this->getSchoolData($school));
+    }
+
+    public function showByCustomDomain(string $host)
+    {
+        return $this->customDomainResponse($host, 'school-landing.show');
+    }
+
+    public function aboutByCustomDomain(string $host)
+    {
+        return $this->customDomainResponse($host, 'school-landing.about');
+    }
+
+    public function academicsByCustomDomain(string $host)
+    {
+        return $this->customDomainResponse($host, 'school-landing.academics');
+    }
+
+    public function admissionsByCustomDomain(string $host)
+    {
+        return $this->customDomainResponse($host, 'school-landing.admissions');
+    }
+
+    public function noticesByCustomDomain(string $host)
+    {
+        return $this->customDomainResponse($host, 'school-landing.notices');
+    }
+
+    public function facilitiesByCustomDomain(string $host)
+    {
+        return $this->customDomainResponse($host, 'school-landing.facilities');
+    }
+
+    public function facultyByCustomDomain(string $host)
+    {
+        return $this->customDomainResponse($host, 'school-landing.faculty');
+    }
+
+    public function galleryByCustomDomain(string $host)
+    {
+        return $this->customDomainResponse($host, 'school-landing.gallery');
+    }
+
+    public function contactByCustomDomain(string $host)
+    {
+        return $this->customDomainResponse($host, 'school-landing.contact');
+    }
+
     /**
      * Preview the landing page for the current user's school (authenticated).
      */
     public function preview()
     {
         $school = auth()->user()->school;
-        
+
         if (!$school) {
             abort(404, 'School not found');
         }
 
-        return redirect()->to($school->subdomain_url);
+        // Prefer the principal-configured custom domain when set, otherwise the
+        // default platform subdomain.
+        return redirect()->to($school->custom_domain_url);
     }
 }

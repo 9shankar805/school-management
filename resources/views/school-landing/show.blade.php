@@ -701,6 +701,30 @@
                     }
                 }
             }
+            // Inject achievement images into the preview
+            if (!empty($school->achievement_gallery) && is_array($school->achievement_gallery)) {
+                foreach($school->achievement_gallery as $i => $aImg) {
+                    if ($i < 2) {
+                        array_unshift($galleryPreview, [
+                            'url' => asset('storage/' . $aImg),
+                            'title' => 'Achievement & Award',
+                            'tag' => 'Achievement'
+                        ]);
+                    }
+                }
+            }
+            // Inject batch images
+            if (!empty($school->batch_gallery) && is_array($school->batch_gallery)) {
+                foreach($school->batch_gallery as $i => $bImg) {
+                    if ($i < 2) {
+                        array_unshift($galleryPreview, [
+                            'url' => asset('storage/' . $bImg),
+                            'title' => 'Class Batch Group Photo',
+                            'tag' => 'Class Batch'
+                        ]);
+                    }
+                }
+            }
             $galleryPreview = array_slice($galleryPreview, 0, 6);
         @endphp
 

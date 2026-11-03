@@ -15,9 +15,10 @@ class School extends Model
     protected $fillable = [
         'name', 'slug', 'iemis_code', 'email', 'phone',
         'address', 'city', 'district', 'province', 'country',
-        'logo', 'website', 'description',
+        'logo', 'website', 'custom_domain', 'custom_domain_token', 'custom_domain_verified_at', 'description',
         'about_us', 'mission', 'vision', 'history',
-        'gallery_images', 'admission_info', 'result_info',
+        'gallery_images', 'achievement_gallery', 'batch_gallery', 'program_gallery',
+        'admission_info', 'result_info',
         'notice_board', 'principal_message',
         // Theme & branding
         'primary_color', 'secondary_color', 'preset_theme',
@@ -47,7 +48,11 @@ class School extends Model
         'ai_features_enabled' => 'boolean',
         'settings'            => 'array',
         'gallery_images'      => 'array',
+        'achievement_gallery' => 'array',
+        'batch_gallery'       => 'array',
+        'program_gallery'     => 'array',
         'slider_banners'      => 'array',
+        'custom_domain_verified_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -246,6 +251,190 @@ class School extends Model
         return "https://{$this->subdomain}.{$baseDomain}";
     }
 
+    /**
+     * Principal-configured custom domain URL (e.g. 'https://mycollege.edu.np').
+     * Falls back to the platform subdomain URL when no custom domain is set.
+     */
+    public function getCustomDomainUrlAttribute(): string
+    {
+        if (! empty($this->custom_domain)) {
+            return 'https://' . $this->custom_domain;
+        }
+
+        return $this->subdomain_url;
+    }
+
+    /**
+     * Normalize the custom domain before it is stored so exact host matching
+     * in routing/middleware works reliably: strips scheme, leading "www.",
+     * any path and any trailing port, then lower-cases. Empty => null so the
+     * principal can clear the field.
+     */
+    public function setCustomDomainAttribute($value): void
+    {
+        if ($value === null || $value === '') {
+            $this->attributes['custom_domain'] = null;
+
+            return;
+        }
+
+        $value = strtolower(trim((string) $value));
+        $value = preg_replace('#^https?://#', '', $value);   // strip scheme
+        $value = preg_replace('#^www\.#', '', $value);       // strip leading www.
+        $value = preg_replace('#/.*$#', '', $value);          // drop any path
+        $value = preg_replace('#:\d+$#', '', $value);         // drop port
+
+        $this->attributes['custom_domain'] = $value !== '' ? $value : null;
+    }
+
+    /**
+     * ── School Staff Headshot Accessors ──────────────────────────────────────
+     * Each accessor checks `settings['<role>_image']` first (school-level override
+     * uploaded in School Profile), then falls back to the first matching User with
+     * that role who has a photo, then to the generic profile placeholder.
+     */
+    private function staffPhotoUrl(string $settingsKey, string $userRole): string
+    {
+        $settings = $this->settings ?? [];
+
+        if (! empty($settings[$settingsKey])) {
+            return asset('storage/' . $settings[$settingsKey]);
+        }
+
+        $user = $this->users()
+            ->where('role', $userRole)
+            ->whereNotNull('photo')
+            ->where('photo', '!=', '')
+            ->first();
+
+        if ($user && $user->photo) {
+            return asset('storage/' . $user->photo);
+        }
+
+        // Extra fallbacks for principal only
+        if ($settingsKey === 'principal_image') {
+            if ($this->owner && $this->owner->photo) {
+                return asset('storage/' . $this->owner->photo);
+            }
+            if (file_exists(public_path('storage/school-staff/principal.jpg'))) {
+                return asset('storage/school-staff/principal.jpg');
+            }
+        }
+
+        return asset('imgs/profile.webp');
+    }
+
+    /** Principal headshot URL — settings['principal_image'] → users.role=principal */
+    public function getPrincipalPhotoUrlAttribute(): string
+    {
+        return $this->staffPhotoUrl('principal_image', 'principal');
+    }
+    public function getVicePrincipalPhotoUrlAttribute(): string
+    {
+        return $this->staffPhotoUrl('vice_principal_image', 'vice-principal');
+    }
+
+    /** Coordinator headshot URL — settings['coordinator_image'] → users.role=academic-coordinator */
+    public function getCoordinatorPhotoUrlAttribute(): string
+    {
+        return $this->staffPhotoUrl('coordinator_image', 'academic-coordinator');
+    }
+
+    /** Team group photo URL — settings['team_photo'] → null (no user fallback) */
+    public function getTeamPhotoUrlAttribute(): ?string
+    {
+        $settings = $this->settings ?? [];
+
+        return ! empty($settings['team_photo'])
+            ? asset('storage/' . $settings['team_photo'])
+            : null;
+    }
+
+    /**
+     * Resolved name for a settings-stored staff member.
+     * Checks settings['{role}_name'], then the first matching User's full name.
+     */
+    private function staffName(string $settingsKey, string $userRole, string $defaultTitle): string
+    {
+        $settings = $this->settings ?? [];
+
+        if (! empty($settings[$settingsKey])) {
+            return $settings[$settingsKey];
+        }
+
+        $user = $this->users()->where('role', $userRole)->first();
+
+        return $user ? trim($user->first_name . ' ' . $user->last_name) : $defaultTitle;
+    }
+
+    public function getVicePrincipalNameResolvedAttribute(): string
+    {
+        return $this->staffName('vice_principal_name', 'vice-principal', 'Vice-Principal');
+    }
+
+    public function getCoordinatorNameResolvedAttribute(): string
+    {
+        return $this->staffName('coordinator_name', 'academic-coordinator', 'Academic Coordinator');
+    }
+
+    /**
+     * Lifecycle stage of the custom-domain onboarding:
+     *  - 'pending'  : domain saved, waiting for DNS verification
+     *  - 'verified' : DNS verified; the domain is live / routable
+     */
+    public function getCustomDomainStatusAttribute(): string
+    {
+        if (empty($this->custom_domain)) {
+            return 'none';
+        }
+
+        return $this->custom_domain_verified_at ? 'verified' : 'pending';
+    }
+
+    /**
+     * The DNS records the principal must create to point & verify their domain.
+     * Rendered verbatim in the profile UI so they can copy/paste them.
+     */
+    public function getCustomDomainDnsRecordsAttribute(): array
+    {
+        if (empty($this->custom_domain)) {
+            return [];
+        }
+
+        $domain = $this->custom_domain;
+
+        // Server IP to point the A record at — configured, otherwise resolved
+        // from the platform's own domain (which already points here).
+        $serverIp = config('app.server_ip');
+        if (empty($serverIp)) {
+            $resolved = @gethostbyname(config('app.domain', 'nshlms.com'));
+            $serverIp = ($resolved && $resolved !== config('app.domain', 'nshlms.com')) ? $resolved : null;
+        }
+
+        $cnameTarget = config('app.domain_cname_target', 'target.' . config('app.domain', 'nshlms.com'));
+
+        return [
+            'a' => [
+                'type'  => 'A',
+                'host'  => '@ (or ' . $domain . ')',
+                'value' => $serverIp ?: '(set SERVER_IP in .env)',
+                'note'  => 'Points your domain to this server (apex / root domain).',
+            ],
+            'cname' => [
+                'type'  => 'CNAME',
+                'host'  => 'www',
+                'value' => $cnameTarget,
+                'note'  => 'Alternative to an A record — point www to the platform target.',
+            ],
+            'txt' => [
+                'type'  => 'TXT',
+                'host'  => '_nshl-verify.' . $domain,
+                'value' => $this->custom_domain_token ?: '',
+                'note'  => 'Ownership proof. Required to verify the domain.',
+            ],
+        ];
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     /**
@@ -275,25 +464,6 @@ class School extends Model
         'slate'        => ['label' => 'Executive Slate Dark', 'primary' => '#0f172a', 'secondary' => '#3b82f6'],
         'sapphire'     => ['label' => 'Royal Sapphire Blue',  'primary' => '#1d4ed8', 'secondary' => '#f59e0b'],
     ];
-
-    /** Get principal photo URL with intelligent fallbacks */
-    public function getPrincipalPhotoUrlAttribute(): string
-    {
-        if (!empty($this->settings['principal_image'])) {
-            return asset('storage/' . $this->settings['principal_image']);
-        }
-        $principal = $this->users()->where('role', 'principal')->whereNotNull('photo')->first();
-        if ($principal && $principal->photo) {
-            return asset('storage/' . $principal->photo);
-        }
-        if ($this->owner && $this->owner->photo) {
-            return asset('storage/' . $this->owner->photo);
-        }
-        if (file_exists(public_path('storage/school-staff/principal.jpg'))) {
-            return asset('storage/school-staff/principal.jpg');
-        }
-        return asset('imgs/profile.webp');
-    }
 
     /** Get principal name with intelligent fallbacks */
     public function getPrincipalNameResolvedAttribute(): string

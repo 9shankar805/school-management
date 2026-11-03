@@ -56,6 +56,17 @@ return [
 
     'domain' => env('APP_DOMAIN', 'nshlms.com'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Domain Onboarding
+    |--------------------------------------------------------------------------
+    | Used to render the exact DNS records a principal must create and to
+    | verify the domain actually points to this server before going live.
+    | Leave SERVER_IP empty to auto-detect from the platform domain.
+    */
+    'server_ip' => env('SERVER_IP'),
+    'domain_cname_target' => env('DOMAIN_CNAME_TARGET', 'target.' . env('APP_DOMAIN', 'nshlms.com')),
+
     'asset_url' => env('ASSET_URL', null),
 
     /*

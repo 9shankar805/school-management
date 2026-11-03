@@ -25,41 +25,63 @@
         {{-- Category Filters --}}
         <div class="flex items-center justify-center gap-2 sm:gap-3 flex-wrap mb-12" id="galleryFilterNav">
             <button onclick="filterGallery('all')" class="gallery-filter-btn active px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 text-white transition shadow-sm">
-                All Moments
+                All Photos
             </button>
             <button onclick="filterGallery('campus')" class="gallery-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 transition shadow-sm">
-                Campus & Architecture
+                <i class="bi bi-building me-1"></i> Campus
             </button>
-            <button onclick="filterGallery('stem')" class="gallery-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 transition shadow-sm">
-                STEM & Labs
+            <button onclick="filterGallery('achievement')" class="gallery-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 transition shadow-sm">
+                <i class="bi bi-trophy me-1"></i> Achievements
             </button>
-            <button onclick="filterGallery('sports')" class="gallery-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 transition shadow-sm">
-                Sports & Athletics
+            <button onclick="filterGallery('batch')" class="gallery-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 transition shadow-sm">
+                <i class="bi bi-mortarboard me-1"></i> Class Batches
             </button>
-            <button onclick="filterGallery('cultural')" class="gallery-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 transition shadow-sm">
-                Annual Fest & Arts
+            <button onclick="filterGallery('program')" class="gallery-filter-btn px-4 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 transition shadow-sm">
+                <i class="bi bi-book me-1"></i> Programs
             </button>
         </div>
 
         @php
-            $items = [
-                ['url' => asset('imgs/hero/hero_1.webp'), 'cat' => 'campus', 'title' => 'Main Academic Quadrangle & Campus', 'tag' => 'Infrastructure'],
-                ['url' => asset('imgs/hero/hero_2.webp'), 'cat' => 'stem', 'title' => 'Advanced Digital STEM & Computing Lab', 'tag' => 'Experiential Learning'],
-                ['url' => asset('imgs/hero/hero_3.webp'), 'cat' => 'sports', 'title' => 'Olympic Standard Athletic Track & Sports Ground', 'tag' => 'Athletics & ECA'],
-                ['url' => asset('imgs/kathmandu.webp'), 'cat' => 'campus', 'title' => 'Kathmandu Valley Academic Excursion', 'tag' => 'Field Expedition'],
-                ['url' => asset('imgs/schools.webp'), 'cat' => 'cultural', 'title' => 'Annual Scholastic Day & Awards Ceremony', 'tag' => 'Cultural Fest'],
-                ['url' => asset('imgs/school_connection.webp'), 'cat' => 'cultural', 'title' => 'Student Mentorship & Collaborative Projects', 'tag' => 'Scholastic Life'],
-            ];
+            $items = [];
 
+            // Campus gallery (general gallery_images)
             if ($school->gallery_images && is_array($school->gallery_images) && count($school->gallery_images) > 0) {
                 foreach($school->gallery_images as $idx => $img) {
-                    $items[] = [
-                        'url' => asset('storage/' . $img),
-                        'cat' => $idx % 2 === 0 ? 'campus' : 'cultural',
-                        'title' => 'Official Campus Event Record #' . ($idx + 1),
-                        'tag' => 'Campus Record'
-                    ];
+                    $items[] = ['url' => asset('storage/' . $img), 'cat' => 'campus', 'title' => 'Campus — Photo ' . ($idx + 1), 'tag' => 'Campus'];
                 }
+            }
+
+            // Achievement gallery
+            if (!empty($school->achievement_gallery) && is_array($school->achievement_gallery)) {
+                foreach($school->achievement_gallery as $idx => $img) {
+                    $items[] = ['url' => asset('storage/' . $img), 'cat' => 'achievement', 'title' => 'Achievement — Photo ' . ($idx + 1), 'tag' => 'Achievement'];
+                }
+            }
+
+            // Batch gallery
+            if (!empty($school->batch_gallery) && is_array($school->batch_gallery)) {
+                foreach($school->batch_gallery as $idx => $img) {
+                    $items[] = ['url' => asset('storage/' . $img), 'cat' => 'batch', 'title' => 'Class Batch — Photo ' . ($idx + 1), 'tag' => 'Class Batch'];
+                }
+            }
+
+            // Program gallery
+            if (!empty($school->program_gallery) && is_array($school->program_gallery)) {
+                foreach($school->program_gallery as $idx => $img) {
+                    $items[] = ['url' => asset('storage/' . $img), 'cat' => 'program', 'title' => 'Academic Program — Photo ' . ($idx + 1), 'tag' => 'Program'];
+                }
+            }
+
+            // Fallback stock images when nothing uploaded yet
+            if (empty($items)) {
+                $items = [
+                    ['url' => asset('imgs/hero/hero_1.webp'), 'cat' => 'campus', 'title' => 'Main Academic Quadrangle & Campus', 'tag' => 'Infrastructure'],
+                    ['url' => asset('imgs/hero/hero_2.webp'), 'cat' => 'program', 'title' => 'Advanced Digital STEM & Computing Lab', 'tag' => 'Experiential Learning'],
+                    ['url' => asset('imgs/hero/hero_3.webp'), 'cat' => 'campus', 'title' => 'Olympic Standard Athletic Track & Sports Ground', 'tag' => 'Athletics & ECA'],
+                    ['url' => asset('imgs/kathmandu.webp'), 'cat' => 'campus', 'title' => 'Kathmandu Valley Academic Excursion', 'tag' => 'Field Expedition'],
+                    ['url' => asset('imgs/schools.webp'), 'cat' => 'achievement', 'title' => 'Annual Scholastic Day & Awards Ceremony', 'tag' => 'Cultural Fest'],
+                    ['url' => asset('imgs/school_connection.webp'), 'cat' => 'batch', 'title' => 'Student Mentorship & Collaborative Projects', 'tag' => 'Scholastic Life'],
+                ];
             }
         @endphp
 

@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\School;
+use App\Services\CustomDomainVerifier;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class SchoolProfileController extends Controller
 {
@@ -25,6 +29,7 @@ class SchoolProfileController extends Controller
             ['icon' => 'bi-images',          'label' => 'Gallery'],
             ['icon' => 'bi-qr-code',         'label' => 'Payment QR'],
             ['icon' => 'bi-megaphone',       'label' => 'Popup Notice'],
+            ['icon' => 'bi-camera-fill',     'label' => 'School Media'],
         ];
 
         $activeStep = (int) request('step', 1);
@@ -88,6 +93,29 @@ class SchoolProfileController extends Controller
             'email'             => 'required|email|max:255',
             'phone'             => 'nullable|string|max:20',
             'website'           => 'nullable|url|max:255',
+            'custom_domain'      => [
+                'nullable',
+                'string',
+                'max:255',
+                'regex:/^[a-z0-9.\-]+$/i',
+                // No two schools may claim the same custom domain
+                Rule::unique('schools', 'custom_domain')->ignore($school->id),
+                // Block platform system domains (apex or any subdomain)
+                function ($attribute, $value, $fail) {
+                    if (! $value) {
+                        return;
+                    }
+                    $host = strtolower((string) $value);
+                    $host = preg_replace('#^https?://#', '', $host);
+                    $host = preg_replace('#^www\.#', '', $host);
+                    $platform = ['nshlms.com', 'nepalschoolhub.com', 'techprocod.com.np', 'localhost', '127.0.0.1'];
+                    foreach ($platform as $d) {
+                        if ($host === $d || str_ends_with($host, '.' . $d)) {
+                            $fail('You cannot use a platform system domain as your custom domain.');
+                        }
+                    }
+                },
+            ],
             'contact_person'    => 'nullable|string|max:255',
             'contact_email'     => 'nullable|email|max:255',
             // Address
@@ -119,6 +147,24 @@ class SchoolProfileController extends Controller
             'logo'                       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'new_gallery_images.*'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'replace_gallery_image.*'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            // Staff headshots (auto-converted to WebP)
+            'vice_principal_image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'coordinator_image'          => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'team_photo'                 => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'vice_principal_name'        => 'nullable|string|max:255',
+            'vice_principal_title'       => 'nullable|string|max:255',
+            'coordinator_name'           => 'nullable|string|max:255',
+            'coordinator_title'          => 'nullable|string|max:255',
+            // Media galleries
+            'new_achievement_images.*'   => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'replace_achievement_image.*'=> 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'delete_achievement_images'  => 'nullable|array',
+            'new_batch_images.*'         => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'replace_batch_image.*'      => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'delete_batch_images'        => 'nullable|array',
+            'new_program_images.*'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'replace_program_image.*'    => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'delete_program_images'      => 'nullable|array',
             // Payment QR codes
             'payment_qr_esewa'           => 'nullable|image|mimes:jpeg,png,jpg,webp|max:1024',
             'payment_qr_khalti'          => 'nullable|image|mimes:jpeg,png,jpg,webp|max:1024',
@@ -231,6 +277,32 @@ class SchoolProfileController extends Controller
         } elseif ($request->input('remove_exam_routine_file') == '1' && !empty($settings['exam_routine_file'])) {
             Storage::disk('public')->delete($settings['exam_routine_file']);
             $settings['exam_routine_file'] = null;
+        }
+
+        // ── Staff Headshots (stored in settings JSON, auto-converted to WebP) ─
+        foreach ([
+            'vice_principal_image' => 'school-staff',
+            'coordinator_image'    => 'school-staff',
+            'team_photo'           => 'school-team',
+        ] as $field => $folder) {
+            if ($request->hasFile($field)) {
+                if (! empty($settings[$field])) {
+                    Storage::disk('public')->delete($settings[$field]);
+                }
+                $settings[$field] = \App\Services\ImageWebpService::storeAsWebp(
+                    $request->file($field), $folder, 'public'
+                );
+            } elseif ($request->input("remove_{$field}") == '1' && ! empty($settings[$field])) {
+                Storage::disk('public')->delete($settings[$field]);
+                $settings[$field] = null;
+            }
+        }
+
+        // Staff name/title overrides stored in settings
+        foreach (['vice_principal_name', 'vice_principal_title', 'coordinator_name', 'coordinator_title'] as $key) {
+            if ($request->has($key)) {
+                $settings[$key] = $request->input($key);
+            }
         }
 
         $school->settings = $settings;
@@ -385,6 +457,50 @@ class SchoolProfileController extends Controller
 
         // ── Persist ───────────────────────────────────────────────────────────
         $school->gallery_images = $gallery;
+
+        // ── Achievement / Batch / Program Media Galleries ─────────────────────
+        // Each follows the same 3-phase pattern (replace, delete, append) but
+        // uses simpler per-collection field names since individual image replacement
+        // is handled through the gallery-style delete+re-upload workflow.
+        foreach ([
+            'achievement' => 'achievement_gallery',
+            'batch'       => 'batch_gallery',
+            'program'     => 'program_gallery',
+        ] as $prefix => $column) {
+            $col = $school->$column ?? [];
+
+            // 1. Replace
+            if ($request->hasFile("replace_{$prefix}_image")) {
+                foreach ($request->file("replace_{$prefix}_image") as $idx => $file) {
+                    if (isset($col[$idx])) {
+                        Storage::disk('public')->delete($col[$idx]);
+                    }
+                    $col[$idx] = \App\Services\ImageWebpService::storeAsWebp($file, "school-{$prefix}", 'public');
+                }
+            }
+
+            // 2. Delete
+            if ($request->has("delete_{$prefix}_images")) {
+                $replaceKeys = array_keys($request->file("replace_{$prefix}_image") ?? []);
+                foreach ((array) $request->input("delete_{$prefix}_images") as $idx) {
+                    if (in_array((int) $idx, array_map('intval', $replaceKeys))) continue;
+                    if (isset($col[$idx])) {
+                        Storage::disk('public')->delete($col[$idx]);
+                        unset($col[$idx]);
+                    }
+                }
+                $col = array_values($col);
+            }
+
+            // 3. Append
+            if ($request->hasFile("new_{$prefix}_images")) {
+                foreach ($request->file("new_{$prefix}_images") as $file) {
+                    $col[] = \App\Services\ImageWebpService::storeAsWebp($file, "school-{$prefix}", 'public');
+                }
+            }
+
+            $school->$column = $col;
+        }
         $school->fill(array_filter([
             'name'              => $data['name'],
             'iemis_code'         => $data['iemis_code']         ?? null,
@@ -416,6 +532,18 @@ class SchoolProfileController extends Controller
             'notice_board'      => $data['notice_board']      ?? null,
         ], fn($v) => $v !== null));
 
+        // Custom domain is set explicitly (not through the filtered fill above) so
+        // the principal can clear it by submitting an empty value. The School model
+        // mutator normalizes the host (strips scheme/www/path/port).
+        $school->custom_domain = $data['custom_domain'] ?? null;
+
+        // Whenever the custom domain changes (set, changed, or cleared) issue a new
+        // ownership token and reset verification so the principal re-verifies DNS.
+        if (($school->custom_domain ?? null) !== $school->getOriginal('custom_domain')) {
+            $school->custom_domain_token = $school->custom_domain ? Str::random(32) : null;
+            $school->custom_domain_verified_at = null;
+        }
+
         // ── Popup Notice ───────────────────────────────────────────────────────
         $school->popup_active    = $request->has('popup_active');
         $school->popup_show_once = $request->has('popup_show_once');
@@ -444,5 +572,34 @@ class SchoolProfileController extends Controller
         return redirect()
             ->route('school.profile.edit', ['step' => $step])
             ->with('success', 'School profile saved successfully.');
+    }
+
+    /**
+     * AJAX: verify the principal's custom domain DNS (A/CNAME + ownership TXT).
+     * On success the domain is marked verified and starts serving the portal.
+     */
+    public function verifyCustomDomain(Request $request): JsonResponse
+    {
+        $school = auth()->user()->school;
+        if (! $school) {
+            abort(404, 'School not found');
+        }
+
+        if (empty($school->custom_domain)) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'No custom domain is configured yet.',
+                'checks' => [],
+            ]);
+        }
+
+        $result = app(CustomDomainVerifier::class)->verify($school);
+
+        if ($result['ok']) {
+            $school->custom_domain_verified_at = now();
+            $school->save();
+        }
+
+        return response()->json($result);
     }
 }

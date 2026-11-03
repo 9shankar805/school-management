@@ -78,7 +78,22 @@ class SetSchoolContext
             }
         }
 
-        // 1c. Custom domain / website lookup
+        // 1c. Custom domain (exact match) — principal-configured domain.
+        //     Only VERIFIED domains are resolved here so the portal is served
+        //     once the principal has pointed & proven the domain via DNS.
+        if (!$school) {
+            $customHost = preg_replace('/^www\./', '', $host);    // strip leading www.
+            $customHost = preg_replace('/:\d+$/', '', $customHost); // strip port
+            $platformHosts = ['nshlms.com', 'nepalschoolhub.com', 'techprocod.com.np', 'localhost', '127.0.0.1', 'test'];
+            if ($customHost && !in_array($customHost, $platformHosts)) {
+                $school = School::where('custom_domain', $customHost)
+                    ->where('status', 'active')
+                    ->whereNotNull('custom_domain_verified_at')
+                    ->first();
+            }
+        }
+
+        // 1d. Website lookup (legacy fuzzy fallback)
         if (!$school && !in_array($host, ['nshlms.com', 'nepalschoolhub.com', 'techprocod.com.np', 'localhost', '127.0.0.1'])) {
             $school = School::where('website', 'LIKE', "%{$host}%")
                 ->orderByRaw("CASE WHEN status = 'active' THEN 0 WHEN status = 'pending' THEN 1 ELSE 2 END")

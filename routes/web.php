@@ -1483,6 +1483,9 @@ Route::middleware(['auth'])->prefix('school/profile')->name('school.profile.')->
     // Dedicated Payment QR management page
     Route::get('/payment-qr',  [SchoolProfileController::class, 'paymentQr'])->name('payment-qr');
     Route::post('/payment-qr', [SchoolProfileController::class, 'updatePaymentQr'])->name('payment-qr.update');
+
+    // Custom domain DNS verification (AJAX)
+    Route::post('/custom-domain/verify', [SchoolProfileController::class, 'verifyCustomDomain'])->name('custom-domain.verify');
 });
 // ── Public School Multi-Page Portal Routes (no auth required) ──
 Route::prefix('school/{slug}')->group(function () {
@@ -1509,6 +1512,25 @@ Route::domain('{subdomain}.' . env('APP_DOMAIN', 'nshlms.com'))->group(function 
     Route::get('/contact',     [SchoolLandingController::class, 'contactBySubdomain'])->name('school.subdomain.contact');
     Route::get('/school/{slug}', [SchoolLandingController::class, 'showBySubdomain']);
 });
+
+// ── Public School Portal Routes via Principal-Configured Custom Domain ──
+// Matches any host that is NOT the platform apex or a platform subdomain, so a
+// school's own landing pages are served at the root of their custom domain.
+// Registered before the catch-all `Route::get('/')` SaaS landing below so custom
+// hosts resolve here; platform hosts fail the `where` constraint and fall through.
+Route::domain('{host}')
+    ->where(['host' => '^(?!.*\.(?:nshlms\.com|nepalschoolhub\.com|techprocod\.com\.np)$)(?!nshlms\.com$|nepalschoolhub\.com$|techprocod\.com\.np$|localhost$|127\.0\.0\.1$)[a-zA-Z0-9.\-]+$'])
+    ->group(function () {
+        Route::get('/',            [SchoolLandingController::class, 'showByCustomDomain'])->name('school.customdomain');
+        Route::get('/about',       [SchoolLandingController::class, 'aboutByCustomDomain'])->name('school.customdomain.about');
+        Route::get('/academics',   [SchoolLandingController::class, 'academicsByCustomDomain'])->name('school.customdomain.academics');
+        Route::get('/admissions',  [SchoolLandingController::class, 'admissionsByCustomDomain'])->name('school.customdomain.admissions');
+        Route::get('/notices',     [SchoolLandingController::class, 'noticesByCustomDomain'])->name('school.customdomain.notices');
+        Route::get('/facilities',  [SchoolLandingController::class, 'facilitiesByCustomDomain'])->name('school.customdomain.facilities');
+        Route::get('/faculty',     [SchoolLandingController::class, 'facultyByCustomDomain'])->name('school.customdomain.faculty');
+        Route::get('/gallery',     [SchoolLandingController::class, 'galleryByCustomDomain'])->name('school.customdomain.gallery');
+        Route::get('/contact',     [SchoolLandingController::class, 'contactByCustomDomain'])->name('school.customdomain.contact');
+    });
 
 // Payment gateway webhooks — no CSRF (raw POST from gateways)
 Route::post('/webhooks/stripe',      [\App\Http\Controllers\WebhookController::class, 'stripe'])->name('webhooks.stripe');

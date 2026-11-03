@@ -249,6 +249,50 @@
                 </div>
             </div>
         </div>
+
+        {{-- Vice-Principal & Coordinator Cards --}}
+        @php
+            $vpName   = $school->vice_principal_name_resolved;
+            $vpTitle  = $school->settings['vice_principal_title'] ?? 'Vice-Principal & Academic Head';
+            $vpPhoto  = $school->vice_principal_photo_url;
+            $coName   = $school->coordinator_name_resolved;
+            $coTitle  = $school->settings['coordinator_title'] ?? 'Academic Coordinator & Senior Mentor';
+            $coPhoto  = $school->coordinator_photo_url;
+        @endphp
+        @if($vpName !== 'Vice-Principal' || $coName !== 'Academic Coordinator')
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-8">
+            @foreach([
+                ['photo'=>$vpPhoto, 'name'=>$vpName, 'title'=>$vpTitle, 'label'=>'Vice-Principal'],
+                ['photo'=>$coPhoto, 'name'=>$coName, 'title'=>$coTitle, 'label'=>'Academic Coordinator'],
+            ] as $leader)
+            <div class="flex items-center gap-5 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                <div class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-slate-200 shrink-0">
+                    <img src="{{ $leader['photo'] }}"
+                         onerror="this.src='{{ asset('imgs/profile.webp') }}'"
+                         alt="{{ $leader['name'] }}"
+                         class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <span class="text-[10px] font-bold uppercase tracking-widest text-[#f36c21]">{{ $leader['label'] }}</span>
+                    <h4 class="font-extrabold text-base text-slate-900 leading-tight">{{ $leader['name'] }}</h4>
+                    <p class="text-xs text-slate-500 mt-0.5">{{ $leader['title'] }}</p>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        @endif
+
+        {{-- Teacher Team Group Photo --}}
+        @if($school->team_photo_url)
+        <div class="mt-8 rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+            <img src="{{ $school->team_photo_url }}" alt="{{ $school->name }} Teacher Team" class="w-full max-h-72 object-cover">
+            <div class="bg-slate-50 border-t border-slate-200 px-5 py-3">
+                <p class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <i class="bi bi-people-fill text-[#f36c21]"></i> Our Dedicated Teaching Team — {{ $school->name }}
+                </p>
+            </div>
+        </div>
+        @endif
     </div>
 </section>
 

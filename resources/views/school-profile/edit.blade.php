@@ -231,10 +231,122 @@ $progressPct = (int) round(($activeStep / count($steps)) * 100);
                     <input type="url" name="website" value="{{ old('website', $school->website) }}" placeholder="https://" class="field-input">
                 </div>
                 <div>
+                    <label class="field-label">
+                        Custom Domain
+                        <span class="text-slate-400 font-normal">(your own domain pointing here)</span>
+                    </label>
+                    <input type="text" name="custom_domain" value="{{ old('custom_domain', $school->custom_domain) }}" placeholder="e.g. mycollege.edu.np" class="field-input">
+                    <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                        Enter the bare host (no <code>https://</code> or <code>www</code>), then click Save.
+                        Follow the <strong>Custom Domain Setup</strong> card below to point your DNS and take the domain live.
+                    </p>
+                    @error('custom_domain')
+                        <p class="text-[11px] text-rose-500 mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
                     <label class="field-label">Short Description</label>
                     <input type="text" name="description" value="{{ old('description', $school->description) }}" placeholder="Shown on landing page hero" class="field-input">
                 </div>
             </div>
+        </div>
+
+        {{-- Custom Domain Setup (guided DNS + verify) --}}
+        @php $cdStatus = $school->custom_domain_status; @endphp
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-6">
+            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-1 flex items-center gap-2">
+                <i class="bi bi-globe2 text-indigo-500"></i> Custom Domain Setup
+            </h3>
+            <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+                Publish your school website on your own domain (e.g. <code>mycollege.edu.np</code>).
+                Set it in the <strong>Custom Domain</strong> field above and Save, then complete the steps here.
+            </p>
+
+            {{-- Status badge --}}
+            <div class="flex items-center gap-2 mb-5">
+                @if($cdStatus === 'none')
+                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300">
+                        <i class="bi bi-circle"></i> Not configured
+                    </span>
+                @elseif($cdStatus === 'pending')
+                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+                        <i class="bi bi-hourglass-split"></i> Pending DNS verification
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400">
+                        <i class="bi bi-check-circle-fill"></i> Verified & live
+                    </span>
+                @endif
+            </div>
+
+            @if($cdStatus === 'none')
+                <div class="rounded-xl border border-dashed border-slate-200 dark:border-slate-700 p-5 text-center">
+                    <i class="bi bi-arrow-bar-up text-2xl text-slate-300"></i>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                        Enter your domain in the <strong>Custom Domain</strong> field at the top and click <em>Save</em> to begin.
+                    </p>
+                </div>
+            @else
+                {{-- What to do next --}}
+                <div class="mb-4">
+                    <h4 class="text-xs font-bold text-slate-600 dark:text-slate-300 mb-2">What to do next</h4>
+                    <ol class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400 list-decimal list-inside leading-relaxed">
+                        @if($cdStatus === 'pending')
+                            <li>Create the <strong>A record</strong> (or <strong>CNAME</strong>) below at your domain registrar / DNS provider.</li>
+                            <li>Add the <strong>TXT ownership record</strong> with the exact token shown below.</li>
+                            <li>Wait a few minutes for DNS propagation (can take up to an hour).</li>
+                            <li>Click <strong>Verify DNS Now</strong>. Once verified, your website goes live at <code>{{ $school->custom_domain }}</code>.</li>
+                        @else
+                            <li>Your website is live at <a href="{{ $school->custom_domain_url }}" target="_blank" class="text-emerald-600 dark:text-emerald-400 font-semibold underline">{{ $school->custom_domain_url }}</a>.</li>
+                            <li>Verified on {{ $school->custom_domain_verified_at?->format('M d, Y · H:i') }}.</li>
+                            <li>To change or remove the domain, edit the <strong>Custom Domain</strong> field above and Save (you'll re-verify DNS).</li>
+                        @endif
+                    </ol>
+                </div>
+
+                {{-- DNS records table --}}
+                <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
+                    <table class="w-full text-xs">
+                        <thead class="bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-300">
+                            <tr>
+                                <th class="text-left font-semibold px-3 py-2">Type</th>
+                                <th class="text-left font-semibold px-3 py-2">Host / Name</th>
+                                <th class="text-left font-semibold px-3 py-2">Value</th>
+                                <th class="px-3 py-2 w-10"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                            @foreach($school->custom_domain_dns_records as $rec)
+                                <tr class="align-top">
+                                    <td class="px-3 py-2.5"><span class="font-mono font-semibold text-indigo-600 dark:text-indigo-400">{{ $rec['type'] }}</span></td>
+                                    <td class="px-3 py-2.5 font-mono text-slate-600 dark:text-slate-300 break-all">{{ $rec['host'] }}</td>
+                                    <td class="px-3 py-2.5">
+                                        <code class="font-mono text-slate-700 dark:text-slate-200 break-all">{{ $rec['value'] }}</code>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">{{ $rec['note'] }}</p>
+                                    </td>
+                                    <td class="px-3 py-2.5 text-center">
+                                        <button type="button" onclick="copyDnsValue(this, {{ json_encode($rec['value']) }})"
+                                                class="text-slate-400 hover:text-indigo-600 transition" title="Copy value">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                @if($cdStatus === 'pending')
+                    <div class="mt-5 flex flex-wrap items-center gap-3">
+                        <button type="button" id="verifyDnsBtn" onclick="verifyDns()"
+                                class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold transition disabled:opacity-50">
+                            <i class="bi bi-shield-check"></i> Verify DNS Now
+                        </button>
+                        <span id="verifySpinner" class="hidden text-xs text-slate-400">Checking DNS…</span>
+                    </div>
+                    <div id="verifyResult" class="mt-3 hidden rounded-xl border p-3 text-xs"></div>
+                @endif
+            @endif
         </div>
 
         {{-- Address --}}
@@ -1555,6 +1667,291 @@ $progressPct = (int) round(($activeStep / count($steps)) * 100);
 </div>{{-- /step-7 --}}
 
 {{-- ════════════════════════════════════════════════
+     STEP 8 — SCHOOL MEDIA (Staff Photos & Media Galleries)
+════════════════════════════════════════════════ --}}
+<div class="step-panel hidden" id="step-8">
+<div class="flex flex-col gap-6">
+
+    {{-- ─── Section title ─── --}}
+    <div class="bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/30 border border-indigo-100 dark:border-indigo-800/50 rounded-2xl px-6 py-4 flex items-start gap-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg shrink-0">
+            <i class="bi bi-camera-fill"></i>
+        </div>
+        <div>
+            <h3 class="text-sm font-extrabold text-slate-800 dark:text-slate-100 mb-0.5">School Media Library</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                Upload staff headshots and photo galleries for your public school website. Every image is automatically converted to optimised WebP format.
+            </p>
+        </div>
+    </div>
+
+    {{-- ─── Staff Headshots ─── --}}
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-6">
+        <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
+            <i class="bi bi-people-fill text-purple-500"></i> Leadership &amp; Staff Headshots
+        </h3>
+        <p class="text-xs text-slate-400 mb-5 leading-relaxed">
+            These photos appear on the public landing page (About &amp; Faculty sections). Automatically converted to WebP. Max 3 MB each.
+        </p>
+
+        @php
+            $staffSlots = [
+                [
+                    'field'       => 'principal_image',
+                    'label'       => 'Principal',
+                    'name_field'  => 'principal_name',
+                    'title_field' => 'principal_title',
+                    'current_photo' => $school->principal_photo_url,
+                    'current_name'  => $school->settings['principal_name'] ?? null,
+                    'current_title' => $school->settings['principal_title'] ?? null,
+                    'color'       => 'indigo',
+                    'icon'        => 'bi-mortarboard-fill',
+                    'placeholder' => 'e.g. Mr. Ramesh Karki',
+                    'title_ph'    => 'e.g. Principal & Head of Institution',
+                ],
+                [
+                    'field'       => 'vice_principal_image',
+                    'label'       => 'Vice-Principal',
+                    'name_field'  => 'vice_principal_name',
+                    'title_field' => 'vice_principal_title',
+                    'current_photo' => $school->vice_principal_photo_url,
+                    'current_name'  => $school->settings['vice_principal_name'] ?? null,
+                    'current_title' => $school->settings['vice_principal_title'] ?? null,
+                    'color'       => 'blue',
+                    'icon'        => 'bi-person-workspace',
+                    'placeholder' => 'e.g. Mrs. Sunita Sharma',
+                    'title_ph'    => 'e.g. Vice-Principal & Academic Head',
+                ],
+                [
+                    'field'       => 'coordinator_image',
+                    'label'       => 'Academic Coordinator',
+                    'name_field'  => 'coordinator_name',
+                    'title_field' => 'coordinator_title',
+                    'current_photo' => $school->coordinator_photo_url,
+                    'current_name'  => $school->settings['coordinator_name'] ?? null,
+                    'current_title' => $school->settings['coordinator_title'] ?? null,
+                    'color'       => 'emerald',
+                    'icon'        => 'bi-person-lines-fill',
+                    'placeholder' => 'e.g. Mr. Dipak Adhikari',
+                    'title_ph'    => 'e.g. Academic Coordinator & Senior Mentor',
+                ],
+            ];
+        @endphp
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            @foreach($staffSlots as $slot)
+            @php
+                $hasPhoto = !empty($school->settings[$slot['field']]);
+                $fallback = asset('imgs/profile.webp');
+            @endphp
+            <div class="border border-slate-200 dark:border-slate-700 rounded-2xl p-4 flex flex-col gap-3">
+                {{-- Label --}}
+                <div class="flex items-center gap-2">
+                    <span class="w-7 h-7 rounded-lg bg-{{ $slot['color'] }}-50 dark:bg-{{ $slot['color'] }}-900/30 text-{{ $slot['color'] }}-600 dark:text-{{ $slot['color'] }}-400 flex items-center justify-center text-sm border border-{{ $slot['color'] }}-100 dark:border-{{ $slot['color'] }}-800">
+                        <i class="bi {{ $slot['icon'] }}"></i>
+                    </span>
+                    <span class="text-sm font-bold text-slate-700 dark:text-slate-200">{{ $slot['label'] }}</span>
+                    @if($hasPhoto)
+                        <span class="ml-auto text-[10px] bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-semibold">Photo set</span>
+                    @endif
+                </div>
+
+                {{-- Current photo preview --}}
+                <div class="flex items-center gap-3">
+                    <div class="w-20 h-20 rounded-xl overflow-hidden border-2 border-slate-200 dark:border-slate-600 bg-slate-100 dark:bg-slate-700 shrink-0">
+                        <img src="{{ $slot['current_photo'] }}"
+                             onerror="this.src='{{ $fallback }}'"
+                             alt="{{ $slot['label'] }}"
+                             class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex flex-col gap-2 flex-1">
+                        <label class="flex items-center justify-center gap-1.5 w-full py-2 px-3 border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-xl cursor-pointer transition text-xs font-semibold text-slate-500">
+                            <i class="bi bi-cloud-upload"></i> Upload
+                            <input type="file" name="{{ $slot['field'] }}" accept="image/*" class="hidden"
+                                   onchange="previewStaffPhoto(this, '{{ $slot['field'] }}-preview')">
+                        </label>
+                        @if($hasPhoto)
+                        <label class="flex items-center gap-1.5 text-[11px] text-rose-600 cursor-pointer">
+                            <input type="checkbox" name="remove_{{ $slot['field'] }}" value="1" class="rounded accent-rose-500">
+                            Remove photo
+                        </label>
+                        @endif
+                    </div>
+                </div>
+                {{-- JS live preview --}}
+                <div id="{{ $slot['field'] }}-preview" class="hidden">
+                    <img src="" alt="Preview" class="w-full rounded-xl border border-indigo-200 object-cover aspect-square">
+                </div>
+
+                {{-- Name & Title --}}
+                <div class="flex flex-col gap-2">
+                    <input type="text" name="{{ $slot['name_field'] }}"
+                           value="{{ old($slot['name_field'], $slot['current_name']) }}"
+                           placeholder="{{ $slot['placeholder'] }}"
+                           class="field-input text-xs">
+                    <input type="text" name="{{ $slot['title_field'] }}"
+                           value="{{ old($slot['title_field'], $slot['current_title']) }}"
+                           placeholder="{{ $slot['title_ph'] }}"
+                           class="field-input text-xs">
+                </div>
+            </div>
+            @endforeach
+        </div>
+
+        {{-- Teacher Team Group Photo --}}
+        <div class="mt-5 border border-slate-200 dark:border-slate-700 rounded-2xl p-5">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center text-sm border border-amber-100">
+                    <i class="bi bi-camera2"></i>
+                </span>
+                <span class="text-sm font-bold text-slate-700 dark:text-slate-200">Teacher Team Group Photo</span>
+                @if(!empty($school->settings['team_photo']))
+                    <span class="ml-auto text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">Photo set</span>
+                @endif
+            </div>
+            <div class="flex items-center gap-4">
+                @if(!empty($school->settings['team_photo']))
+                <div class="w-24 h-16 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-600 bg-slate-100 shrink-0">
+                    <img src="{{ asset('storage/' . $school->settings['team_photo']) }}" alt="Team" class="w-full h-full object-cover">
+                </div>
+                @endif
+                <label class="flex items-center justify-center gap-2 flex-1 border-2 border-dashed border-slate-300 dark:border-slate-600 hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-xl cursor-pointer transition text-xs font-semibold text-slate-500 py-4">
+                    <i class="bi bi-cloud-upload text-lg"></i>
+                    <span>Upload Team Photo</span>
+                    <span class="text-[10px] text-slate-400 font-normal">JPEG/PNG/WebP · max 5 MB</span>
+                    <input type="file" name="team_photo" accept="image/*" class="hidden"
+                           onchange="previewStaffPhoto(this, 'team-photo-preview')">
+                </label>
+                @if(!empty($school->settings['team_photo']))
+                <label class="flex items-center gap-1.5 text-xs text-rose-600 cursor-pointer">
+                    <input type="checkbox" name="remove_team_photo" value="1" class="rounded accent-rose-500">
+                    Remove
+                </label>
+                @endif
+            </div>
+            <div id="team-photo-preview" class="hidden mt-3">
+                <img src="" alt="Preview" class="w-full rounded-xl border border-amber-200 object-cover max-h-48">
+            </div>
+        </div>
+    </div>
+
+    {{-- ─── Achievement Gallery ─── --}}
+    @php
+        $mediaGalleries = [
+            [
+                'prefix'  => 'achievement',
+                'column'  => 'achievement_gallery',
+                'label'   => 'Achievement & Award Photos',
+                'icon'    => 'bi-trophy-fill',
+                'color'   => 'yellow',
+                'desc'    => 'Certificates, trophies, competition wins, student award ceremonies.',
+                'images'  => $school->achievement_gallery ?? [],
+            ],
+            [
+                'prefix'  => 'batch',
+                'column'  => 'batch_gallery',
+                'label'   => 'Class Batch Photos',
+                'icon'    => 'bi-mortarboard-fill',
+                'color'   => 'blue',
+                'desc'    => 'Annual class/batch group photos, graduation ceremonies, send-off events.',
+                'images'  => $school->batch_gallery ?? [],
+            ],
+            [
+                'prefix'  => 'program',
+                'column'  => 'program_gallery',
+                'label'   => 'Academic Program Photos',
+                'icon'    => 'bi-book-fill',
+                'color'   => 'emerald',
+                'desc'    => 'Science lab sessions, computer classes, arts, sports, events by department.',
+                'images'  => $school->program_gallery ?? [],
+            ],
+        ];
+    @endphp
+
+    @foreach($mediaGalleries as $gal)
+    @php $galImages = $gal['images']; @endphp
+    <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-6">
+        <div class="flex items-center justify-between mb-1">
+            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                <i class="bi {{ $gal['icon'] }} text-{{ $gal['color'] }}-500"></i> {{ $gal['label'] }}
+            </h3>
+            @if(count($galImages))
+                <span class="text-xs text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">
+                    {{ count($galImages) }} image{{ count($galImages) !== 1 ? 's' : '' }}
+                </span>
+            @endif
+        </div>
+        <p class="text-xs text-slate-400 mb-4">{{ $gal['desc'] }} · JPEG/PNG/WebP · max 3 MB each.</p>
+
+        {{-- Upload dropzone --}}
+        <label class="flex flex-col items-center justify-center gap-2 w-full border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl py-7 cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition mb-4">
+            <i class="bi bi-cloud-arrow-up text-2xl text-slate-400"></i>
+            <span class="text-xs text-slate-500 font-semibold">Click to add {{ strtolower($gal['label']) }}</span>
+            <span class="text-[10px] text-slate-400">Multiple images allowed</span>
+            <input type="file" name="new_{{ $gal['prefix'] }}_images[]" multiple accept="image/jpeg,image/png,image/jpg,image/webp"
+                   class="hidden" onchange="previewMediaGallery(this, '{{ $gal['prefix'] }}-new-preview')">
+        </label>
+        <div id="{{ $gal['prefix'] }}-new-preview" class="grid grid-cols-4 gap-2 mb-4"></div>
+
+        {{-- Existing images --}}
+        @if(count($galImages))
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" id="{{ $gal['prefix'] }}-gallery-grid">
+            @foreach($galImages as $gIdx => $gImg)
+            <div class="relative group rounded-xl overflow-hidden border-2 border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700"
+                 id="{{ $gal['prefix'] }}-item-{{ $gIdx }}"
+                 style="aspect-ratio:4/3">
+                <img src="{{ asset('storage/'.$gImg) }}"
+                     class="w-full h-full object-cover"
+                     id="{{ $gal['prefix'] }}-img-{{ $gIdx }}"
+                     alt="{{ $gal['label'] }} {{ $gIdx + 1 }}">
+
+                {{-- Overlay: deleted --}}
+                <div class="absolute inset-0 bg-rose-700/80 hidden flex-col items-center justify-center gap-1"
+                     id="{{ $gal['prefix'] }}-del-mask-{{ $gIdx }}">
+                    <i class="bi bi-trash-fill text-white text-xl"></i>
+                    <span class="text-white text-[10px] font-bold">Will be deleted</span>
+                </div>
+                {{-- Replaced badge --}}
+                <div class="absolute top-1 right-1 bg-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden"
+                     id="{{ $gal['prefix'] }}-rep-badge-{{ $gIdx }}">
+                    <i class="bi bi-arrow-repeat"></i> Replaced
+                </div>
+
+                {{-- Action bar --}}
+                <div class="absolute bottom-0 inset-x-0 flex opacity-0 group-hover:opacity-100 transition">
+                    <label class="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold text-white bg-indigo-600/90 hover:bg-indigo-700 cursor-pointer border-r border-indigo-400">
+                        <i class="bi bi-pencil"></i> Replace
+                        <input type="file" name="replace_{{ $gal['prefix'] }}_image[{{ $gIdx }}]"
+                               accept="image/*" class="hidden"
+                               onchange="replaceMediaPreview(this, '{{ $gal['prefix'] }}', {{ $gIdx }})">
+                    </label>
+                    <button type="button"
+                            onclick="toggleMediaDelete('{{ $gal['prefix'] }}', {{ $gIdx }})"
+                            id="{{ $gal['prefix'] }}-del-btn-{{ $gIdx }}"
+                            class="flex-1 flex items-center justify-center gap-1 py-1.5 text-[10px] font-bold text-white bg-rose-600/90 hover:bg-rose-700">
+                        <i class="bi bi-trash" id="{{ $gal['prefix'] }}-del-icon-{{ $gIdx }}"></i>
+                        <span id="{{ $gal['prefix'] }}-del-label-{{ $gIdx }}">Delete</span>
+                    </button>
+                </div>
+
+                <input type="checkbox" name="delete_{{ $gal['prefix'] }}_images[]"
+                       value="{{ $gIdx }}" id="{{ $gal['prefix'] }}-del-chk-{{ $gIdx }}" class="hidden">
+            </div>
+            @endforeach
+        </div>
+        @else
+        <div class="text-center py-6 text-slate-400">
+            <i class="bi {{ $gal['icon'] }} text-3xl block mb-2 opacity-30"></i>
+            <p class="text-xs italic">No {{ strtolower($gal['label']) }} yet.</p>
+        </div>
+        @endif
+    </div>
+    @endforeach
+
+</div>
+</div>{{-- /step-8 --}}
+
+{{-- ════════════════════════════════════════════════
      FOOTER NAV (Prev / Next / Save)
 ════════════════════════════════════════════════ --}}
 <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-2xl shadow-sm px-6 py-4 transition-all">
@@ -2530,6 +2927,93 @@ function previewPrincipalPhoto(input) {
         };
         reader.readAsDataURL(input.files[0]);
     }
+}
+
+/* ── School Media (Step 8) ───────────────────────────────────── */
+
+/** Show a live photo preview for a staff headshot upload. */
+function previewStaffPhoto(input, previewContainerId) {
+    const container = document.getElementById(previewContainerId);
+    if (!container) return;
+    if (!input.files || !input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        container.classList.remove('hidden');
+        const img = container.querySelector('img');
+        if (img) img.src = e.target.result;
+        // Also update the nearby round preview thumb
+        const thumbRow = input.closest('.flex');
+        const thumb = thumbRow ? thumbRow.closest('[class*="border"]').querySelector('.w-20 img') : null;
+        if (thumb) thumb.src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+/** Show pending-upload thumbnails for a media gallery upload. */
+function previewMediaGallery(input, previewContainerId) {
+    const wrap = document.getElementById(previewContainerId);
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    if (!input.files || !input.files.length) return;
+    Array.from(input.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const div = document.createElement('div');
+            div.style.cssText = 'position:relative;aspect-ratio:4/3;border-radius:12px;overflow:hidden;border:2px solid #818cf8;background:#f1f5f9';
+            div.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">
+                <span style="position:absolute;top:4px;left:4px;background:#4f46e5;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:999px">New</span>`;
+            wrap.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+/** Toggle delete state for a media gallery item. */
+const _mediaDeleted = {};
+
+function toggleMediaDelete(prefix, idx) {
+    if (!_mediaDeleted[prefix]) _mediaDeleted[prefix] = new Set();
+    const deleted = _mediaDeleted[prefix];
+    const chk  = document.getElementById(`${prefix}-del-chk-${idx}`);
+    const mask = document.getElementById(`${prefix}-del-mask-${idx}`);
+    const icon = document.getElementById(`${prefix}-del-icon-${idx}`);
+    const lbl  = document.getElementById(`${prefix}-del-label-${idx}`);
+    const item = document.getElementById(`${prefix}-item-${idx}`);
+
+    const isDeleted = deleted.has(idx);
+    if (isDeleted) {
+        deleted.delete(idx);
+        if (chk)  { chk.checked = false; }
+        if (mask) { mask.classList.add('hidden'); mask.classList.remove('flex'); }
+        if (icon) { icon.className = 'bi bi-trash'; }
+        if (lbl)  { lbl.textContent = 'Delete'; }
+        if (item) { item.classList.remove('border-rose-500'); item.classList.add('border-slate-200','dark:border-slate-600'); }
+    } else {
+        deleted.add(idx);
+        if (chk)  { chk.checked = true; }
+        if (mask) { mask.classList.remove('hidden'); mask.classList.add('flex'); }
+        if (icon) { icon.className = 'bi bi-arrow-counterclockwise'; }
+        if (lbl)  { lbl.textContent = 'Undo'; }
+        if (item) { item.classList.add('border-rose-500'); item.classList.remove('border-slate-200','dark:border-slate-600'); }
+    }
+}
+
+/** Show replaced-badge on a media gallery item after selecting a replacement. */
+function replaceMediaPreview(input, prefix, idx) {
+    if (!input.files || !input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const img   = document.getElementById(`${prefix}-img-${idx}`);
+        const badge = document.getElementById(`${prefix}-rep-badge-${idx}`);
+        const item  = document.getElementById(`${prefix}-item-${idx}`);
+        if (img)   img.src = e.target.result;
+        if (badge) badge.classList.remove('hidden');
+        if (item)  { item.classList.remove('border-slate-200','dark:border-slate-600','border-rose-500'); item.classList.add('border-indigo-500'); }
+        // Unmark any pending delete
+        const chk = document.getElementById(`${prefix}-del-chk-${idx}`);
+        if (chk && chk.checked) toggleMediaDelete(prefix, idx);
+    };
+    reader.readAsDataURL(input.files[0]);
 }
 
 /* ── Init ─────────────────────────────────────────────────────── */
