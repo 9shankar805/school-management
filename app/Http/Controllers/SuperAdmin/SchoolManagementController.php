@@ -16,7 +16,7 @@ class SchoolManagementController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'role:super-admin']);
+        $this->middleware(['auth', 'role:super-admin|saas-admin|saas-staff']);
     }
 
     /** GET /super/schools */

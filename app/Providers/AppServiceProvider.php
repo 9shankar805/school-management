@@ -173,7 +173,7 @@ class AppServiceProvider extends ServiceProvider
         try {
             if (!isset($roleTableExists)) $roleTableExists = \Illuminate\Support\Facades\Schema::hasTable('roles');
             if ($roleTableExists) {
-                $roles = \Spatie\Permission\Models\Role::where('name', '!=', 'super-admin')
+                $roles = \Spatie\Permission\Models\Role::whereNotIn('name', ['super-admin', 'saas-admin', 'saas-staff', 'saas-billing', 'saas-support'])
                     ->orderBy('name')
                     ->pluck('name')
                     ->all();

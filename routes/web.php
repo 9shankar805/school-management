@@ -1737,7 +1737,7 @@ Route::post('/register/school',        [\App\Http\Controllers\SchoolRegistration
 Route::get('/register/school/success', [\App\Http\Controllers\SchoolRegistrationController::class, 'registered'])->name('saas.registered');
 
 // Super-admin school management panel
-Route::middleware(['auth', 'role:super-admin'])
+Route::middleware(['auth', 'role:super-admin|saas-admin|saas-staff|saas-billing|saas-support'])
      ->prefix('super')
      ->name('super.')
      ->group(function () {
@@ -1774,6 +1774,54 @@ Route::middleware(['auth', 'role:super-admin'])
          Route::post('/schools/{school}/google/config',              [\App\Http\Controllers\SuperAdmin\GoogleWorkspaceController::class, 'saveConfig'])->name('schools.google.config');
          Route::post('/schools/{school}/google/test',                [\App\Http\Controllers\SuperAdmin\GoogleWorkspaceController::class, 'testConnection'])->name('schools.google.test');
          Route::post('/schools/{school}/google/migrate',             [\App\Http\Controllers\SuperAdmin\GoogleWorkspaceController::class, 'migrate'])->name('schools.google.migrate');
+
+         // ── Hardware & Services Catalog (Thermal Printer, CCTV, Computer Setup, etc.) ──
+         Route::get('/services',                          [\App\Http\Controllers\SuperAdmin\SaasServiceController::class, 'index'])->name('services.index');
+         Route::post('/services',                         [\App\Http\Controllers\SuperAdmin\SaasServiceController::class, 'store'])->name('services.store');
+         Route::put('/services/{service}',                [\App\Http\Controllers\SuperAdmin\SaasServiceController::class, 'update'])->name('services.update');
+         Route::delete('/services/{service}',             [\App\Http\Controllers\SuperAdmin\SaasServiceController::class, 'destroy'])->name('services.destroy');
+         Route::post('/services/{service}/toggle',        [\App\Http\Controllers\SuperAdmin\SaasServiceController::class, 'toggleStatus'])->name('services.toggle');
+         Route::get('/services-api/list',                 [\App\Http\Controllers\SuperAdmin\SaasServiceController::class, 'apiList'])->name('services.api');
+
+         // ── Service Agreements (विद्यालय व्यवस्थापन प्रणालीसम्बन्धी सेवा सम्झौता) ────
+         Route::get('/agreements',                        [\App\Http\Controllers\SuperAdmin\SaasAgreementController::class, 'index'])->name('agreements.index');
+         Route::get('/agreements/create',                 [\App\Http\Controllers\SuperAdmin\SaasAgreementController::class, 'create'])->name('agreements.create');
+         Route::post('/agreements',                       [\App\Http\Controllers\SuperAdmin\SaasAgreementController::class, 'store'])->name('agreements.store');
+         Route::get('/agreements/{agreement}',            [\App\Http\Controllers\SuperAdmin\SaasAgreementController::class, 'show'])->name('agreements.show');
+         Route::get('/agreements/{agreement}/print',      [\App\Http\Controllers\SuperAdmin\SaasAgreementController::class, 'print'])->name('agreements.print');
+         Route::get('/agreements/{agreement}/edit',       [\App\Http\Controllers\SuperAdmin\SaasAgreementController::class, 'edit'])->name('agreements.edit');
+         Route::put('/agreements/{agreement}',            [\App\Http\Controllers\SuperAdmin\SaasAgreementController::class, 'update'])->name('agreements.update');
+         Route::delete('/agreements/{agreement}',         [\App\Http\Controllers\SuperAdmin\SaasAgreementController::class, 'destroy'])->name('agreements.destroy');
+
+         // ── SaaS Billing & Invoicing (बिलिङ तथा बिजक व्यवस्थापन) ─────────────────
+         Route::get('/billing',                           [\App\Http\Controllers\SuperAdmin\SaasBillingController::class, 'index'])->name('billing.index');
+         Route::get('/billing/create',                    [\App\Http\Controllers\SuperAdmin\SaasBillingController::class, 'create'])->name('billing.create');
+         Route::post('/billing',                          [\App\Http\Controllers\SuperAdmin\SaasBillingController::class, 'store'])->name('billing.store');
+         Route::get('/billing/{invoice}',                 [\App\Http\Controllers\SuperAdmin\SaasBillingController::class, 'show'])->name('billing.show');
+         Route::get('/billing/{invoice}/print',           [\App\Http\Controllers\SuperAdmin\SaasBillingController::class, 'print'])->name('billing.print');
+         Route::get('/billing/{invoice}/edit',            [\App\Http\Controllers\SuperAdmin\SaasBillingController::class, 'edit'])->name('billing.edit');
+         Route::put('/billing/{invoice}',                 [\App\Http\Controllers\SuperAdmin\SaasBillingController::class, 'update'])->name('billing.update');
+         Route::delete('/billing/{invoice}',              [\App\Http\Controllers\SuperAdmin\SaasBillingController::class, 'destroy'])->name('billing.destroy');
+         Route::post('/billing/{invoice}/payments',        [\App\Http\Controllers\SuperAdmin\SaasBillingController::class, 'recordPayment'])->name('billing.payments.store');
+
+         // ── School Plans & Subscriptions (योजना तथा सदस्यता व्यवस्थापन) ──────────
+         Route::get('/subscriptions',                     [\App\Http\Controllers\SuperAdmin\SaasSubscriptionController::class, 'index'])->name('subscriptions.index');
+         Route::patch('/subscriptions/{school}',          [\App\Http\Controllers\SuperAdmin\SaasSubscriptionController::class, 'update'])->name('subscriptions.update');
+
+         // ── SaaS Staff & Team Management (साँस कर्मचारी व्यवस्थापन) ──────────────
+         Route::resource('staff',                         \App\Http\Controllers\SuperAdmin\SaasStaffController::class);
+
+         // ── User Feedback & Grievances (प्रयोगकर्ता पृष्ठपोषण तथा गुनासो) ────────
+         Route::get('/feedback',                          [\App\Http\Controllers\SuperAdmin\SaasFeedbackController::class, 'index'])->name('feedback.index');
+         Route::get('/feedback/{id}',                     [\App\Http\Controllers\SuperAdmin\SaasFeedbackController::class, 'show'])->name('feedback.show');
+         Route::match(['post', 'patch'], '/feedback/{id}/status', [\App\Http\Controllers\SuperAdmin\SaasFeedbackController::class, 'updateStatus'])->name('feedback.status');
+
+         // ── System Improvements & Roadmap (प्रणाली सुधार तथा कार्य सूची) ─────────
+         Route::get('/improvements',                      [\App\Http\Controllers\SuperAdmin\SystemImprovementController::class, 'index'])->name('improvements.index');
+         Route::post('/improvements',                     [\App\Http\Controllers\SuperAdmin\SystemImprovementController::class, 'store'])->name('improvements.store');
+         Route::put('/improvements/{improvement}',        [\App\Http\Controllers\SuperAdmin\SystemImprovementController::class, 'update'])->name('improvements.update');
+         Route::patch('/improvements/{improvement}/toggle',[\App\Http\Controllers\SuperAdmin\SystemImprovementController::class, 'toggle'])->name('improvements.toggle');
+         Route::delete('/improvements/{improvement}',     [\App\Http\Controllers\SuperAdmin\SystemImprovementController::class, 'destroy'])->name('improvements.destroy');
      });
 
 

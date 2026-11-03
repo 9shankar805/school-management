@@ -1165,7 +1165,7 @@
         </div>
 
         {{-- Session badge --}}
-        @if(!auth()->user()->isSuperAdmin())
+        @if(!auth()->user()->isSuperAdmin() && !auth()->user()->isSaasUser())
         @php
             $latestSession = \App\Models\SchoolSession::latest()->first();
             $sessionName   = $latestSession?->session_name ?? null;
@@ -1196,10 +1196,10 @@
         <div class="flex-shrink-0 px-4 py-3" style="border-top:1px solid rgba(255,255,255,.07)">
             <div class="flex items-center gap-2.5">
                 <a href="{{ route('profile.edit') }}" class="flex items-center gap-2.5 flex-1 min-w-0 group" title="View & Edit Profile">
-                    @if(auth()->user()->isSuperAdmin())
-                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center flex-shrink-0 shadow-xs group-hover:ring-2 group-hover:ring-indigo-400 transition">SA</div>
+                    @if(auth()->user()->isSuperAdmin() || auth()->user()->isSaasUser())
+                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center flex-shrink-0 shadow-xs group-hover:ring-2 group-hover:ring-indigo-400 transition">{{ auth()->user()->isSuperAdmin() ? 'SA' : 'ST' }}</div>
                     <div class="flex-1 min-w-0">
-                        <p class="text-xs font-bold text-white truncate group-hover:text-indigo-300 transition">Super Admin</p>
+                        <p class="text-xs font-bold text-white truncate group-hover:text-indigo-300 transition">{{ auth()->user()->isSuperAdmin() ? 'Super Admin' : (auth()->user()->full_name ?: 'SaaS Staff') }}</p>
                         <p class="text-[10px] truncate" style="color:rgba(255,255,255,.4)">{{ auth()->user()->email ?? 'superadmin@nshub.com' }}</p>
                     </div>
                     @else
@@ -1322,7 +1322,7 @@
                     $unreadChatCount = 0;
                     $chatLink = route('communication.index');
                     try {
-                        if (auth()->user()->isSuperAdmin()) {
+                        if (auth()->user()->isSuperAdmin() || auth()->user()->isSaasUser()) {
                             $unreadChatCount = \App\Models\ContactMessage::where('status', 'unread')->count();
                             $chatLink = route('super.contact-messages.index');
                         } elseif (auth()->user()->isTeacher()) {
@@ -1462,13 +1462,13 @@
                 <div class="relative ml-1" id="user-menu-wrapper">
                     <button onclick="toggleUserMenu()"
                             class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                        @if(auth()->user()->isSuperAdmin())
-                        <div class="w-7 h-7 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0">SA</div>
+                        @if(auth()->user()->isSuperAdmin() || auth()->user()->isSaasUser())
+                        <div class="w-7 h-7 rounded-full bg-blue-600 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0">{{ auth()->user()->isSuperAdmin() ? 'SA' : 'ST' }}</div>
                         @else
                         <img src="{{ auth()->user()->avatar }}" class="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-slate-200 dark:border-slate-700" alt="">
                         @endif
                         <span class="hidden sm:block text-xs font-semibold text-slate-700 dark:text-slate-200 max-w-[90px] truncate">
-                            @if(auth()->user()->isSuperAdmin())Super Admin@else{{ auth()->user()->first_name }}@endif
+                            @if(auth()->user()->isSuperAdmin())Super Admin@elseif(auth()->user()->isSaasUser()){{ auth()->user()->first_name }}@else{{ auth()->user()->first_name }}@endif
                         </span>
                         <i class="bi bi-chevron-down text-[9px] text-slate-400"></i>
                     </button>

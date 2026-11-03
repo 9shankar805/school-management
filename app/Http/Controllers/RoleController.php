@@ -178,7 +178,7 @@ class RoleController extends Controller
             $query = User::with('roles');
 
             if (!auth()->user()->isSuperAdmin()) {
-                $query->whereDoesntHave('roles', fn ($q) => $q->where('name', 'super-admin'));
+                $query->whereDoesntHave('roles', fn ($q) => $q->whereIn('name', ['super-admin', 'saas-admin', 'saas-staff', 'saas-billing', 'saas-support']));
             }
 
             if ($search = request('search')) {
@@ -210,11 +210,13 @@ class RoleController extends Controller
     public function userRoles(User $user): View
     {
         try {
-            if (!auth()->user()->isSuperAdmin() && $user->hasRole('super-admin')) {
-                abort(403, 'You cannot modify super-admin users.');
+            $saasRoles = ['super-admin', 'saas-admin', 'saas-staff', 'saas-billing', 'saas-support'];
+
+            if (!auth()->user()->isSuperAdmin() && $user->hasAnyRole($saasRoles)) {
+                abort(403, 'You cannot modify platform SaaS users.');
             }
 
-            $roles = Role::when(!auth()->user()->isSuperAdmin(), fn ($q) => $q->where('name', '!=', 'super-admin'))
+            $roles = Role::when(!auth()->user()->isSuperAdmin(), fn ($q) => $q->whereNotIn('name', $saasRoles))
                          ->orderBy('name')
                          ->get();
             $userRoles = $user->getRoleNames()->toArray();
@@ -233,8 +235,10 @@ class RoleController extends Controller
     public function updateUserRoles(Request $request, User $user): RedirectResponse
     {
         try {
-            if (!auth()->user()->isSuperAdmin() && $user->hasRole('super-admin')) {
-                abort(403, 'You cannot modify super-admin users.');
+            $saasRoles = ['super-admin', 'saas-admin', 'saas-staff', 'saas-billing', 'saas-support'];
+
+            if (!auth()->user()->isSuperAdmin() && $user->hasAnyRole($saasRoles)) {
+                abort(403, 'You cannot modify platform SaaS users.');
             }
 
             $request->validate([
@@ -244,7 +248,7 @@ class RoleController extends Controller
 
             $roles = $request->roles ?? [];
             if (!auth()->user()->isSuperAdmin()) {
-                $roles = array_values(array_filter($roles, fn ($r) => $r !== 'super-admin'));
+                $roles = array_values(array_filter($roles, fn ($r) => !in_array($r, $saasRoles)));
             }
 
             $user->syncRoles($roles);

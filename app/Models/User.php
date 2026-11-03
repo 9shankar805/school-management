@@ -344,6 +344,9 @@ class User extends Authenticatable implements MustVerifyEmail
     // -----------------------------------------------------------------------
 
     public function isSuperAdmin(): bool    { return $this->hasRole('super-admin'); }
+    public function isSaasAdmin(): bool     { return $this->hasRole('saas-admin'); }
+    public function isSaasStaff(): bool     { return $this->hasAnyRole(['saas-admin', 'saas-staff', 'saas-billing', 'saas-support']); }
+    public function isSaasUser(): bool      { return $this->isSuperAdmin() || $this->isSaasStaff(); }
     public function isOrgOwner(): bool      { return $this->hasRole('organization-owner'); }
     public function isAdmin(): bool         { return $this->hasRole('admin'); }
     public function isPrincipal(): bool     { return $this->hasRole('principal'); }
@@ -379,7 +382,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getHomePage(): string
     {
         return match (true) {
-            $this->isSuperAdmin()       => 'home',
+            $this->isSuperAdmin() || $this->isSaasUser() => 'home',
             $this->isOrgOwner()         => 'home',
             $this->isAdmin()            => 'home',
             $this->isPrincipal()        => 'home',
@@ -401,7 +404,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getDashboardView(): string
     {
         return match (true) {
-            $this->isSuperAdmin()       => 'dashboards.super-admin',
+            $this->isSuperAdmin() || $this->isSaasUser() => 'dashboards.super-admin',
             $this->isOrgOwner()         => 'dashboards.organization-owner',
             $this->isAdmin()            => 'dashboards.admin',
             $this->isPrincipal()        => 'dashboards.principal',

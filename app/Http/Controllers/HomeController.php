@@ -50,7 +50,7 @@ class HomeController extends Controller
         $user = auth()->user();
 
         return match (true) {
-            $user->isSuperAdmin()
+            $user->isSuperAdmin() || $user->isSaasUser()
                 => $this->superAdminDashboard(),
 
             $user->isOrgOwner()
@@ -330,6 +330,27 @@ class HomeController extends Controller
             ];
         }
 
+        // ── 12. SaaS Billing & Agreement Metrics (Tech Pro Code / NepalSchoolHub Platform) ──
+        try {
+            $saasAgreementCount = \App\Models\SaasAgreement::where('status', 'active')->count();
+            $saasTotalBilled    = (float)\App\Models\SaasInvoice::sum('total_amount');
+            $saasTotalCollected = (float)\App\Models\SaasInvoice::sum('paid_amount');
+            $saasTotalDue       = (float)\App\Models\SaasInvoice::sum('due_amount');
+            $saasServicesCount  = \App\Models\SaasService::where('is_active', true)->count();
+            $recentAgreements   = \App\Models\SaasAgreement::latest()->take(4)->get();
+            $recentSaasInvoices = \App\Models\SaasInvoice::latest('invoice_date')->take(4)->get();
+            $featuredServices   = \App\Models\SaasService::where('is_active', true)->take(4)->get();
+        } catch (\Throwable $e) {
+            $saasAgreementCount = 0;
+            $saasTotalBilled    = 0;
+            $saasTotalCollected = 0;
+            $saasTotalDue       = 0;
+            $saasServicesCount  = 0;
+            $recentAgreements   = collect();
+            $recentSaasInvoices = collect();
+            $featuredServices   = collect();
+        }
+
         return view('dashboards.super-admin', compact(
             'totalSchools', 'activeSchools', 'totalUsers', 'activeSubscriptions',
             'studentCount', 'teacherCount', 'monthRevenue', 'outstandingFees',
@@ -337,7 +358,9 @@ class HomeController extends Controller
             'attendancePct', 'studentsPresent', 'studentsAbsent', 'teachersPresent', 'lateArrivals',
             'revenueBarData', 'collectedToday', 'totalInvoices', 'pendingTasks',
             'revenueTrendData', 'annualRevenueTotal', 'subscriptionStatus', 'schoolsByPlan',
-            'recentActivity', 'upcomingEvents'
+            'recentActivity', 'upcomingEvents',
+            'saasAgreementCount', 'saasTotalBilled', 'saasTotalCollected', 'saasTotalDue',
+            'saasServicesCount', 'recentAgreements', 'recentSaasInvoices', 'featuredServices'
         ));
     }
 

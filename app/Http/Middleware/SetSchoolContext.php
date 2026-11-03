@@ -89,8 +89,8 @@ class SetSchoolContext
         if (!$school && Auth::check()) {
             $user = Auth::user();
 
-            // Super-admins have no school_id — they see everything
-            if ($user->isSuperAdmin()) {
+            // Super-admins and SaaS staff have no school_id — they manage the whole SaaS platform
+            if ($user->isSuperAdmin() || $user->isSaasUser()) {
                 // Allow cross-school override via X-School-ID header (super-admin only)
                 if ($request->hasHeader('X-School-ID')) {
                     $overrideId = (int) $request->header('X-School-ID');
