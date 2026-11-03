@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
             QuestionPaperTemplateSeeder::class,
             CertificateTemplateSeeder::class,
             CertificateTemplateSeeder2::class,
+            SaasServiceSeeder::class,
         ]);
     }
 }

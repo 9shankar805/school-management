@@ -22,6 +22,29 @@ class RoleSeeder extends Seeder
         'super-admin' => ['*'],   // wildcard handled in AuthServiceProvider
 
         // ----------------------------------------------------------------
+        // SAAS PLATFORM ROLES (SaaS Staff / Operations)
+        // ----------------------------------------------------------------
+        'saas-admin' => [
+            'manage saas schools', 'manage saas plans', 'manage saas billing',
+            'manage saas payments', 'manage saas agreements', 'manage saas services',
+            'manage saas messages', 'manage saas google', 'manage saas staff',
+            'impersonate schools',
+        ],
+
+        'saas-billing' => [
+            'manage saas billing', 'manage saas payments', 'manage saas agreements',
+            'manage saas services', 'manage saas plans',
+        ],
+
+        'saas-support' => [
+            'manage saas schools', 'manage saas messages', 'manage saas google',
+        ],
+
+        'saas-staff' => [
+            'manage saas schools', 'manage saas messages', 'manage saas billing',
+        ],
+
+        // ----------------------------------------------------------------
         // ORGANIZATION OWNER — owns a school group / multi-campus org
         // ----------------------------------------------------------------
         'organization-owner' => [

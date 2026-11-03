@@ -1,32 +1,15 @@
 {{-- NepalSchoolHub Sidebar Navigation --}}
 <nav class="sidebar-nav">
 
-@role('super-admin')
+@if(auth()->user()->isSuperAdmin() || auth()->user()->isSaasUser())
 {{-- ══════════════════════════════════════
-     SUPER-ADMIN SIDEBAR  (SaaS Platform Owner)
+     SUPER-ADMIN & SAAS STAFF SIDEBAR (SaaS Platform Operations)
 ══════════════════════════════════════ --}}
 
     <p class="sidebar-section-label">Main</p>
-    <a href="{{ url('home') }}" class="sidebar-link {{ request()->is('home') || request()->is('super*') ? 'active' : '' }}">
+    <a href="{{ url('home') }}" class="sidebar-link {{ request()->is('home') || request()->is('super*') && !request()->is('super/schools*') && !request()->is('super/billing*') && !request()->is('super/agreements*') && !request()->is('super/services*') && !request()->is('super/staff*') && !request()->is('super/subscriptions*') && !request()->is('super/contact*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-grid-fill"></i></span>
         <span class="sidebar-link-text">Dashboard</span>
-    </a>
-    <a href="{{ route('school.setup') }}" class="sidebar-link {{ (request()->is('school/setup*') || request()->is('academics/settings*')) ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-gear-wide-connected text-amber-500"></i></span>
-        <span class="sidebar-link-text">School Setup</span>
-    </a>
-    <a href="{{ route('central_analytics.index') }}" class="sidebar-link {{ request()->is('analytics*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-pie-chart-fill"></i></span>
-        <span class="sidebar-link-text">Analytics</span>
-    </a>
-    <a href="{{ route('live-quiz.index') }}" class="sidebar-link {{ request()->is('live-quiz*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-trophy-fill text-warning"></i></span>
-        <span class="sidebar-link-text">Live Quiz Arena</span>
-    </a>
-    <a href="{{ route('events.show') }}" class="sidebar-link {{ request()->is('calendar-event*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-calendar2-heart-fill text-rose-500"></i></span>
-        <span class="sidebar-link-text">Academic Calendar (पात्रो)</span>
-        <span class="sidebar-badge" style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;">BS &amp; AD</span>
     </a>
     <a href="{{ route('notifications.index') }}" class="sidebar-link {{ request()->is('notifications*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-bell-fill"></i></span>
@@ -35,7 +18,7 @@
         @if($unread > 0)<span class="sidebar-badge">{{ $unread > 99 ? '99+' : $unread }}</span>@endif
     </a>
 
-    <p class="sidebar-section-label">Schools</p>
+    <p class="sidebar-section-label">Schools &amp; Tenants</p>
     <a href="{{ route('super.schools.index') }}" class="sidebar-link {{ request()->is('super/schools*') && !request()->get('status') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-building-fill"></i></span>
         <span class="sidebar-link-text">All Schools</span>
@@ -53,30 +36,48 @@
         <span class="sidebar-link-text">Google Workspace Hub</span>
     </a>
 
-    <p class="sidebar-section-label">Finance</p>
-    <a href="{{ route('finance.overview') }}" class="sidebar-link {{ request()->is('finance') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-graph-up-arrow"></i></span>
-        <span class="sidebar-link-text">Revenue Overview</span>
+    <p class="sidebar-section-label">Finance &amp; SaaS Billing</p>
+    <a href="{{ route('super.billing.index') }}" class="sidebar-link {{ request()->is('super/billing*') && request()->get('status') !== 'paid' ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-receipt-cutoff text-indigo-400"></i></span>
+        <span class="sidebar-link-text">SaaS Invoices &amp; Billing</span>
+        @php try { $unpaidBills = \App\Models\SaasInvoice::whereIn('status', ['unpaid', 'overdue'])->count(); } catch(\Throwable $e) { $unpaidBills = 0; } @endphp
+        @if($unpaidBills > 0)<span class="sidebar-badge" style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;">{{ $unpaidBills }} Due</span>@endif
     </a>
-    <a href="{{ route('payments.index') }}" class="sidebar-link {{ request()->is('payments*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-receipt-cutoff"></i></span>
-        <span class="sidebar-link-text">Invoices & Payments</span>
+    <a href="{{ route('super.billing.index') }}?status=paid" class="sidebar-link {{ request()->is('super/billing*') && request()->get('status') === 'paid' ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-check2-circle text-emerald-400"></i></span>
+        <span class="sidebar-link-text">Paid Invoices &amp; Collections</span>
+        @php try { $paidBillsCount = \App\Models\SaasInvoice::where('status', 'paid')->count(); } catch(\Throwable $e) { $paidBillsCount = 0; } @endphp
+        @if($paidBillsCount > 0)<span class="sidebar-badge" style="background:#dcfce7;color:#15803d;font-size:9px;font-weight:700;">{{ $paidBillsCount }} Paid</span>@endif
     </a>
-    <a href="{{ route('finance.expenses') }}" class="sidebar-link {{ request()->is('finance/expenses*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-arrow-up-circle-fill"></i></span>
-        <span class="sidebar-link-text">Expenses</span>
+    <a href="{{ route('super.subscriptions.index') }}" class="sidebar-link {{ request()->is('super/subscriptions*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-award-fill text-amber-400"></i></span>
+        <span class="sidebar-link-text">Plans &amp; Subscriptions</span>
+        @php try { $activeSubs = \App\Models\School::whereIn('plan', ['starter','growth','enterprise'])->count(); } catch(\Throwable $e) { $activeSubs = 0; } @endphp
+        @if($activeSubs > 0)<span class="sidebar-badge" style="background:#fef3c7;color:#b45309;font-size:9px;font-weight:700;">{{ $activeSubs }}</span>@endif
     </a>
-    <a href="{{ route('finance.bank-accounts.index') }}" class="sidebar-link {{ request()->is('finance/bank-accounts*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-bank2 text-teal-500"></i></span>
-        <span class="sidebar-link-text">Bank Master & QR</span>
+    <a href="{{ route('super.agreements.index') }}" class="sidebar-link {{ request()->is('super/agreements*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-file-earmark-check-fill text-blue-400"></i></span>
+        <span class="sidebar-link-text">Service Agreements (सम्झौता)</span>
+        @php try { $activeAgrs = \App\Models\SaasAgreement::where('status', 'active')->count(); } catch(\Throwable $e) { $activeAgrs = 0; } @endphp
+        @if($activeAgrs > 0)<span class="sidebar-badge" style="background:#e0e7ff;color:#4338ca;font-size:9px;font-weight:700;">{{ $activeAgrs }}</span>@endif
+    </a>
+    <a href="{{ route('super.services.index') }}" class="sidebar-link {{ request()->is('super/services*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-printer-fill text-amber-500"></i></span>
+        <span class="sidebar-link-text">Hardware &amp; Service Catalog</span>
     </a>
 
-    <p class="sidebar-section-label">Communication</p>
+    <p class="sidebar-section-label">Communication &amp; Feedback</p>
     <a href="{{ route('super.contact-messages.index') }}" class="sidebar-link {{ request()->is('super/contact-messages*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-envelope-fill"></i></span>
         <span class="sidebar-link-text">Contact Inbox</span>
         @php try { $unreadMsgs = \App\Models\ContactMessage::where('status','unread')->count(); } catch(\Throwable $e) { $unreadMsgs = 0; } @endphp
         @if($unreadMsgs > 0)<span class="sidebar-badge">{{ $unreadMsgs }}</span>@endif
+    </a>
+    <a href="{{ route('super.feedback.index') }}" class="sidebar-link {{ request()->is('super/feedback*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-chat-heart-fill text-rose-400"></i></span>
+        <span class="sidebar-link-text">User Feedback</span>
+        @php try { $pendingFb = \App\Models\Feedback::withoutGlobalScopes()->where('status', 'pending')->count(); } catch(\Throwable $e) { $pendingFb = 0; } @endphp
+        @if($pendingFb > 0)<span class="sidebar-badge" style="background:#fee2e2;color:#dc2626;font-size:9px;font-weight:700;">{{ $pendingFb }}</span>@endif
     </a>
     <a href="{{ route('communication.bulk') }}" class="sidebar-link {{ request()->is('communication/bulk*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-megaphone-fill"></i></span>
@@ -87,22 +88,30 @@
         <span class="sidebar-link-text">Notices</span>
     </a>
 
-    <p class="sidebar-section-label">System</p>
-    <a href="{{ route('profile.edit') }}" class="sidebar-link {{ request()->is('profile*') ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-person-gear"></i></span>
-        <span class="sidebar-link-text">My Profile</span>
+    <p class="sidebar-section-label">System &amp; Roadmap</p>
+    <a href="{{ route('super.improvements.index') }}" class="sidebar-link {{ request()->is('super/improvements*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-tools text-amber-400"></i></span>
+        <span class="sidebar-link-text">System Improvements</span>
+        @php try { $remainingTasks = \App\Models\SystemImprovement::whereIn('status', ['remaining', 'in_progress'])->count(); } catch(\Throwable $e) { $remainingTasks = 0; } @endphp
+        @if($remainingTasks > 0)<span class="sidebar-badge" style="background:#fef3c7;color:#b45309;font-size:9px;font-weight:700;">{{ $remainingTasks }} Rem</span>@endif
     </a>
-    <a href="{{ route('roles.index') }}" class="sidebar-link {{ request()->is('roles') ? 'active' : '' }}">
+    <a href="{{ route('super.staff.index') }}" class="sidebar-link {{ request()->is('super/staff*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-people-fill text-indigo-400"></i></span>
+        <span class="sidebar-link-text">SaaS Staff &amp; Access</span>
+        @php try { $staffCount = \App\Models\User::whereNull('school_id')->whereHas('roles', fn ($q) => $q->whereIn('name', ['super-admin', 'saas-admin', 'saas-staff', 'saas-billing', 'saas-support']))->count(); } catch(\Throwable $e) { $staffCount = 0; } @endphp
+        @if($staffCount > 0)<span class="sidebar-badge" style="background:#e0e7ff;color:#4338ca;font-size:9px;font-weight:700;">{{ $staffCount }}</span>@endif
+    </a>
+    <a href="{{ route('roles.index') }}" class="sidebar-link {{ request()->is('roles*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-shield-fill-check"></i></span>
-        <span class="sidebar-link-text">Roles & Permissions</span>
+        <span class="sidebar-link-text">Roles &amp; Permissions</span>
     </a>
     <a href="{{ route('two-factor.setup') }}" class="sidebar-link {{ request()->is('two-factor*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-shield-lock-fill"></i></span>
         <span class="sidebar-link-text">Security (2FA)</span>
     </a>
-    <a href="{{ route('school.setup') }}" class="sidebar-link {{ (request()->is('academics/settings*') || request()->is('school/setup*')) ? 'active' : '' }}">
-        <span class="sidebar-link-icon"><i class="bi bi-gear-wide-connected"></i></span>
-        <span class="sidebar-link-text">School Setup</span>
+    <a href="{{ route('profile.edit') }}" class="sidebar-link {{ request()->is('profile*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-person-gear"></i></span>
+        <span class="sidebar-link-text">My Profile</span>
     </a>
     @if(class_exists(\Laravel\Horizon\Horizon::class))
     <a href="{{ url(config('horizon.path', 'horizon')) }}" target="_blank" class="sidebar-link {{ request()->is('horizon*') ? 'active' : '' }}">

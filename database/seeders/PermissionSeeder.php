@@ -28,6 +28,20 @@ class PermissionSeeder extends Seeder
         'manage schools',           // super-admin only
 
         // ------------------------------------------------------------------
+        // SAAS PLATFORM & BILLING MANAGEMENT
+        // ------------------------------------------------------------------
+        'manage saas schools',
+        'manage saas plans',
+        'manage saas billing',
+        'manage saas payments',
+        'manage saas agreements',
+        'manage saas services',
+        'manage saas messages',
+        'manage saas google',
+        'manage saas staff',
+        'impersonate schools',
+
+        // ------------------------------------------------------------------
         // SCHOOL SESSIONS / ACADEMIC CALENDAR
         // ------------------------------------------------------------------
         'create school sessions',

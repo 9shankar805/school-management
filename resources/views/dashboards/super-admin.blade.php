@@ -65,65 +65,77 @@
     </div>
 
 
-    {{-- ── 2. QUICK ACTIONS (5 CARDS) ────────────────────────────────── --}}
-    <div class="grid grid-cols-5 gap-4">
+    {{-- ── 2. QUICK ACTIONS (6 CARDS) ────────────────────────────────── --}}
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
         {{-- Add School --}}
         <a href="{{ route('super.schools.index') }}"
-           class="group bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 flex items-center gap-3.5 hover:border-blue-500 hover:shadow-md transition-all">
-            <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-105 transition-transform">
+           class="group bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-3.5 flex items-center gap-3 hover:border-blue-500 hover:shadow-md transition-all">
+            <div class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-105 transition-transform">
                 <i class="bi bi-building-add"></i>
             </div>
-            <div>
-                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-blue-600 whitespace-nowrap">Add School</h4>
-                <p class="text-[10px] text-slate-400 whitespace-nowrap">Register a new school</p>
+            <div class="min-w-0">
+                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-blue-600 truncate">Add School</h4>
+                <p class="text-[10px] text-slate-400 truncate">Register new</p>
             </div>
         </a>
 
-        {{-- Invite Admin --}}
-        <a href="{{ route('teacher.create.show') }}"
-           class="group bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 flex items-center gap-3.5 hover:border-emerald-500 hover:shadow-md transition-all">
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-105 transition-transform">
-                <i class="bi bi-person-plus-fill"></i>
+        {{-- Service Agreement --}}
+        <a href="{{ route('super.agreements.create') }}"
+           class="group bg-white dark:bg-slate-800 border border-emerald-200/80 dark:border-emerald-800/80 rounded-2xl p-3.5 flex items-center gap-3 hover:border-emerald-500 hover:shadow-md transition-all bg-emerald-50/20">
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-105 transition-transform">
+                <i class="bi bi-file-earmark-check-fill"></i>
             </div>
-            <div>
-                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 whitespace-nowrap">Invite Admin</h4>
-                <p class="text-[10px] text-slate-400 whitespace-nowrap">Add new admin user</p>
-            </div>
-        </a>
-
-        {{-- Generate Report --}}
-        <a href="{{ route('reports.index') }}"
-           class="group bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 flex items-center gap-3.5 hover:border-purple-500 hover:shadow-md transition-all">
-            <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-105 transition-transform">
-                <i class="bi bi-file-earmark-bar-graph"></i>
-            </div>
-            <div>
-                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-purple-600 whitespace-nowrap">Generate Report</h4>
-                <p class="text-[10px] text-slate-400 whitespace-nowrap">Download system report</p>
+            <div class="min-w-0">
+                <h4 class="text-xs font-bold text-emerald-700 dark:text-emerald-300 group-hover:text-emerald-600 truncate">Service Agreement</h4>
+                <p class="text-[10px] text-emerald-600/70 truncate">सेवा सम्झौता तयार</p>
             </div>
         </a>
 
-        {{-- Create Invoice --}}
-        <a href="{{ route('payments.index') }}"
-           class="group bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 flex items-center gap-3.5 hover:border-amber-500 hover:shadow-md transition-all">
-            <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-105 transition-transform">
-                <i class="bi bi-file-earmark-text"></i>
+        {{-- SaaS Invoice --}}
+        <a href="{{ route('super.billing.create') }}"
+           class="group bg-white dark:bg-slate-800 border border-indigo-200/80 dark:border-indigo-800/80 rounded-2xl p-3.5 flex items-center gap-3 hover:border-indigo-500 hover:shadow-md transition-all bg-indigo-50/20">
+            <div class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-105 transition-transform">
+                <i class="bi bi-receipt-cutoff"></i>
             </div>
-            <div>
-                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-amber-600 whitespace-nowrap">Create Invoice</h4>
-                <p class="text-[10px] text-slate-400 whitespace-nowrap">Generate new invoice</p>
+            <div class="min-w-0">
+                <h4 class="text-xs font-bold text-indigo-700 dark:text-indigo-300 group-hover:text-indigo-600 truncate">SaaS Invoice</h4>
+                <p class="text-[10px] text-indigo-600/70 truncate">विद्यालय बिजक जारी</p>
             </div>
         </a>
 
-        {{-- School Setup --}}
-        <a href="{{ route('school.setup') }}"
-           class="group bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 flex items-center gap-3.5 hover:border-sky-500 hover:shadow-md transition-all">
-            <div class="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 flex items-center justify-center text-lg flex-shrink-0 group-hover:scale-105 transition-transform">
-                <i class="bi bi-gear-wide-connected"></i>
+        {{-- Hardware & Services Catalog --}}
+        <a href="{{ route('super.services.index') }}"
+           class="group bg-white dark:bg-slate-800 border border-amber-200/80 dark:border-amber-800/80 rounded-2xl p-3.5 flex items-center gap-3 hover:border-amber-500 hover:shadow-md transition-all bg-amber-50/20">
+            <div class="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-105 transition-transform">
+                <i class="bi bi-printer-fill"></i>
             </div>
-            <div>
-                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-sky-600 whitespace-nowrap">School Setup</h4>
-                <p class="text-[10px] text-slate-400 whitespace-nowrap">Academic terms, classes & rules</p>
+            <div class="min-w-0">
+                <h4 class="text-xs font-bold text-amber-700 dark:text-amber-300 group-hover:text-amber-600 truncate">Hardware Setup</h4>
+                <p class="text-[10px] text-amber-600/70 truncate">Thermal, CCTV, PC</p>
+            </div>
+        </a>
+
+        {{-- SaaS Staff & Team --}}
+        <a href="{{ route('super.staff.index') }}"
+           class="group bg-white dark:bg-slate-800 border border-purple-200/80 dark:border-purple-800/80 rounded-2xl p-3.5 flex items-center gap-3 hover:border-purple-500 hover:shadow-md transition-all bg-purple-50/20">
+            <div class="w-9 h-9 rounded-xl bg-purple-50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-105 transition-transform">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="min-w-0">
+                <h4 class="text-xs font-bold text-purple-700 dark:text-purple-300 group-hover:text-purple-600 truncate">SaaS Staff</h4>
+                <p class="text-[10px] text-purple-600/70 truncate">कर्मचारी तथा अनुमति</p>
+            </div>
+        </a>
+
+        {{-- School Plans & Subscriptions --}}
+        <a href="{{ route('super.subscriptions.index') }}"
+           class="group bg-white dark:bg-slate-800 border border-sky-200/80 dark:border-sky-800/80 rounded-2xl p-3.5 flex items-center gap-3 hover:border-sky-500 hover:shadow-md transition-all bg-sky-50/20">
+            <div class="w-9 h-9 rounded-xl bg-sky-50 dark:bg-sky-900/40 text-sky-600 dark:text-sky-400 flex items-center justify-center text-base flex-shrink-0 group-hover:scale-105 transition-transform">
+                <i class="bi bi-award-fill"></i>
+            </div>
+            <div class="min-w-0">
+                <h4 class="text-xs font-bold text-sky-700 dark:text-sky-300 group-hover:text-sky-600 truncate">Plans &amp; Subs</h4>
+                <p class="text-[10px] text-sky-600/70 truncate">योजना तथा सदस्यता</p>
             </div>
         </a>
     </div>
@@ -220,7 +232,276 @@
     </div>
 
 
-    {{-- ── 4. MIDDLE GRID ROW 1 (3 CARDS) ────────────────────────────── --}}
+    {{-- ── 3.5 SAAS PLATFORM: AGREEMENTS, BILLING & HARDWARE (TECH PRO CODE) ── --}}
+    <div class="space-y-4">
+        {{-- Section Title & Quick Links --}}
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-5 shadow-sm border border-slate-800">
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 uppercase tracking-wider">
+                        Tech Pro Code Pvt. Ltd. &bull; नेपालस्कुलहब
+                    </span>
+                    <span class="text-xs text-slate-400">SaaS Operations</span>
+                </div>
+                <h2 class="text-lg font-black tracking-tight mt-1 flex items-center gap-2">
+                    <i class="bi bi-shield-check text-emerald-400"></i>
+                    Partner School Agreements, SaaS Billing &amp; Hardware Catalog
+                </h2>
+                <p class="text-xs text-slate-400 mt-0.5">
+                    Formal legal contracts, recurring subscription invoices, and hardware fulfillment (Thermal Printers, CCTV, Computer Setup)
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 flex-shrink-0">
+                <a href="{{ route('super.agreements.create') }}"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition shadow-xs">
+                    <i class="bi bi-file-earmark-plus-fill"></i> New Agreement
+                </a>
+                <a href="{{ route('super.billing.create') }}"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-xs">
+                    <i class="bi bi-receipt"></i> Create SaaS Bill
+                </a>
+                <a href="{{ route('super.services.index') }}"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-bold transition">
+                    <i class="bi bi-printer-fill"></i> Add Services / Hardware
+                </a>
+            </div>
+        </div>
+
+        {{-- 4 Stat Cards for SaaS Operations --}}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 shadow-xs">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Active Agreements</p>
+                        <h4 class="text-xl font-black text-slate-900 dark:text-white mt-1">{{ $saasAgreementCount }} Schools</h4>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg">
+                        <i class="bi bi-file-earmark-check-fill"></i>
+                    </div>
+                </div>
+                <div class="mt-2 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                    <i class="bi bi-check-circle-fill text-xs"></i> 13-Section Official Contracts
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 shadow-xs">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Billed to Schools</p>
+                        <h4 class="text-xl font-black text-slate-900 dark:text-white font-mono mt-1">रु. {{ number_format($saasTotalBilled) }}</h4>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-lg">
+                        <i class="bi bi-receipt-cutoff"></i>
+                    </div>
+                </div>
+                <div class="mt-2 text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold flex items-center gap-1">
+                    <i class="bi bi-arrow-up-right text-xs"></i> Setup + Renewals + Hardware
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 shadow-xs">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Collected Revenue</p>
+                        <h4 class="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-1">रु. {{ number_format($saasTotalCollected) }}</h4>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                </div>
+                <div class="mt-2 text-[11px] text-slate-400">
+                    Remaining Due: <strong class="text-rose-600 font-mono">रु. {{ number_format($saasTotalDue) }}</strong>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 shadow-xs">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hardware &amp; Services</p>
+                        <h4 class="text-xl font-black text-slate-900 dark:text-white mt-1">{{ $saasServicesCount }} Available</h4>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg">
+                        <i class="bi bi-printer-fill"></i>
+                    </div>
+                </div>
+                <div class="mt-2 text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                    Thermal Printer, CCTV, PC Setup
+                </div>
+            </div>
+        </div>
+
+        {{-- Side by Side Panels: Recent Agreements & Recent Invoices --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {{-- 1. Recent Service Agreements Panel --}}
+            <div class="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between shadow-xs">
+                <div>
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xs font-bold">
+                                <i class="bi bi-file-earmark-check-fill"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Recent Service Agreements (सेवा सम्झौता)</h3>
+                        </div>
+                        <a href="{{ route('super.agreements.index') }}" class="text-xs font-bold text-emerald-600 hover:underline">
+                            View All (सबै हेर्नुहोस्) &rarr;
+                        </a>
+                    </div>
+
+                    <div class="divide-y divide-slate-100 dark:divide-slate-700/60 mt-2">
+                        @forelse($recentAgreements as $agr)
+                            <div class="py-3 flex items-center justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ route('super.agreements.show', $agr->id) }}" class="font-bold text-xs text-slate-900 dark:text-white hover:text-emerald-600 truncate">
+                                            {{ $agr->school_name }}
+                                        </a>
+                                        <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                            {{ $agr->agreement_number }}
+                                        </span>
+                                    </div>
+                                    <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+                                        <span><i class="bi bi-calendar2"></i> {{ $agr->agreement_date_bs }}</span>
+                                        @if($agr->items->count() > 0)
+                                            <span>&bull; {{ $agr->items->count() }} hardware/service item(s)</span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <span class="text-xs font-black font-mono text-slate-900 dark:text-white">
+                                        रु. {{ number_format($agr->grand_total) }}
+                                    </span>
+                                    {{-- Direct Print Button matching official PDF --}}
+                                    <a href="{{ route('super.agreements.print', $agr->id) }}" target="_blank"
+                                        class="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 transition-colors"
+                                        title="Print Official Agreement (Same to same PDF)">
+                                        <i class="bi bi-printer-fill text-xs"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="py-8 text-center text-slate-400 text-xs">
+                                No agreements generated yet.
+                                <a href="{{ route('super.agreements.create') }}" class="text-emerald-600 font-bold hover:underline block mt-1">
+                                    + Generate First Agreement
+                                </a>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-xs">
+                    <span class="text-slate-400">Official Tech Pro Code legal contracts</span>
+                    <a href="{{ route('super.agreements.create') }}" class="font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+                        <i class="bi bi-plus-circle"></i> Create Agreement
+                    </a>
+                </div>
+            </div>
+
+            {{-- 2. Recent SaaS Invoices Panel --}}
+            <div class="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-5 flex flex-col justify-between shadow-xs">
+                <div>
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-xs font-bold">
+                                <i class="bi bi-receipt-cutoff"></i>
+                            </div>
+                            <h3 class="text-sm font-bold text-slate-900 dark:text-white">Recent SaaS Bills (विद्यालय बिजकहरू)</h3>
+                        </div>
+                        <a href="{{ route('super.billing.index') }}" class="text-xs font-bold text-indigo-600 hover:underline">
+                            View All (सबै बिजक) &rarr;
+                        </a>
+                    </div>
+
+                    <div class="divide-y divide-slate-100 dark:divide-slate-700/60 mt-2">
+                        @forelse($recentSaasInvoices as $inv)
+                            <div class="py-3 flex items-center justify-between gap-3">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <a href="{{ route('super.billing.show', $inv->id) }}" class="font-bold text-xs text-slate-900 dark:text-white hover:text-indigo-600 truncate">
+                                            {{ $inv->school_name }}
+                                        </a>
+                                        @if($inv->status === 'paid')
+                                            <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">Paid</span>
+                                        @elseif($inv->status === 'partial')
+                                            <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-blue-100 text-blue-800">Partial</span>
+                                        @else
+                                            <span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800">Due</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-[11px] text-slate-400 mt-0.5">
+                                        <span class="font-mono">{{ $inv->invoice_number }}</span> &bull; {{ $inv->invoice_date->format('M d, Y') }}
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <div class="text-right">
+                                        <span class="text-xs font-black font-mono text-slate-900 dark:text-white block">
+                                            रु. {{ number_format($inv->total_amount) }}
+                                        </span>
+                                        @if($inv->due_amount > 0)
+                                            <span class="text-[10px] text-rose-500 font-mono font-bold block">
+                                                Due: रु. {{ number_format($inv->due_amount) }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <a href="{{ route('super.billing.print', $inv->id) }}" target="_blank"
+                                        class="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 transition-colors"
+                                        title="Print Bill">
+                                        <i class="bi bi-printer-fill text-xs"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="py-8 text-center text-slate-400 text-xs">
+                                No SaaS bills created yet.
+                                <a href="{{ route('super.billing.create') }}" class="text-indigo-600 font-bold hover:underline block mt-1">
+                                    + Create First SaaS Bill
+                                </a>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 dark:border-slate-700 flex justify-between items-center text-xs">
+                    <span class="text-slate-400">VAT &amp; Non-VAT School Invoices</span>
+                    <a href="{{ route('super.billing.create') }}" class="font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
+                        <i class="bi bi-plus-circle"></i> Create Bill
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {{-- 3. Hardware & Services Provided Quick Catalog Banner --}}
+        <div class="bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl p-4 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg flex-shrink-0">
+                    <i class="bi bi-tools"></i>
+                </div>
+                <div>
+                    <h4 class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        Provided Hardware &amp; Services Setup (उपकरण तथा थप सेवा सामग्रीहरू)
+                    </h4>
+                    <p class="text-[11px] text-slate-500">
+                        Deliver complete digital setup: 80mm Thermal Receipt Printers, 4-CH CCTV Systems, Full Desktop PC Setups, and Biometrics
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <a href="{{ route('super.services.index') }}"
+                    class="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 font-bold text-xs transition">
+                    View Catalog &rarr;
+                </a>
+                <button type="button" onclick="window.location='{{ route('super.services.index') }}'"
+                    class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs transition flex items-center gap-1">
+                    <i class="bi bi-plus-lg"></i> Add New Equipment
+                </button>
+            </div>
+        </div>
+    </div>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {{-- Card 1: Today's Attendance Overview --}}
@@ -538,8 +819,8 @@
             </div>
 
             <div class="pt-4 border-t border-slate-100 dark:border-slate-700/60 mt-4">
-                <a href="{{ route('central_analytics.index') }}" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
-                    View Plan Analytics <i class="bi bi-arrow-right"></i>
+                <a href="{{ route('super.subscriptions.index') }}" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                    Manage Plans &amp; Subscriptions <i class="bi bi-arrow-right"></i>
                 </a>
             </div>
         </div>
@@ -658,8 +939,8 @@
             </div>
 
             <div class="pt-4 border-t border-slate-100 dark:border-slate-700/60 mt-4">
-                <a href="{{ route('events.show') }}" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
-                    View Calendar <i class="bi bi-arrow-right"></i>
+                <a href="{{ route('super.agreements.index') }}" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                    View Service Agreements <i class="bi bi-arrow-right"></i>
                 </a>
             </div>
         </div>
@@ -726,8 +1007,8 @@
             </div>
 
             <div class="pt-4 border-t border-slate-100 dark:border-slate-700/60 mt-4">
-                <a href="{{ route('central_analytics.index') }}" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
-                    View System Health <i class="bi bi-arrow-right"></i>
+                <a href="{{ route('super.schools.index') }}" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                    Manage Schools Directory <i class="bi bi-arrow-right"></i>
                 </a>
             </div>
         </div>
