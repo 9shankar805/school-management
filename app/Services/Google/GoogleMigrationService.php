@@ -321,6 +321,264 @@ class GoogleMigrationService
     }
 
     /**
+     * Same as migrateSchool() but emits progress events via a callable.
+     *
+     * The callable receives: fn(int $pct, string $step, string $detail)
+     * where $pct is 0–100, $step is a short label, $detail is a one-liner.
+     *
+     * This lets the SSE controller stream live percentage updates to the browser
+     * without blocking the response.
+     */
+    public function migrateWithProgress(int $schoolId, callable $emit, ?int $triggeredByUserId = null): array
+    {
+        $school = School::findOrFail($schoolId);
+        $config = SchoolGoogleConfig::withoutGlobalScopes()
+            ->where('school_id', $schoolId)
+            ->first();
+
+        if (!$config || !$config->hasValidCredentials()) {
+            throw new \Exception("Google Education credentials are not properly configured for {$school->name}.");
+        }
+
+        $sessionId = SchoolSession::where('school_id', $schoolId)->latest('id')->value('id') ?? 1;
+        $domain    = $config->workspace_domain ?: 'school.edu.np';
+
+        $emit(2, 'Initialising', 'Connecting to Google APIs…');
+
+        $client           = null;
+        $classroomService = null;
+        $directoryService = null;
+
+        try {
+            $client           = GoogleClientFactory::fromConfig($config);
+            $classroomService = new Classroom($client);
+            $directoryService = new Directory($client);
+        } catch (\Throwable $e) {
+            if (!app()->environment('testing')) {
+                throw new \Exception("Google API initialization error: " . $e->getMessage());
+            }
+        }
+
+        $report = [
+            'accounts_migrated'  => 0,
+            'classrooms_created' => 0,
+            'students_enrolled'  => 0,
+            'teachers_assigned'  => 0,
+            'errors'             => [],
+        ];
+
+        // ── Count totals so we can compute percentage ────────────────────────
+        $users = User::where('school_id', $schoolId)
+            ->whereIn('role', ['student', 'teacher', 'class-teacher'])
+            ->get();
+
+        $classes  = SchoolClass::where('school_id', $schoolId)->get();
+        $courseRows = 0;
+        foreach ($classes as $cls) {
+            $secs = Section::where('class_id', $cls->id)->count();
+            $subs = Course::where('class_id', $cls->id)->count();
+            $courseRows += max(1, $secs) * max(1, $subs);
+        }
+        // Weight: accounts = 40%, classrooms = 60%
+        $totalUsers  = max(1, $users->count());
+        $totalCourses = max(1, $courseRows);
+
+        DB::beginTransaction();
+        try {
+            // ── STEP 1: USER ACCOUNTS (0 → 40%) ────────────────────────────
+            $emit(5, 'Accounts', "Processing {$totalUsers} user accounts…");
+
+            foreach ($users as $idx => $user) {
+                try {
+                    $targetEmail  = $this->formatGoogleWorkspaceEmail($user, $domain, $schoolId);
+                    $googleUserId = $user->google_id;
+
+                    if ($directoryService && $config->sync_directory_users && !$googleUserId) {
+                        try {
+                            $name  = new \Google\Service\Directory\UserName([
+                                'givenName'  => $user->first_name ?: 'User',
+                                'familyName' => $user->last_name  ?: 'Student',
+                            ]);
+                            $dUser = new \Google\Service\Directory\User([
+                                'name'                      => $name,
+                                'primaryEmail'              => $targetEmail,
+                                'password'                  => 'School@' . rand(100000, 999999),
+                                'changePasswordAtNextLogin' => true,
+                                'orgUnitPath'               => $user->role === 'student' ? '/Students' : '/Teachers',
+                            ]);
+                            $created      = $directoryService->users->insert($dUser);
+                            $googleUserId = $created->getId();
+                        } catch (\Throwable $gErr) {
+                            if (str_contains($gErr->getMessage(), 'already exists') || str_contains($gErr->getMessage(), 'duplicate')) {
+                                try { $googleUserId = $directoryService->users->get($targetEmail)->getId(); } catch (\Throwable $ex) {}
+                            }
+                        }
+                    }
+
+                    $googleUserId = $googleUserId ?: 'g_' . $schoolId . '_' . $user->id;
+
+                    GoogleWorkspaceAccount::updateOrCreate(
+                        ['school_id' => $schoolId, 'user_id' => $user->id],
+                        ['google_user_id' => $googleUserId, 'primary_email' => $targetEmail,
+                         'org_unit_path'  => $user->role === 'student' ? '/Students' : '/Teachers']
+                    );
+
+                    $user->update(['google_id' => $googleUserId, 'google_workspace_email' => $targetEmail]);
+                    $report['accounts_migrated']++;
+                } catch (\Throwable $err) {
+                    $report['errors'][] = "User #{$user->id}: " . $err->getMessage();
+                }
+
+                // Emit progress every ~10 users (5%→40%)
+                if ($idx % max(1, intval($totalUsers / 10)) === 0) {
+                    $pct    = 5 + intval(($idx / $totalUsers) * 35);
+                    $done   = $idx + 1;
+                    $emit($pct, 'Accounts', "Provisioned {$done}/{$totalUsers} accounts…");
+                }
+            }
+
+            $emit(40, 'Accounts done', "✓ {$report['accounts_migrated']} accounts processed.");
+
+            // ── STEP 2: CLASSROOMS & ROSTERS (40 → 95%) ────────────────────
+            $coursesDone = 0;
+            $classes     = SchoolClass::where('school_id', $schoolId)->get();
+
+            foreach ($classes as $class) {
+                $sections = Section::where('class_id', $class->id)->get();
+                $subjects = Course::where('class_id', $class->id)
+                    ->orderBy('position', 'asc')->orderBy('course_name', 'asc')
+                    ->get()->unique('course_name');
+
+                foreach ($sections as $section) {
+                    foreach ($subjects as $subject) {
+                        try {
+                            $classroomName = "{$class->class_name} - Sec {$section->section_name} : {$subject->course_name}";
+                            $assignedTeacher = AssignedTeacher::where('class_id', $class->id)
+                                ->where('section_id', $section->id)->where('course_id', $subject->id)->first();
+                            $teacherUser = $assignedTeacher ? User::find($assignedTeacher->teacher_id) : null;
+                            $ownerEmail  = $teacherUser?->google_workspace_email ?: ($config->admin_email ?: "admin@{$domain}");
+
+                            $googleCourseId = $enrollmentCode = $alternateLink = null;
+
+                            if ($classroomService && $config->sync_classroom) {
+                                try {
+                                    $gCourse = new \Google\Service\Classroom\Course([
+                                        'name'               => $classroomName,
+                                        'section'            => "Section {$section->section_name}",
+                                        'descriptionHeading' => $subject->course_name,
+                                        'room'               => $section->room_no ?: 'Classroom',
+                                        'ownerId'            => $ownerEmail,
+                                        'courseState'        => 'ACTIVE',
+                                    ]);
+                                    $created        = $classroomService->courses->create($gCourse);
+                                    $googleCourseId = $created->getId();
+                                    $enrollmentCode = $created->getEnrollmentCode();
+                                    $alternateLink  = $created->getAlternateLink();
+                                } catch (\Throwable $gErr) {
+                                    $report['errors'][] = "Classroom API ({$classroomName}): " . $gErr->getMessage();
+                                }
+                            }
+
+                            $googleCourseId = $googleCourseId ?: 'gc_' . $schoolId . '_' . $class->id . '_' . $section->id . '_' . $subject->id;
+                            $alternateLink  = $alternateLink  ?: "https://classroom.google.com/c/{$googleCourseId}";
+
+                            $localCourse = GoogleClassroomCourse::updateOrCreate(
+                                ['school_id' => $schoolId, 'class_id' => $class->id, 'section_id' => $section->id, 'course_id' => $subject->id],
+                                ['session_id' => $sessionId, 'google_course_id' => $googleCourseId, 'name' => $classroomName,
+                                 'section_name' => $section->section_name, 'description_heading' => $subject->course_name,
+                                 'owner_google_id' => $ownerEmail, 'enrollment_code' => $enrollmentCode,
+                                 'alternate_link' => $alternateLink, 'course_state' => 'ACTIVE']
+                            );
+                            $report['classrooms_created']++;
+
+                            // Enroll teacher
+                            if ($teacherUser) {
+                                if ($classroomService && $config->sync_classroom && !str_starts_with($localCourse->google_course_id, 'gc_')) {
+                                    try {
+                                        $classroomService->courses_teachers->create(
+                                            $localCourse->google_course_id,
+                                            new \Google\Service\Classroom\Teacher(['userId' => $teacherUser->google_workspace_email ?: $teacherUser->email])
+                                        );
+                                    } catch (\Throwable $tErr) {}
+                                }
+                                GoogleClassroomRoster::updateOrCreate(
+                                    ['google_classroom_course_id' => $localCourse->id, 'google_user_id' => $teacherUser->google_id ?: (string) $teacherUser->id, 'role' => 'TEACHER'],
+                                    ['school_id' => $schoolId, 'user_id' => $teacherUser->id, 'user_email' => $teacherUser->google_workspace_email ?: $teacherUser->email, 'enrollment_state' => 'ACTIVE']
+                                );
+                                $report['teachers_assigned']++;
+                            }
+
+                            // Enroll students
+                            $promotedIds = Promotion::where('class_id', $class->id)->where('section_id', $section->id)->where('session_id', $sessionId)->pluck('student_id')->all();
+                            foreach (User::whereIn('id', $promotedIds)->get() as $student) {
+                                if ($classroomService && $config->sync_classroom && !str_starts_with($localCourse->google_course_id, 'gc_')) {
+                                    try {
+                                        $classroomService->courses_students->create(
+                                            $localCourse->google_course_id,
+                                            new \Google\Service\Classroom\Student(['userId' => $student->google_workspace_email ?: $student->email])
+                                        );
+                                    } catch (\Throwable $sErr) {}
+                                }
+                                GoogleClassroomRoster::updateOrCreate(
+                                    ['google_classroom_course_id' => $localCourse->id, 'google_user_id' => $student->google_id ?: (string) $student->id, 'role' => 'STUDENT'],
+                                    ['school_id' => $schoolId, 'user_id' => $student->id, 'user_email' => $student->google_workspace_email ?: $student->email, 'enrollment_state' => 'ACTIVE']
+                                );
+                                $report['students_enrolled']++;
+                            }
+                        } catch (\Throwable $cErr) {
+                            $report['errors'][] = "Course ({$class->class_name}): " . $cErr->getMessage();
+                        }
+
+                        $coursesDone++;
+                        if ($coursesDone % max(1, intval($totalCourses / 20)) === 0) {
+                            $pct = 40 + intval(($coursesDone / $totalCourses) * 55);
+                            $emit($pct, 'Classrooms', "Created {$coursesDone}/{$totalCourses} classrooms, enrolled {$report['students_enrolled']} students…");
+                        }
+                    }
+                }
+            }
+
+            $emit(95, 'Finalising', 'Saving stats and audit log…');
+
+            // Update stats
+            $config->update([
+                'last_synced_at'    => now(),
+                'connection_status' => 'connected',
+                'stats'             => [
+                    'accounts_count'   => GoogleWorkspaceAccount::where('school_id', $schoolId)->count(),
+                    'classrooms_count' => GoogleClassroomCourse::where('school_id', $schoolId)->count(),
+                    'roster_count'     => GoogleClassroomRoster::where('school_id', $schoolId)->count(),
+                ],
+            ]);
+
+            GoogleSyncLog::create([
+                'school_id'    => $schoolId,
+                'sync_type'    => 'full_migration',
+                'status'       => empty($report['errors']) ? 'success' : 'warning',
+                'summary'      => "Migrated {$report['accounts_migrated']} accounts, {$report['classrooms_created']} classrooms, and enrolled {$report['students_enrolled']} students.",
+                'details'      => $report,
+                'triggered_by' => $triggeredByUserId,
+            ]);
+
+            DB::commit();
+            $emit(100, 'Complete', "✓ Migration done — {$report['accounts_migrated']} accounts, {$report['classrooms_created']} classrooms, {$report['students_enrolled']} students.");
+            return $report;
+
+        } catch (\Throwable $fatal) {
+            DB::rollBack();
+            GoogleSyncLog::create([
+                'school_id'    => $schoolId,
+                'sync_type'    => 'full_migration',
+                'status'       => 'failed',
+                'summary'      => 'Migration failed: ' . $fatal->getMessage(),
+                'details'      => ['error' => $fatal->getMessage()],
+                'triggered_by' => $triggeredByUserId,
+            ]);
+            throw $fatal;
+        }
+    }
+
+    /**
      * Pull live Classroom stream (Coursework, Assignments & Announcements) from Google Workspace
      */
     public function pullClassroomStream(int $schoolId, string $googleCourseId): array

@@ -169,16 +169,41 @@ $activeTab = 'google';
                         </p>
                     </div>
 
-                    <form method="POST" action="{{ route('super.schools.google.migrate', $school) }}" onsubmit="return confirm('Start full data migration to Google Education Workspace for {{ addslashes($school->name) }}? This will provision student accounts and create classrooms.')">
+                    <form method="POST" action="{{ route('super.schools.google.migrate', $school) }}" id="migrationFallbackForm" onsubmit="return confirm('Start full data migration to Google Education Workspace for {{ addslashes($school->name) }}? This will provision student accounts and create classrooms.')">
                         @csrf
-                        <button type="submit" class="btn-primary !py-2.5 !px-4 text-xs font-bold shadow-md shadow-indigo-600/25 flex items-center gap-2 whitespace-nowrap {{ !$config->hasValidCredentials() ? 'opacity-50 cursor-not-allowed' : '' }}" {{ !$config->hasValidCredentials() ? 'disabled' : '' }}>
-                            <i class="bi bi-arrow-repeat text-sm"></i> Run Full Migration Now
+                        <button type="button"
+                                id="migrateLaunchBtn"
+                                onclick="startMigration()"
+                                class="btn-primary !py-2.5 !px-4 text-xs font-bold shadow-md shadow-indigo-600/25 flex items-center gap-2 whitespace-nowrap {{ !$config->hasValidCredentials() ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                {{ !$config->hasValidCredentials() ? 'disabled' : '' }}>
+                            <i class="bi bi-arrow-repeat text-sm" id="migrateBtnIcon"></i>
+                            <span id="migrateBtnText">Run Full Migration Now</span>
                         </button>
                     </form>
                 </div>
 
+                {{-- ── Migration Progress Panel (shown while SSE stream is active) ── --}}
+                <div id="migrationProgressPanel" class="hidden mt-5 pt-4 border-t border-indigo-100 dark:border-indigo-900/40">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                            <i class="bi bi-arrow-repeat" id="migrationSpinIcon" style="display:none"></i>
+                            <span id="migrationStepLabel">Starting…</span>
+                        </span>
+                        <span id="migrationPctBadge" class="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-700/60 rounded-full h-3 overflow-hidden mb-2">
+                        <div id="migrationProgressBar" class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-blue-500 to-emerald-500 transition-all duration-500 ease-out" style="width:0%"></div>
+                    </div>
+                    <p id="migrationDetailText" class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed"></p>
+                    <div class="grid grid-cols-3 gap-2 mt-3" id="migrationChecklist">
+                        <div id="chk-accounts"   class="flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 transition-all"><i class="bi bi-person-check"></i> Accounts</div>
+                        <div id="chk-classrooms" class="flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 transition-all"><i class="bi bi-mortarboard"></i> Classrooms</div>
+                        <div id="chk-done"       class="flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 transition-all"><i class="bi bi-patch-check"></i> Finalised</div>
+                    </div>
+                </div>
+                <div id="migrationResultBanner" class="hidden mt-4 px-4 py-3 rounded-xl text-xs font-semibold"></div>
+
                 {{-- Migration Breakdown Badges --}}
-                <div class="grid grid-cols-3 gap-3 mt-5 pt-4 border-t border-indigo-100 dark:border-indigo-900/40">
                     <div class="p-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700/60 text-center">
                         <span class="text-lg font-bold text-slate-800 dark:text-slate-100 block">{{ $config->stats['accounts_count'] ?? 0 }}</span>
                         <span class="text-[11px] text-slate-400 font-medium">Directory Accounts</span>
@@ -282,5 +307,142 @@ $activeTab = 'google';
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+(function () {
+    const STREAM_URL = '{{ route('super.schools.google.migrate.stream', $school) }}'
+                     + '?_token={{ csrf_token() }}';
+    const FALLBACK_URL = '{{ route('super.schools.google.migrate', $school) }}';
+
+    let evtSource = null;
+
+    function el(id) { return document.getElementById(id); }
+
+    function setProgress(pct, step, detail) {
+        const bar    = el('migrationProgressBar');
+        const badge  = el('migrationPctBadge');
+        const label  = el('migrationStepLabel');
+        const detail_ = el('migrationDetailText');
+        if (bar)    bar.style.width = Math.min(100, pct) + '%';
+        if (badge)  badge.textContent = pct + '%';
+        if (label)  label.textContent = step;
+        if (detail_) detail_.textContent = detail;
+
+        // Tick checklist
+        if (pct >= 40) tickCheck('chk-accounts');
+        if (pct >= 95) tickCheck('chk-classrooms');
+        if (pct >= 100) tickCheck('chk-done');
+    }
+
+    function tickCheck(id) {
+        const div = el(id);
+        if (!div || div.classList.contains('text-emerald-600')) return;
+        div.classList.remove('text-slate-400', 'border-slate-200', 'dark:border-slate-700');
+        div.classList.add('text-emerald-600', 'border-emerald-300', 'bg-emerald-50', 'dark:bg-emerald-900/20', 'dark:border-emerald-700');
+        div.querySelector('i').className = 'bi bi-check-circle-fill';
+    }
+
+    function showResult(ok, msg) {
+        const banner = el('migrationResultBanner');
+        if (!banner) return;
+        banner.classList.remove('hidden');
+        if (ok) {
+            banner.className = 'mt-4 px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-700 dark:text-emerald-400';
+            banner.innerHTML = '<i class="bi bi-check-circle-fill text-emerald-500"></i> ' + msg;
+        } else {
+            banner.className = 'mt-4 px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2 bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-900/20 dark:border-rose-700 dark:text-rose-400';
+            banner.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-rose-500"></i> ' + msg;
+        }
+    }
+
+    function resetBtn(running) {
+        const btn  = el('migrateLaunchBtn');
+        const icon = el('migrateBtnIcon');
+        const txt  = el('migrateBtnText');
+        if (!btn) return;
+        btn.disabled = running;
+        if (running) {
+            btn.classList.add('opacity-60', 'cursor-not-allowed');
+            if (icon) icon.className = 'bi bi-arrow-repeat text-sm animate-spin';
+            if (txt)  txt.textContent = 'Migrating…';
+        } else {
+            btn.classList.remove('opacity-60', 'cursor-not-allowed');
+            if (icon) icon.className = 'bi bi-arrow-repeat text-sm';
+            if (txt)  txt.textContent = 'Run Full Migration Now';
+        }
+    }
+
+    window.startMigration = function () {
+        if (!confirm('Start full Google Education migration for {{ addslashes($school->name) }}? This provisions accounts and creates classrooms.')) return;
+
+        // Show progress panel, reset state
+        const panel = el('migrationProgressPanel');
+        if (panel) panel.classList.remove('hidden');
+        const result = el('migrationResultBanner');
+        if (result) result.classList.add('hidden');
+
+        // Reset checklist
+        ['chk-accounts', 'chk-classrooms', 'chk-done'].forEach(id => {
+            const div = el(id);
+            if (!div) return;
+            div.className = 'flex items-center gap-1.5 text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 transition-all';
+            const i = div.querySelector('i');
+            if (i) i.className = i.className.replace('bi-check-circle-fill', ['chk-accounts','chk-classrooms','chk-done'].indexOf(id) === 0 ? 'bi-person-check' : ['chk-accounts','chk-classrooms','chk-done'].indexOf(id) === 1 ? 'bi-mortarboard' : 'bi-patch-check');
+        });
+
+        setProgress(0, 'Connecting…', 'Establishing connection to migration service…');
+        resetBtn(true);
+
+        // Check SSE support, fall back to regular form POST
+        if (typeof EventSource === 'undefined') {
+            el('migrationFallbackForm')?.submit();
+            return;
+        }
+
+        if (evtSource) evtSource.close();
+        evtSource = new EventSource(STREAM_URL);
+
+        evtSource.addEventListener('progress', function (e) {
+            try {
+                const d = JSON.parse(e.data);
+                setProgress(d.pct || 0, d.step || '', d.detail || '');
+            } catch (_) {}
+        });
+
+        evtSource.addEventListener('done', function (e) {
+            evtSource.close();
+            evtSource = null;
+            try {
+                const d = JSON.parse(e.data);
+                setProgress(100, 'Complete ✓', d.detail || 'Migration completed successfully.');
+            } catch (_) {
+                setProgress(100, 'Complete ✓', 'Migration completed successfully.');
+            }
+            resetBtn(false);
+            showResult(true, 'Migration completed successfully. Refresh to see updated stats.');
+        });
+
+        evtSource.addEventListener('error', function (e) {
+            evtSource.close();
+            evtSource = null;
+            let msg = 'Migration failed. Check the logs for details.';
+            try { msg = JSON.parse(e.data)?.detail || msg; } catch (_) {}
+            setProgress(0, 'Failed', msg);
+            resetBtn(false);
+            showResult(false, msg);
+        });
+
+        evtSource.onerror = function () {
+            if (evtSource && evtSource.readyState === EventSource.CLOSED) {
+                evtSource = null;
+                resetBtn(false);
+            }
+        };
+    };
+})();
+</script>
+@endpush
+
 @endsection
 

@@ -1801,6 +1801,7 @@ Route::middleware(['auth', 'role:super-admin'])
          Route::post('/schools/{school}/google/config',              [\App\Http\Controllers\SuperAdmin\GoogleWorkspaceController::class, 'saveConfig'])->name('schools.google.config');
          Route::post('/schools/{school}/google/test',                [\App\Http\Controllers\SuperAdmin\GoogleWorkspaceController::class, 'testConnection'])->name('schools.google.test');
          Route::post('/schools/{school}/google/migrate',             [\App\Http\Controllers\SuperAdmin\GoogleWorkspaceController::class, 'migrate'])->name('schools.google.migrate');
+         Route::get('/schools/{school}/google/migrate-stream',       [\App\Http\Controllers\SuperAdmin\GoogleWorkspaceController::class, 'migrateStream'])->name('schools.google.migrate.stream');
      });
 
 

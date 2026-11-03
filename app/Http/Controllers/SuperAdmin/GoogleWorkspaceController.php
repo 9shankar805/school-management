@@ -151,6 +151,7 @@ class GoogleWorkspaceController extends Controller
     /**
      * POST /super/schools/{school}/google/migrate
      * Migrate all data (accounts, classrooms, rosters) to Google Education
+     * Standard POST fallback (used if JS/SSE is unavailable).
      */
     public function migrate(School $school, GoogleMigrationService $migrationService)
     {
@@ -168,6 +169,60 @@ class GoogleWorkspaceController extends Controller
         } catch (\Throwable $e) {
             return back()->with('error', "Migration failed: " . $e->getMessage());
         }
+    }
+
+    /**
+     * GET /super/schools/{school}/google/migrate-stream
+     * Server-Sent Events stream — emits progress percentage as migration runs.
+     * The browser connects via EventSource; each event carries JSON:
+     *   { "pct": 0-100, "step": "label", "detail": "one-liner" }
+     * A final event with pct=100 and type="done" signals completion.
+     */
+    public function migrateStream(School $school, GoogleMigrationService $migrationService, \Illuminate\Http\Request $request)
+    {
+        // Verify CSRF token passed as query param (EventSource can't set headers)
+        abort_unless(
+            $request->hasValidSignature() || hash_equals(
+                (string) session()->token(),
+                (string) $request->query('_token', '')
+            ),
+            403
+        );
+
+        $userId = auth()->id();
+
+        return response()->stream(function () use ($school, $migrationService, $userId) {
+
+            $send = function (array $payload, string $type = 'progress') {
+                echo "event: {$type}\n";
+                echo 'data: ' . json_encode($payload) . "\n\n";
+                if (ob_get_level() > 0) ob_flush();
+                flush();
+            };
+
+            // Keep-alive header ping so the browser doesn't time out immediately
+            $send(['pct' => 0, 'step' => 'Starting', 'detail' => 'Migration starting…']);
+
+            try {
+                $migrationService->migrateWithProgress(
+                    $school->id,
+                    function (int $pct, string $step, string $detail) use ($send) {
+                        $send(['pct' => $pct, 'step' => $step, 'detail' => $detail]);
+                    },
+                    $userId
+                );
+
+                $send(['pct' => 100, 'step' => 'Done', 'detail' => 'Migration completed successfully.'], 'done');
+            } catch (\Throwable $e) {
+                $send(['pct' => 0, 'step' => 'Error', 'detail' => $e->getMessage()], 'error');
+            }
+
+        }, 200, [
+            'Content-Type'      => 'text/event-stream',
+            'Cache-Control'     => 'no-cache, no-store',
+            'X-Accel-Buffering' => 'no',   // disable Nginx buffering
+            'Connection'        => 'keep-alive',
+        ]);
     }
 }
 
