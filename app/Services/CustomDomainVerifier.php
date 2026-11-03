@@ -37,44 +37,50 @@ class CustomDomainVerifier
         $checks = [];
 
         // ── Check 1: the domain points to this server ────────────────────────
+        // The A record must resolve to the ORIGIN server IP (not a Cloudflare proxy
+        // IP — pointing to Cloudflare IPs causes Error 1000 loops).  Alternatively
+        // a CNAME to the platform domain works for subdomains (DNS-only mode).
         $pointsOk = false;
         $pointingDetail = '';
 
         $aRecords = @dns_get_record($domain, DNS_A) ?: [];
         $resolvedIps = collect($aRecords)->pluck('ip')->filter()->unique()->values()->all();
 
-        // Get ALL IPs the platform domain resolves to (may be multiple behind a CDN)
-        $platformIps = [];
-        foreach ((@dns_get_record(config('app.domain', 'nshlms.com'), DNS_A) ?: []) as $pr) {
-            if (!empty($pr['ip'])) $platformIps[] = $pr['ip'];
+        // Build the list of acceptable IPs: configured SERVER_IP (origin) plus
+        // any IPs the platform domain itself resolves to (covers multi-IP origins).
+        $expectedIps = [];
+        if (! empty($serverIp)) {
+            $expectedIps[] = $serverIp;
         }
-        if (!empty($serverIp)) $platformIps[] = $serverIp;
-        $platformIps = array_unique($platformIps);
+        foreach ((@dns_get_record(config('app.domain', 'nshlms.com'), DNS_A) ?: []) as $pr) {
+            if (! empty($pr['ip'])) $expectedIps[] = $pr['ip'];
+        }
+        $expectedIps = array_unique($expectedIps);
 
-        // Exact IP match?
-        $exactMatch = !empty($resolvedIps) && !empty(array_intersect($resolvedIps, $platformIps));
+        // Exact IP match against the origin server?
+        $matchedIps = !empty($resolvedIps) ? array_intersect($resolvedIps, $expectedIps) : [];
 
-        if ($exactMatch) {
+        if (! empty($matchedIps)) {
             $pointsOk = true;
-            $matched = array_intersect($resolvedIps, $platformIps);
-            $pointingDetail = "A record resolves to " . implode(', ', $matched) . " (matches server).";
+            $pointingDetail = "A record resolves to " . implode(', ', $matchedIps) . " (matches origin server).";
         } else {
-            // Check CNAME
+            // Check CNAME to the platform domain / CNAME target
             $cnameRecords = @dns_get_record($domain, DNS_CNAME) ?: [];
             $cnameTargets = collect($cnameRecords)->pluck('target')->map(fn ($t) => strtolower(rtrim($t, '.')))->all();
-            if (in_array($cnameTarget, $cnameTargets, true)) {
+            $acceptableCnames = array_unique(array_filter([
+                $cnameTarget,
+                strtolower(config('app.domain', 'nshlms.com')),
+            ]));
+            $matchedCname = !empty(array_intersect($cnameTargets, $acceptableCnames));
+
+            if ($matchedCname) {
                 $pointsOk = true;
-                $pointingDetail = "CNAME points to {$cnameTarget}.";
-            } elseif ($this->isSameCloudflareRange($resolvedIps, $platformIps)) {
-                // Both behind Cloudflare but different IPs from the same pool — same infra
-                $pointsOk = true;
-                $pointingDetail = "A record resolves to " . implode(', ', $resolvedIps)
-                    . " — same Cloudflare infrastructure as server ("
-                    . implode(', ', $platformIps) . ").";
+                $pointingDetail = "CNAME points to " . implode(' / ', array_intersect($cnameTargets, $acceptableCnames)) . ".";
             } else {
                 $pointingDetail = ! empty($resolvedIps)
                     ? 'A record resolves to ' . implode(', ', $resolvedIps)
-                        . ($serverIp ? " (expected {$serverIp})." : '.')
+                        . ' — expected origin IP ' . ($serverIp ?: implode(' or ', $expectedIps))
+                        . '. If using Cloudflare, point the A record to your origin server IP, NOT a Cloudflare proxy IP (causes Error 1000).'
                     : 'No A or CNAME record found yet (DNS may still be propagating).';
             }
         }
@@ -131,47 +137,5 @@ class CustomDomainVerifier
             'message' => $message,
             'checks' => $checks,
         ];
-    }
-
-    /**
-     * Check whether the custom domain's IPs and the platform's IPs are
-     * both in the same Cloudflare IP range — meaning the custom domain is
-     * proxied through the same CDN infrastructure as the server.
-     *
-     * Cloudflare uses these ranges: 104.21.0.0/16, 172.67.0.0/16,
-     * 104.16.0.0/13, 141.101.64.0/18, 108.162.192.0/18, 188.114.96.0/20, etc.
-     * For simplicity we check the two common /16 prefixes.
-     */
-    private function isSameCloudflareRange(array $domainIps, array $serverIps): bool
-    {
-        if (empty($domainIps) || empty($serverIps)) {
-            return false;
-        }
-
-        // Cloudflare /16 prefixes commonly used for A records
-        $cloudflareRanges = ['104.21.', '172.67.', '104.16.', '104.17.', '104.18.', '104.19.', '104.20.'];
-
-        $domainIsCloudflare = false;
-        $serverIsCloudflare  = false;
-
-        foreach ($domainIps as $ip) {
-            foreach ($cloudflareRanges as $range) {
-                if (str_starts_with($ip, $range)) {
-                    $domainIsCloudflare = true;
-                    break 2;
-                }
-            }
-        }
-
-        foreach ($serverIps as $ip) {
-            foreach ($cloudflareRanges as $range) {
-                if (str_starts_with($ip, $range)) {
-                    $serverIsCloudflare = true;
-                    break 2;
-                }
-            }
-        }
-
-        return $domainIsCloudflare && $serverIsCloudflare;
     }
 }
