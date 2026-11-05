@@ -183,7 +183,20 @@ class GoogleMigrationService
                                     $enrollmentCode = $created->getEnrollmentCode();
                                     $alternateLink  = $created->getAlternateLink();
                                 } catch (\Throwable $gErr) {
-                                    $report['errors'][] = "Classroom creation API ({$classroomName}): " . $gErr->getMessage();
+                                    // If teacher does not exist in Google Workspace, retry with school admin email
+                                    if ($ownerEmail !== $config->admin_email && !empty($config->admin_email)) {
+                                        try {
+                                            $gCourse->setOwnerId($config->admin_email);
+                                            $created = $classroomService->courses->create($gCourse);
+                                            $googleCourseId = $created->getId();
+                                            $enrollmentCode = $created->getEnrollmentCode();
+                                            $alternateLink  = $created->getAlternateLink();
+                                        } catch (\Throwable $fallbackErr) {
+                                            $report['errors'][] = "Classroom creation API ({$classroomName}): " . $fallbackErr->getMessage();
+                                        }
+                                    } else {
+                                        $report['errors'][] = "Classroom creation API ({$classroomName}): " . $gErr->getMessage();
+                                    }
                                 }
                             }
 

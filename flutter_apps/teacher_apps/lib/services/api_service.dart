@@ -476,12 +476,23 @@ class ApiService {
 
   Future<ApiResponse<List<dynamic>>> getExamMarks({
     String? examId,
+    String? examName,
+    int? semesterId,
     int? classId,
     int? sectionId,
     int? courseId,
   }) async {
     final queryParams = <String>[];
-    if (examId != null) queryParams.add('exam_id=$examId');
+    if (examId != null && examId.isNotEmpty) {
+      queryParams.add('exam_id=${Uri.encodeQueryComponent(examId)}');
+      queryParams.add('exam_name=${Uri.encodeQueryComponent(examId)}');
+    }
+    if (examName != null && examName.isNotEmpty && (examId == null || examName != examId)) {
+      queryParams.add('exam_name=${Uri.encodeQueryComponent(examName)}');
+    }
+    if (semesterId != null && semesterId > 0) {
+      queryParams.add('semester_id=$semesterId');
+    }
     if (classId != null) queryParams.add('class_id=$classId');
     if (sectionId != null) queryParams.add('section_id=$sectionId');
     if (courseId != null) queryParams.add('course_id=$courseId');
@@ -490,7 +501,11 @@ class ApiService {
   }
 
   Future<ApiResponse<dynamic>> submitExamMarks(String examId, Map<String, dynamic> marksData) async {
-    return _put('$_baseUrl/exams/$examId/marks', marksData);
+    final res = await _post('$_baseUrl/exams/marks', marksData);
+    if (!res.success && (res.statusCode == 404 || res.statusCode == 405)) {
+      return _put('$_baseUrl/exams/$examId/marks', marksData);
+    }
+    return res;
   }
 
   // ==========================================

@@ -602,6 +602,17 @@ class _MarksEntryScreenState extends State<MarksEntryScreen> {
       }
     } catch (_) {}
 
+    // Derive semester_id from selected exam name
+    int semesterId = 1;
+    final lowerExam = _selectedExam.toLowerCase();
+    if (lowerExam.contains('second') || lowerExam.contains('2nd')) {
+      semesterId = 2;
+    } else if (lowerExam.contains('third') || lowerExam.contains('3rd')) {
+      semesterId = 3;
+    } else if (lowerExam.contains('annual') || lowerExam.contains('final') || lowerExam.contains('4th')) {
+      semesterId = 4;
+    }
+
     // 2. Fetch official server marks from live database
     try {
       final res = await _apiService.getExamMarks(
@@ -609,6 +620,8 @@ class _MarksEntryScreenState extends State<MarksEntryScreen> {
         sectionId: sectionId,
         courseId: _isAllSubjectsMode ? null : courseId,
         examId: _selectedExam,
+        examName: _selectedExam,
+        semesterId: semesterId,
       );
       if (res.success && res.data != null && mounted) {
         List existing = [];
@@ -631,10 +644,41 @@ class _MarksEntryScreenState extends State<MarksEntryScreen> {
     }
   }
 
+  double? _findScoreInMap(Map<dynamic, double> map, dynamic subId, String subName, String? subCode) {
+    if (subId != null) {
+      if (map.containsKey(subId)) return map[subId];
+      if (map.containsKey(subId.toString())) return map[subId.toString()];
+      final parsed = int.tryParse(subId.toString());
+      if (parsed != null && map.containsKey(parsed)) return map[parsed];
+    }
+
+    final target = subName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final codeTarget = (subCode ?? '').toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+
+    // Exact string match
+    for (var entry in map.entries) {
+      final key = entry.key.toString().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+      if (key.isNotEmpty && (key == target || (codeTarget.isNotEmpty && key == codeTarget))) {
+        return entry.value;
+      }
+    }
+
+    // Substring or prefix match (e.g. "english" vs "compulsoryenglish", "engoral" vs "eng.oral")
+    for (var entry in map.entries) {
+      final key = entry.key.toString().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+      if (key.length >= 3 && (target.contains(key) || key.contains(target))) {
+        return entry.value;
+      }
+    }
+
+    return null;
+  }
+
   void _applyMarksToStudentControllers(List existing) {
     final markMap = <int, Map<dynamic, double>>{};
     final thMap = <int, Map<dynamic, double>>{};
     final prMap = <int, Map<dynamic, double>>{};
+    final studentNameMap = <String, int>{};
 
     for (var item in existing) {
       if (item is Map && item['student_id'] != null) {
@@ -644,6 +688,10 @@ class _MarksEntryScreenState extends State<MarksEntryScreen> {
         final sc = ((item['score'] ?? item['marks'] ?? 0) as num).toDouble();
         final cId = item['course_id'];
         final cName = item['course_name']?.toString().toLowerCase().trim();
+        final stName = item['student_name']?.toString().toLowerCase().trim();
+        if (stName != null && stName.isNotEmpty && sId > 0) {
+          studentNameMap[stName] = sId;
+        }
 
         double? th = item['theory'] != null ? ((item['theory'] as num).toDouble()) : null;
         double? pr = item['practical'] != null ? ((item['practical'] as num).toDouble()) : null;
@@ -676,36 +724,37 @@ class _MarksEntryScreenState extends State<MarksEntryScreen> {
       setState(() {
         for (var entry in _studentsMarks) {
           final sId = entry['student_id'] as int;
-          if (markMap.containsKey(sId)) {
-            final studentCourseScores = markMap[sId]!;
-            final studentThScores = thMap[sId] ?? {};
-            final studentPrScores = prMap[sId] ?? {};
+          final sName = (entry['name'] as String?)?.toLowerCase().trim();
+
+          // Match by student_id or student_name
+          int targetId = sId;
+          if (!markMap.containsKey(targetId) && sName != null && studentNameMap.containsKey(sName)) {
+            targetId = studentNameMap[sName]!;
+          }
+
+          if (markMap.containsKey(targetId)) {
+            final studentCourseScores = markMap[targetId]!;
+            final studentThScores = thMap[targetId] ?? {};
+            final studentPrScores = prMap[targetId] ?? {};
 
             final controllers = entry['subjectControllers'] as Map<String, TextEditingController>?;
             final thControllers = entry['subjectTheoryControllers'] as Map<String, TextEditingController>?;
             final prControllers = entry['subjectPracticalControllers'] as Map<String, TextEditingController>?;
 
             for (var sub in _masterSubjects) {
-              final sName = sub['name'] as String;
-              final sNameLower = sName.toLowerCase().trim();
+              final subName = sub['name'] as String;
               final cId = sub['id'];
               final hasPr = (sub['has_practical'] as bool?) ?? false;
               final thFm = ((sub['th_fm'] ?? (hasPr ? 75.0 : 100.0)) as num).toDouble();
               final prFm = ((sub['pr_fm'] ?? (hasPr ? 25.0 : 0.0)) as num).toDouble();
 
-              double? foundScore = studentCourseScores[cId] ??
-                  studentCourseScores[cId?.toString()] ??
-                  studentCourseScores[sNameLower];
+              double? foundScore = _findScoreInMap(studentCourseScores, cId, subName, sub['code']?.toString());
 
               if (foundScore != null) {
-                controllers?[sName]?.text = foundScore.toStringAsFixed(foundScore.truncateToDouble() == foundScore ? 0 : 1);
+                controllers?[subName]?.text = foundScore.toStringAsFixed(foundScore.truncateToDouble() == foundScore ? 0 : 1);
 
-                double? foundTh = studentThScores[cId] ??
-                    studentThScores[cId?.toString()] ??
-                    studentThScores[sNameLower];
-                double? foundPr = studentPrScores[cId] ??
-                    studentPrScores[cId?.toString()] ??
-                    studentPrScores[sNameLower];
+                double? foundTh = _findScoreInMap(studentThScores, cId, subName, sub['code']?.toString());
+                double? foundPr = _findScoreInMap(studentPrScores, cId, subName, sub['code']?.toString());
 
                 if (hasPr) {
                   if (foundTh == null || foundPr == null) {
@@ -713,11 +762,11 @@ class _MarksEntryScreenState extends State<MarksEntryScreen> {
                     foundPr = foundScore > prFm ? prFm : (foundScore > 0 && prFm > 0 ? (foundScore * (prFm / totFm)).clamp(0, prFm) : 0.0);
                     foundTh = (foundScore - foundPr).clamp(0, thFm);
                   }
-                  thControllers?[sName]?.text = foundTh.toStringAsFixed(foundTh.truncateToDouble() == foundTh ? 0 : 1);
-                  prControllers?[sName]?.text = foundPr > 0 ? foundPr.toStringAsFixed(foundPr.truncateToDouble() == foundPr ? 0 : 1) : '';
+                  thControllers?[subName]?.text = foundTh.toStringAsFixed(foundTh.truncateToDouble() == foundTh ? 0 : 1);
+                  prControllers?[subName]?.text = foundPr > 0 ? foundPr.toStringAsFixed(foundPr.truncateToDouble() == foundPr ? 0 : 1) : '';
                 } else {
-                  thControllers?[sName]?.text = foundScore.toStringAsFixed(foundScore.truncateToDouble() == foundScore ? 0 : 1);
-                  prControllers?[sName]?.text = '';
+                  thControllers?[subName]?.text = foundScore.toStringAsFixed(foundScore.truncateToDouble() == foundScore ? 0 : 1);
+                  prControllers?[subName]?.text = '';
                 }
               }
             }
@@ -1450,9 +1499,31 @@ class _MarksEntryScreenState extends State<MarksEntryScreen> {
       }
     }
 
+    if (marksPayload.isEmpty) {
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No marks entered yet. Please enter student scores before saving.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    int semesterId = 1;
+    final lowerExam = _selectedExam.toLowerCase();
+    if (lowerExam.contains('second') || lowerExam.contains('2nd')) {
+      semesterId = 2;
+    } else if (lowerExam.contains('third') || lowerExam.contains('3rd')) {
+      semesterId = 3;
+    } else if (lowerExam.contains('annual') || lowerExam.contains('final') || lowerExam.contains('4th')) {
+      semesterId = 4;
+    }
+
     final targetClassId = classObj.classId ?? classObj.id ?? 1;
     final payload = {
       'exam_name': _selectedExam,
+      'semester_id': semesterId,
       'class_id': targetClassId,
       'section_id': classObj.sectionId ?? 1,
       'course_id': _isAllSubjectsMode ? 0 : realSelectedCourseId,
@@ -1473,15 +1544,27 @@ class _MarksEntryScreenState extends State<MarksEntryScreen> {
     if (!mounted) return;
     setState(() => _saving = false);
 
+    if (res.success) {
+      // Reload server marks from live database into table
+      _loadExistingMarks(targetClassId, classObj.sectionId, classObj.courseId);
+    }
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.check_circle_rounded, color: AppTheme.green, size: 24),
-            SizedBox(width: 10),
-            Text('Marks Published! 🎯', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
+            Icon(
+              res.success ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+              color: res.success ? AppTheme.green : Colors.red,
+              size: 24,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              res.success ? 'Marks Published! 🎯' : 'Save Failed',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17),
+            ),
           ],
         ),
         content: Text(
@@ -1489,19 +1572,21 @@ class _MarksEntryScreenState extends State<MarksEntryScreen> {
               ? (res.message.isNotEmpty
                   ? res.message
                   : 'All grade records for $_selectedClass have been saved to the school master database.')
-              : 'Marks saved locally. (Offline sync active)',
+              : (res.message.isNotEmpty
+                  ? res.message
+                  : 'Failed to record marks on the school server. Please check connection and try again.'),
         ),
         actions: [
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
+              backgroundColor: res.success ? AppTheme.primary : Colors.grey,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () {
               Navigator.pop(ctx);
             },
-            child: const Text('Continue Editing'),
+            child: Text(res.success ? 'Continue Editing' : 'Dismiss'),
           ),
         ],
       ),
@@ -2724,6 +2809,12 @@ class _MarksEntryScreenState extends State<MarksEntryScreen> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
+                final targetObj = classesList.firstWhere(
+                  (c) => c.section == _selectedClass,
+                  orElse: () => classesList.first,
+                );
+                final targetId = targetObj.classId ?? targetObj.id ?? 1;
+                _loadExistingMarks(targetId, targetObj.sectionId, targetObj.courseId);
                 setState(() => _currentStep = 1);
               },
               style: ElevatedButton.styleFrom(

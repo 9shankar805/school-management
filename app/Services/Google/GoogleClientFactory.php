@@ -51,14 +51,14 @@ class GoogleClientFactory
             $client->setSubject($config->admin_email);
         }
 
-        // Essential Google Workspace for Education Scopes
+        // Essential Google Workspace for Education Scopes matching Domain-Wide Delegation
         $client->setScopes([
-            \Google\Service\Classroom::CLASSROOM_COURSES,
-            \Google\Service\Classroom::CLASSROOM_ROSTERS,
-            \Google\Service\Classroom::CLASSROOM_COURSEWORK_STUDENTS,
-            \Google\Service\Directory::ADMIN_DIRECTORY_USER,
-            \Google\Service\Directory::ADMIN_DIRECTORY_GROUP,
-            \Google\Service\Calendar::CALENDAR_EVENTS,
+            'https://www.googleapis.com/auth/admin.directory.user',
+            'https://www.googleapis.com/auth/classroom.courses',
+            'https://www.googleapis.com/auth/classroom.rosters',
+            'https://www.googleapis.com/auth/classroom.profile.emails',
+            'https://www.googleapis.com/auth/drive',
+            'https://www.googleapis.com/auth/calendar',
         ]);
 
         return $client;

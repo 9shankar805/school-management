@@ -92,33 +92,116 @@ class ExamController extends Controller
      */
     public function getMarks(Request $request, $id = null): JsonResponse
     {
-        $sessionId = $this->currentSessionId();
-        $classId   = $request->input('class_id');
-        $sectionId = $request->input('section_id');
-        $courseId  = $request->input('course_id');
-        $examId    = $id && $id !== 'marks' && is_numeric($id) ? (int)$id : $request->input('exam_id');
+        $sessionId  = $this->currentSessionId();
+        $classId    = (int) ($request->input('class_id') ?: 0);
+        $sectionId  = (int) ($request->input('section_id') ?: 0);
+        $courseId   = (int) ($request->input('course_id') ?: 0);
+        $semesterId = (int) ($request->input('semester_id') ?: 0);
+        $examParam  = $request->input('exam_name') ?: $request->input('exam_id') ?: ($id && $id !== 'marks' ? $id : null);
 
-        if (!$examId && $request->filled('exam_name')) {
-            $examId = Exam::where('session_id', $sessionId)
-                ->where('exam_name', $request->input('exam_name'))
-                ->value('id');
+        // 1. Resolve Semester if possible
+        $semester = null;
+        if ($semesterId > 0) {
+            $semester = Semester::find($semesterId);
+        }
+        if (!$semester && !empty($examParam)) {
+            if (is_numeric($examParam) && (int)$examParam > 0) {
+                $semester = Semester::find((int)$examParam);
+            }
+            if (!$semester) {
+                $cleanParam = trim(preg_replace('/(examination|assessment|term|terminal|exam)/i', '', (string)$examParam));
+                $semester = Semester::where('session_id', $sessionId)
+                    ->where(function($q) use ($examParam, $cleanParam) {
+                        $q->where('semester_name', $examParam)
+                          ->orWhere('semester_name', 'like', "%{$examParam}%");
+                        if (!empty($cleanParam)) {
+                            $q->orWhere('semester_name', 'like', "%{$cleanParam}%");
+                        }
+                    })
+                    ->first();
+            }
+        }
+        if ($semester) {
+            $semesterId = $semester->id;
         }
 
+        // 2. Resolve all corresponding exam IDs for this semester & class
+        $examIds = collect();
+        if ($semesterId > 0) {
+            $examIds = Exam::where('session_id', $sessionId)
+                ->when($classId > 0, fn($q) => $q->where('class_id', $classId))
+                ->where('semester_id', $semesterId)
+                ->when($courseId > 0, fn($q) => $q->where('course_id', $courseId))
+                ->pluck('id');
+        }
+
+        // Fallback: search by exam_name
+        if ($examIds->isEmpty() && !empty($examParam)) {
+            $examIds = Exam::where('session_id', $sessionId)
+                ->when($classId > 0, fn($q) => $q->where('class_id', $classId))
+                ->where(function($q) use ($examParam) {
+                    $q->where('exam_name', $examParam)
+                      ->orWhere('exam_name', 'like', "%{$examParam}%");
+                })
+                ->when($courseId > 0, fn($q) => $q->where('course_id', $courseId))
+                ->pluck('id');
+        }
+
+        // If examParam was directly an exam ID
+        if ($examIds->isEmpty() && is_numeric($examParam) && (int)$examParam > 0) {
+            $singleExam = Exam::find((int)$examParam);
+            if ($singleExam) {
+                if ($singleExam->semester_id && $courseId <= 0) {
+                    $examIds = Exam::where('session_id', $sessionId)
+                        ->when($classId > 0, fn($q) => $q->where('class_id', $classId))
+                        ->where('semester_id', $singleExam->semester_id)
+                        ->pluck('id');
+                }
+                if ($examIds->isEmpty()) {
+                    $examIds = collect([$singleExam->id]);
+                }
+            }
+        }
+
+        // 3. Build query
         $marksQuery = Mark::where('session_id', $sessionId);
 
-        if ($classId) $marksQuery->where('class_id', $classId);
-        if ($sectionId) $marksQuery->where('section_id', $sectionId);
-        if ($courseId) $marksQuery->where('course_id', $courseId);
-        if ($examId) $marksQuery->where('exam_id', $examId);
+        if ($classId > 0) {
+            $marksQuery->where('class_id', $classId);
+        }
 
-        $marks = $marksQuery->with(['student', 'course'])->get()->map(function ($m) {
-            $courseName = $m->course?->course_name ?? '';
-            $isPractical = (bool) preg_match('/(science|sci|physic|chem|bio|comput|hpe|health|vocat|art)/i', $courseName);
+        if ($sectionId > 0) {
+            $marksQuery->where(function($q) use ($sectionId) {
+                $q->where('section_id', $sectionId)
+                  ->orWhere('section_id', 0)
+                  ->orWhereNull('section_id');
+            });
+        }
+
+        if ($courseId > 0) {
+            $marksQuery->where('course_id', $courseId);
+        }
+
+        if ($examIds->isNotEmpty()) {
+            // Only restrict to examIds if matching marks exist, so marks are never hidden
+            $marksWithExams = (clone $marksQuery)->whereIn('exam_id', $examIds)->exists();
+            if ($marksWithExams) {
+                $marksQuery->whereIn('exam_id', $examIds);
+            }
+        }
+
+        $classCourses = $classId > 0 ? Course::where('class_id', $classId)->get()->keyBy('id') : collect();
+
+        $marks = $marksQuery->with(['student', 'course'])->get()->map(function ($m) use ($classCourses) {
+            $course = $m->course ?? $classCourses->get($m->course_id);
+            $courseName = $course?->course_name ?? '';
+            $isPractical = (bool) preg_match('/(science|sci|physic|chem|bio|comput|hpe|health|vocat|art|oral)/i', $courseName);
             $th = $isPractical ? round($m->marks * 0.75, 1) : (float)$m->marks;
             $pr = $isPractical ? round($m->marks * 0.25, 1) : 0.0;
             return [
                 'id'            => $m->id,
                 'student_id'    => $m->student_id,
+                'student_name'  => trim(($m->student?->first_name ?? '') . ' ' . ($m->student?->last_name ?? '')),
                 'marks'         => (float)$m->marks,
                 'score'         => (float)$m->marks,
                 'theory'        => (float)$th,
@@ -310,7 +393,7 @@ class ExamController extends Controller
 
     /**
      * PUT /api/teacher-app/exams/{id}/marks or POST /api/teacher-app/exams/marks
-     * Real database upsert for student marks.
+     * Real database upsert for student marks across all subjects or single subject.
      */
     public function submitMarks(Request $request, $id = null): JsonResponse
     {
@@ -329,33 +412,88 @@ class ExamController extends Controller
         $examName   = $request->input('exam_name', 'Terminal Examination');
         $examId     = $id && $id !== 'marks' && is_numeric($id) ? (int)$id : (int) $request->input('exam_id', 0);
 
-        // Find or create the exam record
-        if (!$examId && $classId && $courseId) {
+        // 1. Resolve Semester
+        $semester = null;
+        if ($semesterId > 0) {
+            $semester = Semester::find($semesterId);
+        }
+        if (!$semester && !empty($examName)) {
+            $cleanExamName = trim(preg_replace('/(examination|assessment|term|terminal|exam)/i', '', (string)$examName));
+            $semester = Semester::where('session_id', $sessionId)
+                ->where(function($q) use ($examName, $cleanExamName) {
+                    $q->where('semester_name', $examName)
+                      ->orWhere('semester_name', 'like', "%{$examName}%");
+                    if (!empty($cleanExamName)) {
+                        $q->orWhere('semester_name', 'like', "%{$cleanExamName}%");
+                    }
+                })
+                ->first();
+        }
+        if (!$semester) {
+            $semester = Semester::firstOrCreate(
+                ['session_id' => $sessionId, 'semester_name' => $examName],
+                [
+                    'school_id'  => $teacher?->school_id,
+                    'start_date' => now(),
+                    'end_date'   => now()->addMonths(3),
+                ]
+            );
+        }
+        $resolvedSemesterId = $semester?->id ?? ($semesterId > 0 ? $semesterId : 1);
+        $semesterTitle = $semester?->semester_name ?? $examName;
+
+        // 2. Build or find Exam records for every course submitted (like web MarkController)
+        $marksInput = $request->input('marks');
+        $submittedCourseIds = collect($marksInput)
+            ->map(fn($m) => (int)($m['course_id'] ?? $courseId))
+            ->filter(fn($cId) => $cId > 0)
+            ->unique()
+            ->values()
+            ->toArray();
+
+        if (empty($submittedCourseIds) && $courseId > 0) {
+            $submittedCourseIds = [$courseId];
+        }
+
+        $examCache = [];
+        foreach ($submittedCourseIds as $cId) {
             $exam = Exam::where('session_id', $sessionId)
                 ->where('class_id', $classId)
-                ->where('course_id', $courseId)
-                ->when($semesterId > 0, fn($q) => $q->where('semester_id', $semesterId))
+                ->where('course_id', $cId)
+                ->when($resolvedSemesterId > 0, fn($q) => $q->where('semester_id', $resolvedSemesterId))
                 ->first();
 
             if (!$exam) {
                 $exam = Exam::create([
                     'school_id'   => $teacher?->school_id,
-                    'exam_name'   => $examName,
+                    'exam_name'   => $semesterTitle,
                     'start_date'  => now(),
                     'end_date'    => now()->addDays(7),
-                    'semester_id' => $semesterId > 0 ? $semesterId : null,
+                    'semester_id' => $resolvedSemesterId,
                     'class_id'    => $classId,
-                    'course_id'   => $courseId,
+                    'course_id'   => $cId,
                     'session_id'  => $sessionId,
                 ]);
             }
-            $examId = $exam->id;
+
+            // Ensure ExamRule exists
+            ExamRule::firstOrCreate(
+                ['exam_id' => $exam->id, 'session_id' => $sessionId],
+                [
+                    'school_id'               => $teacher?->school_id,
+                    'total_marks'             => 100,
+                    'pass_marks'              => 40,
+                    'marks_distribution_note' => 'Standard 100 marks',
+                ]
+            );
+
+            $examCache[$cId] = $exam;
         }
 
         // Student section fallback map
         $studentSectionMap = [];
         if ($classId) {
-            $studentIds = collect($request->input('marks'))->pluck('student_id')->toArray();
+            $studentIds = collect($marksInput)->pluck('student_id')->toArray();
             $studentSectionMap = Promotion::where('session_id', $sessionId)
                 ->where('class_id', $classId)
                 ->whereIn('student_id', $studentIds)
@@ -364,12 +502,14 @@ class ExamController extends Controller
         }
 
         $savedCount = 0;
-        foreach ($request->input('marks') as $m) {
+        foreach ($marksInput as $m) {
             $stId = (int) $m['student_id'];
             $secId = $sectionId > 0 ? $sectionId : (int)($studentSectionMap[$stId] ?? 1);
-            $cId = $courseId > 0 ? $courseId : (int)($m['course_id'] ?? 1);
+            $cId = (int)($m['course_id'] ?? ($courseId > 0 ? $courseId : 1));
             $clsId = $classId > 0 ? $classId : (int)($m['class_id'] ?? 1);
-            $exId = $examId > 0 ? $examId : 1;
+
+            $examForCourse = $examCache[$cId] ?? null;
+            $exId = $examForCourse ? $examForCourse->id : ($examId > 0 ? $examId : 1);
 
             $th = isset($m['theory']) ? (float)$m['theory'] : null;
             $pr = isset($m['practical']) ? (float)$m['practical'] : null;
@@ -402,10 +542,11 @@ class ExamController extends Controller
         }
 
         return response()->json([
-            'status'  => 'success',
-            'message' => "Successfully recorded marks for {$savedCount} students in the database.",
-            'count'   => $savedCount,
-            'exam_id' => $examId,
+            'status'      => 'success',
+            'message'     => "Successfully recorded {$savedCount} mark entries for {$semesterTitle} in the database.",
+            'count'       => $savedCount,
+            'semester_id' => $resolvedSemesterId,
+            'exam_id'     => $examId,
         ]);
     }
 }
