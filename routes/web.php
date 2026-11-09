@@ -1498,6 +1498,7 @@ Route::prefix('school/{slug}')->group(function () {
     Route::get('/faculty',     [SchoolLandingController::class, 'faculty'])->name('school.landing.faculty');
     Route::get('/gallery',     [SchoolLandingController::class, 'gallery'])->name('school.landing.gallery');
     Route::get('/contact',     [SchoolLandingController::class, 'contact'])->name('school.landing.contact');
+    Route::post('/newsletter', [SchoolLandingController::class, 'newsletterSubscribe'])->name('school.landing.newsletter');
 });
 
 Route::domain('{subdomain}.' . env('APP_DOMAIN', 'nshlms.com'))->group(function () {
@@ -1510,6 +1511,7 @@ Route::domain('{subdomain}.' . env('APP_DOMAIN', 'nshlms.com'))->group(function 
     Route::get('/faculty',     [SchoolLandingController::class, 'facultyBySubdomain'])->name('school.subdomain.faculty');
     Route::get('/gallery',     [SchoolLandingController::class, 'galleryBySubdomain'])->name('school.subdomain.gallery');
     Route::get('/contact',     [SchoolLandingController::class, 'contactBySubdomain'])->name('school.subdomain.contact');
+    Route::post('/newsletter', [SchoolLandingController::class, 'newsletterSubscribe'])->name('school.subdomain.newsletter');
     Route::get('/school/{slug}', [SchoolLandingController::class, 'showBySubdomain']);
 });
 

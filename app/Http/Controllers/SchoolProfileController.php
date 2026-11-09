@@ -244,6 +244,31 @@ class SchoolProfileController extends Controller
             $settings['admission_banner_btn_url'] = $request->input('admission_banner_btn_url');
         }
 
+        // College Counseling & Global Placements (Rato Bangala style)
+        if ($request->has('college_counseling_active')) {
+            $settings['college_counseling_active'] = $request->boolean('college_counseling_active');
+        }
+        if ($request->has('college_counseling_text')) {
+            $settings['college_counseling_text'] = $request->input('college_counseling_text');
+        }
+        if ($request->has('college_counseling_btn_text')) {
+            $settings['college_counseling_btn_text'] = $request->input('college_counseling_btn_text');
+        }
+        if ($request->has('college_counseling_btn_url')) {
+            $settings['college_counseling_btn_url'] = $request->input('college_counseling_btn_url');
+        }
+
+        // Newsletter Subscription
+        if ($request->has('newsletter_active')) {
+            $settings['newsletter_active'] = $request->boolean('newsletter_active');
+        }
+        if ($request->has('newsletter_title')) {
+            $settings['newsletter_title'] = $request->input('newsletter_title');
+        }
+        if ($request->has('newsletter_desc')) {
+            $settings['newsletter_desc'] = $request->input('newsletter_desc');
+        }
+
         // School Operating Hours
         if ($request->has('school_hours_weekdays')) {
             $settings['school_hours_weekdays'] = $request->input('school_hours_weekdays');

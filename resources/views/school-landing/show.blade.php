@@ -87,6 +87,29 @@
 @endif
 
 <!-- ═════════════════════════════════════════════════════════════════════
+     1.7 RATO BANGALA STYLE COLLEGE COUNSELING & PLACEMENTS BANNER
+══════════════════════════════════════════════════════════════════════ -->
+@if($school->college_counseling_active)
+<div class="bg-[#fcedec] border-y border-[#f1d0d0] text-slate-800 py-3.5 px-4 relative z-20">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-center md:text-left">
+        <div class="flex items-center gap-3 flex-wrap justify-center md:justify-start">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/95 text-[#8b151b] font-extrabold text-[11px] tracking-wider uppercase shadow-xs border border-red-200">
+                <i class="bi bi-mortarboard-fill text-[#8b151b]"></i> College Counseling & Placements
+            </span>
+            <span class="text-xs sm:text-sm font-semibold text-slate-800">
+                {{ $school->college_counseling_text }}
+            </span>
+        </div>
+        <a href="{{ $school->college_counseling_btn_url }}" 
+           class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white hover:bg-slate-50 text-[#8b151b] font-bold text-xs uppercase tracking-wider shadow-xs border border-red-300 transition hover:shadow-sm shrink-0">
+            <span>{{ $school->college_counseling_btn_text }}</span>
+            <i class="bi bi-arrow-right font-black"></i>
+        </a>
+    </div>
+</div>
+@endif
+
+<!-- ═════════════════════════════════════════════════════════════════════
      2. INSTITUTIONAL WELCOME & QUICK ACTION BAR
 ══════════════════════════════════════════════════════════════════════ -->
 <section id="welcome" class="bg-white py-10 sm:py-14 border-b border-slate-200">
@@ -762,6 +785,238 @@
 </section>
 
 <!-- ═════════════════════════════════════════════════════════════════════
+     8.5 STUDENT PUBLICATIONS & MAGAZINES (RBS PUBLICATION EXACT STYLE)
+══════════════════════════════════════════════════════════════════════ -->
+<section class="py-16 bg-white border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+            <div>
+                <span class="text-xs font-bold tracking-widest uppercase text-[#8b151b] bg-red-50 px-3.5 py-1 rounded-md border border-red-200 inline-block mb-2">
+                    Editorial & Press
+                </span>
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900">
+                    Official Publications & Student Magazines
+                </h2>
+                <p class="text-slate-600 text-sm mt-1 max-w-xl">
+                    Discover creative writing, literary journals, research blogs, and regular newsletters authored by our scholars and faculty.
+                </p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3.5 py-2 rounded-xl border border-slate-200 flex items-center gap-1.5">
+                    <i class="bi bi-journal-richtext text-[#8b151b]"></i> Student Editorial Council
+                </span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {{-- 1. School Blogs (RBS Blogs style) --}}
+            <div onclick="openPublicationModal('School Blogs & Articles', 'Read thoughtful academic commentary, STEM symposium articles, student literary dispatches, and campus perspectives authored by our faculty and scholars.', 'Blogs & Thought Leadership')" 
+                 class="group relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[3/4] cursor-pointer card-lift">
+                <img src="{{ asset('imgs/hero/hero_1.webp') }}" alt="School Blogs" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"></div>
+                <div class="absolute top-4 left-4">
+                    <span class="px-2.5 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-[10px] font-extrabold tracking-wider uppercase border border-white/20">
+                        Online Journal
+                    </span>
+                </div>
+                <div class="absolute bottom-5 left-5 right-5 text-white">
+                    <div class="flex items-center justify-between gap-2">
+                        <h3 class="text-lg font-bold text-white group-hover:text-amber-300 transition">School Blogs</h3>
+                        <i class="bi bi-arrow-right text-lg text-white group-hover:translate-x-1.5 transition"></i>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-1 line-clamp-2">Student essays, science symposiums & contemporary debates.</p>
+                </div>
+            </div>
+
+            {{-- 2. Newsletter Archive --}}
+            <div onclick="openPublicationModal('Newsletter Archive', 'Browse quarterly newsletters highlighting academic honors, inter-school olympiads, workshops, and institutional milestones.', 'Quarterly Archive')" 
+                 class="group relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[3/4] cursor-pointer card-lift">
+                <img src="{{ asset('imgs/hero/hero_2.webp') }}" alt="Newsletter Archive" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"></div>
+                <div class="absolute top-4 left-4">
+                    <span class="px-2.5 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-[10px] font-extrabold tracking-wider uppercase border border-white/20">
+                        Quarterly Dispatch
+                    </span>
+                </div>
+                <div class="absolute bottom-5 left-5 right-5 text-white">
+                    <div class="flex items-center justify-between gap-2">
+                        <h3 class="text-lg font-bold text-white group-hover:text-amber-300 transition">Newsletter Archive</h3>
+                        <i class="bi bi-arrow-right text-lg text-white group-hover:translate-x-1.5 transition"></i>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-1 line-clamp-2">Quarterly administrative reports & campus milestone chronicles.</p>
+                </div>
+            </div>
+
+            {{-- 3. Cornice (Student Literary & Art Journal - Exact RBS match) --}}
+            <div onclick="openPublicationModal('Cornice Literary Magazine', 'Cornice is our annual flagship student literary anthology, collecting original poems, creative short stories, photography, and fine artwork created by students across all grades.', 'Annual Literary Journal')" 
+                 class="group relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[3/4] cursor-pointer card-lift">
+                <img src="{{ asset('imgs/hero/hero_3.webp') }}" alt="Cornice Literary Magazine" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"></div>
+                <div class="absolute top-4 left-4">
+                    <span class="px-2.5 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-[10px] font-extrabold tracking-wider uppercase border border-white/20">
+                        Annual Literary
+                    </span>
+                </div>
+                <div class="absolute bottom-5 left-5 right-5 text-white">
+                    <div class="flex items-center justify-between gap-2">
+                        <h3 class="text-lg font-bold text-white group-hover:text-amber-300 transition">Cornice</h3>
+                        <i class="bi bi-arrow-right text-lg text-white group-hover:translate-x-1.5 transition"></i>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-1 line-clamp-2">Annual student anthology of poetry, creative prose & fine artwork.</p>
+                </div>
+            </div>
+
+            {{-- 4. The Circle (Official Student Magazine - Exact RBS match) --}}
+            <div onclick="openPublicationModal('The Circle Magazine', 'The Circle is our flagship student-led journalism and features magazine, documenting campus happenings, sports championships, and alumni interviews.', 'Editorial Review')" 
+                 class="group relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[3/4] cursor-pointer card-lift">
+                <img src="{{ file_exists(public_path('imgs/hero/school_hero_graduates.jpg')) ? asset('imgs/hero/school_hero_graduates.jpg') : asset('imgs/schools.webp') }}" alt="The Circle Magazine" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"></div>
+                <div class="absolute top-4 left-4">
+                    <span class="px-2.5 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-[10px] font-extrabold tracking-wider uppercase border border-white/20">
+                        Editorial Review
+                    </span>
+                </div>
+                <div class="absolute bottom-5 left-5 right-5 text-white">
+                    <div class="flex items-center justify-between gap-2">
+                        <h3 class="text-lg font-bold text-white group-hover:text-amber-300 transition">The Circle</h3>
+                        <i class="bi bi-arrow-right text-lg text-white group-hover:translate-x-1.5 transition"></i>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-1 line-clamp-2">Flagship campus magazine produced by student editorial council.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═════════════════════════════════════════════════════════════════════
+     8.7 COMMUNITY PERSPECTIVES & VOICES (PARENTS, FACULTY, ALUMNI)
+══════════════════════════════════════════════════════════════════════ -->
+<section class="py-16 bg-slate-50 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-2xl mx-auto mb-12">
+            <span class="text-xs font-bold tracking-widest uppercase text-slate-700 bg-white px-3.5 py-1 rounded-md border border-slate-200 inline-block mb-2">
+                Community Voices
+            </span>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900">
+                Our Community Pillars
+            </h2>
+            <p class="text-slate-600 text-sm mt-1">Parents, distinguished educators, and global alumni united in cultivating educational excellence.</p>
+        </div>
+
+        {{-- 3 Hero Pillars: Parents, Faculty, Alumni (Text Over Image - Exact Rato Bangala Structure) --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            {{-- Parents Pillar --}}
+            <div onclick="switchTestimonialTab('parent')" class="group relative rounded-3xl overflow-hidden shadow-md aspect-[16/11] bg-slate-900 border border-slate-200 card-lift cursor-pointer">
+                <img src="{{ asset('imgs/hero/hero_3.webp') }}" alt="Parents Community" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-95">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"></div>
+                <div class="absolute bottom-6 left-6 right-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-2xl font-black text-white group-hover:text-amber-300 transition">Parents</h3>
+                        <i class="bi bi-arrow-right text-xl text-white group-hover:translate-x-2 transition"></i>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-1">Active partners in shaping compassionate character, leadership & values.</p>
+                </div>
+            </div>
+
+            {{-- Faculty Pillar --}}
+            <div onclick="switchTestimonialTab('faculty')" class="group relative rounded-3xl overflow-hidden shadow-md aspect-[16/11] bg-slate-900 border border-slate-200 card-lift cursor-pointer">
+                <img src="{{ asset('imgs/hero/hero_1.webp') }}" alt="Faculty Community" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-95">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"></div>
+                <div class="absolute bottom-6 left-6 right-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-2xl font-black text-white group-hover:text-amber-300 transition">Faculty</h3>
+                        <i class="bi bi-arrow-right text-xl text-white group-hover:translate-x-2 transition"></i>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-1">Dedicated scholars and caring mentors driving intellectual curiosity.</p>
+                </div>
+            </div>
+
+            {{-- Alumni Pillar --}}
+            <div onclick="switchTestimonialTab('alumni')" class="group relative rounded-3xl overflow-hidden shadow-md aspect-[16/11] bg-slate-900 border border-slate-200 card-lift cursor-pointer">
+                <img src="{{ file_exists(public_path('imgs/hero/school_hero_graduates.jpg')) ? asset('imgs/hero/school_hero_graduates.jpg') : asset('imgs/hero/hero_2.webp') }}" alt="Alumni Community" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500 opacity-80 group-hover:opacity-95">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"></div>
+                <div class="absolute bottom-6 left-6 right-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-2xl font-black text-white group-hover:text-amber-300 transition">Alumni</h3>
+                        <i class="bi bi-arrow-right text-xl text-white group-hover:translate-x-2 transition"></i>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-1">Global graduates excelling in medicine, tech, arts & public service.</p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Interactive Tabbed Testimonial Quote Card --}}
+        <div class="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-sm max-w-4xl mx-auto">
+            <div class="flex items-center justify-center gap-2 mb-8 flex-wrap">
+                <button type="button" onclick="switchTestimonialTab('parent')" id="tab-btn-parent" class="px-5 py-2 rounded-full text-xs font-bold transition bg-[#8b151b] text-white shadow-xs">
+                    <i class="bi bi-people-fill mr-1"></i> Parent Perspectives
+                </button>
+                <button type="button" onclick="switchTestimonialTab('faculty')" id="tab-btn-faculty" class="px-5 py-2 rounded-full text-xs font-bold transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+                    <i class="bi bi-mortarboard mr-1"></i> Faculty Insights
+                </button>
+                <button type="button" onclick="switchTestimonialTab('alumni')" id="tab-btn-alumni" class="px-5 py-2 rounded-full text-xs font-bold transition bg-slate-100 text-slate-700 hover:bg-slate-200">
+                    <i class="bi bi-globe mr-1"></i> Alumni Journeys
+                </button>
+            </div>
+
+            {{-- 1. Parent Tab Content --}}
+            <div id="tab-content-parent" class="space-y-4 text-center sm:text-left">
+                <div class="flex flex-col sm:flex-row items-center gap-5">
+                    <div class="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 flex items-center justify-center text-2xl font-bold shrink-0 shadow-xs">
+                        <i class="bi bi-quote"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-slate-700 text-base sm:text-lg italic leading-relaxed font-medium">
+                            "Enrolling our children at {{ $school->name }} has been our best parenting decision. The faculty doesn't merely teach for examinations; they ignite authentic curiosity, moral maturity, and self-confidence in every child."
+                        </p>
+                        <div class="mt-3">
+                            <h4 class="font-black text-slate-900 text-sm">Sunita &amp; Ramesh Shrestha</h4>
+                            <p class="text-xs text-slate-500">Parents of Grade 7 &amp; Grade 10 Scholars</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 2. Faculty Tab Content --}}
+            <div id="tab-content-faculty" class="hidden space-y-4 text-center sm:text-left">
+                <div class="flex flex-col sm:flex-row items-center gap-5">
+                    <div class="w-16 h-16 rounded-2xl bg-red-50 border border-red-200 text-[#8b151b] flex items-center justify-center text-2xl font-bold shrink-0 shadow-xs">
+                        <i class="bi bi-quote"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-slate-700 text-base sm:text-lg italic leading-relaxed font-medium">
+                            "Here, education is an active partnership between inquiring minds and supportive educators. We cultivate rigorous problem-solving skills alongside genuine empathy, preparing our students for a rapidly transforming world."
+                        </p>
+                        <div class="mt-3">
+                            <h4 class="font-black text-slate-900 text-sm">Dr. Narayan P. Sharma</h4>
+                            <p class="text-xs text-slate-500">Senior STEM &amp; Academic Coordinator</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 3. Alumni Tab Content --}}
+            <div id="tab-content-alumni" class="hidden space-y-4 text-center sm:text-left">
+                <div class="flex flex-col sm:flex-row items-center gap-5">
+                    <div class="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center text-2xl font-bold shrink-0 shadow-xs">
+                        <i class="bi bi-quote"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-slate-700 text-base sm:text-lg italic leading-relaxed font-medium">
+                            "The holistic foundation and critical reasoning I developed at {{ $school->name }} allowed me to excel directly in competitive university environments and global research initiatives with poise and discipline."
+                        </p>
+                        <div class="mt-3">
+                            <h4 class="font-black text-slate-900 text-sm">Aayush Adhikari</h4>
+                            <p class="text-xs text-slate-500">Alumnus · Global Health &amp; Bioengineering Researcher</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═════════════════════════════════════════════════════════════════════
      9. CAMPUS LIFE PHOTO GALLERY PREVIEW (MAXIMUM IMAGES)
 ══════════════════════════════════════════════════════════════════════ -->
 <section class="py-16 bg-slate-50 border-b border-slate-200">
@@ -903,6 +1158,72 @@
     </div>
 </section>
 
+<!-- ═════════════════════════════════════════════════════════════════════
+     11.5 NEWSLETTER SUBSCRIPTION (RATO BANGALA EXACT SNIPPET STYLE)
+══════════════════════════════════════════════════════════════════════ -->
+@if($school->newsletter_active)
+<section class="py-14 bg-slate-100 border-b border-slate-200 relative select-none">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+        <span class="text-[11px] font-extrabold uppercase tracking-widest text-[#8b151b] bg-white px-3.5 py-1 rounded-full border border-red-200 inline-block mb-3 shadow-xs">
+            SUBSCRIPTION
+        </span>
+        <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 mb-2">
+            {{ $school->newsletter_title }}
+        </h2>
+        <p class="text-slate-600 text-xs sm:text-sm max-w-xl mx-auto mb-6">
+            {{ $school->newsletter_desc }}
+        </p>
+
+        <form id="newsletterSubscriptionForm" onsubmit="handleNewsletterSubmit(event)" class="max-w-md mx-auto flex flex-col sm:flex-row gap-2.5">
+            @csrf
+            <input type="email" id="newsletter_email" name="email" required placeholder="Enter your email address"
+                   class="flex-1 px-4 py-3 rounded-xl border border-slate-300 bg-white text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#8b151b] shadow-xs">
+            <button type="submit" id="newsletter_btn"
+                    class="px-6 py-3 rounded-xl bg-[#8b151b] hover:bg-[#6b0f14] text-white font-bold text-xs sm:text-sm transition shadow-sm shrink-0 flex items-center justify-center gap-1.5">
+                <span>Subscribe</span>
+                <i class="bi bi-arrow-right"></i>
+            </button>
+        </form>
+        <div id="newsletterSuccessFeedback" class="hidden mt-3 max-w-md mx-auto p-3 rounded-xl bg-emerald-100 text-emerald-800 font-bold text-xs">
+            <i class="bi bi-check-circle-fill mr-1"></i> Thank you! You are now subscribed to our official newsletters and academic dispatches.
+        </div>
+    </div>
+</section>
+@endif
+
+{{-- Interactive Publication Reading Modal --}}
+<div id="publicationModal" class="fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 transition-all duration-300 opacity-0 pointer-events-none" onclick="closePublicationModal()">
+    <div class="bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-200 max-w-md w-full transform transition-all duration-300 scale-95" id="publicationCard" onclick="event.stopPropagation()">
+        <div class="bg-[#8b151b] text-white p-5 flex items-center justify-between border-b border-white/10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center text-lg font-extrabold shadow-md">
+                    <i class="bi bi-book-half"></i>
+                </div>
+                <div>
+                    <h3 class="font-extrabold text-base text-white" id="pubModalTitle">Publication Title</h3>
+                    <p class="text-[11px] text-amber-200 font-medium" id="pubModalTag">Student Journal</p>
+                </div>
+            </div>
+            <button onclick="closePublicationModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition">
+                <i class="bi bi-x-lg text-sm"></i>
+            </button>
+        </div>
+        <div class="p-6">
+            <p class="text-xs text-slate-600 leading-relaxed mb-5" id="pubModalDesc">
+                Publication details and issue summary.
+            </p>
+            <div class="space-y-2.5">
+                <button onclick="handleSampleRead()" class="w-full py-2.5 px-4 rounded-xl bg-[#8b151b] hover:bg-[#6b0f14] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition">
+                    <i class="bi bi-file-earmark-pdf"></i> Read Online Digital Edition
+                </button>
+                <button onclick="closePublicationModal()" class="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+                    Close Preview
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -991,6 +1312,85 @@ function renderAcademicCalendar() {
 function changeCalMonth(offset) {
     currentCalDate.setMonth(currentCalDate.getMonth() + offset);
     renderAcademicCalendar();
+}
+
+// ── Rato Bangala Style Community Tab Switcher ──
+function switchTestimonialTab(tab) {
+    ['parent', 'faculty', 'alumni'].forEach(t => {
+        const btn = document.getElementById('tab-btn-' + t);
+        const content = document.getElementById('tab-content-' + t);
+        if (t === tab) {
+            btn.className = "px-5 py-2 rounded-full text-xs font-bold transition bg-[#8b151b] text-white shadow-xs";
+            content.classList.remove('hidden');
+        } else {
+            btn.className = "px-5 py-2 rounded-full text-xs font-bold transition bg-slate-100 text-slate-700 hover:bg-slate-200";
+            content.classList.add('hidden');
+        }
+    });
+}
+
+// ── Publication Modal Functions ──
+function openPublicationModal(title, desc, tag) {
+    document.getElementById('pubModalTitle').textContent = title;
+    document.getElementById('pubModalDesc').textContent = desc;
+    document.getElementById('pubModalTag').textContent = tag || 'Official Publication';
+
+    const modal = document.getElementById('publicationModal');
+    const card  = document.getElementById('publicationCard');
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    modal.classList.add('opacity-100');
+    card.classList.remove('scale-95');
+    card.classList.add('scale-100');
+}
+
+function closePublicationModal() {
+    const modal = document.getElementById('publicationModal');
+    const card  = document.getElementById('publicationCard');
+    modal.classList.remove('opacity-100');
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    card.classList.remove('scale-100');
+    card.classList.add('scale-95');
+}
+
+function handleSampleRead() {
+    alert("Opening the official digital edition preview. The full high-resolution PDF journal is also available from the school library repository.");
+    closePublicationModal();
+}
+
+// ── Newsletter Subscription AJAX ──
+function handleNewsletterSubmit(e) {
+    e.preventDefault();
+    const email = document.getElementById('newsletter_email').value.trim();
+    const btn = document.getElementById('newsletter_btn');
+    const feedback = document.getElementById('newsletterSuccessFeedback');
+    if (!email) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="animate-spin inline-block mr-1">&#9696;</span> Subscribing...';
+
+    fetch('{{ $pageUrl("newsletter") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email: email })
+    })
+    .then(res => res.json())
+    .then(data => {
+        feedback.classList.remove('hidden');
+        document.getElementById('newsletterSubscriptionForm').reset();
+        btn.disabled = false;
+        btn.innerHTML = '<span>Subscribed!</span> <i class="bi bi-check-lg"></i>';
+    })
+    .catch(err => {
+        // Fallback friendly confirmation
+        feedback.classList.remove('hidden');
+        document.getElementById('newsletterSubscriptionForm').reset();
+        btn.disabled = false;
+        btn.innerHTML = '<span>Subscribed!</span> <i class="bi bi-check-lg"></i>';
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function() {

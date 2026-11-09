@@ -1709,6 +1709,84 @@ $progressPct = (int) round(($activeStep / count($steps)) * 100);
         </div>
     </div>
 </div>
+
+{{-- ── College Counseling & Global Placements Banner (Rato Bangala Style) ── --}}
+<div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-6 mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-4 border-b border-slate-100 dark:border-slate-700">
+        <div>
+            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <i class="bi bi-mortarboard-fill text-pink-600"></i> College Counseling &amp; Placements Banner (Rato Bangala Pink Style)
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Display the signature soft rose-pink announcement bar directly below the admissions ribbon highlighting international college admissions, SAT/AP prep, and scholarships.
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="college_counseling_active" value="1" class="sr-only peer" {{ $school->college_counseling_active ? 'checked' : '' }}>
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"></div>
+                <span class="ml-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Show Banner</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="md:col-span-2">
+            <label class="field-label">Counseling Announcement Headline</label>
+            <input type="text" name="college_counseling_text" class="field-input font-medium"
+                   value="{{ old('college_counseling_text', $school->settings['college_counseling_text'] ?? 'College Counseling & Global Placements: Mentoring students for Ivy League, leading universities abroad, SAT/AP guidance & competitive scholarships.') }}"
+                   placeholder="e.g. College Counseling & Global Placements: Mentoring students for Ivy League...">
+        </div>
+        <div>
+            <label class="field-label">Button Label</label>
+            <input type="text" name="college_counseling_btn_text" class="field-input"
+                   value="{{ old('college_counseling_btn_text', $school->settings['college_counseling_btn_text'] ?? 'Explore Placements & Apply') }}"
+                   placeholder="e.g. Explore Placements & Apply">
+        </div>
+        <div class="md:col-span-3">
+            <label class="field-label">Button Target URL</label>
+            <input type="text" name="college_counseling_btn_url" class="field-input"
+                   value="{{ old('college_counseling_btn_url', $school->settings['college_counseling_btn_url'] ?? url('admissions/apply?school=' . $school->slug)) }}"
+                   placeholder="e.g. {{ url('admissions/apply?school=' . $school->slug) }}">
+        </div>
+    </div>
+</div>
+
+{{-- ── Newsletter Subscription Bar Controls ── --}}
+<div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-6 mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-4 border-b border-slate-100 dark:border-slate-700">
+        <div>
+            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <i class="bi bi-envelope-paper-fill text-indigo-600"></i> Newsletter Subscription Bar (Above Footer)
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Collect parent and visitor email subscribers for term newsletters, admission reminders, and circulars directly from your homepage.
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="newsletter_active" value="1" class="sr-only peer" {{ $school->newsletter_active ? 'checked' : '' }}>
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                <span class="ml-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Show Newsletter</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="field-label">Newsletter Title</label>
+            <input type="text" name="newsletter_title" class="field-input font-bold"
+                   value="{{ old('newsletter_title', $school->settings['newsletter_title'] ?? 'Join our Newsletter') }}"
+                   placeholder="e.g. Join our Newsletter">
+        </div>
+        <div>
+            <label class="field-label">Description / Subtitle</label>
+            <input type="text" name="newsletter_desc" class="field-input"
+                   value="{{ old('newsletter_desc', $school->settings['newsletter_desc'] ?? 'Subscribe to our official newsletter to receive latest academic circulars, event dispatches, and student achievements directly in your inbox.') }}"
+                   placeholder="e.g. Subscribe to our official newsletter...">
+        </div>
+    </div>
+</div>
 </div>{{-- /step-7 --}}
 
 {{-- ════════════════════════════════════════════════

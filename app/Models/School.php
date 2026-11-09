@@ -389,6 +389,43 @@ class School extends Model
         return $this->settings['admission_banner_btn_url'] ?? url('admissions/apply?school=' . $this->slug);
     }
 
+    /** College counseling banner accessors (Rato Bangala style) */
+    public function getCollegeCounselingActiveAttribute(): bool
+    {
+        return !isset($this->settings['college_counseling_active']) || !empty($this->settings['college_counseling_active']);
+    }
+
+    public function getCollegeCounselingTextAttribute(): string
+    {
+        return $this->settings['college_counseling_text'] ?? 'College Counseling & Global Placements: Mentoring students for Ivy League, leading universities abroad, SAT/AP guidance & competitive scholarships.';
+    }
+
+    public function getCollegeCounselingBtnTextAttribute(): string
+    {
+        return $this->settings['college_counseling_btn_text'] ?? 'Explore Placements & Apply';
+    }
+
+    public function getCollegeCounselingBtnUrlAttribute(): string
+    {
+        return $this->settings['college_counseling_btn_url'] ?? url('admissions/apply?school=' . $this->slug);
+    }
+
+    /** Newsletter subscription accessors */
+    public function getNewsletterActiveAttribute(): bool
+    {
+        return !isset($this->settings['newsletter_active']) || !empty($this->settings['newsletter_active']);
+    }
+
+    public function getNewsletterTitleAttribute(): string
+    {
+        return $this->settings['newsletter_title'] ?? 'Join our Newsletter';
+    }
+
+    public function getNewsletterDescAttribute(): string
+    {
+        return $this->settings['newsletter_desc'] ?? 'Subscribe to our official newsletter to receive latest academic circulars, event dispatches, and student achievements directly in your inbox.';
+    }
+
     public function getHeritageTaglineAttribute(): string
     {
         return $this->settings['heritage_tagline'] ?? ('CENTER OF EXCELLENCE SINCE ' . ($this->settings['established_year'] ?? $this->established_year ?? '1992'));

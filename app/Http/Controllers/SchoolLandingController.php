@@ -204,6 +204,37 @@ class SchoolLandingController extends Controller
     }
 
     /**
+     * Handle public newsletter subscription for a school.
+     */
+    public function newsletterSubscribe(Request $request, string $slug)
+    {
+        $school = $this->resolveSchoolBySlug($slug);
+        $request->validate([
+            'email' => 'required|email|max:255',
+        ]);
+
+        $settings = $school->settings ?? [];
+        $subscribers = $settings['newsletter_subscribers'] ?? [];
+        $email = strtolower(trim($request->input('email')));
+
+        if (!in_array($email, $subscribers)) {
+            $subscribers[] = $email;
+            $settings['newsletter_subscribers'] = array_slice($subscribers, -500);
+            $school->settings = $settings;
+            $school->save();
+        }
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Thank you for subscribing! You will receive our latest academic dispatches and newsletters directly.',
+            ]);
+        }
+
+        return back()->with('success', 'Thank you for subscribing to our newsletter!');
+    }
+
+    /**
      * Preview the landing page for the current user's school (authenticated).
      */
     public function preview()
