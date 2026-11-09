@@ -583,6 +583,49 @@ body {
         border-top-right-radius: 80px;
     }
 }
+
+/* ── Rato Bangala Authentic Design Accents ── */
+.rbs-dots-red {
+    background-image: radial-gradient(#d02d2e 1.5px, transparent 1.5px);
+    background-size: 8px 8px;
+}
+.rbs-dots-navy {
+    background-image: radial-gradient(#0b417e 1.5px, transparent 1.5px);
+    background-size: 8px 8px;
+}
+.rbs-sub-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+.rbs-sub-title::after {
+    content: '';
+    display: inline-block;
+    width: 2.25rem;
+    height: 2px;
+    background-color: currentColor;
+}
+.rbs-sub-title-center {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+.rbs-sub-title-center::before,
+.rbs-sub-title-center::after {
+    content: '';
+    display: inline-block;
+    width: 2.25rem;
+    height: 2px;
+    background-color: currentColor;
+}
 </style>
 @stack('styles')
 </head>
@@ -841,17 +884,28 @@ body {
                 </button>
             </div>
 
-            {{-- Right Actions (Online Application CTA, Hamburger Mega Drawer, Login Dropdown) --}}
-            <div class="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0">
+            {{-- Right Actions (Online Application CTA, Phone, Location, MENU, Login Dropdown) --}}
+            <div class="hidden lg:flex items-center gap-2 xl:gap-2.5 shrink-0">
                 {{-- Online Application CTA Button --}}
-                <a href="{{ url('admissions/apply?school='.$school->slug) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-[#f36c21] hover:bg-[#e05d15] shadow-sm hover:shadow transition transform hover:-translate-y-0.5">
+                <a href="{{ url('admissions/apply?school='.$school->slug) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-[var(--brand-primary,#8b151b)] hover:opacity-95 shadow-sm hover:shadow transition transform hover:-translate-y-0.5">
                     <i class="bi bi-pencil-square text-xs"></i>
                     <span>Online Application</span>
                 </a>
 
-                {{-- Hamburger Mega Menu Drawer Trigger (☰) --}}
-                <button type="button" onclick="toggleSideDrawer()" aria-label="Open School Information Drawer" class="w-9 h-9 flex items-center justify-center text-slate-700 hover:text-[#f36c21] hover:bg-orange-50 border border-slate-200 rounded-xl transition">
-                    <i class="bi bi-list text-xl font-bold"></i>
+                @if($school->phone)
+                <a href="tel:{{ $school->phone }}" class="w-9 h-9 flex items-center justify-center text-slate-700 hover:text-[var(--brand-primary,#8b151b)] hover:bg-slate-50 border border-slate-200 rounded-xl transition" title="Call {{ $school->name }}">
+                    <i class="bi bi-telephone text-sm"></i>
+                </a>
+                @endif
+
+                <a href="{{ $pageUrl('contact') }}#location" class="w-9 h-9 flex items-center justify-center text-slate-700 hover:text-[var(--brand-primary,#8b151b)] hover:bg-slate-50 border border-slate-200 rounded-xl transition" title="Campus Location">
+                    <i class="bi bi-geo-alt text-sm"></i>
+                </a>
+
+                {{-- Authentic Rato Bangala Menu Trigger (☰ MENU) --}}
+                <button type="button" onclick="toggleSideDrawer()" aria-label="Open School Information Drawer" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-slate-800 hover:text-[var(--brand-primary,#8b151b)] hover:bg-slate-50 transition text-xs font-bold uppercase tracking-wider">
+                    <i class="bi bi-list text-lg"></i>
+                    <span>Menu</span>
                 </button>
 
                 {{-- Login Dropdown with Padlock Icon (🔒 Login ∨) --}}

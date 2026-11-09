@@ -2,6 +2,53 @@
 
 @section('title', 'Official Academic Portal & Home')
 
+@push('styles')
+<style>
+/* ── Rato Bangala Authentic Design Accents ── */
+.rbs-dots-red {
+    background-image: radial-gradient(#d02d2e 1.5px, transparent 1.5px);
+    background-size: 8px 8px;
+}
+.rbs-dots-navy {
+    background-image: radial-gradient(#0b417e 1.5px, transparent 1.5px);
+    background-size: 8px 8px;
+}
+.rbs-sub-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+.rbs-sub-title::after {
+    content: '';
+    display: inline-block;
+    width: 2.25rem;
+    height: 2px;
+    background-color: currentColor;
+}
+.rbs-sub-title-center {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+.rbs-sub-title-center::before,
+.rbs-sub-title-center::after {
+    content: '';
+    display: inline-block;
+    width: 2.25rem;
+    height: 2px;
+    background-color: currentColor;
+}
+</style>
+@endpush
+
 @section('content')
 
 <!-- ═════════════════════════════════════════════════════════════════════
@@ -110,44 +157,57 @@
 @endif
 
 <!-- ═════════════════════════════════════════════════════════════════════
-     2. INSTITUTIONAL WELCOME & QUICK ACTION BAR
+     2. WELCOME TO RBS & VIDEO TOUR (MATCHING RATO BANGALA EXACT UI)
 ══════════════════════════════════════════════════════════════════════ -->
-<section id="welcome" class="bg-white py-10 sm:py-14 border-b border-slate-200">
+<section id="welcome" class="bg-white py-14 sm:py-20 border-b border-slate-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div class="lg:col-span-8">
-                <div class="inline-flex items-center gap-2 mb-3 flex-wrap">
-                    <span class="bg-[#f36c21] text-white text-xs font-bold px-3 py-1 rounded-md shadow-sm tracking-wide">
-                        {{ $school->name }}
-                    </span>
-                    <span class="text-slate-500 font-semibold text-xs sm:text-sm">
-                        ESTD {{ $school->established_year ?? '2004' }} · {{ $school->city ?? ($school->district ?? 'Nepal') }}
-                    </span>
-                    <span class="bg-slate-100 text-slate-800 text-[11px] font-bold px-2.5 py-0.5 rounded border border-slate-200">
-                        <i class="bi bi-patch-check-fill text-[#f36c21]"></i> Govt. / NEB Approved
-                    </span>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-start">
+            {{-- Left Section: Video tour, title, description and link --}}
+            <div class="lg:col-span-7">
+                <p class="rbs-sub-title text-[#0b417e] mb-3">A SHORT VIDEO TOUR</p>
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight mb-6">
+                    Welcome to <br class="hidden sm:inline">{{ $school->name }}
+                </h2>
+                
+                {{-- Responsive 16:9 Video Player --}}
+                <div class="relative aspect-video rounded-2xl overflow-hidden shadow-sm bg-black mb-6">
+                    @if($school->campus_video_embed_url)
+                        <iframe src="{{ $school->campus_video_embed_url }}" 
+                                class="w-full h-full border-0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                allowfullscreen></iframe>
+                    @else
+                        <iframe src="https://www.youtube.com/embed/S2hIoTw8i9w?autoplay=1&mute=1&rel=0&loop=1&playlist=S2hIoTw8i9w&modestbranding=1" 
+                                class="w-full h-full border-0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                                allowfullscreen></iframe>
+                    @endif
                 </div>
-                <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight mb-3">
-                    We help our students <span class="text-slate-900 underline decoration-[#f36c21] decoration-4 underline-offset-8">realise their potential</span>
-                </h1>
-                <p class="text-slate-600 text-sm sm:text-base leading-relaxed max-w-3xl">
-                    {{ $school->slogan ?? 'A premier institution dedicated to academic excellence, disciplined leadership, holistic sports, and modern STEM innovation.' }}
+
+                <p class="text-slate-700 text-sm sm:text-base leading-relaxed mb-4">
+                    {{ $school->about_short ?? ($school->name . ' is a co-educational day school founded in ' . ($school->established_year ?? '1992') . '. Since then the school has grown to be a leader in progressive education and a pioneer in improving the quality of instruction in private and government schools across Nepal.') }}
                 </p>
+
+                <a href="{{ $pageUrl('about') }}" class="inline-flex items-center gap-2 text-sm sm:text-base font-bold text-[#d02d2e] hover:text-[#a01c1d] transition group">
+                    <span>Learn More About Us</span>
+                    <span class="transform group-hover:translate-x-1 transition">&rarr;</span>
+                </a>
             </div>
 
-            <div class="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 justify-center">
-                <a href="{{ url('admissions/apply?school='.$school->slug) }}" 
-                   class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-[#f36c21] hover:bg-[#e05d15] shadow-md transition transform hover:-translate-y-0.5">
-                    <i class="bi bi-pencil-square"></i>
-                    <span>Apply Online for 2026/27</span>
-                </a>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="openProspectusModal()" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl font-bold text-xs text-slate-800 bg-white hover:bg-slate-50 border border-slate-300 shadow-sm transition">
-                        <i class="bi bi-download text-[#f36c21]"></i> Prospectus
-                    </button>
-                    <button onclick="openExamResultModal()" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl font-bold text-xs text-slate-800 bg-white hover:bg-slate-50 border border-slate-300 shadow-sm transition">
-                        <i class="bi bi-mortarboard text-[#f36c21]"></i> Exam Results
-                    </button>
+            {{-- Right Section: Pastel Rose Pre-K Announcement Box --}}
+            <div class="lg:col-span-5 lg:pt-16">
+                <div class="bg-[#fcedec] rounded-2xl p-7 sm:p-9 border border-[#f5d5d5] text-slate-800 shadow-xs flex flex-col justify-between">
+                    <div>
+                        <p class="text-slate-800 text-sm sm:text-base leading-relaxed mb-1">
+                            We are currently accepting applications for {{ $school->admission_open_classes ?? 'Pre-Kindergarten only' }}.
+                        </p>
+                        <a href="{{ url('admissions/apply?school='.$school->slug) }}" class="text-[#d02d2e] font-extrabold text-sm sm:text-base inline-block hover:underline mb-8">
+                            Click here to apply.
+                        </a>
+                    </div>
+                    <div class="pt-6 border-t border-[#f5d5d5]/80 text-xs sm:text-sm text-slate-700">
+                        <span class="font-bold text-slate-900">28 April 2027:</span> Term 1 begins for the incoming batch.
+                    </div>
                 </div>
             </div>
         </div>
@@ -155,42 +215,239 @@
 </section>
 
 <!-- ═════════════════════════════════════════════════════════════════════
-     3. INSTITUTIONAL STATISTICAL MILESTONES
+     3. ADMISSIONS SHOWCASE CAROUSEL (MATCHING RATO BANGALA EXACT UI)
 ══════════════════════════════════════════════════════════════════════ -->
-<div id="milestones" class="bg-slate-50 text-slate-900 py-8 border-b border-slate-200 relative z-10">
+<section id="admissions" class="py-16 sm:py-24 bg-white border-b border-slate-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6 text-center">
-            <div class="p-3 border-r border-slate-200">
-                <div class="text-2xl sm:text-4xl font-extrabold text-slate-900 mb-0.5">100%</div>
-                <div class="text-xs sm:text-sm font-bold tracking-wider text-slate-800 uppercase">Board Pass Record</div>
-                <p class="text-[11px] text-slate-500 mt-0.5 hidden sm:block">National NEB & SEE Distinctions</p>
-            </div>
-            <div class="p-3 border-r border-slate-200">
-                <div class="text-2xl sm:text-4xl font-extrabold text-slate-900 mb-0.5">Max 35</div>
-                <div class="text-xs sm:text-sm font-bold tracking-wider text-slate-800 uppercase">Capped Class Size</div>
-                <p class="text-[11px] text-slate-500 mt-0.5 hidden sm:block">Guaranteed 1:1 Attention</p>
-            </div>
-            <div class="p-3 border-r border-slate-200">
-                <div class="text-2xl sm:text-4xl font-extrabold text-slate-900 mb-0.5">ISO 9001</div>
-                <div class="text-xs sm:text-sm font-bold tracking-wider text-slate-800 uppercase">Quality Standard</div>
-                <p class="text-[11px] text-slate-500 mt-0.5 hidden sm:block">Certified Management System</p>
-            </div>
-            <div class="p-3 border-r border-slate-200">
-                <div class="text-2xl sm:text-4xl font-extrabold text-slate-900 mb-0.5">1:15</div>
-                <div class="text-xs sm:text-sm font-bold tracking-wider text-slate-800 uppercase">Teacher Ratio</div>
-                <p class="text-[11px] text-slate-500 mt-0.5 hidden sm:block">Personalized Mentorship</p>
-            </div>
-            <div class="p-3 col-span-2 md:col-span-1">
-                <div class="text-2xl sm:text-4xl font-extrabold text-slate-900 mb-0.5">45+</div>
-                <div class="text-xs sm:text-sm font-bold tracking-wider text-slate-800 uppercase">ECA Clubs & Sports</div>
-                <p class="text-[11px] text-slate-500 mt-0.5 hidden sm:block">Holistic STEAM & Athletics</p>
+        <div class="text-center mb-12">
+            <p class="rbs-sub-title-center text-[#0b417e] text-sm tracking-widest uppercase">ADMISSIONS</p>
+        </div>
+
+        <div class="max-w-5xl mx-auto bg-white rounded-3xl p-6 sm:p-10 border border-slate-100 shadow-xl relative">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+                {{-- Left: Photo with authentic red dots & wavy squiggle --}}
+                <div class="lg:col-span-7 relative">
+                    <div class="relative">
+                        <!-- Decorative Red Dots Top-Right -->
+                        <img src="{{ asset('imgs/rato-bangala/dots_red.png') }}" class="absolute -top-4 -right-4 w-14 sm:w-16 pointer-events-none z-10" alt="">
+                        <!-- Decorative Red Wavy Lines Left -->
+                        <img src="{{ asset('imgs/rato-bangala/lines.png') }}" class="absolute -left-5 top-1/2 -translate-y-1/2 w-6 sm:w-8 pointer-events-none z-10" alt="">
+                        
+                        <!-- Main Admissions Photo -->
+                        <div class="rounded-2xl overflow-hidden shadow-sm aspect-[4/3] bg-slate-100">
+                            <img id="admissionSlideImg" 
+                                 src="{{ asset('imgs/rato-bangala/admissions_kids.jpg') }}" 
+                                 alt="Admissions" 
+                                 class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Right: Grade Title, description, red apply link, and 01 - 03 pagination --}}
+                <div class="lg:col-span-5 flex flex-col justify-between h-full py-2">
+                    <div>
+                        <h3 id="admissionSlideTitle" class="text-xl sm:text-2xl font-extrabold text-slate-900 mb-3">Pre-Kindergarten</h3>
+                        <p id="admissionSlideDesc" class="text-slate-600 text-sm sm:text-base leading-relaxed mb-6">
+                            Parents seeking admission for their child in above grades must apply online from here.
+                        </p>
+                        <a id="admissionSlideLink" href="{{ url('admissions/apply?school='.$school->slug) }}" class="inline-flex items-center gap-2 text-sm font-bold text-[#d02d2e] hover:underline mb-8">
+                            <span>Submit Application</span> &rarr;
+                        </a>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-6 border-t border-slate-100">
+                        <span id="admissionSlideCounter" class="text-xs sm:text-sm font-bold text-slate-800 tracking-wider">01 — 03</span>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="changeAdmissionSlide(-1)" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition" aria-label="Previous">
+                                <i class="bi bi-chevron-left text-xs"></i>
+                            </button>
+                            <button type="button" onclick="changeAdmissionSlide(1)" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition" aria-label="Next">
+                                <i class="bi bi-chevron-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
 <!-- ═════════════════════════════════════════════════════════════════════
-     4. ACADEMIC PROGRAM LEVELS WITH PHOTO CARDS (MAXIMUM IMAGES)
+     4. OUR PROGRAM (MATCHING RATO BANGALA SIGNATURE CURVED PHOTO & RECTANGLES)
+══════════════════════════════════════════════════════════════════════ -->
+<section id="program" class="py-16 sm:py-24 bg-[#f6f9fc] border-b border-slate-100 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div class="lg:col-span-6">
+                <p class="rbs-sub-title text-[#0b417e] mb-3">OUR PROGRAM</p>
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight mb-5">
+                    The {{ $school->name }} Early Childhood Centre
+                </h2>
+                <p class="text-slate-600 text-sm sm:text-base leading-relaxed mb-8 max-w-xl">
+                    {{ $school->name }} Early Childhood Centre was established keeping in mind that the early years are the most important years in a child's life where rapid brain development takes place.
+                </p>
+                <a href="{{ $pageUrl('academics') }}" class="inline-flex items-center justify-center px-7 py-3 rounded-xl font-bold text-sm text-white bg-[#d02d2e] hover:bg-[#b52425] shadow-sm transition">
+                    Learn More
+                </a>
+            </div>
+
+            <div class="lg:col-span-6 flex justify-center lg:justify-end">
+                <div class="relative inline-block">
+                    <!-- Floating red rectangle & red dots on top-right -->
+                    <img src="{{ asset('imgs/rato-bangala/red_rectangle.png') }}" class="absolute -top-3 -right-3 w-12 sm:w-14 z-20" alt="">
+                    <img src="{{ asset('imgs/rato-bangala/dots_red.png') }}" class="absolute -top-6 -right-12 w-14 sm:w-16 pointer-events-none z-0" alt="">
+
+                    <!-- Floating blue rectangle & navy dots on bottom-left -->
+                    <img src="{{ asset('imgs/rato-bangala/blue_rectangle.png') }}" class="absolute -bottom-3 -left-3 w-12 sm:w-14 z-20" alt="">
+                    <div class="absolute -bottom-6 -left-12 w-14 sm:w-16 h-14 sm:h-16 rbs-dots-navy pointer-events-none z-0"></div>
+
+                    <!-- Signature curved image: rounded-tl-[90px] -->
+                    <img src="{{ asset('imgs/rato-bangala/ecc.jpg') }}" 
+                         alt="The Early Childhood Centre" 
+                         class="w-full max-w-md sm:max-w-lg aspect-[4/3] object-cover rounded-tl-[90px] rounded-br-[28px] rounded-tr-xl rounded-bl-xl shadow-lg border-4 border-white relative z-10">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═════════════════════════════════════════════════════════════════════
+     5. INSTITUTIONAL STATISTICS (MATCHING RATO BANGALA EXACT S_STATS)
+══════════════════════════════════════════════════════════════════════ -->
+<section id="milestones" class="bg-white py-12 border-b border-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div class="p-2">
+                <img src="{{ asset('imgs/rato-bangala/star.png') }}" class="w-6 h-6 mx-auto mb-3" alt="">
+                <div class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-1">30+</div>
+                <div class="text-xs sm:text-sm font-bold text-slate-700 tracking-wide uppercase">Years of Excellence</div>
+            </div>
+            <div class="p-2">
+                <img src="{{ asset('imgs/rato-bangala/star.png') }}" class="w-6 h-6 mx-auto mb-3" alt="">
+                <div class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-1">1100+</div>
+                <div class="text-xs sm:text-sm font-bold text-slate-700 tracking-wide uppercase">Enrolled Students</div>
+            </div>
+            <div class="p-2">
+                <img src="{{ asset('imgs/rato-bangala/star.png') }}" class="w-6 h-6 mx-auto mb-3" alt="">
+                <div class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-1">200+</div>
+                <div class="text-xs sm:text-sm font-bold text-slate-700 tracking-wide uppercase">Teachers & Staff</div>
+            </div>
+            <div class="p-2">
+                <img src="{{ asset('imgs/rato-bangala/star.png') }}" class="w-6 h-6 mx-auto mb-3" alt="">
+                <div class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-1">100%</div>
+                <div class="text-xs sm:text-sm font-bold text-slate-700 tracking-wide uppercase">Board Results</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═════════════════════════════════════════════════════════════════════
+     6. MESSAGES FROM LEADERSHIP (MATCHING RATO BANGALA EXACT UI)
+══════════════════════════════════════════════════════════════════════ -->
+<section id="leadership" class="py-16 sm:py-24 bg-white relative overflow-hidden border-b border-slate-100">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <!-- Floating blue rectangle behind top-left -->
+        <img src="{{ asset('imgs/rato-bangala/blue_rectangle.png') }}" class="absolute -top-6 -left-6 w-20 sm:w-28 opacity-90 -z-10" alt="">
+        <!-- Floating red rectangle behind bottom-right -->
+        <img src="{{ asset('imgs/rato-bangala/red_rectangle.png') }}" class="absolute -bottom-6 -right-6 w-20 sm:w-28 opacity-90 -z-10" alt="">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+            {{-- Card 1: Principal --}}
+            <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-sm flex flex-col justify-between">
+                <div class="w-full aspect-[4/3] bg-slate-100 overflow-hidden">
+                    <img src="{{ file_exists(public_path('imgs/rato-bangala/milan_dixit.jpg')) ? asset('imgs/rato-bangala/milan_dixit.jpg') : ($school->principal_photo_url ?? asset('imgs/hero/hero_1.webp')) }}" 
+                         alt="Principal {{ $school->principal_name_resolved ?? 'Milan Dixit' }}" 
+                         class="w-full h-full object-cover">
+                </div>
+                <div class="p-6 sm:p-8 flex-1 flex flex-col justify-between">
+                    <div>
+                        <p class="rbs-sub-title text-[#0b417e] mb-2">MESSAGE FROM THE PRINCIPAL</p>
+                        <h3 class="text-2xl font-extrabold text-slate-900 mb-3">{{ $school->principal_name_resolved ?? 'Milan Dixit' }}</h3>
+                        <p class="text-slate-600 text-sm sm:text-base leading-relaxed mb-6">
+                            {{ $school->principal_message ?? ('Whether you visit us online or in person, we hope you will get a sense of what ' . $school->name . ' is and the mission that drives us. We are a progressive learning community that works to educate the whole person and prepare them for life.') }}
+                        </p>
+                    </div>
+                    <a href="{{ $pageUrl('about') }}#principal-message" class="inline-flex items-center gap-2 text-sm font-bold text-[#d02d2e] hover:underline">
+                        <span>View Detail Message</span> &rarr;
+                    </a>
+                </div>
+            </div>
+
+            {{-- Card 2: Director --}}
+            <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-sm flex flex-col justify-between">
+                <div class="w-full aspect-[4/3] bg-slate-100 overflow-hidden">
+                    <img src="{{ file_exists(public_path('imgs/rato-bangala/shanta_dixit.jpg')) ? asset('imgs/rato-bangala/shanta_dixit.jpg') : ($school->founder_photo_url ?? asset('imgs/hero/hero_2.webp')) }}" 
+                         alt="Director {{ $school->founder_name_resolved ?? 'Shanta Dixit' }}" 
+                         class="w-full h-full object-cover">
+                </div>
+                <div class="p-6 sm:p-8 flex-1 flex flex-col justify-between">
+                    <div>
+                        <p class="rbs-sub-title text-[#d02d2e] mb-2">MESSAGE FROM THE DIRECTOR</p>
+                        <h3 class="text-2xl font-extrabold text-slate-900 mb-3">{{ $school->founder_name_resolved ?? 'Shanta Dixit' }}</h3>
+                        <p class="text-slate-600 text-sm sm:text-base leading-relaxed mb-6">
+                            {{ $school->founder_message ?? ('For over three decades, ' . $school->name . ' has continuously evolved to work towards its mission of providing the best in progressive pedagogy to its children. The path has been challenging and sometimes lonely.') }}
+                        </p>
+                    </div>
+                    <a href="{{ $pageUrl('about') }}#director-message" class="inline-flex items-center gap-2 text-sm font-bold text-[#d02d2e] hover:underline">
+                        <span>View Detail Message</span> &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ═════════════════════════════════════════════════════════════════════
+     6.5 SCHOOL HISTORY & RBPOP OUTREACH MILESTONES (EXACT RATO BANGALA UI)
+══════════════════════════════════════════════════════════════════════ -->
+@if($school->outreach_active)
+<section id="history" class="s_rbpop bg-[#0b417e] text-white py-16 sm:py-24 relative overflow-hidden border-b border-blue-950">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+            
+            {{-- Left Vertical White Dot Ornament (exact match to screenshot) --}}
+            <div class="hidden lg:flex lg:col-span-1 justify-start items-end h-full pb-8">
+                <img src="{{ asset('imgs/rato-bangala/ornament.png') }}" class="w-4 h-24 object-contain opacity-90" alt="Ornament Dots">
+            </div>
+
+            {{-- Text Content Column --}}
+            <div class="lg:col-span-5 flex flex-col justify-center">
+                <p class="rbs-sub-title text-white mb-3 tracking-widest text-xs font-bold uppercase">
+                    {{ $school->outreach_tag }}
+                </p>
+                <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight mb-5">
+                    {{ $school->outreach_title }}
+                </h2>
+                <p class="text-white/90 text-sm sm:text-base leading-relaxed mb-6 font-normal">
+                    {{ $school->outreach_desc }}
+                </p>
+                <div>
+                    <a href="{{ $school->outreach_btn_url }}" class="inline-flex items-center gap-2 text-white font-bold text-sm sm:text-base hover:text-white/80 transition group">
+                        <span>{{ $school->outreach_btn_text }}</span>
+                        <span class="transform group-hover:translate-x-1.5 transition">&rarr;</span>
+                    </a>
+                </div>
+            </div>
+
+            {{-- Roadmap / Timeline Visual (2003 Started Year, 4 Phases, 9 Districts, 700 Schools) --}}
+            <div class="lg:col-span-5 flex justify-center items-center py-4">
+                <img src="{{ asset('imgs/rato-bangala/rcpop_visual.png') }}" 
+                     alt="{{ $school->outreach_title }}" 
+                     class="w-full max-w-lg object-contain drop-shadow-xl">
+            </div>
+
+            {{-- Right Vertical White Dot Ornament (exact match to screenshot) --}}
+            <div class="hidden lg:flex lg:col-span-1 justify-end items-start h-full pt-8">
+                <img src="{{ asset('imgs/rato-bangala/ornament.png') }}" class="w-4 h-24 object-contain opacity-90" alt="Ornament Dots">
+            </div>
+
+        </div>
+    </div>
+</section>
+@endif
+
+<!-- ═════════════════════════════════════════════════════════════════════
+     7. ACADEMIC PROGRAM LEVELS WITH PHOTO CARDS
 ══════════════════════════════════════════════════════════════════════ -->
 <section class="py-16 bg-white border-b border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -488,213 +745,6 @@
                 </div>
             </div>
         </div>
-    </div>
-</section>
-
-<!-- ═════════════════════════════════════════════════════════════════════
-     6. ABOUT THE ACADEMY & CAMPUS VIDEO TOUR (RATO BANGALA STYLE)
-══════════════════════════════════════════════════════════════════════ -->
-<section class="py-16 bg-white border-b border-slate-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            <div class="lg:col-span-6 relative">
-                @if(!empty($school->campus_video_embed_url))
-                {{-- Campus Video Tour Embed --}}
-                <div class="relative rounded-3xl overflow-hidden shadow-2xl border-2 border-slate-200 aspect-video bg-slate-950 group">
-                    @if($school->is_campus_video_direct_file)
-                        <video class="w-full h-full object-cover" controls preload="metadata">
-                            <source src="{{ $school->campus_video_embed_url }}" type="video/mp4">
-                        </video>
-                    @else
-                        <iframe src="{{ $school->campus_video_embed_url }}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                    @endif
-                </div>
-                <div class="mt-3 flex items-center justify-between text-xs text-slate-500 px-1">
-                    <span class="font-bold tracking-wider text-slate-700 uppercase flex items-center gap-1.5">
-                        <i class="bi bi-play-circle-fill text-[#f36c21]"></i> A Short Video Tour of Our School
-                    </span>
-                    <span class="text-slate-400">Campus Walkthrough</span>
-                </div>
-                @else
-                <div class="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 aspect-[4/3] bg-white">
-                    @php
-                        $aboutImg = !empty($school->gallery_images[0]) 
-                            ? asset('storage/' . $school->gallery_images[0]) 
-                            : asset('imgs/hero/hero_1.webp');
-                    @endphp
-                    <img src="{{ $aboutImg }}" alt="{{ $school->name }} Campus" class="w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent"></div>
-                    <div class="absolute bottom-5 left-5 right-5 text-white">
-                        <span class="text-xs uppercase tracking-widest font-bold text-orange-300">INSPIRED SCHOLARSHIP</span>
-                        <h4 class="text-lg font-bold text-white">{{ $school->name }}</h4>
-                    </div>
-                </div>
-
-                <div class="absolute -bottom-6 -right-4 sm:-bottom-8 sm:-right-6 bg-white text-slate-900 p-4 rounded-2xl shadow-xl border border-slate-200 max-w-xs hidden sm:block">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-orange-50 text-[#f36c21] flex items-center justify-center text-xl font-bold border border-orange-200">
-                            <i class="bi bi-award-fill"></i>
-                        </div>
-                        <div>
-                            <span class="text-xs font-bold text-slate-900 block">SEE & NEB Accredited</span>
-                            <span class="text-[11px] text-slate-500">Excellence in Board Results</span>
-                        </div>
-                    </div>
-                </div>
-                @endif
-            </div>
-
-            <div class="lg:col-span-6">
-                <span class="text-xs font-bold tracking-widest uppercase text-slate-700 bg-slate-100 px-3.5 py-1 rounded-md border border-slate-200 inline-block mb-2">
-                    Who We Are
-                </span>
-                <span class="text-xs font-bold text-[#f36c21] tracking-widest uppercase block mb-2">{{ $school->heritage_tagline }}</span>
-                <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-5 leading-tight">
-                    Nurturing Intellect, Inspiring Character &amp; Shaping Future Leaders
-                </h2>
-                <div class="text-slate-600 text-sm sm:text-base leading-relaxed space-y-4 mb-6">
-                    @if($school->about_us && strlen($school->about_us) > 30)
-                        <p>{{ Str::limit($school->about_us, 350) }}</p>
-                    @elseif($school->description && strlen($school->description) > 30)
-                        <p>{{ Str::limit($school->description, 350) }}</p>
-                    @else
-                        <p>
-                            Welcome to <strong>{{ $school->name }}</strong>, a premier center of academic distinction dedicated to providing holistic, forward-looking education in Nepal. Our pedagogy harmonizes rigorous academic inquiry with moral values, critical reasoning, and leadership development.
-                        </p>
-                    @endif
-                </div>
-
-                <div class="flex items-center gap-4 flex-wrap">
-                    <a href="{{ $pageUrl('about') }}" class="btn-primary-dark shadow-sm">
-                        <span>Read Full Heritage & Mission</span> <i class="bi bi-arrow-right"></i>
-                    </a>
-                    <a href="{{ $pageUrl('facilities') }}" class="btn-secondary-white">
-                        <span>Campus Infrastructure</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ═════════════════════════════════════════════════════════════════════
-     7. LEADERSHIP ADDRESS (RATO BANGALA DUAL LEADERSHIP OR SINGLE)
-══════════════════════════════════════════════════════════════════════ -->
-<section class="py-16 bg-slate-50 border-b border-slate-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        @if(!empty($school->founder_name_resolved))
-        {{-- Dual Leadership Layout (Director + Principal - Rato Bangala Exact Pattern) --}}
-        <div class="text-center max-w-2xl mx-auto mb-12">
-            <span class="text-xs font-bold tracking-widest uppercase text-slate-700 bg-white px-3.5 py-1 rounded-md border border-slate-200 inline-block mb-2">
-                Governance & Direction
-            </span>
-            <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900">
-                Message from the Leadership
-            </h2>
-            <p class="text-slate-600 text-sm mt-1">Guided by experienced educators committed to progressive learning in Nepal.</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {{-- 1. Founder / Director Card --}}
-            <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center gap-4 mb-5">
-                        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-amber-400 shrink-0 shadow-sm bg-slate-100">
-                            <img src="{{ $school->founder_photo_url ?? asset('imgs/profile.webp') }}" alt="{{ $school->founder_name_resolved }}" class="w-full h-full object-cover">
-                        </div>
-                        <div>
-                            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
-                                {{ $school->founder_title_resolved }}
-                            </span>
-                            <h3 class="text-xl font-black text-slate-900 mt-1">{{ $school->founder_name_resolved }}</h3>
-                            <p class="text-xs text-[#f36c21] font-semibold">{{ $school->name }}</p>
-                        </div>
-                    </div>
-                    <div class="text-slate-700 text-sm leading-relaxed italic border-l-4 border-amber-400 pl-4 py-1.5 bg-slate-50/60 rounded-r-xl">
-                        "{{ $school->founder_message_resolved ?: 'We are a progressive learning community that works to educate the whole person and prepare them for life.' }}"
-                    </div>
-                </div>
-            </div>
-
-            {{-- 2. Principal Card --}}
-            <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center gap-4 mb-5">
-                        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-[#f36c21] shrink-0 shadow-sm bg-slate-100">
-                            <img src="{{ $school->principal_photo_url }}" onerror="this.src='{{ asset('imgs/profile.webp') }}'" alt="{{ $school->principal_name_resolved }}" class="w-full h-full object-cover">
-                        </div>
-                        <div>
-                            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-orange-50 text-[#f36c21] border border-orange-200">
-                                {{ $school->settings['principal_title'] ?? 'Principal & Head of Institution' }}
-                            </span>
-                            <h3 class="text-xl font-black text-slate-900 mt-1">{{ $school->principal_name_resolved }}</h3>
-                            <p class="text-xs text-[#f36c21] font-semibold">{{ $school->name }}</p>
-                        </div>
-                    </div>
-                    <div class="text-slate-700 text-sm leading-relaxed italic border-l-4 border-[#f36c21] pl-4 py-1.5 bg-slate-50/60 rounded-r-xl">
-                        "{{ $school->principal_message ? Str::limit($school->principal_message, 240) : 'Education is not merely the accumulation of facts; it is the training of the mind to think critically, the awakening of curiosity, and the cultivation of compassionate character.' }}"
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        @else
-        {{-- Single Principal Layout --}}
-        <div class="bg-white rounded-2xl p-8 sm:p-12 border border-slate-200 shadow-md">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-                <div class="lg:col-span-4 flex flex-col items-center text-center">
-                    <div class="relative">
-                        <div class="w-52 h-52 sm:w-60 sm:h-60 rounded-2xl overflow-hidden shadow-lg border border-slate-200 p-1 bg-white">
-                            <img src="{{ $school->principal_photo_url }}" 
-                                 onerror="this.src='{{ asset('imgs/profile.webp') }}'" 
-                                 alt="{{ $school->principal_name_resolved }}" 
-                                 class="w-full h-full object-cover rounded-xl">
-                        </div>
-                        <div class="absolute -bottom-4 bg-slate-900 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md">
-                            Office of the Principal
-                        </div>
-                    </div>
-                    <div class="mt-8">
-                        <h3 class="font-bold text-xl text-slate-900">{{ $school->principal_name_resolved }}</h3>
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mt-0.5">{{ $school->settings['principal_title'] ?? 'Head of Institution / Principal' }}</p>
-                        <p class="text-xs text-[#f36c21] font-bold mt-1">{{ $school->name }}</p>
-                    </div>
-                </div>
-
-                <div class="lg:col-span-8">
-                    <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-600 mb-2">
-                        <i class="bi bi-quote text-2xl leading-none text-[#f36c21]"></i> Words of Welcome & Inspiration
-                    </div>
-                    <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-5 leading-tight">
-                        Leadership Address
-                    </h2>
-                    <div class="text-slate-700 leading-relaxed text-sm sm:text-base space-y-4">
-                        @if($school->principal_message && strlen($school->principal_message) > 20)
-                            <p class="italic text-slate-800 font-medium border-l-4 border-[#f36c21] pl-4 py-2 bg-slate-50 rounded-r-lg">
-                                "{{ Str::limit($school->principal_message, 240) }}"
-                            </p>
-                        @else
-                            <p class="italic text-slate-800 font-medium border-l-4 border-[#f36c21] pl-4 py-2 bg-slate-50 rounded-r-lg">
-                                "Education is not merely the accumulation of facts; it is the training of the mind to think critically, the awakening of curiosity, and the cultivation of compassionate character."
-                            </p>
-                        @endif
-                        <p>
-                            At {{ $school->name }}, we believe in unlocking every student's distinctive potential through holistic mentoring, scientific inquiry, and global ethical awareness.
-                        </p>
-                    </div>
-
-                    <div class="mt-8 pt-6 border-t border-slate-200 flex flex-wrap items-center gap-4">
-                        <a href="{{ $pageUrl('about') }}#leadership" class="btn-primary-dark">
-                            <span>Read Full Principal Message</span> <i class="bi bi-arrow-right"></i>
-                        </a>
-                        <a href="{{ url('admissions/apply?school='.$school->slug) }}" class="btn-secondary-white">
-                            <i class="bi bi-mortarboard-fill text-[#f36c21]"></i> Apply for 2026/27
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
     </div>
 </section>
 
@@ -1312,6 +1362,49 @@ function renderAcademicCalendar() {
 function changeCalMonth(offset) {
     currentCalDate.setMonth(currentCalDate.getMonth() + offset);
     renderAcademicCalendar();
+}
+
+// ── Rato Bangala Style Admissions Carousel ──
+const admissionSlides = [
+    {
+        num: '01',
+        title: 'Pre-Kindergarten',
+        desc: 'Parents seeking admission for their child in above grades must apply online from here.',
+        img: '{{ asset("imgs/rato-bangala/admissions_kids.jpg") }}',
+        link: '{{ url("admissions/apply?school=".$school->slug) }}'
+    },
+    {
+        num: '02',
+        title: 'Primary & Basic School (Grades 1 – 8)',
+        desc: 'Child-centered inquiry-based pedagogy developing foundational literacy, mathematical reasoning, STEAM, and moral integrity.',
+        img: '{{ asset("imgs/hero/hero_1.webp") }}',
+        link: '{{ url("admissions/apply?school=".$school->slug) }}'
+    },
+    {
+        num: '03',
+        title: 'Secondary & +2 Higher Secondary (9 – 12)',
+        desc: 'Rigorous national examination preparation with state-of-the-art science labs, Olympiad training, and college counseling.',
+        img: '{{ asset("imgs/hero/hero_2.webp") }}',
+        link: '{{ url("admissions/apply?school=".$school->slug) }}'
+    }
+];
+let currentAdmissionIndex = 0;
+
+function changeAdmissionSlide(delta) {
+    currentAdmissionIndex = (currentAdmissionIndex + delta + admissionSlides.length) % admissionSlides.length;
+    const slide = admissionSlides[currentAdmissionIndex];
+    
+    const imgEl = document.getElementById('admissionSlideImg');
+    const titleEl = document.getElementById('admissionSlideTitle');
+    const descEl = document.getElementById('admissionSlideDesc');
+    const linkEl = document.getElementById('admissionSlideLink');
+    const counterEl = document.getElementById('admissionSlideCounter');
+
+    if (imgEl) imgEl.src = slide.img;
+    if (titleEl) titleEl.textContent = slide.title;
+    if (descEl) descEl.textContent = slide.desc;
+    if (linkEl) linkEl.href = slide.link;
+    if (counterEl) counterEl.textContent = `${slide.num} — 03`;
 }
 
 // ── Rato Bangala Style Community Tab Switcher ──

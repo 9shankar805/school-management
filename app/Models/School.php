@@ -426,6 +426,43 @@ class School extends Model
         return $this->settings['newsletter_desc'] ?? 'Subscribe to our official newsletter to receive latest academic circulars, event dispatches, and student achievements directly in your inbox.';
     }
 
+    /** RBPOP / Outreach & History accessors (Rato Bangala style) */
+    public function getOutreachActiveAttribute(): bool
+    {
+        return !isset($this->settings['outreach_active']) || !empty($this->settings['outreach_active']);
+    }
+
+    public function getOutreachTagAttribute(): string
+    {
+        return $this->settings['outreach_tag'] ?? 'RBPOP';
+    }
+
+    public function getOutreachTitleAttribute(): string
+    {
+        return $this->settings['outreach_title'] ?? 'RATO BANGALA PARTNERSHIP IN OUTREACH PROGRAM';
+    }
+
+    public function getOutreachDescAttribute(): string
+    {
+        if (!empty($this->settings['outreach_desc'])) {
+            return $this->settings['outreach_desc'];
+        }
+        if (!empty($this->history)) {
+            return $this->history;
+        }
+        return 'The Rato Bangala Partnership in Outreach Programme (RBPOP) is a UNESCO awarded public-private partnership programme of Rato Bangala School that works to uplift the education of Nepali children beyond the school itself. It was started with inputs from RBS parents, teachers and students in 2003.';
+    }
+
+    public function getOutreachBtnTextAttribute(): string
+    {
+        return $this->settings['outreach_btn_text'] ?? 'More On RBPOP';
+    }
+
+    public function getOutreachBtnUrlAttribute(): string
+    {
+        return $this->settings['outreach_btn_url'] ?? url('school/' . $this->slug . '/about#history');
+    }
+
     public function getHeritageTaglineAttribute(): string
     {
         return $this->settings['heritage_tagline'] ?? ('CENTER OF EXCELLENCE SINCE ' . ($this->settings['established_year'] ?? $this->established_year ?? '1992'));

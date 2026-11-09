@@ -1787,6 +1787,59 @@ $progressPct = (int) round(($activeStep / count($steps)) * 100);
         </div>
     </div>
 </div>
+
+{{-- ── RBPOP / History & Outreach Timeline Section Controls ── --}}
+<div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-6 mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-4 border-b border-slate-100 dark:border-slate-700">
+        <div>
+            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <i class="bi bi-diagram-3-fill text-[#0b417e]"></i> School History & Outreach Timeline (Rato Bangala Style)
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Display the signature deep royal blue history showcase featuring your outreach milestones, dashed roadmap trail, and institutional heritage.
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="outreach_active" value="1" class="sr-only peer" {{ $school->outreach_active ? 'checked' : '' }}>
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0b417e]"></div>
+                <span class="ml-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Show Section</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="field-label">Subtitle / Tag</label>
+            <input type="text" name="outreach_tag" class="field-input font-bold uppercase tracking-wider"
+                   value="{{ old('outreach_tag', $school->settings['outreach_tag'] ?? 'RBPOP') }}"
+                   placeholder="e.g. RBPOP or HISTORY & HERITAGE">
+        </div>
+        <div>
+            <label class="field-label">Headline Title</label>
+            <input type="text" name="outreach_title" class="field-input font-bold"
+                   value="{{ old('outreach_title', $school->settings['outreach_title'] ?? 'RATO BANGALA PARTNERSHIP IN OUTREACH PROGRAM') }}"
+                   placeholder="e.g. RATO BANGALA PARTNERSHIP IN OUTREACH PROGRAM">
+        </div>
+        <div class="md:col-span-2">
+            <label class="field-label">History / Outreach Description</label>
+            <textarea name="outreach_desc" rows="3" class="field-input leading-relaxed"
+                      placeholder="Narrate your school's history, UNESCO outreach programs, community impact, or foundational journey...">{{ old('outreach_desc', $school->settings['outreach_desc'] ?? ($school->history ?: 'The Rato Bangala Partnership in Outreach Programme (RBPOP) is a UNESCO awarded public-private partnership programme of Rato Bangala School that works to uplift the education of Nepali children beyond the school itself. It was started with inputs from RBS parents, teachers and students in 2003.')) }}</textarea>
+        </div>
+        <div>
+            <label class="field-label">Button Label</label>
+            <input type="text" name="outreach_btn_text" class="field-input"
+                   value="{{ old('outreach_btn_text', $school->settings['outreach_btn_text'] ?? 'More On RBPOP') }}"
+                   placeholder="e.g. More On RBPOP">
+        </div>
+        <div>
+            <label class="field-label">Button Target URL</label>
+            <input type="text" name="outreach_btn_url" class="field-input"
+                   value="{{ old('outreach_btn_url', $school->settings['outreach_btn_url'] ?? url('school/' . $school->slug . '/about#history')) }}"
+                   placeholder="e.g. {{ url('school/' . $school->slug . '/about#history') }}">
+        </div>
+    </div>
+</div>
 </div>{{-- /step-7 --}}
 
 {{-- ════════════════════════════════════════════════

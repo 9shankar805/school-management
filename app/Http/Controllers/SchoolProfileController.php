@@ -269,6 +269,26 @@ class SchoolProfileController extends Controller
             $settings['newsletter_desc'] = $request->input('newsletter_desc');
         }
 
+        // RBPOP / Outreach & History (Rato Bangala style)
+        if ($request->has('outreach_active')) {
+            $settings['outreach_active'] = $request->boolean('outreach_active');
+        }
+        if ($request->has('outreach_tag')) {
+            $settings['outreach_tag'] = $request->input('outreach_tag');
+        }
+        if ($request->has('outreach_title')) {
+            $settings['outreach_title'] = $request->input('outreach_title');
+        }
+        if ($request->has('outreach_desc')) {
+            $settings['outreach_desc'] = $request->input('outreach_desc');
+        }
+        if ($request->has('outreach_btn_text')) {
+            $settings['outreach_btn_text'] = $request->input('outreach_btn_text');
+        }
+        if ($request->has('outreach_btn_url')) {
+            $settings['outreach_btn_url'] = $request->input('outreach_btn_url');
+        }
+
         // School Operating Hours
         if ($request->has('school_hours_weekdays')) {
             $settings['school_hours_weekdays'] = $request->input('school_hours_weekdays');

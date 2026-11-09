@@ -139,6 +139,53 @@
     </div>
 </section>
 
+{{-- ── Rato Bangala Style School History & Outreach Roadmap ── --}}
+@if($school->outreach_active)
+<section id="history" class="s_rbpop bg-[#0b417e] text-white py-16 sm:py-24 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+            
+            {{-- Left Vertical White Dot Ornament --}}
+            <div class="hidden lg:flex lg:col-span-1 justify-start items-end h-full pb-8">
+                <img src="{{ asset('imgs/rato-bangala/ornament.png') }}" class="w-4 h-24 object-contain opacity-90" alt="Ornament Dots">
+            </div>
+
+            {{-- Text Content Column --}}
+            <div class="lg:col-span-5 flex flex-col justify-center">
+                <p class="rbs-sub-title text-white mb-3 tracking-widest text-xs font-bold uppercase">
+                    {{ $school->outreach_tag }}
+                </p>
+                <h2 class="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight mb-5">
+                    {{ $school->outreach_title }}
+                </h2>
+                <p class="text-white/90 text-sm sm:text-base leading-relaxed mb-6 font-normal">
+                    {{ $school->outreach_desc }}
+                </p>
+                <div>
+                    <a href="{{ $pageUrl('') }}#welcome" class="inline-flex items-center gap-2 text-white font-bold text-sm sm:text-base hover:text-white/80 transition group">
+                        <span>Explore Campus Tour</span>
+                        <span class="transform group-hover:translate-x-1.5 transition">&rarr;</span>
+                    </a>
+                </div>
+            </div>
+
+            {{-- Roadmap / Timeline Visual (2003 Started Year, 4 Phases, 9 Districts, 700 Schools) --}}
+            <div class="lg:col-span-5 flex justify-center items-center py-4">
+                <img src="{{ asset('imgs/rato-bangala/rcpop_visual.png') }}" 
+                     alt="{{ $school->outreach_title }}" 
+                     class="w-full max-w-lg object-contain drop-shadow-xl">
+            </div>
+
+            {{-- Right Vertical White Dot Ornament --}}
+            <div class="hidden lg:flex lg:col-span-1 justify-end items-start h-full pt-8">
+                <img src="{{ asset('imgs/rato-bangala/ornament.png') }}" class="w-4 h-24 object-contain opacity-90" alt="Ornament Dots">
+            </div>
+
+        </div>
+    </div>
+</section>
+@endif
+
 {{-- School Management Committee (SMC) Section --}}
 @if(isset($committeeMembers) && $committeeMembers->count() > 0)
 <section class="py-16 bg-slate-50 border-t border-slate-200">
