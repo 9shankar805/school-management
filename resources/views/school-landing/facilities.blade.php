@@ -27,7 +27,7 @@
             {{-- Facility 1: STEM & Robotics Lab --}}
             <div class="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm card-lift flex flex-col justify-between group hover:border-[#f36c21] transition">
                 <div class="aspect-[16/10] overflow-hidden bg-slate-100 relative">
-                    <img src="{{ asset('imgs/hero/hero_2.webp') }}" alt="STEM & Robotics Lab" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('facility_computer_image', 'imgs/hero/hero_2.webp') }}" alt="STEM & Robotics Lab" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                     <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-900 shadow-sm">
                         Tech & Coding
                     </div>
@@ -48,7 +48,7 @@
             {{-- Facility 2: Science Laboratories --}}
             <div class="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm card-lift flex flex-col justify-between group hover:border-[#f36c21] transition">
                 <div class="aspect-[16/10] overflow-hidden bg-slate-100 relative">
-                    <img src="{{ asset('imgs/hero/hero_1.webp') }}" alt="Modern Science Laboratories" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('facility_stem_image', 'imgs/hero/hero_1.webp') }}" alt="Modern Science Laboratories" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                     <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-900 shadow-sm">
                         Physics, Chem & Bio
                     </div>
@@ -69,7 +69,7 @@
             {{-- Facility 3: Central Research & E-Library --}}
             <div class="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm card-lift flex flex-col justify-between group hover:border-[#f36c21] transition">
                 <div class="aspect-[16/10] overflow-hidden bg-slate-100 relative">
-                    <img src="{{ asset('imgs/hero/hero_3.webp') }}" alt="Central Research E-Library" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('facility_library_image', 'imgs/hero/hero_3.webp') }}" alt="Central Research E-Library" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                     <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-900 shadow-sm">
                         Knowledge Hub
                     </div>
@@ -90,7 +90,7 @@
             {{-- Facility 4: Sports Arena & Turf --}}
             <div class="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm card-lift flex flex-col justify-between group hover:border-[#f36c21] transition">
                 <div class="aspect-[16/10] overflow-hidden bg-slate-100 relative">
-                    <img src="{{ asset('imgs/schools.webp') }}" alt="Olympic Sports Arena" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('facility_sports_image', 'imgs/schools.webp') }}" alt="Olympic Sports Arena" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                     <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-900 shadow-sm">
                         Athletics Arena
                     </div>
@@ -111,7 +111,7 @@
             {{-- Facility 5: GPS Fleet --}}
             <div class="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm card-lift flex flex-col justify-between group hover:border-[#f36c21] transition">
                 <div class="aspect-[16/10] overflow-hidden bg-slate-100 relative">
-                    <img src="{{ asset('imgs/kathmandu.webp') }}" alt="GPS-Tracked Bus Fleet" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('facility_transport_image', 'imgs/kathmandu.webp') }}" alt="GPS-Tracked Bus Fleet" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                     <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-900 shadow-sm">
                         Safe Transport
                     </div>
@@ -132,7 +132,7 @@
             {{-- Facility 6: Smart Interactive Classrooms --}}
             <div class="bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-sm card-lift flex flex-col justify-between group hover:border-[#f36c21] transition">
                 <div class="aspect-[16/10] overflow-hidden bg-slate-100 relative">
-                    <img src="{{ file_exists(public_path('imgs/hero/school_hero_graduates.jpg')) ? asset('imgs/hero/school_hero_graduates.jpg') : asset('imgs/hero/hero_2.webp') }}" alt="Smart Interactive Classrooms" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('facility_classroom_image', file_exists(public_path('imgs/hero/school_hero_graduates.jpg')) ? 'imgs/hero/school_hero_graduates.jpg' : 'imgs/hero/hero_2.webp') }}" alt="Smart Interactive Classrooms" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                     <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-900 shadow-sm">
                         Smart AV Tech
                     </div>

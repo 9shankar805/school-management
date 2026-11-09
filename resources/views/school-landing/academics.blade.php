@@ -52,7 +52,7 @@
                             </ul>
                         </div>
                         <div class="rounded-xl overflow-hidden border border-slate-200 aspect-[16/9] shadow-xs">
-                            <img src="{{ asset('imgs/hero/hero_2.webp') }}" alt="+2 Science Laboratory" class="w-full h-full object-cover">
+                            <img src="{{ $school->sectionImage('pathway_plus2_image', 'imgs/hero/hero_2.webp') }}" alt="+2 Science Laboratory" class="w-full h-full object-cover">
                         </div>
                     </div>
                 </div>
@@ -101,7 +101,7 @@
                             </ul>
                         </div>
                         <div class="rounded-xl overflow-hidden border border-slate-200 aspect-[16/9] shadow-xs">
-                            <img src="{{ asset('imgs/hero/hero_1.webp') }}" alt="+2 Management Studies" class="w-full h-full object-cover">
+                            <img src="{{ $school->sectionImage('pathway_primary_image', 'imgs/hero/hero_1.webp') }}" alt="+2 Management Studies" class="w-full h-full object-cover">
                         </div>
                     </div>
                 </div>
@@ -461,5 +461,8 @@
 
     </div>
 </section>
+
+{{-- ── ACADEMIC HALL OF FAME: TOP RANKERS (AUTO-UPDATED WITH CLASS & SECTION) ── --}}
+@include('school-landing.partials.top-rankers')
 
 @endsection

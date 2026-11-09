@@ -1489,30 +1489,40 @@ Route::middleware(['auth'])->prefix('school/profile')->name('school.profile.')->
 });
 // ── Public School Multi-Page Portal Routes (no auth required) ──
 Route::prefix('school/{slug}')->group(function () {
-    Route::get('/',            [SchoolLandingController::class, 'show'])->name('school.landing');
-    Route::get('/about',       [SchoolLandingController::class, 'about'])->name('school.landing.about');
-    Route::get('/academics',   [SchoolLandingController::class, 'academics'])->name('school.landing.academics');
-    Route::get('/admissions',  [SchoolLandingController::class, 'admissions'])->name('school.landing.admissions');
-    Route::get('/notices',     [SchoolLandingController::class, 'notices'])->name('school.landing.notices');
-    Route::get('/facilities',  [SchoolLandingController::class, 'facilities'])->name('school.landing.facilities');
-    Route::get('/faculty',     [SchoolLandingController::class, 'faculty'])->name('school.landing.faculty');
-    Route::get('/gallery',     [SchoolLandingController::class, 'gallery'])->name('school.landing.gallery');
-    Route::get('/contact',     [SchoolLandingController::class, 'contact'])->name('school.landing.contact');
-    Route::post('/newsletter', [SchoolLandingController::class, 'newsletterSubscribe'])->name('school.landing.newsletter');
+    Route::get('/',                    [SchoolLandingController::class, 'show'])->name('school.landing');
+    Route::get('/about',               [SchoolLandingController::class, 'about'])->name('school.landing.about');
+    Route::get('/academics',           [SchoolLandingController::class, 'academics'])->name('school.landing.academics');
+    Route::get('/admissions',          [SchoolLandingController::class, 'admissions'])->name('school.landing.admissions');
+    Route::get('/notices',             [SchoolLandingController::class, 'notices'])->name('school.landing.notices');
+    Route::get('/facilities',          [SchoolLandingController::class, 'facilities'])->name('school.landing.facilities');
+    Route::get('/faculty',             [SchoolLandingController::class, 'faculty'])->name('school.landing.faculty');
+    Route::get('/gallery',             [SchoolLandingController::class, 'gallery'])->name('school.landing.gallery');
+    Route::get('/contact',             [SchoolLandingController::class, 'contact'])->name('school.landing.contact');
+    Route::get('/blogs',               [SchoolLandingController::class, 'blogs'])->name('school.landing.blogs');
+    Route::get('/news',                [SchoolLandingController::class, 'news'])->name('school.landing.news');
+    Route::get('/stories',             [SchoolLandingController::class, 'stories'])->name('school.landing.stories');
+    Route::get('/publications',         [SchoolLandingController::class, 'publications'])->name('school.landing.publications');
+    Route::get('/article/{articleSlug}', [SchoolLandingController::class, 'articleDetail'])->name('school.landing.article');
+    Route::post('/newsletter',         [SchoolLandingController::class, 'newsletterSubscribe'])->name('school.landing.newsletter');
 });
 
 Route::domain('{subdomain}.' . env('APP_DOMAIN', 'nshlms.com'))->group(function () {
-    Route::get('/',            [SchoolLandingController::class, 'showBySubdomain'])->name('school.subdomain');
-    Route::get('/about',       [SchoolLandingController::class, 'aboutBySubdomain'])->name('school.subdomain.about');
-    Route::get('/academics',   [SchoolLandingController::class, 'academicsBySubdomain'])->name('school.subdomain.academics');
-    Route::get('/admissions',  [SchoolLandingController::class, 'admissionsBySubdomain'])->name('school.subdomain.admissions');
-    Route::get('/notices',     [SchoolLandingController::class, 'noticesBySubdomain'])->name('school.subdomain.notices');
-    Route::get('/facilities',  [SchoolLandingController::class, 'facilitiesBySubdomain'])->name('school.subdomain.facilities');
-    Route::get('/faculty',     [SchoolLandingController::class, 'facultyBySubdomain'])->name('school.subdomain.faculty');
-    Route::get('/gallery',     [SchoolLandingController::class, 'galleryBySubdomain'])->name('school.subdomain.gallery');
-    Route::get('/contact',     [SchoolLandingController::class, 'contactBySubdomain'])->name('school.subdomain.contact');
-    Route::post('/newsletter', [SchoolLandingController::class, 'newsletterSubscribe'])->name('school.subdomain.newsletter');
-    Route::get('/school/{slug}', [SchoolLandingController::class, 'showBySubdomain']);
+    Route::get('/',                    [SchoolLandingController::class, 'showBySubdomain'])->name('school.subdomain');
+    Route::get('/about',               [SchoolLandingController::class, 'aboutBySubdomain'])->name('school.subdomain.about');
+    Route::get('/academics',           [SchoolLandingController::class, 'academicsBySubdomain'])->name('school.subdomain.academics');
+    Route::get('/admissions',          [SchoolLandingController::class, 'admissionsBySubdomain'])->name('school.subdomain.admissions');
+    Route::get('/notices',             [SchoolLandingController::class, 'noticesBySubdomain'])->name('school.subdomain.notices');
+    Route::get('/facilities',          [SchoolLandingController::class, 'facilitiesBySubdomain'])->name('school.subdomain.facilities');
+    Route::get('/faculty',             [SchoolLandingController::class, 'facultyBySubdomain'])->name('school.subdomain.faculty');
+    Route::get('/gallery',             [SchoolLandingController::class, 'galleryBySubdomain'])->name('school.subdomain.gallery');
+    Route::get('/contact',             [SchoolLandingController::class, 'contactBySubdomain'])->name('school.subdomain.contact');
+    Route::get('/blogs',               [SchoolLandingController::class, 'blogsBySubdomain'])->name('school.subdomain.blogs');
+    Route::get('/news',                [SchoolLandingController::class, 'newsBySubdomain'])->name('school.subdomain.news');
+    Route::get('/stories',             [SchoolLandingController::class, 'storiesBySubdomain'])->name('school.subdomain.stories');
+    Route::get('/publications',         [SchoolLandingController::class, 'publicationsBySubdomain'])->name('school.subdomain.publications');
+    Route::get('/article/{articleSlug}', [SchoolLandingController::class, 'articleDetailBySubdomain'])->name('school.subdomain.article');
+    Route::post('/newsletter',         [SchoolLandingController::class, 'newsletterSubscribe'])->name('school.subdomain.newsletter');
+    Route::get('/school/{slug}',       [SchoolLandingController::class, 'showBySubdomain']);
 });
 
 // Payment gateway webhooks — no CSRF (raw POST from gateways)

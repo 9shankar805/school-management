@@ -47,6 +47,7 @@ $steps = $steps ?? [
     ['icon'=>'bi-images',         'label'=>'Gallery'],
     ['icon'=>'bi-qr-code',         'label'=>'Payment QR'],
     ['icon'=>'bi-megaphone',       'label'=>'Popup Notice'],
+    ['icon'=>'bi-card-image',     'label'=>'Section Photos'],
 ];
 $activeStep = (int)(request('step', old('active_step', 1)));
 $activeStep = max(1, min(count($steps), $activeStep));
@@ -1840,7 +1841,773 @@ $progressPct = (int) round(($activeStep / count($steps)) * 100);
         </div>
     </div>
 </div>
+
+{{-- ── Academic Hall of Fame: 1st, 2nd & 3rd Rank Toppers Settings ── --}}
+@php
+    $topperSettings = $school->settings ?? [];
+    $topperActive = old('topper_ranks_active', $topperSettings['topper_ranks_active'] ?? 1);
+    $topperMode = old('topper_ranks_mode', $topperSettings['topper_ranks_mode'] ?? 'auto');
+    $customToppers = $topperSettings['topper_ranks_custom'] ?? [];
+@endphp
+<div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-6 mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-4 border-b border-slate-100 dark:border-slate-700">
+        <div>
+            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <i class="bi bi-trophy-fill text-amber-500"></i> Academic Hall of Fame &amp; Top 1st, 2nd, 3rd Rank Toppers
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Display the school's top academic achievers (1st Rank, 2nd Rank, 3rd Rank) with their <strong>Class</strong> and <strong>Section</strong> across your website. Ranks auto-update whenever exam marksheets or terminal roll numbers are saved!
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="topper_ranks_active" value="1" class="sr-only peer" {{ $topperActive ? 'checked' : '' }}>
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                <span class="ml-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Show On Website</span>
+            </label>
+        </div>
+    </div>
+
+    {{-- Mode Selector --}}
+    <div class="bg-slate-50 dark:bg-slate-900/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700 mb-6">
+        <label class="field-label mb-2 block font-bold text-slate-700 dark:text-slate-300">Rank Calculation Mode</label>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label class="relative flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition {{ $topperMode === 'auto' ? 'bg-amber-50/50 border-amber-300 ring-2 ring-amber-300/30 dark:bg-amber-950/20' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300' }}">
+                <input type="radio" name="topper_ranks_mode" value="auto" class="mt-1 text-amber-600 focus:ring-amber-500" {{ $topperMode === 'auto' ? 'checked' : '' }} onchange="toggleTopperModeFields('auto')">
+                <div>
+                    <span class="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                        <i class="bi bi-cpu-fill text-amber-600"></i> Auto-Calculate from Examination Results (Recommended)
+                    </span>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                        Pulls 1st, 2nd, and 3rd rankers with their class and section automatically from <code>TerminalRollNumber</code> and mark records. Ranks update in real time as soon as exam marks are saved.
+                    </p>
+                </div>
+            </label>
+
+            <label class="relative flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition {{ $topperMode === 'manual' ? 'bg-amber-50/50 border-amber-300 ring-2 ring-amber-300/30 dark:bg-amber-950/20' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300' }}">
+                <input type="radio" name="topper_ranks_mode" value="manual" class="mt-1 text-amber-600 focus:ring-amber-500" {{ $topperMode === 'manual' ? 'checked' : '' }} onchange="toggleTopperModeFields('manual')">
+                <div>
+                    <span class="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                        <i class="bi bi-pencil-square text-indigo-600"></i> Custom Spotlight (Manual Override)
+                    </span>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                        Handpick and feature specific board exam toppers (e.g. SEE District Topper, NEB +2 Board Achievers) with custom names, photos, class, section, and honors.
+                    </p>
+                </div>
+            </label>
+        </div>
+    </div>
+
+    {{-- Title and Subtitle --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+            <label class="field-label">Section Heading</label>
+            <input type="text" name="topper_ranks_title" class="field-input font-bold"
+                   value="{{ old('topper_ranks_title', $topperSettings['topper_ranks_title'] ?? 'Academic Hall of Fame · Top Rankers') }}"
+                   placeholder="Academic Hall of Fame · Top Rankers">
+        </div>
+        <div>
+            <label class="field-label">Subtitle / Description</label>
+            <input type="text" name="topper_ranks_subtitle" class="field-input"
+                   value="{{ old('topper_ranks_subtitle', $topperSettings['topper_ranks_subtitle'] ?? 'Celebrating academic brilliance, diligence, and scholarly distinction across our classes and sections.') }}"
+                   placeholder="Celebrating academic brilliance...">
+        </div>
+        <div class="md:col-span-2">
+            <label class="field-label">Examination / Term Badge Label <span class="text-[10px] text-slate-400 font-normal">— leave empty to auto-detect from latest exam</span></label>
+            <input type="text" name="topper_ranks_exam_term" class="field-input"
+                   value="{{ old('topper_ranks_exam_term', $topperSettings['topper_ranks_exam_term'] ?? '') }}"
+                   placeholder="e.g. Annual Terminal Examination 2081/82 or SEE Board 2081">
+        </div>
+    </div>
+
+    {{-- Custom Spotlight Fields (Shown only if manual mode is chosen) --}}
+    <div id="customToppersContainer" class="{{ $topperMode === 'manual' ? '' : 'hidden' }} space-y-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+        <div class="p-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 rounded-xl text-xs text-indigo-900 dark:text-indigo-200">
+            <i class="bi bi-info-circle-fill mr-1"></i> Enter details for the 1st, 2nd, and 3rd rank achievers below. Uploaded student photos will be <strong>automatically converted to WebP</strong>.
+        </div>
+
+        {{-- 1st, 2nd, 3rd Rank Cards --}}
+        @foreach([
+            1 => ['label' => '1st Rank (Gold Medalist)', 'badge' => '🥇 Gold', 'border' => 'border-amber-400'],
+            2 => ['label' => '2nd Rank (Silver Medalist)', 'badge' => '🥈 Silver', 'border' => 'border-slate-300'],
+            3 => ['label' => '3rd Rank (Bronze Medalist)', 'badge' => '🥉 Bronze', 'border' => 'border-amber-700/50'],
+        ] as $r => $meta)
+        @php $p = "topper_{$r}_"; @endphp
+        <div class="p-5 rounded-2xl border-2 {{ $meta['border'] }} bg-slate-50/50 dark:bg-slate-900/40">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <span>{{ $meta['badge'] }}</span> {{ $meta['label'] }}
+                </span>
+                <span class="text-[11px] font-bold text-slate-400 uppercase">Rank #{{ $r }}</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="field-label">Student Full Name</label>
+                    <input type="text" name="{{ $p }}name" class="field-input font-bold"
+                           value="{{ old($p . 'name', $customToppers[$p . 'name'] ?? '') }}"
+                           placeholder="e.g. Aarav Sharma">
+                </div>
+                <div>
+                    <label class="field-label">Class</label>
+                    <input type="text" name="{{ $p }}class" class="field-input"
+                           value="{{ old($p . 'class', $customToppers[$p . 'class'] ?? 'Grade 10') }}"
+                           placeholder="e.g. Grade 10">
+                </div>
+                <div>
+                    <label class="field-label">Section</label>
+                    <input type="text" name="{{ $p }}section" class="field-input"
+                           value="{{ old($p . 'section', $customToppers[$p . 'section'] ?? 'Section A') }}"
+                           placeholder="e.g. Section A">
+                </div>
+                <div>
+                    <label class="field-label">GPA / Total Marks</label>
+                    <input type="text" name="{{ $p }}gpa" class="field-input"
+                           value="{{ old($p . 'gpa', $customToppers[$p . 'gpa'] ?? ($r === 1 ? '3.98' : ($r === 2 ? '3.94' : '3.90'))) }}"
+                           placeholder="e.g. 3.98">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="field-label">Percentage / Honors Description</label>
+                    <input type="text" name="{{ $p }}honors" class="field-input"
+                           value="{{ old($p . 'honors', $customToppers[$p . 'honors'] ?? 'Outstanding Academic Distinction · Campus Scholar') }}"
+                           placeholder="e.g. Outstanding Academic Distinction">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="field-label">Student Photo (Auto-WebP)</label>
+                    <div class="flex items-center gap-3">
+                        @if(!empty($customToppers[$p . 'photo']))
+                            <img src="{{ asset('storage/' . $customToppers[$p . 'photo']) }}" alt="Topper {{ $r }}" class="w-10 h-10 rounded-full object-cover border border-slate-300">
+                        @endif
+                        <input type="file" name="{{ $p }}photo" accept="image/*" class="field-input text-xs">
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+
+<script>
+function toggleTopperModeFields(mode) {
+    const container = document.getElementById('customToppersContainer');
+    if (container) {
+        if (mode === 'manual') {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+    }
+}
+</script>
 </div>{{-- /step-7 --}}
+
+{{-- ════════════════════════════════════════════════
+     STEP 8 — SECTION PHOTOS & MEDIA (AUTO-WEBP ENGINE)
+════════════════════════════════════════════════ --}}
+<div class="step-panel hidden" id="step-8">
+
+    {{-- Top Engine Banner --}}
+    <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-6 sm:p-8 mb-8 shadow-md relative overflow-hidden">
+        <div class="relative z-10 max-w-3xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold uppercase tracking-wider text-amber-300 mb-3">
+                <i class="bi bi-cpu-fill"></i> High-Performance Auto-WebP Optimization Engine
+            </div>
+            <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white mb-2">
+                Editable Section Photos & Visual Assets
+            </h2>
+            <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                Upload photos for your school's landing page sections below. Every image you upload (JPEG, PNG, GIF, BMP) is <strong class="text-amber-300">automatically converted to next-generation WebP format</strong> with lossless quality compression to deliver instant page loads and pristine visual quality.
+            </p>
+        </div>
+        <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none text-white text-[180px] leading-none">
+            <i class="bi bi-file-earmark-image"></i>
+        </div>
+    </div>
+
+    @php
+    $pubCards = [
+        [
+            'key' => 'pub_blogs_image',
+            'title' => 'School Blogs & Online Journal',
+            'tag' => 'ONLINE JOURNAL',
+            'desc' => 'Student essays, science symposiums & contemporary debates.',
+            'default' => 'imgs/hero/hero_1.webp',
+            'ratio' => '3:4 Portrait (Recommended: 600x800px)'
+        ],
+        [
+            'key' => 'pub_newsletter_image',
+            'title' => 'Newsletter Archive',
+            'tag' => 'QUARTERLY DISPATCH',
+            'desc' => 'Quarterly administrative reports & campus milestone chronicles.',
+            'default' => 'imgs/hero/hero_2.webp',
+            'ratio' => '3:4 Portrait (Recommended: 600x800px)'
+        ],
+        [
+            'key' => 'pub_cornice_image',
+            'title' => 'Cornice Literary Journal',
+            'tag' => 'ANNUAL LITERARY',
+            'desc' => 'Annual student anthology of poetry, creative prose & fine artwork.',
+            'default' => 'imgs/hero/hero_3.webp',
+            'ratio' => '3:4 Portrait (Recommended: 600x800px)'
+        ],
+        [
+            'key' => 'pub_circle_image',
+            'title' => 'The Circle Flagship Magazine',
+            'tag' => 'EDITORIAL REVIEW',
+            'desc' => 'Flagship campus magazine produced by student editorial council.',
+            'default' => file_exists(public_path('imgs/hero/school_hero_graduates.jpg')) ? 'imgs/hero/school_hero_graduates.jpg' : 'imgs/schools.webp',
+            'ratio' => '3:4 Portrait (Recommended: 600x800px)'
+        ],
+    ];
+
+    $pathwayCards = [
+        [
+            'key' => 'pathway_preschool_image',
+            'title' => 'Preschool & Montessori',
+            'tag' => 'Pre-Nursery – UKG',
+            'desc' => 'Child-centred early years foundation nurturing phonics and sensorial play.',
+            'default' => 'imgs/hero/hero_3.webp',
+            'ratio' => '16:10 Landscape (Recommended: 800x500px)'
+        ],
+        [
+            'key' => 'pathway_primary_image',
+            'title' => 'Primary & Basic School',
+            'tag' => 'Grades 1 – 8',
+            'desc' => 'English-medium curriculum combining mathematical inquiry and early coding.',
+            'default' => 'imgs/hero/hero_1.webp',
+            'ratio' => '16:10 Landscape (Recommended: 800x500px)'
+        ],
+        [
+            'key' => 'pathway_secondary_image',
+            'title' => 'Secondary SEE Board',
+            'tag' => 'Grades 9 – 10 (SEE)',
+            'desc' => 'Rigorous national examination preparation with laboratory sessions.',
+            'default' => file_exists(public_path('imgs/hero/school_hero_graduates.jpg')) ? 'imgs/hero/school_hero_graduates.jpg' : 'imgs/hero/hero_2.webp',
+            'ratio' => '16:10 Landscape (Recommended: 800x500px)'
+        ],
+        [
+            'key' => 'pathway_plus2_image',
+            'title' => '+2 Higher Secondary',
+            'tag' => 'Grade XI & XII (NEB)',
+            'desc' => 'NEB accredited Science, Management & Humanities with entrance coaching.',
+            'default' => 'imgs/hero/hero_2.webp',
+            'ratio' => '16:10 Landscape (Recommended: 800x500px)'
+        ],
+        [
+            'key' => 'pathway_steam_image',
+            'title' => 'Robotics, AI & Computing',
+            'tag' => 'Innovation & Tech',
+            'desc' => 'Hands-on digital intelligence, Python coding, microcontrollers, and logic.',
+            'default' => 'imgs/kathmandu.webp',
+            'ratio' => '16:10 Landscape (Recommended: 800x500px)'
+        ],
+        [
+            'key' => 'pathway_sports_image',
+            'title' => 'Sports & Performing Arts',
+            'tag' => 'Athletics & Culture',
+            'desc' => 'Football, basketball, martial arts, vocal music, and championships.',
+            'default' => 'imgs/schools.webp',
+            'ratio' => '16:10 Landscape (Recommended: 800x500px)'
+        ],
+    ];
+
+    $facilityCards = [
+        [
+            'key' => 'facility_stem_image',
+            'title' => 'Advanced STEM Science Labs',
+            'desc' => 'Precision apparatus, optical microscopes, and safety gear for experiments.',
+            'default' => 'imgs/hero/hero_2.webp',
+            'ratio' => '16:10 Landscape (Recommended: 800x500px)'
+        ],
+        [
+            'key' => 'facility_computer_image',
+            'title' => 'High-Speed Computer & AI Lab',
+            'desc' => 'Gigabit fiber workstations, coding software, and digital literacy suites.',
+            'default' => 'imgs/hero/hero_3.webp',
+            'ratio' => '16:10 Landscape (Recommended: 800x500px)'
+        ],
+        [
+            'key' => 'facility_library_image',
+            'title' => 'Rich Knowledge Resource Library',
+            'desc' => 'Curriculum volumes, international journals, and quiet study alcoves.',
+            'default' => 'imgs/hero/hero_1.webp',
+            'ratio' => '16:10 Landscape (Recommended: 800x500px)'
+        ],
+        [
+            'key' => 'facility_sports_image',
+            'title' => 'Multi-Sport Athletics Arena',
+            'desc' => 'Spacious turf grounds for football, basketball court, and athletic coaching.',
+            'default' => 'imgs/schools.webp',
+            'ratio' => '16:10 Landscape (Recommended: 800x500px)'
+        ],
+        [
+            'key' => 'facility_transport_image',
+            'title' => 'Safe GPS Fleet Transportation',
+            'desc' => 'Dedicated school buses covering major routes with real-time GPS tracking.',
+            'default' => 'imgs/kathmandu.webp',
+            'ratio' => '16:10 Landscape (Recommended: 800x500px)'
+        ],
+        [
+            'key' => 'facility_classroom_image',
+            'title' => 'Smart Interactive AV Classrooms',
+            'desc' => 'Multimedia projectors, smart boards, and ergonomic seating.',
+            'default' => file_exists(public_path('imgs/hero/school_hero_graduates.jpg')) ? 'imgs/hero/school_hero_graduates.jpg' : 'imgs/hero/hero_2.webp',
+            'ratio' => '16:10 Landscape (Recommended: 800x500px)'
+        ],
+    ];
+
+    $ratoCards = [
+        [
+            'key' => 'campus_video_cover_image',
+            'title' => 'Video Tour Cover / Poster Photo',
+            'tag' => 'VIDEO TOUR',
+            'desc' => 'Cover image shown in the Welcome & Video Tour section.',
+            'default' => 'imgs/hero/hero_1.webp',
+            'ratio' => '16:9 Widescreen (Recommended: 1280x720px)'
+        ],
+        [
+            'key' => 'admissions_slide1_image',
+            'title' => 'Admissions Slide 1 (Pre-Kindergarten)',
+            'tag' => 'ADMISSIONS',
+            'desc' => 'Featured student photo shown on the admissions slider.',
+            'default' => 'imgs/rato-bangala/admissions_kids.jpg',
+            'ratio' => '4:3 Standard (Recommended: 800x600px)'
+        ],
+        [
+            'key' => 'admissions_slide2_image',
+            'title' => 'Admissions Slide 2 (Primary & Basic)',
+            'tag' => 'ADMISSIONS',
+            'desc' => 'Second slide photo on the admissions slider.',
+            'default' => 'imgs/hero/hero_1.webp',
+            'ratio' => '4:3 Standard (Recommended: 800x600px)'
+        ],
+        [
+            'key' => 'admissions_slide3_image',
+            'title' => 'Admissions Slide 3 (Secondary & +2)',
+            'tag' => 'ADMISSIONS',
+            'desc' => 'Third slide photo on the admissions slider.',
+            'default' => 'imgs/hero/hero_2.webp',
+            'ratio' => '4:3 Standard (Recommended: 800x600px)'
+        ],
+        [
+            'key' => 'program_ecc_image',
+            'title' => 'Our Program (Curved Signature Photo)',
+            'tag' => 'OUR PROGRAM',
+            'desc' => 'The signature curved photo with overlapping red & navy squares.',
+            'default' => 'imgs/rato-bangala/ecc.jpg',
+            'ratio' => '4:3 Standard (Recommended: 800x600px)'
+        ],
+        [
+            'key' => 'principal_photo_image',
+            'title' => 'Message from Principal Photo',
+            'tag' => 'LEADERSHIP',
+            'desc' => 'Portrait photo displayed on the Principal message card with blue rectangle.',
+            'default' => 'imgs/rato-bangala/milan_dixit.jpg',
+            'ratio' => '4:3 Standard (Recommended: 800x600px)'
+        ],
+        [
+            'key' => 'founder_photo_image',
+            'title' => 'Message from Director Photo',
+            'tag' => 'LEADERSHIP',
+            'desc' => 'Portrait photo displayed on the Director message card with red rectangle.',
+            'default' => 'imgs/rato-bangala/shanta_dixit.jpg',
+            'ratio' => '4:3 Standard (Recommended: 800x600px)'
+        ],
+        [
+            'key' => 'outreach_visual_image',
+            'title' => 'School History & Outreach Roadmap',
+            'tag' => 'HISTORY / RBPOP',
+            'desc' => 'The winding dashed trail milestone infographic visual on blue background.',
+            'default' => 'imgs/rato-bangala/rcpop_visual.png',
+            'ratio' => 'Transparent PNG or WebP Graphic (Recommended: 600x500px)'
+        ],
+    ];
+    @endphp
+
+    {{-- ── 1. OFFICIAL PUBLICATIONS & STUDENT MAGAZINES ── --}}
+    <div class="mb-10">
+        <div class="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <i class="bi bi-journal-bookmark-fill text-rose-600"></i> Official Publications & Student Magazines
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Images shown on the 4 tall magazine & journal showcase cards.
+                </p>
+            </div>
+            <span class="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">
+                4 Visuals
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            @foreach($pubCards as $card)
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-xs p-4 flex flex-col justify-between group hover:border-indigo-400 dark:hover:border-indigo-500 transition-all duration-200">
+                <div>
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/40">
+                            {{ $card['tag'] }}
+                        </span>
+                        <span id="badge_{{ $card['key'] }}" class="text-[10px] font-bold px-2 py-0.5 rounded {{ $school->hasCustomSectionImage($card['key']) ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400' }}">
+                            {{ $school->hasCustomSectionImage($card['key']) ? 'Custom WebP' : 'Default Preset' }}
+                        </span>
+                    </div>
+
+                    <h4 class="font-extrabold text-sm text-slate-900 dark:text-slate-100 mb-1 leading-snug">
+                        {{ $card['title'] }}
+                    </h4>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3 line-clamp-2">
+                        {{ $card['desc'] }}
+                    </p>
+
+                    <div class="relative rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 aspect-[3/4] mb-3 group/img">
+                        <img id="img_{{ $card['key'] }}" 
+                             src="{{ $school->sectionImage($card['key'], $card['default']) }}" 
+                             alt="{{ $card['title'] }}" 
+                             class="w-full h-full object-cover transform group-hover/img:scale-105 transition duration-300">
+                        <div class="absolute bottom-2 right-2 bg-slate-950/80 backdrop-blur-xs text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-xs">
+                            ⚡ Auto-WebP
+                        </div>
+                    </div>
+
+                    <div class="text-[10px] text-slate-400 mb-3">
+                        <i class="bi bi-aspect-ratio text-slate-500 mr-1"></i> {{ $card['ratio'] }}
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100 dark:border-slate-700/60 flex items-center gap-2">
+                    <label class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer shadow-xs transition transform hover:-translate-y-0.5">
+                        <i class="bi bi-cloud-arrow-up-fill"></i>
+                        <span>Upload Photo</span>
+                        <input type="file" 
+                               name="{{ $card['key'] }}" 
+                               id="input_{{ $card['key'] }}" 
+                               accept="image/*" 
+                               class="hidden" 
+                               onchange="previewSectionImg(this, 'img_{{ $card['key'] }}', 'badge_{{ $card['key'] }}')">
+                    </label>
+
+                    <input type="hidden" name="remove_{{ $card['key'] }}" id="remove_{{ $card['key'] }}" value="0">
+
+                    @if($school->hasCustomSectionImage($card['key']))
+                    <button type="button" 
+                            onclick="markSectionImgReset('{{ $card['key'] }}', '{{ asset($card['default']) }}', 'img_{{ $card['key'] }}', 'badge_{{ $card['key'] }}')"
+                            class="py-2 px-2.5 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 transition"
+                            title="Reset to default preset image">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- ── 2. COMPREHENSIVE ACADEMIC PATHWAYS ── --}}
+    <div class="mb-10">
+        <div class="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <i class="bi bi-mortarboard-fill text-orange-500"></i> Comprehensive Academic Pathways
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Images shown across the 6 academic level cards (Preschool through +2 Higher Secondary).
+                </p>
+            </div>
+            <span class="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">
+                6 Visuals
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            @foreach($pathwayCards as $card)
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-xs p-4 flex flex-col justify-between group hover:border-indigo-400 dark:hover:border-indigo-500 transition-all duration-200">
+                <div>
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-orange-50 dark:bg-orange-950/60 text-[#f36c21] dark:text-orange-400 border border-orange-200/60 dark:border-orange-800/40">
+                            {{ $card['tag'] }}
+                        </span>
+                        <span id="badge_{{ $card['key'] }}" class="text-[10px] font-bold px-2 py-0.5 rounded {{ $school->hasCustomSectionImage($card['key']) ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400' }}">
+                            {{ $school->hasCustomSectionImage($card['key']) ? 'Custom WebP' : 'Default Preset' }}
+                        </span>
+                    </div>
+
+                    <h4 class="font-extrabold text-sm text-slate-900 dark:text-slate-100 mb-1 leading-snug">
+                        {{ $card['title'] }}
+                    </h4>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3 line-clamp-2">
+                        {{ $card['desc'] }}
+                    </p>
+
+                    <div class="relative rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 aspect-[16/10] mb-3 group/img">
+                        <img id="img_{{ $card['key'] }}" 
+                             src="{{ $school->sectionImage($card['key'], $card['default']) }}" 
+                             alt="{{ $card['title'] }}" 
+                             class="w-full h-full object-cover transform group-hover/img:scale-105 transition duration-300">
+                        <div class="absolute bottom-2 right-2 bg-slate-950/80 backdrop-blur-xs text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-xs">
+                            ⚡ Auto-WebP
+                        </div>
+                    </div>
+
+                    <div class="text-[10px] text-slate-400 mb-3">
+                        <i class="bi bi-aspect-ratio text-slate-500 mr-1"></i> {{ $card['ratio'] }}
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100 dark:border-slate-700/60 flex items-center gap-2">
+                    <label class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer shadow-xs transition transform hover:-translate-y-0.5">
+                        <i class="bi bi-cloud-arrow-up-fill"></i>
+                        <span>Upload Photo</span>
+                        <input type="file" 
+                               name="{{ $card['key'] }}" 
+                               id="input_{{ $card['key'] }}" 
+                               accept="image/*" 
+                               class="hidden" 
+                               onchange="previewSectionImg(this, 'img_{{ $card['key'] }}', 'badge_{{ $card['key'] }}')">
+                    </label>
+
+                    <input type="hidden" name="remove_{{ $card['key'] }}" id="remove_{{ $card['key'] }}" value="0">
+
+                    @if($school->hasCustomSectionImage($card['key']))
+                    <button type="button" 
+                            onclick="markSectionImgReset('{{ $card['key'] }}', '{{ asset($card['default']) }}', 'img_{{ $card['key'] }}', 'badge_{{ $card['key'] }}')"
+                            class="py-2 px-2.5 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 transition"
+                            title="Reset to default preset image">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- ── 3. CAMPUS INFRASTRUCTURE & FACILITIES ── --}}
+    <div class="mb-10">
+        <div class="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <i class="bi bi-buildings-fill text-indigo-500"></i> Campus Infrastructure & Facilities
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Images shown across the 6 facility cards (STEM labs, computers, library, athletics, buses, smart classrooms).
+                </p>
+            </div>
+            <span class="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">
+                6 Visuals
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            @foreach($facilityCards as $card)
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-xs p-4 flex flex-col justify-between group hover:border-indigo-400 dark:hover:border-indigo-500 transition-all duration-200">
+                <div>
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-[#0b417e] dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/40">
+                            FACILITY
+                        </span>
+                        <span id="badge_{{ $card['key'] }}" class="text-[10px] font-bold px-2 py-0.5 rounded {{ $school->hasCustomSectionImage($card['key']) ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400' }}">
+                            {{ $school->hasCustomSectionImage($card['key']) ? 'Custom WebP' : 'Default Preset' }}
+                        </span>
+                    </div>
+
+                    <h4 class="font-extrabold text-sm text-slate-900 dark:text-slate-100 mb-1 leading-snug">
+                        {{ $card['title'] }}
+                    </h4>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3 line-clamp-2">
+                        {{ $card['desc'] }}
+                    </p>
+
+                    <div class="relative rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 aspect-[16/10] mb-3 group/img">
+                        <img id="img_{{ $card['key'] }}" 
+                             src="{{ $school->sectionImage($card['key'], $card['default']) }}" 
+                             alt="{{ $card['title'] }}" 
+                             class="w-full h-full object-cover transform group-hover/img:scale-105 transition duration-300">
+                        <div class="absolute bottom-2 right-2 bg-slate-950/80 backdrop-blur-xs text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-xs">
+                            ⚡ Auto-WebP
+                        </div>
+                    </div>
+
+                    <div class="text-[10px] text-slate-400 mb-3">
+                        <i class="bi bi-aspect-ratio text-slate-500 mr-1"></i> {{ $card['ratio'] }}
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100 dark:border-slate-700/60 flex items-center gap-2">
+                    <label class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer shadow-xs transition transform hover:-translate-y-0.5">
+                        <i class="bi bi-cloud-arrow-up-fill"></i>
+                        <span>Upload Photo</span>
+                        <input type="file" 
+                               name="{{ $card['key'] }}" 
+                               id="input_{{ $card['key'] }}" 
+                               accept="image/*" 
+                               class="hidden" 
+                               onchange="previewSectionImg(this, 'img_{{ $card['key'] }}', 'badge_{{ $card['key'] }}')">
+                    </label>
+
+                    <input type="hidden" name="remove_{{ $card['key'] }}" id="remove_{{ $card['key'] }}" value="0">
+
+                    @if($school->hasCustomSectionImage($card['key']))
+                    <button type="button" 
+                            onclick="markSectionImgReset('{{ $card['key'] }}', '{{ asset($card['default']) }}', 'img_{{ $card['key'] }}', 'badge_{{ $card['key'] }}')"
+                            class="py-2 px-2.5 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 transition"
+                            title="Reset to default preset image">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- ── 4. RATO BANGALA SIGNATURE SHOWCASE & LEADERSHIP ── --}}
+    <div class="mb-10">
+        <div class="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <i class="bi bi-stars text-red-600"></i> Admissions Carousel, Early Childhood, Leadership & Showcase Visuals
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Images used in the Admissions Carousel slider, the signature curved Early Childhood photo, Principal & Director message cards, and the History Roadmap.
+                </p>
+            </div>
+            <span class="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-full">
+                {{ count($ratoCards) }} Visuals
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            @foreach($ratoCards as $card)
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700/80 shadow-xs p-4 flex flex-col justify-between group hover:border-indigo-400 dark:hover:border-indigo-500 transition-all duration-200">
+                <div>
+                    <div class="flex items-center justify-between gap-2 mb-2">
+                        <span class="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-400 border border-red-200/60 dark:border-red-800/40">
+                            {{ $card['tag'] }}
+                        </span>
+                        <span id="badge_{{ $card['key'] }}" class="text-[10px] font-bold px-2 py-0.5 rounded {{ $school->hasCustomSectionImage($card['key']) ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400' }}">
+                            {{ $school->hasCustomSectionImage($card['key']) ? 'Custom WebP' : 'Default Preset' }}
+                        </span>
+                    </div>
+
+                    <h4 class="font-extrabold text-sm text-slate-900 dark:text-slate-100 mb-1 leading-snug">
+                        {{ $card['title'] }}
+                    </h4>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mb-3 line-clamp-2">
+                        {{ $card['desc'] }}
+                    </p>
+
+                    <div class="relative rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 aspect-[4/3] mb-3 group/img">
+                        <img id="img_{{ $card['key'] }}" 
+                             src="{{ $school->sectionImage($card['key'], $card['default']) }}" 
+                             alt="{{ $card['title'] }}" 
+                             class="w-full h-full object-cover transform group-hover/img:scale-105 transition duration-300">
+                        <div class="absolute bottom-2 right-2 bg-slate-950/80 backdrop-blur-xs text-white text-[9px] font-bold px-2 py-0.5 rounded shadow-xs">
+                            ⚡ Auto-WebP
+                        </div>
+                    </div>
+
+                    <div class="text-[10px] text-slate-400 mb-3">
+                        <i class="bi bi-aspect-ratio text-slate-500 mr-1"></i> {{ $card['ratio'] }}
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100 dark:border-slate-700/60 flex items-center gap-2">
+                    <label class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 cursor-pointer shadow-xs transition transform hover:-translate-y-0.5">
+                        <i class="bi bi-cloud-arrow-up-fill"></i>
+                        <span>Upload Photo</span>
+                        <input type="file" 
+                               name="{{ $card['key'] }}" 
+                               id="input_{{ $card['key'] }}" 
+                               accept="image/*" 
+                               class="hidden" 
+                               onchange="previewSectionImg(this, 'img_{{ $card['key'] }}', 'badge_{{ $card['key'] }}')">
+                    </label>
+
+                    <input type="hidden" name="remove_{{ $card['key'] }}" id="remove_{{ $card['key'] }}" value="0">
+
+                    @if($school->hasCustomSectionImage($card['key']))
+                    <button type="button" 
+                            onclick="markSectionImgReset('{{ $card['key'] }}', '{{ asset($card['default']) }}', 'img_{{ $card['key'] }}', 'badge_{{ $card['key'] }}')"
+                            class="py-2 px-2.5 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-900/30 hover:bg-rose-100 transition"
+                            title="Reset to default preset image">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+
+    {{-- ── 5. WELCOME VIDEO TOUR & ADMISSION ANNOUNCEMENT BOX ── --}}
+    <div class="mb-10 bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700/80 shadow-xs p-6 sm:p-8">
+        <div class="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-slate-200 dark:border-slate-700">
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <i class="bi bi-camera-video-fill text-indigo-600"></i> Video Tour & Soft-Pink Admission Notice Content
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Customize the YouTube tour video embed, application prompt text, and start term dates shown next to the tour video.
+                </p>
+            </div>
+            <span class="text-xs font-bold text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200/60 dark:border-indigo-800 px-3 py-1 rounded-full">
+                Live on Homepage
+            </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {{-- Video Tour Embed --}}
+            <div class="space-y-4">
+                <div>
+                    <label class="field-label flex items-center gap-1.5 font-bold text-xs">
+                        <i class="bi bi-youtube text-red-600"></i> YouTube / Video Embed URL
+                    </label>
+                    <input type="text" name="campus_video_url" 
+                           value="{{ old('campus_video_url', $school->settings['campus_video_url'] ?? '') }}"
+                           placeholder="https://www.youtube.com/watch?v=S2hIoTw8i9w" 
+                           class="field-input text-xs">
+                    <p class="text-[11px] text-slate-400 mt-1">Leave empty to use default video tour or custom tour poster image uploaded above.</p>
+                </div>
+
+                <div>
+                    <label class="field-label font-bold text-xs">Admissions Notice Header Line</label>
+                    <input type="text" name="admission_notice_text" 
+                           value="{{ old('admission_notice_text', $school->settings['admission_notice_text'] ?? 'We are currently accepting applications for Pre-Kindergarten only.') }}" 
+                           class="field-input text-xs">
+                    <p class="text-[11px] text-slate-400 mt-1">e.g. We are currently accepting applications for Pre-Kindergarten only.</p>
+                </div>
+            </div>
+
+            {{-- Notice Dates and Link --}}
+            <div class="space-y-4">
+                <div>
+                    <label class="field-label font-bold text-xs">Admissions Apply Link Text</label>
+                    <input type="text" name="admission_notice_link_text" 
+                           value="{{ old('admission_notice_link_text', $school->settings['admission_notice_link_text'] ?? 'Click here to apply.') }}" 
+                           class="field-input text-xs">
+                    <p class="text-[11px] text-slate-400 mt-1">Highlighted red text link pointing directly to online application.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="field-label font-bold text-xs">Term Start Date Highlight</label>
+                        <input type="text" name="admission_notice_date" 
+                               value="{{ old('admission_notice_date', $school->settings['admission_notice_date'] ?? '28 April 2027:') }}" 
+                               class="field-input text-xs">
+                    </div>
+                    <div>
+                        <label class="field-label font-bold text-xs">Batch Information</label>
+                        <input type="text" name="admission_notice_term" 
+                               value="{{ old('admission_notice_term', $school->settings['admission_notice_term'] ?? 'Term 1 begins for the incoming batch.') }}" 
+                               class="field-input text-xs">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>{{-- /step-8 --}}
 
 {{-- ════════════════════════════════════════════════
      FOOTER NAV (Prev / Next / Save)
@@ -2817,6 +3584,40 @@ function previewPrincipalPhoto(input) {
             preview.src = e.target.result;
         };
         reader.readAsDataURL(input.files[0]);
+    }
+}
+
+/* ── Section Photos Live Preview & Reset Helpers ────────────────── */
+function previewSectionImg(input, imgId, badgeId) {
+    if (!input || !input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = document.getElementById(imgId);
+        if (img) img.src = e.target.result;
+        const badge = document.getElementById(badgeId);
+        if (badge) {
+            badge.textContent = 'Auto-WebP Ready';
+            badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800';
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function markSectionImgReset(key, defaultUrl, imgId, badgeId) {
+    const removeInput = document.getElementById('remove_' + key);
+    if (removeInput) removeInput.value = '1';
+    
+    const fileInput = document.getElementById('input_' + key);
+    if (fileInput) fileInput.value = '';
+
+    const img = document.getElementById(imgId);
+    if (img) img.src = defaultUrl;
+
+    const badge = document.getElementById(badgeId);
+    if (badge) {
+        badge.textContent = 'Default Preset';
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-400';
     }
 }
 

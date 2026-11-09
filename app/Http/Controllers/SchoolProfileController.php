@@ -162,11 +162,15 @@ class SchoolProfileController extends Controller
             'established_year'           => 'nullable|string|max:20',
             'heritage_tagline'           => 'nullable|string|max:255',
             'campus_video_url'           => 'nullable|string|max:500',
-            // Prominent Admission Announcement Ribbon
+            // Prominent Admission Announcement Ribbon & Box Notice
             'admission_banner_active'    => 'nullable|in:0,1',
             'admission_banner_text'      => 'nullable|string|max:255',
             'admission_banner_btn_text'  => 'nullable|string|max:100',
             'admission_banner_btn_url'   => 'nullable|string|max:500',
+            'admission_notice_text'      => 'nullable|string|max:500',
+            'admission_notice_link_text' => 'nullable|string|max:150',
+            'admission_notice_date'      => 'nullable|string|max:100',
+            'admission_notice_term'      => 'nullable|string|max:255',
             // Hero Slider Banners (Supports Images & MP4 Videos)
             'new_slider_image'           => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm,ogg,mov|max:51200',
             'new_slider_title'           => 'nullable|string|max:255',
@@ -179,6 +183,31 @@ class SchoolProfileController extends Controller
             'slider_banners'             => 'nullable|array',
             'replace_slider_image.*'     => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm,ogg,mov|max:51200',
             'delete_slider_banners'      => 'nullable|array',
+            // Section Custom Images (Auto-converted to WebP)
+            'admissions_slide1_image'    => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'admissions_slide2_image'    => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'admissions_slide3_image'    => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'program_ecc_image'          => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'principal_photo_image'      => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'founder_photo_image'        => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'outreach_visual_image'      => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'campus_video_cover_image'   => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'pub_blogs_image'            => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'pub_newsletter_image'       => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'pub_cornice_image'          => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'pub_circle_image'           => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'pathway_preschool_image'    => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'pathway_primary_image'      => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'pathway_secondary_image'    => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'pathway_plus2_image'        => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'pathway_steam_image'        => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'pathway_sports_image'       => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'facility_stem_image'        => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'facility_computer_image'    => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'facility_library_image'     => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'facility_sports_image'      => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'facility_transport_image'   => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
+            'facility_classroom_image'   => 'nullable|image|mimes:jpeg,png,jpg,webp,gif,bmp|max:10240',
         ]);
 
         // ── Principal Photo & Operational Settings ───────────────────────────
@@ -242,6 +271,18 @@ class SchoolProfileController extends Controller
         }
         if ($request->has('admission_banner_btn_url')) {
             $settings['admission_banner_btn_url'] = $request->input('admission_banner_btn_url');
+        }
+        if ($request->has('admission_notice_text')) {
+            $settings['admission_notice_text'] = $request->input('admission_notice_text');
+        }
+        if ($request->has('admission_notice_link_text')) {
+            $settings['admission_notice_link_text'] = $request->input('admission_notice_link_text');
+        }
+        if ($request->has('admission_notice_date')) {
+            $settings['admission_notice_date'] = $request->input('admission_notice_date');
+        }
+        if ($request->has('admission_notice_term')) {
+            $settings['admission_notice_term'] = $request->input('admission_notice_term');
         }
 
         // College Counseling & Global Placements (Rato Bangala style)
@@ -320,6 +361,41 @@ class SchoolProfileController extends Controller
             $settings['exam_shift_details'] = $request->input('exam_shift_details');
         }
 
+        // ── Academic Hall of Fame / Toppers Ranking Settings ────────────────
+        if ($request->has('topper_ranks_active') || $request->has('topper_ranks_mode') || $request->has('topper_ranks_title')) {
+            $settings['topper_ranks_active'] = $request->has('topper_ranks_active') ? 1 : 0;
+            $settings['topper_ranks_mode'] = $request->input('topper_ranks_mode', 'auto');
+            $settings['topper_ranks_title'] = $request->input('topper_ranks_title', 'Academic Hall of Fame · Top Rankers');
+            $settings['topper_ranks_subtitle'] = $request->input('topper_ranks_subtitle', 'Celebrating academic dedication, discipline, and intellectual brilliance across all classes & sections.');
+            $settings['topper_ranks_exam_term'] = $request->input('topper_ranks_exam_term');
+
+            $customToppers = $settings['topper_ranks_custom'] ?? [];
+            for ($r = 1; $r <= 3; $r++) {
+                $pfx = "topper_{$r}_";
+                if ($request->has($pfx . 'name')) {
+                    $customToppers[$pfx . 'name'] = $request->input($pfx . 'name');
+                    $customToppers[$pfx . 'class'] = $request->input($pfx . 'class');
+                    $customToppers[$pfx . 'section'] = $request->input($pfx . 'section');
+                    $customToppers[$pfx . 'gpa'] = $request->input($pfx . 'gpa');
+                    $customToppers[$pfx . 'percentage'] = $request->input($pfx . 'percentage');
+                    $customToppers[$pfx . 'honors'] = $request->input($pfx . 'honors');
+
+                    if ($request->hasFile($pfx . 'photo')) {
+                        if (!empty($customToppers[$pfx . 'photo'])) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($customToppers[$pfx . 'photo']);
+                        }
+                        $customToppers[$pfx . 'photo'] = \App\Services\ImageWebpService::storeAsWebp(
+                            $request->file($pfx . 'photo'), 'topper-photos', 'public'
+                        );
+                    } elseif ($request->input('remove_' . $pfx . 'photo') == '1' && !empty($customToppers[$pfx . 'photo'])) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($customToppers[$pfx . 'photo']);
+                        unset($customToppers[$pfx . 'photo']);
+                    }
+                }
+            }
+            $settings['topper_ranks_custom'] = $customToppers;
+        }
+
         // Exam Routine File Upload
         if ($request->hasFile('exam_routine_file')) {
             if (!empty($settings['exam_routine_file'])) {
@@ -336,6 +412,34 @@ class SchoolProfileController extends Controller
             Storage::disk('public')->delete($settings['exam_routine_file']);
             $settings['exam_routine_file'] = null;
         }
+
+        // ── Custom Section Images (Auto-converted to WebP) ───────────────────
+        $sectionImageKeys = [
+            'admissions_slide1_image', 'admissions_slide2_image', 'admissions_slide3_image',
+            'program_ecc_image', 'principal_photo_image', 'founder_photo_image',
+            'outreach_visual_image', 'campus_video_cover_image',
+            'pub_blogs_image', 'pub_newsletter_image', 'pub_cornice_image', 'pub_circle_image',
+            'pathway_preschool_image', 'pathway_primary_image', 'pathway_secondary_image',
+            'pathway_plus2_image', 'pathway_steam_image', 'pathway_sports_image',
+            'facility_stem_image', 'facility_computer_image', 'facility_library_image',
+            'facility_sports_image', 'facility_transport_image', 'facility_classroom_image',
+        ];
+
+        $sectionImages = $settings['section_images'] ?? [];
+        foreach ($sectionImageKeys as $secKey) {
+            if ($request->hasFile($secKey)) {
+                if (!empty($sectionImages[$secKey])) {
+                    Storage::disk('public')->delete($sectionImages[$secKey]);
+                }
+                $sectionImages[$secKey] = \App\Services\ImageWebpService::storeAsWebp(
+                    $request->file($secKey), 'section-images', 'public'
+                );
+            } elseif ($request->input('remove_' . $secKey) == '1' && !empty($sectionImages[$secKey])) {
+                Storage::disk('public')->delete($sectionImages[$secKey]);
+                unset($sectionImages[$secKey]);
+            }
+        }
+        $settings['section_images'] = $sectionImages;
 
         $school->settings = $settings;
 

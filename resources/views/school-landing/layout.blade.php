@@ -802,6 +802,13 @@ body {
                             </div>
                         </a>
                         <div class="my-1 border-t border-slate-100"></div>
+                        <a href="{{ $pageUrl('') }}#hall-of-fame" class="nav-dropdown-item !bg-amber-50/70 hover:!bg-amber-100">
+                            <i class="bi bi-trophy-fill text-amber-600"></i>
+                            <div>
+                                <div class="font-bold text-amber-900 leading-tight">Academic Hall of Fame</div>
+                                <div class="text-[11px] text-amber-700 font-normal">1st, 2nd &amp; 3rd Rank Achievers</div>
+                            </div>
+                        </a>
                         <a href="{{ $pageUrl('academics') }}" class="nav-dropdown-item !bg-orange-50 hover:!bg-orange-100">
                             <i class="bi bi-grid text-[#f36c21]"></i>
                             <div class="font-bold text-[#f36c21] leading-tight">View All Programs</div>
@@ -844,6 +851,44 @@ body {
                                 <div class="text-[11px] text-slate-500 font-normal">Digital brochure (PDF)</div>
                             </div>
                         </button>
+                    </div>
+                </div>
+
+                {{-- Stories & Publications Dropdown --}}
+                <div class="nav-dropdown">
+                    <a href="{{ $pageUrl('publications') }}" class="nav-link-white {{ ($activeNav('publications') || $activeNav('blogs') || $activeNav('news') || $activeNav('stories')) ? 'active' : '' }}">
+                        <span>Stories & Media</span>
+                        <i class="bi bi-chevron-down text-[10px] opacity-70"></i>
+                    </a>
+                    <div class="nav-dropdown-menu !min-w-[270px]">
+                        <a href="{{ $pageUrl('blogs') }}" class="nav-dropdown-item">
+                            <i class="bi bi-journal-text text-[#8b151b]"></i>
+                            <div>
+                                <div class="font-bold text-slate-900 leading-tight">School Blogs</div>
+                                <div class="text-[11px] text-slate-500 font-normal">Pedagogy, science & essays</div>
+                            </div>
+                        </a>
+                        <a href="{{ $pageUrl('news') }}" class="nav-dropdown-item">
+                            <i class="bi bi-newspaper text-[#0b417e]"></i>
+                            <div>
+                                <div class="font-bold text-slate-900 leading-tight">News & Press Articles</div>
+                                <div class="text-[11px] text-slate-500 font-normal">Campus milestones & reports</div>
+                            </div>
+                        </a>
+                        <a href="{{ $pageUrl('stories') }}" class="nav-dropdown-item">
+                            <i class="bi bi-stars text-amber-500"></i>
+                            <div>
+                                <div class="font-bold text-slate-900 leading-tight">Student Stories & Voices</div>
+                                <div class="text-[11px] text-slate-500 font-normal">Alumni journeys & student voice</div>
+                            </div>
+                        </a>
+                        <a href="{{ $pageUrl('publications') }}" class="nav-dropdown-item">
+                            <i class="bi bi-journal-bookmark-fill text-rose-600"></i>
+                            <div>
+                                <div class="font-bold text-slate-900 leading-tight">Magazines & Publications</div>
+                                <div class="text-[11px] text-slate-500 font-normal">Cornice, The Circle & Newsletters</div>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
@@ -1067,6 +1112,42 @@ body {
                         <span class="text-xs font-bold text-slate-800 group-hover:text-[#f36c21] block">+2 College</span>
                         <span class="text-[10px] text-slate-500">NEB Streams</span>
                     </a>
+                    <a href="{{ $pageUrl('') }}#hall-of-fame" class="p-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition group col-span-2 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <i class="bi bi-trophy-fill text-amber-600 text-lg"></i>
+                            <div>
+                                <span class="text-xs font-bold text-amber-950 block">Academic Hall of Fame</span>
+                                <span class="text-[10px] text-amber-800">1st, 2nd, 3rd Rankers with Class &amp; Section</span>
+                            </div>
+                        </div>
+                        <i class="bi bi-arrow-right text-amber-600 text-xs"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div>
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">Publications & Media</h4>
+                <div class="grid grid-cols-2 gap-2">
+                    <a href="{{ $pageUrl('blogs') }}" class="p-3 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl transition group">
+                        <i class="bi bi-journal-text text-[#8b151b] text-lg block mb-1"></i>
+                        <span class="text-xs font-bold text-slate-800 group-hover:text-[#8b151b] block">School Blogs</span>
+                        <span class="text-[10px] text-slate-500">Academic Essays</span>
+                    </a>
+                    <a href="{{ $pageUrl('news') }}" class="p-3 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-xl transition group">
+                        <i class="bi bi-newspaper text-[#0b417e] text-lg block mb-1"></i>
+                        <span class="text-xs font-bold text-slate-800 group-hover:text-[#0b417e] block">News & Press</span>
+                        <span class="text-[10px] text-slate-500">Campus Events</span>
+                    </a>
+                    <a href="{{ $pageUrl('stories') }}" class="p-3 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-200 rounded-xl transition group">
+                        <i class="bi bi-stars text-amber-500 text-lg block mb-1"></i>
+                        <span class="text-xs font-bold text-slate-800 group-hover:text-amber-600 block">Student Stories</span>
+                        <span class="text-[10px] text-slate-500">Alumni Voices</span>
+                    </a>
+                    <a href="{{ $pageUrl('publications') }}" class="p-3 bg-slate-50 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-xl transition group">
+                        <i class="bi bi-journal-bookmark-fill text-rose-600 text-lg block mb-1"></i>
+                        <span class="text-xs font-bold text-slate-800 group-hover:text-rose-700 block">Magazines</span>
+                        <span class="text-[10px] text-slate-500">Cornice & Circle</span>
+                    </a>
                 </div>
             </div>
 
@@ -1172,6 +1253,10 @@ body {
                         <a href="{{ $pageUrl('academics') }}" class="hover:underline hover:text-white transition">Programs</a>
                     </li>
                     <li class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                        <a href="{{ $pageUrl('') }}#hall-of-fame" class="hover:underline text-amber-200 hover:text-white transition font-bold">Top Achievers (1st, 2nd, 3rd)</a>
+                    </li>
+                    <li class="flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
                         <a href="{{ $pageUrl('admissions') }}" class="hover:underline hover:text-white transition">Admission</a>
                     </li>
@@ -1182,6 +1267,22 @@ body {
                     <li class="flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
                         <a href="{{ $pageUrl('notices') }}" class="hover:underline hover:text-white transition">News/Events</a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                        <a href="{{ $pageUrl('blogs') }}" class="hover:underline hover:text-white transition">School Blogs</a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                        <a href="{{ $pageUrl('news') }}" class="hover:underline hover:text-white transition">News & Articles</a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                        <a href="{{ $pageUrl('stories') }}" class="hover:underline hover:text-white transition">Student Stories</a>
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+                        <a href="{{ $pageUrl('publications') }}" class="hover:underline hover:text-white transition">Magazines & Journals</a>
                     </li>
                     <li class="flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-white"></span>

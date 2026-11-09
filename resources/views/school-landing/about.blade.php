@@ -171,7 +171,7 @@
 
             {{-- Roadmap / Timeline Visual (2003 Started Year, 4 Phases, 9 Districts, 700 Schools) --}}
             <div class="lg:col-span-5 flex justify-center items-center py-4">
-                <img src="{{ asset('imgs/rato-bangala/rcpop_visual.png') }}" 
+                <img src="{{ $school->sectionImage('outreach_visual_image', 'imgs/rato-bangala/rcpop_visual.png') }}" 
                      alt="{{ $school->outreach_title }}" 
                      class="w-full max-w-lg object-contain drop-shadow-xl">
             </div>

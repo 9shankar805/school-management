@@ -169,9 +169,13 @@
                     Welcome to <br class="hidden sm:inline">{{ $school->name }}
                 </h2>
                 
-                {{-- Responsive 16:9 Video Player --}}
+                {{-- Responsive 16:9 Video Player or Custom Tour Poster --}}
                 <div class="relative aspect-video rounded-2xl overflow-hidden shadow-sm bg-black mb-6">
-                    @if($school->campus_video_embed_url)
+                    @if($school->hasCustomSectionImage('campus_video_cover_image'))
+                        <img src="{{ $school->sectionImage('campus_video_cover_image', '') }}" 
+                             alt="Campus Tour" 
+                             class="w-full h-full object-cover">
+                    @elseif($school->campus_video_embed_url)
                         <iframe src="{{ $school->campus_video_embed_url }}" 
                                 class="w-full h-full border-0" 
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
@@ -199,14 +203,14 @@
                 <div class="bg-[#fcedec] rounded-2xl p-7 sm:p-9 border border-[#f5d5d5] text-slate-800 shadow-xs flex flex-col justify-between">
                     <div>
                         <p class="text-slate-800 text-sm sm:text-base leading-relaxed mb-1">
-                            We are currently accepting applications for {{ $school->admission_open_classes ?? 'Pre-Kindergarten only' }}.
+                            {{ $school->settings['admission_notice_text'] ?? ('We are currently accepting applications for ' . ($school->admission_open_classes ?? 'Pre-Kindergarten only') . '.') }}
                         </p>
                         <a href="{{ url('admissions/apply?school='.$school->slug) }}" class="text-[#d02d2e] font-extrabold text-sm sm:text-base inline-block hover:underline mb-8">
-                            Click here to apply.
+                            {{ $school->settings['admission_notice_link_text'] ?? 'Click here to apply.' }}
                         </a>
                     </div>
                     <div class="pt-6 border-t border-[#f5d5d5]/80 text-xs sm:text-sm text-slate-700">
-                        <span class="font-bold text-slate-900">28 April 2027:</span> Term 1 begins for the incoming batch.
+                        <span class="font-bold text-slate-900">{{ $school->settings['admission_notice_date'] ?? '28 April 2027:' }}</span> {{ $school->settings['admission_notice_term'] ?? 'Term 1 begins for the incoming batch.' }}
                     </div>
                 </div>
             </div>
@@ -236,7 +240,7 @@
                         <!-- Main Admissions Photo -->
                         <div class="rounded-2xl overflow-hidden shadow-sm aspect-[4/3] bg-slate-100">
                             <img id="admissionSlideImg" 
-                                 src="{{ asset('imgs/rato-bangala/admissions_kids.jpg') }}" 
+                                 src="{{ $school->sectionImage('admissions_slide1_image', 'imgs/rato-bangala/admissions_kids.jpg') }}" 
                                  alt="Admissions" 
                                  class="w-full h-full object-cover">
                         </div>
@@ -301,10 +305,10 @@
                     <img src="{{ asset('imgs/rato-bangala/blue_rectangle.png') }}" class="absolute -bottom-3 -left-3 w-12 sm:w-14 z-20" alt="">
                     <div class="absolute -bottom-6 -left-12 w-14 sm:w-16 h-14 sm:h-16 rbs-dots-navy pointer-events-none z-0"></div>
 
-                    <!-- Signature curved image: rounded-tl-[90px] -->
-                    <img src="{{ asset('imgs/rato-bangala/ecc.jpg') }}" 
+                    <!-- Signature curved image: rounded-tl-[90px] without white border (Screenshot 3 & 4 match) -->
+                    <img src="{{ $school->sectionImage('program_ecc_image', 'imgs/rato-bangala/ecc.jpg') }}" 
                          alt="The Early Childhood Centre" 
-                         class="w-full max-w-md sm:max-w-lg aspect-[4/3] object-cover rounded-tl-[90px] rounded-br-[28px] rounded-tr-xl rounded-bl-xl shadow-lg border-4 border-white relative z-10">
+                         class="w-full max-w-md sm:max-w-lg aspect-[4/3] object-cover rounded-tl-[90px] rounded-br-2xl rounded-tr-2xl rounded-bl-2xl shadow-xl relative z-10">
                 </div>
             </div>
         </div>
@@ -346,51 +350,53 @@
 ══════════════════════════════════════════════════════════════════════ -->
 <section id="leadership" class="py-16 sm:py-24 bg-white relative overflow-hidden border-b border-slate-100">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <!-- Floating blue rectangle behind top-left -->
-        <img src="{{ asset('imgs/rato-bangala/blue_rectangle.png') }}" class="absolute -top-6 -left-6 w-20 sm:w-28 opacity-90 -z-10" alt="">
-        <!-- Floating red rectangle behind bottom-right -->
-        <img src="{{ asset('imgs/rato-bangala/red_rectangle.png') }}" class="absolute -bottom-6 -right-6 w-20 sm:w-28 opacity-90 -z-10" alt="">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-            {{-- Card 1: Principal --}}
-            <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-sm flex flex-col justify-between">
-                <div class="w-full aspect-[4/3] bg-slate-100 overflow-hidden">
-                    <img src="{{ file_exists(public_path('imgs/rato-bangala/milan_dixit.jpg')) ? asset('imgs/rato-bangala/milan_dixit.jpg') : ($school->principal_photo_url ?? asset('imgs/hero/hero_1.webp')) }}" 
-                         alt="Principal {{ $school->principal_name_resolved ?? 'Milan Dixit' }}" 
-                         class="w-full h-full object-cover">
-                </div>
-                <div class="p-6 sm:p-8 flex-1 flex flex-col justify-between">
-                    <div>
-                        <p class="rbs-sub-title text-[#0b417e] mb-2">MESSAGE FROM THE PRINCIPAL</p>
-                        <h3 class="text-2xl font-extrabold text-slate-900 mb-3">{{ $school->principal_name_resolved ?? 'Milan Dixit' }}</h3>
-                        <p class="text-slate-600 text-sm sm:text-base leading-relaxed mb-6">
-                            {{ $school->principal_message ?? ('Whether you visit us online or in person, we hope you will get a sense of what ' . $school->name . ' is and the mission that drives us. We are a progressive learning community that works to educate the whole person and prepare them for life.') }}
-                        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-12 items-stretch">
+            {{-- Card 1: Principal with top-left navy rectangle (Exact Screenshot 5 match) --}}
+            <div class="relative">
+                <div class="absolute -top-5 -left-5 w-16 sm:w-20 h-24 sm:h-28 bg-[#0b417e] rounded-xl z-0"></div>
+                <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-md flex flex-col justify-between relative z-10 h-full">
+                    <div class="w-full aspect-[4/3] bg-slate-100 overflow-hidden">
+                        <img src="{{ $school->sectionImage('principal_photo_image', !empty($school->settings['principal_image']) ? asset('storage/'.$school->settings['principal_image']) : (file_exists(public_path('imgs/rato-bangala/milan_dixit.jpg')) ? asset('imgs/rato-bangala/milan_dixit.jpg') : ($school->principal_photo_url ?? asset('imgs/hero/hero_1.webp')))) }}" 
+                             alt="Principal {{ $school->principal_name_resolved ?? 'Milan Dixit' }}" 
+                             class="w-full h-full object-cover">
                     </div>
-                    <a href="{{ $pageUrl('about') }}#principal-message" class="inline-flex items-center gap-2 text-sm font-bold text-[#d02d2e] hover:underline">
-                        <span>View Detail Message</span> &rarr;
-                    </a>
+                    <div class="p-6 sm:p-8 flex-1 flex flex-col justify-between">
+                        <div>
+                            <p class="rbs-sub-title text-[#0b417e] mb-2">MESSAGE FROM THE PRINCIPAL</p>
+                            <h3 class="text-2xl font-extrabold text-slate-900 mb-3">{{ $school->principal_name_resolved ?? 'Milan Dixit' }}</h3>
+                            <p class="text-slate-600 text-sm sm:text-base leading-relaxed mb-6">
+                                {{ $school->principal_message ?? ('Whether you visit us online or in person, we hope you will get a sense of what ' . $school->name . ' is and the mission that drives us. We are a progressive learning community that works to educate the whole person and prepare them for life.') }}
+                            </p>
+                        </div>
+                        <a href="{{ $pageUrl('about') }}#principal-message" class="inline-flex items-center gap-2 text-sm font-bold text-[#d02d2e] hover:underline">
+                            <span>View Detail Message</span> &rarr;
+                        </a>
+                    </div>
                 </div>
             </div>
 
-            {{-- Card 2: Director --}}
-            <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-sm flex flex-col justify-between">
-                <div class="w-full aspect-[4/3] bg-slate-100 overflow-hidden">
-                    <img src="{{ file_exists(public_path('imgs/rato-bangala/shanta_dixit.jpg')) ? asset('imgs/rato-bangala/shanta_dixit.jpg') : ($school->founder_photo_url ?? asset('imgs/hero/hero_2.webp')) }}" 
-                         alt="Director {{ $school->founder_name_resolved ?? 'Shanta Dixit' }}" 
-                         class="w-full h-full object-cover">
-                </div>
-                <div class="p-6 sm:p-8 flex-1 flex flex-col justify-between">
-                    <div>
-                        <p class="rbs-sub-title text-[#d02d2e] mb-2">MESSAGE FROM THE DIRECTOR</p>
-                        <h3 class="text-2xl font-extrabold text-slate-900 mb-3">{{ $school->founder_name_resolved ?? 'Shanta Dixit' }}</h3>
-                        <p class="text-slate-600 text-sm sm:text-base leading-relaxed mb-6">
-                            {{ $school->founder_message ?? ('For over three decades, ' . $school->name . ' has continuously evolved to work towards its mission of providing the best in progressive pedagogy to its children. The path has been challenging and sometimes lonely.') }}
-                        </p>
+            {{-- Card 2: Director with bottom-right red rectangle (Exact Screenshot 5 match) --}}
+            <div class="relative">
+                <div class="absolute -bottom-5 -right-5 w-16 sm:w-20 h-24 sm:h-28 bg-[#d02d2e] rounded-xl z-0"></div>
+                <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/90 shadow-md flex flex-col justify-between relative z-10 h-full">
+                    <div class="w-full aspect-[4/3] bg-slate-100 overflow-hidden">
+                        <img src="{{ $school->sectionImage('founder_photo_image', !empty($school->settings['founder_image']) ? asset('storage/'.$school->settings['founder_image']) : (file_exists(public_path('imgs/rato-bangala/shanta_dixit.jpg')) ? asset('imgs/rato-bangala/shanta_dixit.jpg') : ($school->founder_photo_url ?? asset('imgs/hero/hero_2.webp')))) }}" 
+                             alt="Director {{ $school->founder_name_resolved ?? 'Shanta Dixit' }}" 
+                             class="w-full h-full object-cover">
                     </div>
-                    <a href="{{ $pageUrl('about') }}#director-message" class="inline-flex items-center gap-2 text-sm font-bold text-[#d02d2e] hover:underline">
-                        <span>View Detail Message</span> &rarr;
-                    </a>
+                    <div class="p-6 sm:p-8 flex-1 flex flex-col justify-between">
+                        <div>
+                            <p class="rbs-sub-title text-[#d02d2e] mb-2">MESSAGE FROM THE DIRECTOR</p>
+                            <h3 class="text-2xl font-extrabold text-slate-900 mb-3">{{ $school->founder_name_resolved ?? 'Shanta Dixit' }}</h3>
+                            <p class="text-slate-600 text-sm sm:text-base leading-relaxed mb-6">
+                                {{ $school->founder_message ?? ('For over three decades, ' . $school->name . ' has continuously evolved to work towards its mission of providing the best in progressive pedagogy to its children. The path has been challenging and sometimes lonely.') }}
+                            </p>
+                        </div>
+                        <a href="{{ $pageUrl('about') }}#director-message" class="inline-flex items-center gap-2 text-sm font-bold text-[#d02d2e] hover:underline">
+                            <span>View Detail Message</span> &rarr;
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -431,7 +437,7 @@
 
             {{-- Roadmap / Timeline Visual (2003 Started Year, 4 Phases, 9 Districts, 700 Schools) --}}
             <div class="lg:col-span-5 flex justify-center items-center py-4">
-                <img src="{{ asset('imgs/rato-bangala/rcpop_visual.png') }}" 
+                <img src="{{ $school->sectionImage('outreach_visual_image', 'imgs/rato-bangala/rcpop_visual.png') }}" 
                      alt="{{ $school->outreach_title }}" 
                      class="w-full max-w-lg object-contain drop-shadow-xl">
             </div>
@@ -472,7 +478,7 @@
             {{-- 1. Pre-Primary & Montessori --}}
             <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm card-lift flex flex-col justify-between group hover:border-[#f36c21] transition">
                 <div class="relative aspect-[16/10] overflow-hidden bg-slate-100">
-                    <img src="{{ asset('imgs/hero/hero_3.webp') }}" alt="Pre-Primary & Montessori" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('pathway_preschool_image', 'imgs/hero/hero_3.webp') }}" alt="Pre-Primary & Montessori" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                     <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-900 shadow-sm">
                         Pre-Nursery – UKG
                     </div>
@@ -493,7 +499,7 @@
             {{-- 2. Basic School (1-8) --}}
             <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm card-lift flex flex-col justify-between group hover:border-[#f36c21] transition">
                 <div class="relative aspect-[16/10] overflow-hidden bg-slate-100">
-                    <img src="{{ asset('imgs/hero/hero_1.webp') }}" alt="Basic School Grades 1-8" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('pathway_primary_image', 'imgs/hero/hero_1.webp') }}" alt="Basic School Grades 1-8" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                     <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-900 shadow-sm">
                         Grades 1 – 8
                     </div>
@@ -514,7 +520,7 @@
             {{-- 3. Secondary SEE (9-10) --}}
             <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm card-lift flex flex-col justify-between group hover:border-[#f36c21] transition">
                 <div class="relative aspect-[16/10] overflow-hidden bg-slate-100">
-                    <img src="{{ file_exists(public_path('imgs/hero/school_hero_graduates.jpg')) ? asset('imgs/hero/school_hero_graduates.jpg') : asset('imgs/hero/hero_2.webp') }}" alt="Secondary SEE Grades 9-10" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('pathway_secondary_image', file_exists(public_path('imgs/hero/school_hero_graduates.jpg')) ? 'imgs/hero/school_hero_graduates.jpg' : 'imgs/hero/hero_2.webp') }}" alt="Secondary SEE Grades 9-10" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                     <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-900 shadow-sm">
                         Grades 9 – 10 (SEE)
                     </div>
@@ -535,7 +541,7 @@
             {{-- 4. +2 Science & Management --}}
             <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm card-lift flex flex-col justify-between group hover:border-[#f36c21] transition">
                 <div class="relative aspect-[16/10] overflow-hidden bg-slate-100">
-                    <img src="{{ asset('imgs/hero/hero_2.webp') }}" alt="+2 Higher Secondary" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('pathway_plus2_image', 'imgs/hero/hero_2.webp') }}" alt="+2 Higher Secondary" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                     <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-900 shadow-sm">
                         Grade XI & XII (NEB)
                     </div>
@@ -556,7 +562,7 @@
             {{-- 5. STEAM & Robotics --}}
             <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm card-lift flex flex-col justify-between group hover:border-[#f36c21] transition">
                 <div class="relative aspect-[16/10] overflow-hidden bg-slate-100">
-                    <img src="{{ asset('imgs/kathmandu.webp') }}" alt="STEAM & Digital Labs" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('pathway_steam_image', 'imgs/kathmandu.webp') }}" alt="STEAM & Digital Labs" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                     <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-900 shadow-sm">
                         Innovation & Tech
                     </div>
@@ -577,7 +583,7 @@
             {{-- 6. Sports & Creative Arts --}}
             <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm card-lift flex flex-col justify-between group hover:border-[#f36c21] transition">
                 <div class="relative aspect-[16/10] overflow-hidden bg-slate-100">
-                    <img src="{{ asset('imgs/schools.webp') }}" alt="Sports & Performing Arts" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('pathway_sports_image', 'imgs/schools.webp') }}" alt="Sports & Performing Arts" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                     <div class="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-900 shadow-sm">
                         Athletics & Culture
                     </div>
@@ -597,6 +603,9 @@
         </div>
     </div>
 </section>
+
+{{-- ── 8. ACADEMIC HALL OF FAME: 1ST, 2ND, 3RD RANK TOPPERS (AUTO-UPDATED WITH CLASS & SECTION) ── --}}
+@include('school-landing.partials.top-rankers')
 
 <!-- ═════════════════════════════════════════════════════════════════════
      5. INTERACTIVE ACADEMIC & EVENT CALENDAR (PROPERLY SET UP)
@@ -773,7 +782,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm card-lift group hover:border-[#f36c21] transition">
                 <div class="aspect-[16/10] overflow-hidden bg-slate-100">
-                    <img src="{{ asset('imgs/hero/hero_2.webp') }}" alt="Physics, Chemistry & Biology Science Labs" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('facility_stem_image', 'imgs/hero/hero_2.webp') }}" alt="Physics, Chemistry & Biology Science Labs" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                 </div>
                 <div class="p-5">
                     <h3 class="font-bold text-base text-slate-900 mb-1">Advanced STEM Science Labs</h3>
@@ -783,7 +792,7 @@
 
             <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm card-lift group hover:border-[#f36c21] transition">
                 <div class="aspect-[16/10] overflow-hidden bg-slate-100">
-                    <img src="{{ asset('imgs/hero/hero_3.webp') }}" alt="Computer & AI Innovation Center" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('facility_computer_image', 'imgs/hero/hero_3.webp') }}" alt="Computer & AI Innovation Center" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                 </div>
                 <div class="p-5">
                     <h3 class="font-bold text-base text-slate-900 mb-1">High-Speed Computer & AI Lab</h3>
@@ -793,7 +802,7 @@
 
             <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm card-lift group hover:border-[#f36c21] transition">
                 <div class="aspect-[16/10] overflow-hidden bg-slate-100">
-                    <img src="{{ asset('imgs/hero/hero_1.webp') }}" alt="Central Knowledge Library" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('facility_library_image', 'imgs/hero/hero_1.webp') }}" alt="Central Knowledge Library" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                 </div>
                 <div class="p-5">
                     <h3 class="font-bold text-base text-slate-900 mb-1">Rich Knowledge Resource Library</h3>
@@ -803,7 +812,7 @@
 
             <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm card-lift group hover:border-[#f36c21] transition">
                 <div class="aspect-[16/10] overflow-hidden bg-slate-100">
-                    <img src="{{ asset('imgs/schools.webp') }}" alt="Sports Arena & Football Ground" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('facility_sports_image', 'imgs/schools.webp') }}" alt="Sports Arena & Football Ground" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                 </div>
                 <div class="p-5">
                     <h3 class="font-bold text-base text-slate-900 mb-1">Multi-Sport Athletics Arena</h3>
@@ -813,7 +822,7 @@
 
             <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm card-lift group hover:border-[#f36c21] transition">
                 <div class="aspect-[16/10] overflow-hidden bg-slate-100">
-                    <img src="{{ asset('imgs/kathmandu.webp') }}" alt="GPS Fleet School Transportation" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('facility_transport_image', 'imgs/kathmandu.webp') }}" alt="GPS Fleet School Transportation" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                 </div>
                 <div class="p-5">
                     <h3 class="font-bold text-base text-slate-900 mb-1">Safe GPS Fleet Transportation</h3>
@@ -823,7 +832,7 @@
 
             <div class="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm card-lift group hover:border-[#f36c21] transition">
                 <div class="aspect-[16/10] overflow-hidden bg-slate-100">
-                    <img src="{{ file_exists(public_path('imgs/hero/school_hero_graduates.jpg')) ? asset('imgs/hero/school_hero_graduates.jpg') : asset('imgs/hero/hero_2.webp') }}" alt="Smart Interactive Digital Classrooms" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+                    <img src="{{ $school->sectionImage('facility_classroom_image', file_exists(public_path('imgs/hero/school_hero_graduates.jpg')) ? 'imgs/hero/school_hero_graduates.jpg' : 'imgs/hero/hero_2.webp') }}" alt="Smart Interactive Digital Classrooms" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                 </div>
                 <div class="p-5">
                     <h3 class="font-bold text-base text-slate-900 mb-1">Smart Interactive AV Classrooms</h3>
@@ -851,18 +860,21 @@
                     Discover creative writing, literary journals, research blogs, and regular newsletters authored by our scholars and faculty.
                 </p>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
-                <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3.5 py-2 rounded-xl border border-slate-200 flex items-center gap-1.5">
+            <div class="flex items-center gap-2.5 shrink-0">
+                <a href="{{ $pageUrl('publications') }}" class="btn-primary-dark !text-xs !py-2 !px-4 flex items-center gap-1.5 shadow-sm">
+                    <span>Explore All Publications</span> &rarr;
+                </a>
+                <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3.5 py-2 rounded-xl border border-slate-200 hidden sm:flex items-center gap-1.5">
                     <i class="bi bi-journal-richtext text-[#8b151b]"></i> Student Editorial Council
                 </span>
             </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {{-- 1. School Blogs (RBS Blogs style) --}}
-            <div onclick="openPublicationModal('School Blogs & Articles', 'Read thoughtful academic commentary, STEM symposium articles, student literary dispatches, and campus perspectives authored by our faculty and scholars.', 'Blogs & Thought Leadership')" 
-                 class="group relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[3/4] cursor-pointer card-lift">
-                <img src="{{ asset('imgs/hero/hero_1.webp') }}" alt="School Blogs" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+            {{-- 1. School Blogs (Direct to /blogs) --}}
+            <a href="{{ $pageUrl('blogs') }}" 
+               class="group relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[3/4] block card-lift">
+                <img src="{{ $school->sectionImage('pub_blogs_image', 'imgs/hero/hero_1.webp') }}" alt="School Blogs" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"></div>
                 <div class="absolute top-4 left-4">
                     <span class="px-2.5 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-[10px] font-extrabold tracking-wider uppercase border border-white/20">
@@ -876,12 +888,12 @@
                     </div>
                     <p class="text-xs text-slate-300 mt-1 line-clamp-2">Student essays, science symposiums & contemporary debates.</p>
                 </div>
-            </div>
+            </a>
 
-            {{-- 2. Newsletter Archive --}}
-            <div onclick="openPublicationModal('Newsletter Archive', 'Browse quarterly newsletters highlighting academic honors, inter-school olympiads, workshops, and institutional milestones.', 'Quarterly Archive')" 
-                 class="group relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[3/4] cursor-pointer card-lift">
-                <img src="{{ asset('imgs/hero/hero_2.webp') }}" alt="Newsletter Archive" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+            {{-- 2. Newsletter Archive (Direct to /news or /publications) --}}
+            <a href="{{ $pageUrl('news') }}" 
+               class="group relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[3/4] block card-lift">
+                <img src="{{ $school->sectionImage('pub_newsletter_image', 'imgs/hero/hero_2.webp') }}" alt="Newsletter Archive" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"></div>
                 <div class="absolute top-4 left-4">
                     <span class="px-2.5 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-[10px] font-extrabold tracking-wider uppercase border border-white/20">
@@ -890,17 +902,17 @@
                 </div>
                 <div class="absolute bottom-5 left-5 right-5 text-white">
                     <div class="flex items-center justify-between gap-2">
-                        <h3 class="text-lg font-bold text-white group-hover:text-amber-300 transition">Newsletter Archive</h3>
+                        <h3 class="text-lg font-bold text-white group-hover:text-amber-300 transition">News & Dispatch</h3>
                         <i class="bi bi-arrow-right text-lg text-white group-hover:translate-x-1.5 transition"></i>
                     </div>
                     <p class="text-xs text-slate-300 mt-1 line-clamp-2">Quarterly administrative reports & campus milestone chronicles.</p>
                 </div>
-            </div>
+            </a>
 
-            {{-- 3. Cornice (Student Literary & Art Journal - Exact RBS match) --}}
-            <div onclick="openPublicationModal('Cornice Literary Magazine', 'Cornice is our annual flagship student literary anthology, collecting original poems, creative short stories, photography, and fine artwork created by students across all grades.', 'Annual Literary Journal')" 
-                 class="group relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[3/4] cursor-pointer card-lift">
-                <img src="{{ asset('imgs/hero/hero_3.webp') }}" alt="Cornice Literary Magazine" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+            {{-- 3. Cornice (Annual Student Anthology - Direct to /publications) --}}
+            <a href="{{ $pageUrl('publications') }}" 
+               class="group relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[3/4] block card-lift">
+                <img src="{{ $school->sectionImage('pub_cornice_image', 'imgs/hero/hero_3.webp') }}" alt="Cornice Literary Magazine" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"></div>
                 <div class="absolute top-4 left-4">
                     <span class="px-2.5 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-[10px] font-extrabold tracking-wider uppercase border border-white/20">
@@ -914,12 +926,12 @@
                     </div>
                     <p class="text-xs text-slate-300 mt-1 line-clamp-2">Annual student anthology of poetry, creative prose & fine artwork.</p>
                 </div>
-            </div>
+            </a>
 
-            {{-- 4. The Circle (Official Student Magazine - Exact RBS match) --}}
-            <div onclick="openPublicationModal('The Circle Magazine', 'The Circle is our flagship student-led journalism and features magazine, documenting campus happenings, sports championships, and alumni interviews.', 'Editorial Review')" 
-                 class="group relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[3/4] cursor-pointer card-lift">
-                <img src="{{ file_exists(public_path('imgs/hero/school_hero_graduates.jpg')) ? asset('imgs/hero/school_hero_graduates.jpg') : asset('imgs/schools.webp') }}" alt="The Circle Magazine" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
+            {{-- 4. The Circle (Official Student Magazine - Direct to /stories) --}}
+            <a href="{{ $pageUrl('stories') }}" 
+               class="group relative rounded-2xl overflow-hidden shadow-sm border border-slate-200 aspect-[3/4] block card-lift">
+                <img src="{{ $school->sectionImage('pub_circle_image', file_exists(public_path('imgs/hero/school_hero_graduates.jpg')) ? 'imgs/hero/school_hero_graduates.jpg' : 'imgs/schools.webp') }}" alt="The Circle Magazine" class="w-full h-full object-cover transform group-hover:scale-105 transition duration-500">
                 <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent"></div>
                 <div class="absolute top-4 left-4">
                     <span class="px-2.5 py-1 rounded-md bg-white/20 backdrop-blur-md text-white text-[10px] font-extrabold tracking-wider uppercase border border-white/20">
@@ -927,6 +939,13 @@
                     </span>
                 </div>
                 <div class="absolute bottom-5 left-5 right-5 text-white">
+                    <div class="flex items-center justify-between gap-2">
+                        <h3 class="text-lg font-bold text-white group-hover:text-amber-300 transition">The Circle & Stories</h3>
+                        <i class="bi bi-arrow-right text-lg text-white group-hover:translate-x-1.5 transition"></i>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-1 line-clamp-2">Flagship campus magazine produced by student editorial council.</p>
+                </div>
+            </a>
                     <div class="flex items-center justify-between gap-2">
                         <h3 class="text-lg font-bold text-white group-hover:text-amber-300 transition">The Circle</h3>
                         <i class="bi bi-arrow-right text-lg text-white group-hover:translate-x-1.5 transition"></i>
@@ -1370,21 +1389,21 @@ const admissionSlides = [
         num: '01',
         title: 'Pre-Kindergarten',
         desc: 'Parents seeking admission for their child in above grades must apply online from here.',
-        img: '{{ asset("imgs/rato-bangala/admissions_kids.jpg") }}',
+        img: '{{ $school->sectionImage("admissions_slide1_image", "imgs/rato-bangala/admissions_kids.jpg") }}',
         link: '{{ url("admissions/apply?school=".$school->slug) }}'
     },
     {
         num: '02',
         title: 'Primary & Basic School (Grades 1 – 8)',
         desc: 'Child-centered inquiry-based pedagogy developing foundational literacy, mathematical reasoning, STEAM, and moral integrity.',
-        img: '{{ asset("imgs/hero/hero_1.webp") }}',
+        img: '{{ $school->sectionImage("admissions_slide2_image", "imgs/hero/hero_1.webp") }}',
         link: '{{ url("admissions/apply?school=".$school->slug) }}'
     },
     {
         num: '03',
         title: 'Secondary & +2 Higher Secondary (9 – 12)',
         desc: 'Rigorous national examination preparation with state-of-the-art science labs, Olympiad training, and college counseling.',
-        img: '{{ asset("imgs/hero/hero_2.webp") }}',
+        img: '{{ $school->sectionImage("admissions_slide3_image", "imgs/hero/hero_2.webp") }}',
         link: '{{ url("admissions/apply?school=".$school->slug) }}'
     }
 ];
@@ -1404,7 +1423,7 @@ function changeAdmissionSlide(delta) {
     if (titleEl) titleEl.textContent = slide.title;
     if (descEl) descEl.textContent = slide.desc;
     if (linkEl) linkEl.href = slide.link;
-    if (counterEl) counterEl.textContent = `${slide.num} — 03`;
+    if (counterEl) counterEl.textContent = `${slide.num} — ${String(admissionSlides.length).padStart(2, '0')}`;
 }
 
 // ── Rato Bangala Style Community Tab Switcher ──
