@@ -26,6 +26,20 @@ class NoticeController extends Controller
      */
     public function index(Request $request)
     {
+        if (!auth()->check()) {
+            $school = config('tenant.school');
+            if (!$school && session()->has('tenant_school_id')) {
+                $school = \App\Models\School::find(session('tenant_school_id'));
+            }
+            if (!$school) {
+                $school = \App\Models\School::where('status', 'active')->first() ?? \App\Models\School::first();
+            }
+            if ($school) {
+                return redirect()->route('school.landing.notices', ['slug' => $school->slug]);
+            }
+            return redirect()->route('login');
+        }
+
         $current_school_session_id = $this->getSchoolCurrentSession();
         $audience = $request->input('audience');
         $search   = $request->input('search');
@@ -80,7 +94,15 @@ class NoticeController extends Controller
      */
     public function show(Notice $notice)
     {
-        $school = auth()->user()->school ?? \App\Models\School::first();
+        if (!auth()->check()) {
+            $school = $notice->school ?? \App\Models\School::first();
+            if ($school) {
+                return redirect()->route('school.landing.notice', ['slug' => $school->slug, 'notice' => $notice->id]);
+            }
+            return redirect()->route('login');
+        }
+
+        $school = auth()->user()->school ?? $notice->school ?? \App\Models\School::first();
         return view('notices.show', compact('notice', 'school'));
     }
 
