@@ -78,24 +78,233 @@ class FeeController extends Controller
 
     // ── Fee Structures ────────────────────────────────────────────────────────
 
+    /**
+     * Sort classes in natural academic order:
+     * PG -> NUR -> LKG -> UKG -> ONE -> TWO -> ... -> TEN -> 11 -> 12
+     */
+    private function sortClassesNaturally($classes)
+    {
+        $orderMap = [
+            'pg' => 1, 'playgroup' => 1, 'play group' => 1, 'p.g' => 1, 'p.g.' => 1,
+            'nursery' => 2, 'nur' => 2, 'nur.' => 2,
+            'lkg' => 3, 'l.k.g' => 3, 'l.k.g.' => 3, 'kg 1' => 3, 'kg-1' => 3,
+            'ukg' => 4, 'u.k.g' => 4, 'u.k.g.' => 4, 'kg 2' => 4, 'kg-2' => 4,
+            'one' => 10, 'class 1' => 10, 'grade 1' => 10, '1' => 10,
+            'two' => 20, 'class 2' => 20, 'grade 2' => 20, '2' => 20,
+            'three' => 30, 'class 3' => 30, 'grade 3' => 30, '3' => 30,
+            'four' => 40, 'class 4' => 40, 'grade 4' => 40, '4' => 40,
+            'five' => 50, 'class 5' => 50, 'grade 5' => 50, '5' => 50,
+            'six' => 60, 'class 6' => 60, 'grade 6' => 60, '6' => 60,
+            'seven' => 70, 'class 7' => 70, 'grade 7' => 70, '7' => 70,
+            'eight' => 80, 'class 8' => 80, 'grade 8' => 80, '8' => 80,
+            'nine' => 90, 'class 9' => 90, 'grade 9' => 90, '9' => 90,
+            'ten' => 100, 'class 10' => 100, 'grade 10' => 100, '10' => 100,
+            'eleven' => 110, 'class 11' => 110, 'grade 11' => 110, '11' => 110,
+            'twelve' => 120, 'class 12' => 120, 'grade 12' => 120, '12' => 120,
+        ];
+
+        return $classes->sort(function ($a, $b) use ($orderMap) {
+            $cleanA = strtolower(trim($a->class_name));
+            $cleanB = strtolower(trim($b->class_name));
+            $rankA = $orderMap[$cleanA] ?? (preg_match('/(\d+)/', $cleanA, $m) ? (int)$m[1] * 10 : 999);
+            $rankB = $orderMap[$cleanB] ?? (preg_match('/(\d+)/', $cleanB, $m) ? (int)$m[1] * 10 : 999);
+            return $rankA <=> $rankB;
+        })->values();
+    }
+
+    private function detectCategoryFrequency(string $name): string
+    {
+        $lower = strtolower($name);
+        if (str_contains($lower, 'annual') || str_contains($lower, 'वार्षिक')) {
+            return 'yearly';
+        }
+        if (str_contains($lower, 'add') || str_contains($lower, 'admission') || str_contains($lower, 'भर्ना') || str_contains($lower, 'deposit')) {
+            return 'once';
+        }
+        if (str_contains($lower, 'exam') || str_contains($lower, 'परीक्षा')) {
+            return 'quarterly';
+        }
+        return 'monthly';
+    }
+
     public function structures(Request $request)
     {
-        $query = FeeStructure::with(['category', 'session', 'schoolClass']);
+        $sessions = SchoolSession::orderByDesc('id')->get();
+        $selectedSessionId = $request->input('session_id') 
+            ?: (SchoolSession::where('is_active', true)->value('id') ?? $sessions->first()?->id);
+        $selectedSession = $sessions->firstWhere('id', $selectedSessionId) ?? $sessions->first();
 
+        // Query for detailed list view
+        $query = FeeStructure::with(['category', 'session', 'schoolClass']);
         if ($sessionId = $request->input('session_id')) {
             $query->where('session_id', $sessionId);
         }
         if ($classId = $request->input('class_id')) {
             $query->where('class_id', $classId);
         }
+        $structures = $query->orderBy('name')->paginate(25)->withQueryString();
 
-        $structures = $query->orderBy('name')->paginate(20)->withQueryString();
-        $categories = FeeCategory::active()->orderBy('name')->get();
+        $categories = FeeCategory::active()->orderBy('id')->get();
         $feeTypes   = \App\Models\FeeType::active()->orderBy('name')->get();
-        $sessions   = SchoolSession::orderByDesc('id')->get();
-        $classes    = SchoolClass::orderBy('class_name')->get();
 
-        return view('finance.fee-structures', compact('structures', 'categories', 'feeTypes', 'sessions', 'classes'));
+        // Get classes (session-filtered if available, otherwise all classes)
+        $classesQuery = SchoolClass::query();
+        if ($selectedSessionId && SchoolClass::where('session_id', $selectedSessionId)->exists()) {
+            $classesQuery->where('session_id', $selectedSessionId);
+        }
+        $classesRaw = $classesQuery->get();
+        $classes = $this->sortClassesNaturally($classesRaw);
+
+        // Build 2D Matrix lookup: [category_id][class_id] => amount
+        $feeMatrix = [];
+        if ($selectedSessionId) {
+            $matrixStructures = FeeStructure::where('session_id', $selectedSessionId)->get();
+            foreach ($matrixStructures as $str) {
+                $feeMatrix[$str->category_id][$str->class_id] = (float) $str->amount;
+            }
+        }
+
+        $school = auth()->user()?->school ?? \App\Models\School::find(session('school_id')) ?? \App\Models\School::first();
+
+        return view('finance.fee-structures', compact(
+            'structures',
+            'categories',
+            'feeTypes',
+            'sessions',
+            'classes',
+            'selectedSession',
+            'feeMatrix',
+            'school'
+        ));
+    }
+
+    /**
+     * Bulk save or update the entire 2D Fee Structure Matrix.
+     */
+    public function bulkUpdateMatrix(Request $request)
+    {
+        $request->validate([
+            'session_id'  => 'required|integer|exists:school_sessions,id',
+            'matrix'      => 'required|array',
+            'frequencies' => 'nullable|array',
+        ]);
+
+        $sessionId   = (int) $request->input('session_id');
+        $matrix      = $request->input('matrix', []);
+        $frequencies = $request->input('frequencies', []);
+        $schoolId    = auth()->user()?->school_id ?? session('school_id') ?? 1;
+
+        $categories = FeeCategory::whereIn('id', array_keys($matrix))->get()->keyBy('id');
+        $classes    = SchoolClass::all()->keyBy('id');
+
+        $savedCount = 0;
+
+        foreach ($matrix as $catId => $classAmounts) {
+            $category = $categories->get($catId);
+            if (!$category) continue;
+
+            $frequency = $frequencies[$catId] ?? $this->detectCategoryFrequency($category->name);
+
+            foreach ($classAmounts as $classId => $rawAmount) {
+                if (!isset($classes[$classId])) continue;
+
+                $trimmed = trim((string)$rawAmount);
+
+                if ($trimmed !== '' && is_numeric($trimmed) && (float)$trimmed >= 0) {
+                    $amountVal = (float)$trimmed;
+                    FeeStructure::updateOrCreate(
+                        [
+                            'school_id'   => $schoolId,
+                            'session_id'  => $sessionId,
+                            'class_id'    => $classId,
+                            'category_id' => $catId,
+                        ],
+                        [
+                            'name'        => $category->name,
+                            'amount'      => $amountVal,
+                            'frequency'   => $frequency,
+                            'is_active'   => true,
+                        ]
+                    );
+                    $savedCount++;
+                }
+            }
+        }
+
+        return back()->with('status', "Fee chart matrix saved successfully! ({$savedCount} fee rates configured). शुल्क तालिका सफलतापूर्वक सुरक्षित गरियो।");
+    }
+
+    /**
+     * Dedicated Printable Fee Chart matching the school noticeboard photo.
+     */
+    public function printChart(Request $request)
+    {
+        $sessions = SchoolSession::orderByDesc('id')->get();
+        $selectedSessionId = $request->input('session_id') 
+            ?: (SchoolSession::where('is_active', true)->value('id') ?? $sessions->first()?->id);
+        $selectedSession = $sessions->firstWhere('id', $selectedSessionId) ?? $sessions->first();
+
+        $classesQuery = SchoolClass::query();
+        if ($selectedSessionId && SchoolClass::where('session_id', $selectedSessionId)->exists()) {
+            $classesQuery->where('session_id', $selectedSessionId);
+        }
+        $classesRaw = $classesQuery->get();
+        $classes = $this->sortClassesNaturally($classesRaw);
+        $categories = FeeCategory::active()->orderBy('id')->get();
+
+        $feeMatrix = [];
+        if ($selectedSessionId) {
+            $matrixStructures = FeeStructure::where('session_id', $selectedSessionId)->get();
+            foreach ($matrixStructures as $str) {
+                $feeMatrix[$str->category_id][$str->class_id] = (float) $str->amount;
+            }
+        }
+
+        $school = auth()->user()?->school ?? \App\Models\School::find(session('school_id')) ?? \App\Models\School::first();
+
+        $nepaliDate = class_exists(\App\Services\NepaliDateService::class) 
+            ? \App\Services\NepaliDateService::adToBS(date('Y-m-d'))
+            : date('Y-m-d');
+
+        return view('finance.fee-chart-print', compact(
+            'school',
+            'selectedSession',
+            'classes',
+            'categories',
+            'feeMatrix',
+            'nepaliDate'
+        ));
+    }
+
+    /**
+     * Quick-seed the standard fee heads shown in the school fee chart.
+     */
+    public function seedDefaultHeads()
+    {
+        $schoolId = auth()->user()?->school_id ?? session('school_id') ?? 1;
+
+        $defaults = [
+            ['name' => 'ANNUAL CHARGE', 'code' => 'ANN', 'description' => 'वार्षिक शुल्क (Annual Maintenance, Library, Sports & ECA)'],
+            ['name' => 'ADD- FEE', 'code' => 'ADM', 'description' => 'नयाँ भर्ना शुल्क (New Admission Fee)'],
+            ['name' => 'MONTHLY FEE', 'code' => 'TUT', 'description' => 'मासिक शिक्षण/पढाइ शुल्क (Monthly Tuition Fee)'],
+            ['name' => 'COMPUTER FEE', 'code' => 'CMP', 'description' => 'कम्प्युटर तथा ल्याब शुल्क (Computer & IT Lab Fee)'],
+            ['name' => 'HOSTEL FEE', 'code' => 'HST', 'description' => 'छात्रावास शुल्क (Full Boarding Hostel Fee)'],
+            ['name' => 'EXAM FEE', 'code' => 'EXM', 'description' => 'परीक्षा शुल्क (Terminal & Board Examination Fee)'],
+            ['name' => 'DAY HOSTEL FEE', 'code' => 'DHST', 'description' => 'डे होस्टल तथा खाजा शुल्क (Day Boarding / Lunch & Study Care)'],
+            ['name' => 'TIUSION FEE', 'code' => 'COACH', 'description' => 'विशेष ट्युसन तथा कोचिङ शुल्क (Special Morning/Evening Tuition)'],
+            ['name' => 'TRANSPORT FEE', 'code' => 'TRP', 'description' => 'यातायात / बस शुल्क (School Bus / Transportation Fee)'],
+        ];
+
+        $added = 0;
+        foreach ($defaults as $d) {
+            $cat = FeeCategory::firstOrCreate(
+                ['school_id' => $schoolId, 'name' => $d['name']],
+                ['code' => $d['code'], 'description' => $d['description'], 'is_active' => true]
+            );
+            if ($cat->wasRecentlyCreated) $added++;
+        }
+
+        return back()->with('status', "Standard fee heads synchronized successfully ({$added} new heads added). स्ट्यान्डर्ड शुल्क शीर्षकहरू थपियो।");
     }
 
     public function storeStructure(Request $request)

@@ -593,10 +593,13 @@ Route::middleware(['auth'])->group(function () {
         });
 
         // Fee structures
-        Route::get('/structures',        [FeeController::class, 'structures'])->name('structures');
-        Route::post('/structures',       [FeeController::class, 'storeStructure'])->name('structures.store');
-        Route::put('/structures/{id}',   [FeeController::class, 'updateStructure'])->name('structures.update');
-        Route::delete('/structures/{id}',[FeeController::class, 'destroyStructure'])->name('structures.destroy');
+        Route::get('/structures',                     [FeeController::class, 'structures'])->name('structures');
+        Route::post('/structures',                    [FeeController::class, 'storeStructure'])->name('structures.store');
+        Route::post('/structures/matrix',             [FeeController::class, 'bulkUpdateMatrix'])->name('structures.matrix');
+        Route::get('/structures/print-chart',         [FeeController::class, 'printChart'])->name('structures.print-chart');
+        Route::post('/structures/seed-defaults',      [FeeController::class, 'seedDefaultHeads'])->name('structures.seed-defaults');
+        Route::put('/structures/{id}',                [FeeController::class, 'updateStructure'])->name('structures.update');
+        Route::delete('/structures/{id}',             [FeeController::class, 'destroyStructure'])->name('structures.destroy');
 
         // Discounts
         Route::get('/discounts',            [FeeController::class, 'discounts'])->name('discounts');
