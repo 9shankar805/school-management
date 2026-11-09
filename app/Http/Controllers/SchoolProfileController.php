@@ -152,6 +152,21 @@ class SchoolProfileController extends Controller
             'remove_principal_image'     => 'nullable|in:0,1',
             'principal_name'             => 'nullable|string|max:255',
             'principal_title'            => 'nullable|string|max:255',
+            // Founder / Managing Director (Rato Bangala style dual leadership)
+            'founder_image'              => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'remove_founder_image'       => 'nullable|in:0,1',
+            'founder_name'               => 'nullable|string|max:255',
+            'founder_title'              => 'nullable|string|max:255',
+            'founder_message'            => 'nullable|string|max:3000',
+            // Institutional Heritage & Campus Tour Video
+            'established_year'           => 'nullable|string|max:20',
+            'heritage_tagline'           => 'nullable|string|max:255',
+            'campus_video_url'           => 'nullable|string|max:500',
+            // Prominent Admission Announcement Ribbon
+            'admission_banner_active'    => 'nullable|in:0,1',
+            'admission_banner_text'      => 'nullable|string|max:255',
+            'admission_banner_btn_text'  => 'nullable|string|max:100',
+            'admission_banner_btn_url'   => 'nullable|string|max:500',
             // Hero Slider Banners (Supports Images & MP4 Videos)
             'new_slider_image'           => 'nullable|file|mimes:jpeg,png,jpg,webp,gif,mp4,webm,ogg,mov|max:51200',
             'new_slider_title'           => 'nullable|string|max:255',
@@ -183,6 +198,50 @@ class SchoolProfileController extends Controller
         }
         if ($request->has('principal_title')) {
             $settings['principal_title'] = $request->input('principal_title');
+        }
+
+        // ── Founder / Managing Director (Dual Leadership) ─────────────────────
+        if ($request->hasFile('founder_image')) {
+            if (!empty($settings['founder_image'])) {
+                Storage::disk('public')->delete($settings['founder_image']);
+            }
+            $settings['founder_image'] = \App\Services\ImageWebpService::storeAsWebp($request->file('founder_image'), 'school-staff', 'public');
+        } elseif ($request->input('remove_founder_image') == '1' && !empty($settings['founder_image'])) {
+            Storage::disk('public')->delete($settings['founder_image']);
+            $settings['founder_image'] = null;
+        }
+
+        if ($request->has('founder_name')) {
+            $settings['founder_name'] = $request->input('founder_name');
+        }
+        if ($request->has('founder_title')) {
+            $settings['founder_title'] = $request->input('founder_title');
+        }
+        if ($request->has('founder_message')) {
+            $settings['founder_message'] = $request->input('founder_message');
+        }
+
+        // ── Institutional Heritage & Campus Tour Video ───────────────────────
+        if ($request->has('established_year')) {
+            $settings['established_year'] = $request->input('established_year');
+        }
+        if ($request->has('heritage_tagline')) {
+            $settings['heritage_tagline'] = $request->input('heritage_tagline');
+        }
+        if ($request->has('campus_video_url')) {
+            $settings['campus_video_url'] = $request->input('campus_video_url');
+        }
+
+        // ── Prominent Admission Announcement Ribbon ──────────────────────────
+        $settings['admission_banner_active'] = $request->has('admission_banner_active') ? 1 : 0;
+        if ($request->has('admission_banner_text')) {
+            $settings['admission_banner_text'] = $request->input('admission_banner_text');
+        }
+        if ($request->has('admission_banner_btn_text')) {
+            $settings['admission_banner_btn_text'] = $request->input('admission_banner_btn_text');
+        }
+        if ($request->has('admission_banner_btn_url')) {
+            $settings['admission_banner_btn_url'] = $request->input('admission_banner_btn_url');
         }
 
         // School Operating Hours

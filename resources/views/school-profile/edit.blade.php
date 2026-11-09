@@ -237,6 +237,25 @@ $progressPct = (int) round(($activeStep / count($steps)) * 100);
             </div>
         </div>
 
+        {{-- Institutional Heritage & Tagline (Rato Bangala style) --}}
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-6">
+            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
+                <i class="bi bi-award-fill text-amber-500"></i> Institutional Heritage &amp; Identity
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="field-label">Established Year</label>
+                    <input type="text" name="established_year" value="{{ old('established_year', $school->settings['established_year'] ?? $school->established_year ?? '1992') }}" placeholder="e.g. 1992" class="field-input">
+                    <p class="text-[11px] text-slate-400 mt-1">Displayed in top bar and heritage badges (ESTD XXXX).</p>
+                </div>
+                <div>
+                    <label class="field-label">Heritage Motto / Headline Tagline</label>
+                    <input type="text" name="heritage_tagline" value="{{ old('heritage_tagline', $school->settings['heritage_tagline'] ?? '') }}" placeholder="e.g. CENTER OF EXCELLENCE SINCE 1992" class="field-input font-medium">
+                    <p class="text-[11px] text-slate-400 mt-1">Displayed as prestigious bold uppercase tagline on website.</p>
+                </div>
+            </div>
+        </div>
+
         {{-- Address --}}
         <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-6">
             <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4 flex items-center gap-2">
@@ -357,6 +376,7 @@ $progressPct = (int) round(($activeStep / count($steps)) * 100);
                     <div class="mt-3 flex items-center gap-1.5 flex-wrap">
                         <span class="text-[9px] font-bold text-slate-400 uppercase mr-1">Prestige:</span>
                         @foreach([
+                            ['#8b151b','Rato Bangala Crimson'],
                             ['#1a365d','Oxford Navy'],
                             ['#881337','Crimson'],
                             ['#064e3b','Dartmouth'],
@@ -924,6 +944,50 @@ $progressPct = (int) round(($activeStep / count($steps)) * 100);
         </div>
     </div>
 
+    {{-- Dedicated Campus Video Tour Section (Rato Bangala Style) --}}
+    <div class="col-span-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 rounded-2xl shadow-sm p-6 mt-4">
+        <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <span class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-sm shadow-sm">
+                    <i class="bi bi-youtube"></i>
+                </span>
+                A Short Video Tour of School (Homepage Video Embed)
+            </h3>
+            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400 border border-rose-200/60 dark:border-rose-800/60">
+                Rato Bangala Style
+            </span>
+        </div>
+        <p class="text-xs text-slate-400 mb-4">
+            Embed an official campus walkthrough, annual day video, or introduction video on your homepage welcome section. Paste any YouTube link, Vimeo, or MP4 URL.
+        </p>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div class="lg:col-span-7 space-y-3">
+                <label class="field-label">Campus Video URL</label>
+                <div class="relative">
+                    <i class="bi bi-link-45deg absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                    <input type="text" name="campus_video_url" id="campusVideoUrlInput"
+                           value="{{ old('campus_video_url', $school->settings['campus_video_url'] ?? '') }}"
+                           placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+                           class="field-input pl-10">
+                </div>
+                <p class="text-[11px] text-slate-400">Supports YouTube links (e.g. <code>https://youtu.be/XYZ</code>), Vimeo, or MP4 files. Automatically embedded in your website's welcome tour section.</p>
+            </div>
+            <div class="lg:col-span-5">
+                <div class="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-900 aspect-video flex items-center justify-center relative shadow-sm">
+                    @if(!empty($school->campus_video_embed_url))
+                        <iframe src="{{ $school->campus_video_embed_url }}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    @else
+                        <div class="text-center p-4 text-slate-400">
+                            <i class="bi bi-play-circle-fill text-3xl text-rose-500 mb-1 block"></i>
+                            <span class="text-xs font-semibold">Video Tour Preview Area</span>
+                            <p class="text-[10px] text-slate-500 mt-0.5">Paste a video link on the left to preview here</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 </div>{{-- /step-3 --}}
 
@@ -995,6 +1059,57 @@ $progressPct = (int) round(($activeStep / count($steps)) * 100);
                 <div>
                     <label class="field-label">Principal's Message</label>
                     <textarea name="principal_message" rows="4" class="field-input resize-y" placeholder="Welcome message to prospective parents and students…">{{ old('principal_message', $school->principal_message) }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        {{-- ── Founder / Managing Director's Message (Dual Leadership) ── --}}
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-6 mt-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
+                    <i class="bi bi-person-heart text-amber-500"></i> Founder / Managing Director Profile
+                </h3>
+                <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400 border border-amber-200/60 dark:border-amber-800/60">
+                    Dual Leadership
+                </span>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">Showcase your Founder, Chairman, or Managing Director side-by-side with the Principal on the homepage leadership section.</p>
+
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="field-label">Founder / Director Name</label>
+                        <input type="text" name="founder_name" value="{{ old('founder_name', $school->founder_name_resolved) }}" class="field-input" placeholder="e.g. Shanta Dixit / Er. Ramesh Sharma">
+                    </div>
+                    <div>
+                        <label class="field-label">Title / Designation</label>
+                        <input type="text" name="founder_title" value="{{ old('founder_title', $school->founder_title_resolved) }}" class="field-input" placeholder="e.g. Founder &amp; Director / Chairman">
+                    </div>
+                </div>
+
+                {{-- Founder Photo Upload --}}
+                <div class="bg-slate-50 dark:bg-slate-900/40 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <label class="field-label mb-2 block">Founder / Director Portrait Photo</label>
+                    <div class="flex items-center gap-4">
+                        <div class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-indigo-400/80 bg-white dark:bg-slate-800 shrink-0 shadow-sm">
+                            <img id="founderPhotoPreview" src="{{ $school->founder_photo_url ?? asset('imgs/profile.webp') }}" alt="Founder Photo" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <input type="file" name="founder_image" accept="image/*" class="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                            <p class="text-[11px] text-slate-400 mt-1">Recommended square or portrait photo (JPEG, PNG, WebP up to 3MB).</p>
+                            @if(!empty($school->settings['founder_image']))
+                            <label class="inline-flex items-center gap-1.5 mt-2 text-xs text-rose-600 cursor-pointer">
+                                <input type="checkbox" name="remove_founder_image" value="1" class="rounded text-rose-600">
+                                <span>Remove custom photo</span>
+                            </label>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="field-label">Founder / Director's Philosophy Message</label>
+                    <textarea name="founder_message" rows="4" class="field-input resize-y" placeholder="Founder's vision and institutional philosophy message…">{{ old('founder_message', $school->founder_message_resolved) }}</textarea>
                 </div>
             </div>
         </div>
@@ -1549,6 +1664,48 @@ $progressPct = (int) round(($activeStep / count($steps)) * 100);
                     This modal displays centered over a darkened backdrop on the landing page.
                 </p>
             </div>
+        </div>
+    </div>
+</div>
+
+{{-- ── Prominent Admissions Announcement Ribbon (Rato Bangala Style) ── --}}
+<div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-6">
+    <div class="flex items-start justify-between flex-wrap gap-4 mb-5">
+        <div>
+            <h3 class="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <i class="bi bi-tag-fill text-rose-500"></i> Prominent Admission Announcement Ribbon (Rato Bangala Style)
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Display an eye-catching, high-converting banner ribbon across the top of your homepage announcing open grades (e.g. <em>"PRE-KINDERGARTEN &amp; GRADE XI NOW ACCEPTING APPLICATIONS"</em>) with a direct action button.
+            </p>
+        </div>
+        <div class="flex items-center gap-3">
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="admission_banner_active" value="1" class="sr-only peer" {{ $school->admission_banner_active ? 'checked' : '' }}>
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+                <span class="ml-2 text-sm font-semibold text-slate-700 dark:text-slate-300">Show Ribbon</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="md:col-span-2">
+            <label class="field-label">Ribbon Announcement Text</label>
+            <input type="text" name="admission_banner_text" class="field-input font-bold"
+                   value="{{ old('admission_banner_text', $school->settings['admission_banner_text'] ?? 'PRE-KINDERGARTEN & GRADE XI NOW ACCEPTING APPLICATIONS') }}"
+                   placeholder="e.g. PRE-KINDERGARTEN &amp; GRADE XI NOW ACCEPTING APPLICATIONS">
+        </div>
+        <div>
+            <label class="field-label">Button Label</label>
+            <input type="text" name="admission_banner_btn_text" class="field-input"
+                   value="{{ old('admission_banner_btn_text', $school->settings['admission_banner_btn_text'] ?? 'CLICK HERE TO APPLY NOW') }}"
+                   placeholder="e.g. CLICK HERE TO APPLY NOW">
+        </div>
+        <div class="md:col-span-3">
+            <label class="field-label">Button Target URL</label>
+            <input type="text" name="admission_banner_btn_url" class="field-input"
+                   value="{{ old('admission_banner_btn_url', $school->settings['admission_banner_btn_url'] ?? url('admissions/apply?school=' . $school->slug)) }}"
+                   placeholder="e.g. {{ url('admissions/apply?school=' . $school->slug) }}">
         </div>
     </div>
 </div>

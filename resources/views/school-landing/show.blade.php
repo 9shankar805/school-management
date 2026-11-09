@@ -64,6 +64,29 @@
 </section>
 
 <!-- ═════════════════════════════════════════════════════════════════════
+     1.5 RATO BANGALA STYLE ADMISSIONS OPEN RIBBON
+══════════════════════════════════════════════════════════════════════ -->
+@if($school->admission_banner_active || true)
+<div class="bg-gradient-to-r from-[#8b151b] via-[#9e1b21] to-[#6b0f14] text-white py-3.5 px-4 shadow-md relative z-20 border-y border-red-900/60">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <div class="flex items-center gap-2.5 flex-wrap justify-center sm:justify-start">
+            <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/20 text-white font-extrabold text-[11px] tracking-wider uppercase backdrop-blur-xs">
+                <i class="bi bi-bell-fill text-amber-300 animate-pulse"></i> Admissions Open
+            </span>
+            <span class="text-xs sm:text-sm font-bold tracking-wide">
+                {{ $school->admission_banner_text }}
+            </span>
+        </div>
+        <a href="{{ $school->admission_banner_btn_url }}" 
+           class="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider shadow-sm transition transform hover:scale-105 shrink-0">
+            <span>{{ $school->admission_banner_btn_text }}</span>
+            <i class="bi bi-arrow-right font-black"></i>
+        </a>
+    </div>
+</div>
+@endif
+
+<!-- ═════════════════════════════════════════════════════════════════════
      2. INSTITUTIONAL WELCOME & QUICK ACTION BAR
 ══════════════════════════════════════════════════════════════════════ -->
 <section id="welcome" class="bg-white py-10 sm:py-14 border-b border-slate-200">
@@ -446,12 +469,30 @@
 </section>
 
 <!-- ═════════════════════════════════════════════════════════════════════
-     6. ABOUT THE ACADEMY FEATURED OVERVIEW (WITH CAMPUS PHOTO)
+     6. ABOUT THE ACADEMY & CAMPUS VIDEO TOUR (RATO BANGALA STYLE)
 ══════════════════════════════════════════════════════════════════════ -->
 <section class="py-16 bg-white border-b border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            <div class="lg:col-span-5 relative">
+            <div class="lg:col-span-6 relative">
+                @if(!empty($school->campus_video_embed_url))
+                {{-- Campus Video Tour Embed --}}
+                <div class="relative rounded-3xl overflow-hidden shadow-2xl border-2 border-slate-200 aspect-video bg-slate-950 group">
+                    @if($school->is_campus_video_direct_file)
+                        <video class="w-full h-full object-cover" controls preload="metadata">
+                            <source src="{{ $school->campus_video_embed_url }}" type="video/mp4">
+                        </video>
+                    @else
+                        <iframe src="{{ $school->campus_video_embed_url }}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    @endif
+                </div>
+                <div class="mt-3 flex items-center justify-between text-xs text-slate-500 px-1">
+                    <span class="font-bold tracking-wider text-slate-700 uppercase flex items-center gap-1.5">
+                        <i class="bi bi-play-circle-fill text-[#f36c21]"></i> A Short Video Tour of Our School
+                    </span>
+                    <span class="text-slate-400">Campus Walkthrough</span>
+                </div>
+                @else
                 <div class="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200 aspect-[4/3] bg-white">
                     @php
                         $aboutImg = !empty($school->gallery_images[0]) 
@@ -477,14 +518,16 @@
                         </div>
                     </div>
                 </div>
+                @endif
             </div>
 
-            <div class="lg:col-span-7">
-                <span class="text-xs font-bold tracking-widest uppercase text-slate-700 bg-slate-100 px-3.5 py-1 rounded-md border border-slate-200 inline-block mb-3">
+            <div class="lg:col-span-6">
+                <span class="text-xs font-bold tracking-widest uppercase text-slate-700 bg-slate-100 px-3.5 py-1 rounded-md border border-slate-200 inline-block mb-2">
                     Who We Are
                 </span>
+                <span class="text-xs font-bold text-[#f36c21] tracking-widest uppercase block mb-2">{{ $school->heritage_tagline }}</span>
                 <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-5 leading-tight">
-                    Nurturing Intellect, Inspiring Character & Shaping Future Leaders
+                    Nurturing Intellect, Inspiring Character &amp; Shaping Future Leaders
                 </h2>
                 <div class="text-slate-600 text-sm sm:text-base leading-relaxed space-y-4 mb-6">
                     @if($school->about_us && strlen($school->about_us) > 30)
@@ -512,10 +555,68 @@
 </section>
 
 <!-- ═════════════════════════════════════════════════════════════════════
-     7. FROM THE PRINCIPAL'S DESK (WITH PRINCIPAL PHOTO)
+     7. LEADERSHIP ADDRESS (RATO BANGALA DUAL LEADERSHIP OR SINGLE)
 ══════════════════════════════════════════════════════════════════════ -->
 <section class="py-16 bg-slate-50 border-b border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        @if(!empty($school->founder_name_resolved))
+        {{-- Dual Leadership Layout (Director + Principal - Rato Bangala Exact Pattern) --}}
+        <div class="text-center max-w-2xl mx-auto mb-12">
+            <span class="text-xs font-bold tracking-widest uppercase text-slate-700 bg-white px-3.5 py-1 rounded-md border border-slate-200 inline-block mb-2">
+                Governance & Direction
+            </span>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-slate-900">
+                Message from the Leadership
+            </h2>
+            <p class="text-slate-600 text-sm mt-1">Guided by experienced educators committed to progressive learning in Nepal.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {{-- 1. Founder / Director Card --}}
+            <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-4 mb-5">
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-amber-400 shrink-0 shadow-sm bg-slate-100">
+                            <img src="{{ $school->founder_photo_url ?? asset('imgs/profile.webp') }}" alt="{{ $school->founder_name_resolved }}" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">
+                                {{ $school->founder_title_resolved }}
+                            </span>
+                            <h3 class="text-xl font-black text-slate-900 mt-1">{{ $school->founder_name_resolved }}</h3>
+                            <p class="text-xs text-[#f36c21] font-semibold">{{ $school->name }}</p>
+                        </div>
+                    </div>
+                    <div class="text-slate-700 text-sm leading-relaxed italic border-l-4 border-amber-400 pl-4 py-1.5 bg-slate-50/60 rounded-r-xl">
+                        "{{ $school->founder_message_resolved ?: 'We are a progressive learning community that works to educate the whole person and prepare them for life.' }}"
+                    </div>
+                </div>
+            </div>
+
+            {{-- 2. Principal Card --}}
+            <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center gap-4 mb-5">
+                        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden border-2 border-[#f36c21] shrink-0 shadow-sm bg-slate-100">
+                            <img src="{{ $school->principal_photo_url }}" onerror="this.src='{{ asset('imgs/profile.webp') }}'" alt="{{ $school->principal_name_resolved }}" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-orange-50 text-[#f36c21] border border-orange-200">
+                                {{ $school->settings['principal_title'] ?? 'Principal & Head of Institution' }}
+                            </span>
+                            <h3 class="text-xl font-black text-slate-900 mt-1">{{ $school->principal_name_resolved }}</h3>
+                            <p class="text-xs text-[#f36c21] font-semibold">{{ $school->name }}</p>
+                        </div>
+                    </div>
+                    <div class="text-slate-700 text-sm leading-relaxed italic border-l-4 border-[#f36c21] pl-4 py-1.5 bg-slate-50/60 rounded-r-xl">
+                        "{{ $school->principal_message ? Str::limit($school->principal_message, 240) : 'Education is not merely the accumulation of facts; it is the training of the mind to think critically, the awakening of curiosity, and the cultivation of compassionate character.' }}"
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @else
+        {{-- Single Principal Layout --}}
         <div class="bg-white rounded-2xl p-8 sm:p-12 border border-slate-200 shadow-md">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
                 <div class="lg:col-span-4 flex flex-col items-center text-center">
@@ -570,6 +671,7 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 </section>
 

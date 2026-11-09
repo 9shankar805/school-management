@@ -266,6 +266,7 @@ class School extends Model
 
     /** All built-in preset themes shown in the colour picker. */
     const PRESET_THEMES = [
+        'rato_bangala' => ['label' => 'Rato Bangala Heritage Crimson', 'primary' => '#8b151b', 'secondary' => '#c29d38'],
         'royal_blue'   => ['label' => 'Oxford Navy & Gold',   'primary' => '#1a365d', 'secondary' => '#c59b27'],
         'forest_green' => ['label' => 'Dartmouth Emerald',    'primary' => '#064e3b', 'secondary' => '#10b981'],
         'classic_red'  => ['label' => 'Harvard Crimson',      'primary' => '#881337', 'secondary' => '#d97706'],
@@ -309,6 +310,93 @@ class School extends Model
             return $principal->name;
         }
         return 'Prof. Dr. Principal';
+    }
+
+    /** Get founder/director photo URL with intelligent fallbacks */
+    public function getFounderPhotoUrlAttribute(): ?string
+    {
+        if (!empty($this->settings['founder_image'])) {
+            return asset('storage/' . $this->settings['founder_image']);
+        }
+        if ($this->owner && $this->owner->photo) {
+            return asset('storage/' . $this->owner->photo);
+        }
+        return null;
+    }
+
+    /** Get founder name */
+    public function getFounderNameResolvedAttribute(): ?string
+    {
+        return $this->settings['founder_name'] ?? null;
+    }
+
+    /** Get founder title */
+    public function getFounderTitleResolvedAttribute(): string
+    {
+        return $this->settings['founder_title'] ?? 'Founder & Managing Director';
+    }
+
+    /** Get founder message */
+    public function getFounderMessageResolvedAttribute(): ?string
+    {
+        return $this->settings['founder_message'] ?? null;
+    }
+
+    /** Convert YouTube / Vimeo or local video URL to clean responsive embed URL */
+    public function getCampusVideoEmbedUrlAttribute(): ?string
+    {
+        $url = $this->settings['campus_video_url'] ?? null;
+        if (empty($url)) return null;
+
+        // YouTube watch URL: https://www.youtube.com/watch?v=XYZ
+        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/i', $url, $match)) {
+            return 'https://www.youtube.com/embed/' . $match[1] . '?rel=0&modestbranding=1';
+        }
+
+        // Vimeo: https://vimeo.com/123456789
+        if (preg_match('/vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)/i', $url, $match)) {
+            return 'https://player.vimeo.com/video/' . $match[3];
+        }
+
+        return $url;
+    }
+
+    /** Check if campus video is MP4 / direct file */
+    public function getIsCampusVideoDirectFileAttribute(): bool
+    {
+        $url = $this->settings['campus_video_url'] ?? '';
+        return (bool) preg_match('/\.(mp4|webm|ogg|mov)$/i', $url);
+    }
+
+    /** Admission announcement banner accessors */
+    public function getAdmissionBannerActiveAttribute(): bool
+    {
+        return !empty($this->settings['admission_banner_active']);
+    }
+
+    public function getAdmissionBannerTextAttribute(): string
+    {
+        return $this->settings['admission_banner_text'] ?? 'PRE-KINDERGARTEN & GRADE XI NOW ACCEPTING APPLICATIONS';
+    }
+
+    public function getAdmissionBannerBtnTextAttribute(): string
+    {
+        return $this->settings['admission_banner_btn_text'] ?? 'CLICK HERE TO APPLY NOW';
+    }
+
+    public function getAdmissionBannerBtnUrlAttribute(): string
+    {
+        return $this->settings['admission_banner_btn_url'] ?? url('admissions/apply?school=' . $this->slug);
+    }
+
+    public function getHeritageTaglineAttribute(): string
+    {
+        return $this->settings['heritage_tagline'] ?? ('CENTER OF EXCELLENCE SINCE ' . ($this->settings['established_year'] ?? $this->established_year ?? '1992'));
+    }
+
+    public function getEstablishedYearResolvedAttribute(): string
+    {
+        return (string) ($this->settings['established_year'] ?? $this->established_year ?? '1992');
     }
 
     /** School Operational Hours & Schedule Accessors */

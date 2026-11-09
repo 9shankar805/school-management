@@ -215,16 +215,16 @@ body {
     outline: none;
 }
 .nav-link-white:hover {
-    color: #f36c21;
+    color: var(--brand-primary, #f36c21);
     background-color: #fff7ed;
 }
 .nav-link-white.active {
-    color: #f36c21;
+    color: var(--brand-primary, #f36c21);
     background-color: #fff7ed;
     font-weight: 700;
 }
 .nav-link-white:focus-visible {
-    outline: 2px solid #f36c21;
+    outline: 2px solid var(--brand-primary, #f36c21);
     outline-offset: 2px;
 }
 
@@ -268,7 +268,7 @@ body {
     pointer-events: auto;
 }
 .nav-dropdown:hover > .nav-link-white {
-    color: #f36c21;
+    color: var(--brand-primary, #f36c21);
     background-color: #fff7ed;
 }
 .nav-dropdown-item {
@@ -285,12 +285,12 @@ body {
 }
 .nav-dropdown-item:hover {
     background: #fff7ed;
-    color: #f36c21;
+    color: var(--brand-primary, #f36c21);
     transform: translateX(2px);
 }
 .nav-dropdown-item i {
     font-size: 0.95rem;
-    color: #f36c21;
+    color: var(--brand-primary, #f36c21);
 }
 
 /* ── Swiper Fullscreen Custom Theme & Auto-Fit Stretch Engine ── */
@@ -339,9 +339,9 @@ body {
 .banner-swiper .swiper-pagination-bullet-active {
     width: 30px;
     border-radius: 6px;
-    background: #f36c21 !important;
+    background: var(--brand-primary, #f36c21) !important;
     opacity: 1;
-    box-shadow: 0 0 10px rgba(243, 108, 33, 0.8);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
 .banner-swiper .swiper-button-prev,
 .banner-swiper .swiper-button-next {
@@ -357,7 +357,7 @@ body {
 .banner-swiper .swiper-button-prev:hover,
 .banner-swiper .swiper-button-next:hover {
     background: #ffffff;
-    color: #f36c21;
+    color: var(--brand-primary, #f36c21);
     transform: scale(1.08);
 }
 .banner-swiper .swiper-button-prev::after,
@@ -392,9 +392,9 @@ body {
     text-decoration: none;
 }
 .social-circle-btn:hover {
-    background-color: #f36c21;
+    background-color: var(--brand-primary, #f36c21);
     color: #ffffff;
-    border-color: #f36c21;
+    border-color: var(--brand-primary, #f36c21);
     transform: scale(1.08) translateX(2px);
 }
 
@@ -428,21 +428,21 @@ body {
     justify-content: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    background-color: #f36c21;
+    background-color: var(--brand-primary, #f36c21);
     color: #ffffff;
     border-radius: 0.75rem;
     font-weight: 700;
     font-size: 0.875rem;
     transition: all 0.2s ease;
     text-decoration: none;
-    border: 1px solid #f36c21;
+    border: 1px solid var(--brand-primary, #f36c21);
     cursor: pointer;
 }
 .btn-brand-orange:hover {
-    background-color: #e05d15;
+    filter: brightness(0.92);
     color: #ffffff;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(243, 108, 33, 0.25);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .btn-navy {
@@ -570,9 +570,9 @@ body {
     pointer-events: auto !important;
 }
 
-/* ── Curved Orange Footer ── */
+/* ── Curved Footer (Matches Dynamic Brand Color) ── */
 .footer-curved-orange {
-    background-color: #f36c21;
+    background-color: var(--brand-primary, #f36c21);
     color: #ffffff;
     border-top-left-radius: 40px;
     border-top-right-radius: 40px;
@@ -607,6 +607,48 @@ body {
         <i class="bi bi-whatsapp"></i>
     </a>
     @endif
+</div>
+
+<!-- ═════════════════════════════════════════════════════════════════════
+     2.5 TOP INSTITUTIONAL CONTACT BAR (RATO BANGALA HERITAGE STYLE)
+══════════════════════════════════════════════════════════════════════ -->
+<div class="bg-slate-900 text-slate-300 text-[11px] sm:text-xs py-2 border-b border-slate-800/80 relative z-30">
+    <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 flex justify-between items-center gap-4 flex-wrap">
+        <div class="flex items-center gap-3 sm:gap-5 flex-wrap">
+            @if($school->city || $school->address)
+            <span class="inline-flex items-center gap-1.5 text-slate-300">
+                <i class="bi bi-geo-alt-fill text-[#f36c21]"></i>
+                <span>{{ $school->address ? Str::limit($school->address, 30) : '' }}{{ $school->city ? ', ' . $school->city : '' }}</span>
+            </span>
+            @endif
+            @if($school->phone)
+            <a href="tel:{{ $school->phone }}" class="inline-flex items-center gap-1.5 text-slate-300 hover:text-white transition">
+                <i class="bi bi-telephone-fill text-[#f36c21]"></i>
+                <span>{{ $school->phone }}</span>
+            </a>
+            @endif
+            @if($school->email)
+            <a href="mailto:{{ $school->email }}" class="hidden md:inline-flex items-center gap-1.5 text-slate-300 hover:text-white transition">
+                <i class="bi bi-envelope-fill text-[#f36c21]"></i>
+                <span>{{ $school->email }}</span>
+            </a>
+            @endif
+        </div>
+        <div class="flex items-center gap-3 sm:gap-4 shrink-0">
+            <span class="font-bold tracking-wider text-slate-200 uppercase text-[10px] sm:text-[11px]">
+                ESTD {{ $school->established_year_resolved }}
+            </span>
+            <span class="text-slate-600 hidden sm:inline">|</span>
+            <div class="flex items-center gap-2.5 text-slate-400">
+                @if($school->facebook_url)<a href="{{ $school->facebook_url }}" target="_blank" class="hover:text-white transition" title="Facebook"><i class="bi bi-facebook"></i></a>@endif
+                @if($school->instagram_url)<a href="{{ $school->instagram_url }}" target="_blank" class="hover:text-white transition" title="Instagram"><i class="bi bi-instagram"></i></a>@endif
+                @if($school->youtube_url)<a href="{{ $school->youtube_url }}" target="_blank" class="hover:text-white transition" title="YouTube"><i class="bi bi-youtube"></i></a>@endif
+                <a href="{{ url('login') }}" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-800 hover:bg-[#f36c21] hover:text-white text-slate-300 font-bold text-[10px] transition border border-slate-700">
+                    <i class="bi bi-person-fill"></i> Portal Login
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- ═════════════════════════════════════════════════════════════════════
