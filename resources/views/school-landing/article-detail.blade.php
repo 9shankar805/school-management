@@ -1,6 +1,10 @@
 @extends('school-landing.layout')
 
-@section('title', $article['title'] . ' — ' . $school->name)
+@section('title', $article['title'])
+@section('seo_description', $article['excerpt'])
+@section('seo_image', $article['image'])
+@section('seo_type', 'article')
+@section('seo_keywords', implode(', ', array_filter(array_merge($article['tags'] ?? [], [$article['category'], $article['type_label'], $school->name, $school->city ?? 'Nepal']))))
 
 @section('content')
 

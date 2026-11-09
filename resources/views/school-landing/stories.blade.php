@@ -1,6 +1,8 @@
 @extends('school-landing.layout')
 
-@section('title', 'Student Stories, Voices & Alumni Journeys — ' . $school->name)
+@section('title', 'Student Voices, Creative Writing & Alumni Journeys')
+@section('seo_description', 'Explore student perspectives, creative literature, youth leadership journals, and alumni success chronicles from the scholars of ' . $school->name . '.')
+@section('seo_keywords', 'student stories Nepal, creative writing, youth leadership, student voices, alumni spotlight, ' . $school->name)
 
 @section('content')
 

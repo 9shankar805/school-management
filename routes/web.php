@@ -63,6 +63,7 @@ use App\Http\Controllers\HouseAssignmentController;
 use App\Http\Controllers\ScholarshipController;
 use App\Http\Controllers\SchoolProfileController;
 use App\Http\Controllers\SchoolLandingController;
+use App\Http\Controllers\SchoolArticleController;
 use App\Http\Controllers\Api\V1\SettingController;
 use App\Http\Controllers\StudentTransferController;
 use App\Http\Controllers\StudentIdCardController;
@@ -1489,43 +1490,87 @@ Route::middleware(['auth'])->prefix('school/profile')->name('school.profile.')->
     Route::get('/payment-qr',  [SchoolProfileController::class, 'paymentQr'])->name('payment-qr');
     Route::post('/payment-qr', [SchoolProfileController::class, 'updatePaymentQr'])->name('payment-qr.update');
 });
+
+// ── School Blog & Article Management (authenticated) ──
+Route::middleware(['auth'])->prefix('school/articles')->name('school.articles.')->group(function () {
+    Route::get('/',              [SchoolArticleController::class, 'index'])->name('index');
+    Route::get('/create',        [SchoolArticleController::class, 'create'])->name('create');
+    Route::post('/',             [SchoolArticleController::class, 'store'])->name('store');
+    Route::get('/{slug}/edit',   [SchoolArticleController::class, 'edit'])->name('edit');
+    Route::put('/{slug}',        [SchoolArticleController::class, 'update'])->name('update');
+    Route::delete('/{slug}',     [SchoolArticleController::class, 'destroy'])->name('destroy');
+});
 // ── Public School Multi-Page Portal Routes (no auth required) ──
 Route::prefix('school/{slug}')->group(function () {
-    Route::get('/',                    [SchoolLandingController::class, 'show'])->name('school.landing');
-    Route::get('/about',               [SchoolLandingController::class, 'about'])->name('school.landing.about');
-    Route::get('/academics',           [SchoolLandingController::class, 'academics'])->name('school.landing.academics');
-    Route::get('/admissions',          [SchoolLandingController::class, 'admissions'])->name('school.landing.admissions');
-    Route::get('/notices',             [SchoolLandingController::class, 'notices'])->name('school.landing.notices');
-    Route::get('/facilities',          [SchoolLandingController::class, 'facilities'])->name('school.landing.facilities');
-    Route::get('/faculty',             [SchoolLandingController::class, 'faculty'])->name('school.landing.faculty');
-    Route::get('/gallery',             [SchoolLandingController::class, 'gallery'])->name('school.landing.gallery');
-    Route::get('/contact',             [SchoolLandingController::class, 'contact'])->name('school.landing.contact');
-    Route::get('/blogs',               [SchoolLandingController::class, 'blogs'])->name('school.landing.blogs');
-    Route::get('/news',                [SchoolLandingController::class, 'news'])->name('school.landing.news');
-    Route::get('/stories',             [SchoolLandingController::class, 'stories'])->name('school.landing.stories');
-    Route::get('/publications',         [SchoolLandingController::class, 'publications'])->name('school.landing.publications');
+    Route::get('/',                      [SchoolLandingController::class, 'show'])->name('school.landing');
+    Route::get('/about',                 [SchoolLandingController::class, 'about'])->name('school.landing.about');
+    Route::get('/academics',             [SchoolLandingController::class, 'academics'])->name('school.landing.academics');
+    Route::get('/admissions',            [SchoolLandingController::class, 'admissions'])->name('school.landing.admissions');
+    Route::get('/notices',               [SchoolLandingController::class, 'notices'])->name('school.landing.notices');
+    Route::get('/notice/{notice}',       [SchoolLandingController::class, 'noticeDetail'])->name('school.landing.notice');
+    Route::get('/facilities',            [SchoolLandingController::class, 'facilities'])->name('school.landing.facilities');
+    Route::get('/faculty',               [SchoolLandingController::class, 'faculty'])->name('school.landing.faculty');
+    Route::get('/gallery',               [SchoolLandingController::class, 'gallery'])->name('school.landing.gallery');
+    Route::get('/contact',               [SchoolLandingController::class, 'contact'])->name('school.landing.contact');
+    Route::get('/blogs',                 [SchoolLandingController::class, 'blogs'])->name('school.landing.blogs');
+    Route::get('/news',                  [SchoolLandingController::class, 'news'])->name('school.landing.news');
+    Route::get('/stories',               [SchoolLandingController::class, 'stories'])->name('school.landing.stories');
+    Route::get('/publications',           [SchoolLandingController::class, 'publications'])->name('school.landing.publications');
     Route::get('/article/{articleSlug}', [SchoolLandingController::class, 'articleDetail'])->name('school.landing.article');
-    Route::post('/newsletter',         [SchoolLandingController::class, 'newsletterSubscribe'])->name('school.landing.newsletter');
+    Route::post('/newsletter',           [SchoolLandingController::class, 'newsletterSubscribe'])->name('school.landing.newsletter');
 });
 
-Route::domain('{subdomain}.' . env('APP_DOMAIN', 'nshlms.com'))->group(function () {
-    Route::get('/',                    [SchoolLandingController::class, 'showBySubdomain'])->name('school.subdomain');
-    Route::get('/about',               [SchoolLandingController::class, 'aboutBySubdomain'])->name('school.subdomain.about');
-    Route::get('/academics',           [SchoolLandingController::class, 'academicsBySubdomain'])->name('school.subdomain.academics');
-    Route::get('/admissions',          [SchoolLandingController::class, 'admissionsBySubdomain'])->name('school.subdomain.admissions');
-    Route::get('/notices',             [SchoolLandingController::class, 'noticesBySubdomain'])->name('school.subdomain.notices');
-    Route::get('/facilities',          [SchoolLandingController::class, 'facilitiesBySubdomain'])->name('school.subdomain.facilities');
-    Route::get('/faculty',             [SchoolLandingController::class, 'facultyBySubdomain'])->name('school.subdomain.faculty');
-    Route::get('/gallery',             [SchoolLandingController::class, 'galleryBySubdomain'])->name('school.subdomain.gallery');
-    Route::get('/contact',             [SchoolLandingController::class, 'contactBySubdomain'])->name('school.subdomain.contact');
-    Route::get('/blogs',               [SchoolLandingController::class, 'blogsBySubdomain'])->name('school.subdomain.blogs');
-    Route::get('/news',                [SchoolLandingController::class, 'newsBySubdomain'])->name('school.subdomain.news');
-    Route::get('/stories',             [SchoolLandingController::class, 'storiesBySubdomain'])->name('school.subdomain.stories');
-    Route::get('/publications',         [SchoolLandingController::class, 'publicationsBySubdomain'])->name('school.subdomain.publications');
+$primaryAppDomain = env('APP_DOMAIN', 'nshlms.com');
+Route::domain('{subdomain}.' . $primaryAppDomain)->group(function () {
+    Route::get('/',                      [SchoolLandingController::class, 'showBySubdomain'])->name('school.subdomain');
+    Route::get('/about',                 [SchoolLandingController::class, 'aboutBySubdomain'])->name('school.subdomain.about');
+    Route::get('/academics',             [SchoolLandingController::class, 'academicsBySubdomain'])->name('school.subdomain.academics');
+    Route::get('/admissions',            [SchoolLandingController::class, 'admissionsBySubdomain'])->name('school.subdomain.admissions');
+    Route::get('/notices',               [SchoolLandingController::class, 'noticesBySubdomain'])->name('school.subdomain.notices');
+    Route::get('/notice/{notice}',       [SchoolLandingController::class, 'noticeDetailBySubdomain'])->name('school.subdomain.notice');
+    Route::get('/facilities',            [SchoolLandingController::class, 'facilitiesBySubdomain'])->name('school.subdomain.facilities');
+    Route::get('/faculty',               [SchoolLandingController::class, 'facultyBySubdomain'])->name('school.subdomain.faculty');
+    Route::get('/gallery',               [SchoolLandingController::class, 'galleryBySubdomain'])->name('school.subdomain.gallery');
+    Route::get('/contact',               [SchoolLandingController::class, 'contactBySubdomain'])->name('school.subdomain.contact');
+    Route::get('/blogs',                 [SchoolLandingController::class, 'blogsBySubdomain'])->name('school.subdomain.blogs');
+    Route::get('/news',                  [SchoolLandingController::class, 'newsBySubdomain'])->name('school.subdomain.news');
+    Route::get('/stories',               [SchoolLandingController::class, 'storiesBySubdomain'])->name('school.subdomain.stories');
+    Route::get('/publications',           [SchoolLandingController::class, 'publicationsBySubdomain'])->name('school.subdomain.publications');
     Route::get('/article/{articleSlug}', [SchoolLandingController::class, 'articleDetailBySubdomain'])->name('school.subdomain.article');
-    Route::post('/newsletter',         [SchoolLandingController::class, 'newsletterSubscribe'])->name('school.subdomain.newsletter');
-    Route::get('/school/{slug}',       [SchoolLandingController::class, 'showBySubdomain']);
+    Route::post('/newsletter',           [SchoolLandingController::class, 'newsletterSubscribe'])->name('school.subdomain.newsletter');
+    Route::get('/school/{slug}',         [SchoolLandingController::class, 'showBySubdomain']);
 });
+
+// Additional local/test/custom domain fallbacks for subdomains (e.g. *.localhost, *.nepalschoolhub.com)
+$extraLandingDomains = array_unique(array_filter([
+    'nepalschoolhub.com',
+    'techprocod.com.np',
+    'localhost',
+]));
+
+foreach ($extraLandingDomains as $extraDom) {
+    if ($extraDom !== $primaryAppDomain) {
+        Route::domain('{subdomain}.' . $extraDom)->group(function () {
+            Route::get('/',                      [SchoolLandingController::class, 'showBySubdomain']);
+            Route::get('/about',                 [SchoolLandingController::class, 'aboutBySubdomain']);
+            Route::get('/academics',             [SchoolLandingController::class, 'academicsBySubdomain']);
+            Route::get('/admissions',            [SchoolLandingController::class, 'admissionsBySubdomain']);
+            Route::get('/notices',               [SchoolLandingController::class, 'noticesBySubdomain']);
+            Route::get('/notice/{notice}',       [SchoolLandingController::class, 'noticeDetailBySubdomain']);
+            Route::get('/facilities',            [SchoolLandingController::class, 'facilitiesBySubdomain']);
+            Route::get('/faculty',               [SchoolLandingController::class, 'facultyBySubdomain']);
+            Route::get('/gallery',               [SchoolLandingController::class, 'galleryBySubdomain']);
+            Route::get('/contact',               [SchoolLandingController::class, 'contactBySubdomain']);
+            Route::get('/blogs',                 [SchoolLandingController::class, 'blogsBySubdomain']);
+            Route::get('/news',                  [SchoolLandingController::class, 'newsBySubdomain']);
+            Route::get('/stories',               [SchoolLandingController::class, 'storiesBySubdomain']);
+            Route::get('/publications',           [SchoolLandingController::class, 'publicationsBySubdomain']);
+            Route::get('/article/{articleSlug}', [SchoolLandingController::class, 'articleDetailBySubdomain']);
+            Route::post('/newsletter',           [SchoolLandingController::class, 'newsletterSubscribe']);
+            Route::get('/school/{slug}',         [SchoolLandingController::class, 'showBySubdomain']);
+        });
+    }
+}
 
 // Payment gateway webhooks — no CSRF (raw POST from gateways)
 Route::post('/webhooks/stripe',      [\App\Http\Controllers\WebhookController::class, 'stripe'])->name('webhooks.stripe');
@@ -1566,15 +1611,103 @@ Route::get('/sitemap.xml', function () {
     $xml .= '    </url>' . "\n";
 
     foreach ($schools as $school) {
-        $schoolUrl = url('/school/' . $school->slug);
+        $subpages = [
+            ''             => ['freq' => 'daily',   'prio' => '1.0'],
+            'about'        => ['freq' => 'weekly',  'prio' => '0.8'],
+            'academics'    => ['freq' => 'weekly',  'prio' => '0.9'],
+            'admissions'   => ['freq' => 'weekly',  'prio' => '0.9'],
+            'notices'      => ['freq' => 'daily',   'prio' => '0.8'],
+            'facilities'   => ['freq' => 'monthly', 'prio' => '0.7'],
+            'faculty'      => ['freq' => 'monthly', 'prio' => '0.7'],
+            'gallery'      => ['freq' => 'weekly',  'prio' => '0.6'],
+            'contact'      => ['freq' => 'monthly', 'prio' => '0.8'],
+            'blogs'        => ['freq' => 'daily',   'prio' => '0.8'],
+            'news'         => ['freq' => 'daily',   'prio' => '0.8'],
+            'stories'      => ['freq' => 'weekly',  'prio' => '0.7'],
+            'publications' => ['freq' => 'weekly',  'prio' => '0.8'],
+        ];
+
         $schoolMod = $school->updated_at ? $school->updated_at->toAtomString() : $lastmod;
+
+        foreach ($subpages as $sub => $meta) {
+            $loc = url('/school/' . $school->slug . ($sub ? '/' . $sub : ''));
+            $xml .= '    <url>' . "\n";
+            $xml .= '        <loc>' . htmlspecialchars($loc) . '</loc>' . "\n";
+            $xml .= '        <lastmod>' . $schoolMod . '</lastmod>' . "\n";
+            $xml .= '        <changefreq>' . $meta['freq'] . '</changefreq>' . "\n";
+            $xml .= '        <priority>' . $meta['prio'] . '</priority>' . "\n";
+            $xml .= '    </url>' . "\n";
+        }
+
+        try {
+            $articles = $school->getLandingArticles();
+            foreach ($articles as $art) {
+                if (!empty($art['slug'])) {
+                    $artLoc = url('/school/' . $school->slug . '/article/' . $art['slug']);
+                    $xml .= '    <url>' . "\n";
+                    $xml .= '        <loc>' . htmlspecialchars($artLoc) . '</loc>' . "\n";
+                    $xml .= '        <lastmod>' . $schoolMod . '</lastmod>' . "\n";
+                    $xml .= '        <changefreq>weekly</changefreq>' . "\n";
+                    $xml .= '        <priority>0.8</priority>' . "\n";
+                    $xml .= '    </url>' . "\n";
+                }
+            }
+        } catch (\Throwable $e) {}
+    }
+
+    $xml .= '</urlset>';
+
+    return response($xml, 200)->header('Content-Type', 'text/xml; charset=UTF-8');
+});
+
+// Dedicated Per-School Sitemap
+Route::get('/school/{slug}/sitemap.xml', function (string $slug) {
+    $school = \App\Models\School::where('slug', $slug)->orWhereRaw("REPLACE(slug, '-', '') = ?", [str_replace('-', '', strtolower($slug))])->where('status', 'active')->firstOrFail();
+    $lastmod = $school->updated_at ? $school->updated_at->toAtomString() : now()->toAtomString();
+
+    $subpages = [
+        ''             => ['freq' => 'daily',   'prio' => '1.0'],
+        'about'        => ['freq' => 'weekly',  'prio' => '0.8'],
+        'academics'    => ['freq' => 'weekly',  'prio' => '0.9'],
+        'admissions'   => ['freq' => 'weekly',  'prio' => '0.9'],
+        'notices'      => ['freq' => 'daily',   'prio' => '0.8'],
+        'facilities'   => ['freq' => 'monthly', 'prio' => '0.7'],
+        'faculty'      => ['freq' => 'monthly', 'prio' => '0.7'],
+        'gallery'      => ['freq' => 'weekly',  'prio' => '0.6'],
+        'contact'      => ['freq' => 'monthly', 'prio' => '0.8'],
+        'blogs'        => ['freq' => 'daily',   'prio' => '0.8'],
+        'news'         => ['freq' => 'daily',   'prio' => '0.8'],
+        'stories'      => ['freq' => 'weekly',  'prio' => '0.7'],
+        'publications' => ['freq' => 'weekly',  'prio' => '0.8'],
+    ];
+
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+
+    foreach ($subpages as $sub => $meta) {
+        $loc = url('/school/' . $school->slug . ($sub ? '/' . $sub : ''));
         $xml .= '    <url>' . "\n";
-        $xml .= '        <loc>' . htmlspecialchars($schoolUrl) . '</loc>' . "\n";
-        $xml .= '        <lastmod>' . $schoolMod . '</lastmod>' . "\n";
-        $xml .= '        <changefreq>daily</changefreq>' . "\n";
-        $xml .= '        <priority>0.8</priority>' . "\n";
+        $xml .= '        <loc>' . htmlspecialchars($loc) . '</loc>' . "\n";
+        $xml .= '        <lastmod>' . $lastmod . '</lastmod>' . "\n";
+        $xml .= '        <changefreq>' . $meta['freq'] . '</changefreq>' . "\n";
+        $xml .= '        <priority>' . $meta['prio'] . '</priority>' . "\n";
         $xml .= '    </url>' . "\n";
     }
+
+    try {
+        $articles = $school->getLandingArticles();
+        foreach ($articles as $art) {
+            if (!empty($art['slug'])) {
+                $artLoc = url('/school/' . $school->slug . '/article/' . $art['slug']);
+                $xml .= '    <url>' . "\n";
+                $xml .= '        <loc>' . htmlspecialchars($artLoc) . '</loc>' . "\n";
+                $xml .= '        <lastmod>' . $lastmod . '</lastmod>' . "\n";
+                $xml .= '        <changefreq>weekly</changefreq>' . "\n";
+                $xml .= '        <priority>0.8</priority>' . "\n";
+                $xml .= '    </url>' . "\n";
+            }
+        }
+    } catch (\Throwable $e) {}
 
     $xml .= '</urlset>';
 
@@ -1584,11 +1717,17 @@ Route::get('/sitemap.xml', function () {
 Route::get('/robots.txt', function () {
     $content = "User-agent: *\n";
     $content .= "Allow: /\n";
+    $content .= "Allow: /storage/\n";
+    $content .= "Allow: /imgs/\n";
+    $content .= "Allow: /school/\n";
     $content .= "Disallow: /home\n";
     $content .= "Disallow: /admin\n";
     $content .= "Disallow: /super\n";
     $content .= "Disallow: /api/\n";
-    $content .= "Disallow: /storage/\n";
+    $content .= "\n";
+    $content .= "User-agent: Googlebot\n";
+    $content .= "Allow: /\n";
+    $content .= "Allow: /storage/\n";
     $content .= "\n";
     $content .= "User-agent: GPTBot\n";
     $content .= "Allow: /\n";

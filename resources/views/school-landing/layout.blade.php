@@ -7,33 +7,102 @@
 {{-- ── Subdomain Auto-SEO Engine ── --}}
 @php
     $pageTitle = trim($__env->yieldContent('title'));
+    $pageSeoDesc = trim($__env->yieldContent('seo_description'));
+    $pageSeoImage = trim($__env->yieldContent('seo_image'));
+    $pageSeoKeywords = trim($__env->yieldContent('seo_keywords'));
+    $pageSeoType = trim($__env->yieldContent('seo_type')) ?: (isset($article) ? 'article' : 'website');
+
+    // 1. Dynamic Full Title
     $fullTitle = $pageTitle 
         ? $pageTitle . ' — ' . $school->name . ' | Nepal School Hub' 
         : $school->name . ' — Official Academic Portal & School Profile | Nepal School Hub';
 
-    $seoDesc = $school->description && strlen($school->description) > 20 
-        ? Str::limit(strip_tags($school->description), 160) 
-        : $school->name . ' located in ' . ($school->city ?? 'Nepal') . ', ' . ($school->district ?? '') . '. Quality education, admissions, notices, exam results & online LMS portal powered by Nepal School Hub (NSH LMS).';
+    // 2. Dynamic SEO Description
+    if (!empty($pageSeoDesc)) {
+        $seoDesc = Str::limit(strip_tags($pageSeoDesc), 160);
+    } elseif (isset($article) && !empty($article['excerpt'])) {
+        $seoDesc = Str::limit(strip_tags($article['excerpt']), 160);
+    } else {
+        $path = trim(request()->path(), '/');
+        $descMap = [
+            'about'        => "Learn about {$school->name}'s heritage, vision, mission, leadership, and decades of pioneering academic excellence in " . ($school->city ?? 'Nepal') . '.',
+            'academics'    => "Explore comprehensive academic streams, NEB accredited +2 programs, SEE board curricula, and inquiry-based pedagogy at {$school->name}.",
+            'admissions'   => "Admissions open for Pre-Kindergarten, Primary, Secondary SEE, and +2 Science/Management at {$school->name}. Review entrance criteria, fee structures & merit scholarships.",
+            'notices'      => "Official administrative circulars, examination schedules, academic calendar events, and terminal notices from {$school->name}.",
+            'facilities'   => "Tour world-class infrastructure at {$school->name}: STEM laboratories, high-speed computer labs, resource library, multi-sport arena & GPS transit.",
+            'faculty'      => "Meet our distinguished educators, department heads, and academic mentors driving educational innovation at {$school->name}.",
+            'gallery'      => "Visual chronicles of sports championships, cultural festivals, science symposiums, and student life at {$school->name}.",
+            'contact'      => "Get in touch with {$school->name} in " . ($school->city ?? 'Nepal') . ". Campus location, phone numbers, admission desk inquiries, and directions.",
+            'blogs'        => "Read academic research, pedagogical essays, and classroom reflections authored by {$school->name} faculty and scholars.",
+            'news'         => "Latest campus news, tournament accolades, community partnerships, and press releases from {$school->name}.",
+            'stories'      => "Student voices, poetry, literature, and alumni journeys from the scholars of {$school->name}.",
+            'publications' => "Official digital publications, literary anthologies (Cornice), flagship campus magazine (The Circle), and quarterly dispatches from {$school->name}.",
+        ];
 
-    $seoKeywords = implode(', ', array_filter([
+        $matchedKey = null;
+        foreach ($descMap as $k => $v) {
+            if (str_contains($path, $k)) {
+                $matchedKey = $k;
+                break;
+            }
+        }
+
+        if ($matchedKey) {
+            $seoDesc = $descMap[$matchedKey];
+        } elseif ($school->description && strlen($school->description) > 20) {
+            $seoDesc = Str::limit(strip_tags($school->description), 160);
+        } else {
+            $seoDesc = $school->name . ' located in ' . ($school->city ?? 'Nepal') . ', ' . ($school->district ?? '') . '. Quality education, admissions, notices, exam results & online LMS portal powered by Nepal School Hub (NSH LMS).';
+        }
+    }
+
+    // 3. Dynamic SEO Image
+    $schoolLogoUrl = $school->logo ? asset('storage/' . $school->logo) : asset('imgs/logo_icon.webp');
+    if (!empty($pageSeoImage)) {
+        $seoImage = $pageSeoImage;
+    } elseif (isset($article) && !empty($article['image'])) {
+        $seoImage = $article['image'];
+    } elseif ($school->hasCustomSectionImage('hero_banner')) {
+        $seoImage = $school->sectionImage('hero_banner', 'imgs/hero/hero_1.webp');
+    } else {
+        $seoImage = asset('imgs/hero/hero_1.webp');
+    }
+
+    $canonicalUrl  = url()->current();
+
+    // 4. Dynamic SEO Keywords
+    $baseKeywords = [
         $school->name,
         $school->name . ' Nepal',
         $school->name . ' ' . ($school->city ?? ''),
         $school->name . ' portal',
         $school->name . ' admissions 2026',
-        $school->name . ' LMS',
+        $school->name . ' SEE examination',
+        $school->name . ' +2 science management',
         'nepal school hub',
         'NSH LMS',
-        'nshlms.com',
-        ($school->city ?? '') . ' school management',
-        ($school->district ?? '') . ' school software',
+        ($school->city ?? '') . ' top schools',
+        ($school->district ?? '') . ' best school',
         'school portal Nepal'
-    ]));
-    $schoolLogoUrl = $school->logo ? asset('storage/' . $school->logo) : asset('imgs/logo_icon.webp');
-    $canonicalUrl  = url()->current();
+    ];
+    if (!empty($pageSeoKeywords)) {
+        $seoKeywords = $pageSeoKeywords . ', ' . implode(', ', $baseKeywords);
+    } elseif (isset($article) && !empty($article['tags'])) {
+        $artTags = is_array($article['tags']) ? implode(', ', $article['tags']) : $article['tags'];
+        $seoKeywords = $artTags . ', ' . $article['category'] . ', ' . implode(', ', $baseKeywords);
+    } else {
+        $seoKeywords = implode(', ', array_filter($baseKeywords));
+    }
 
     // Smart Multi-Page Link Generator fallback
-    $isSubdomain = request()->routeIs('school.subdomain*') || !str_contains(request()->path(), 'school/');
+    $host = strtolower(request()->getHost());
+    $cleanHost = preg_replace('/:\d+$/', '', $host);
+    $isSubdomain = request()->routeIs('school.subdomain*')
+        || (
+            str_contains($cleanHost, '.')
+            && !in_array($cleanHost, ['localhost', '127.0.0.1', 'nshlms.com', 'nepalschoolhub.com', 'techprocod.com.np'])
+            && preg_match('/^([a-z0-9\-]+)\./i', $cleanHost)
+        );
     if (!isset($pageUrl) || !is_callable($pageUrl)) {
         $pageUrl = function(string $page = '') use ($school, $isSubdomain): string {
             $page = ltrim($page, '/');
@@ -60,52 +129,134 @@
 <meta name="description" content="{{ $seoDesc }}">
 <meta name="keywords" content="{{ $seoKeywords }}">
 <meta name="author" content="{{ $school->name }} / Nepal School Hub (NSH LMS)">
-<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
-<meta name="googlebot" content="index, follow">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large">
+<meta name="bingbot" content="index, follow">
 <link rel="canonical" href="{{ $canonicalUrl }}">
 <link rel="icon" type="image/png" href="{{ $schoolLogoUrl }}">
 <link rel="apple-touch-icon" href="{{ $schoolLogoUrl }}">
 
-{{-- ── Open Graph Social Sharing ── --}}
-<meta property="og:type" content="website">
+{{-- Geographic / Local SEO Meta --}}
+<meta name="geo.region" content="NP">
+<meta name="geo.placename" content="{{ $school->city ?? 'Kathmandu' }}">
+<meta name="address" content="{{ ($school->address ? $school->address . ', ' : '') . ($school->city ?? 'Nepal') }}">
+
+{{-- ── Open Graph Social Sharing (Facebook, WhatsApp, LinkedIn) ── --}}
+<meta property="og:type" content="{{ $pageSeoType }}">
 <meta property="og:site_name" content="{{ $school->name }} — Nepal School Hub">
 <meta property="og:url" content="{{ $canonicalUrl }}">
 <meta property="og:title" content="{{ $fullTitle }}">
 <meta property="og:description" content="{{ $seoDesc }}">
-<meta property="og:image" content="{{ $schoolLogoUrl }}">
+<meta property="og:image" content="{{ $seoImage }}">
+<meta property="og:image:secure_url" content="{{ $seoImage }}">
+<meta property="og:image:alt" content="{{ $pageTitle ?: $school->name }}">
 <meta property="og:locale" content="en_US">
+@if($pageSeoType === 'article' && isset($article))
+<meta property="article:published_time" content="{{ isset($article['created_at']) ? date('c', strtotime($article['created_at'])) : now()->toIso8601String() }}">
+<meta property="article:author" content="{{ $article['author_name'] ?? $school->principal_name_resolved }}">
+<meta property="article:section" content="{{ $article['category'] ?? 'Academic' }}">
+@if(!empty($article['tags']) && is_array($article['tags']))
+@foreach($article['tags'] as $tag)
+<meta property="article:tag" content="{{ $tag }}">
+@endforeach
+@endif
+@endif
 
-{{-- ── Twitter Card ── --}}
+{{-- ── Twitter / X Card ── --}}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:site" content="@NepalSchoolHub">
+<meta name="twitter:creator" content="@NepalSchoolHub">
 <meta name="twitter:url" content="{{ $canonicalUrl }}">
 <meta name="twitter:title" content="{{ $fullTitle }}">
 <meta name="twitter:description" content="{{ $seoDesc }}">
-<meta name="twitter:image" content="{{ $schoolLogoUrl }}">
+<meta name="twitter:image" content="{{ $seoImage }}">
+<meta name="twitter:image:alt" content="{{ $pageTitle ?: $school->name }}">
 
-{{-- ── Schema.org JSON-LD Structured Data ── --}}
+{{-- ── Schema.org JSON-LD Structured Data Engine ── --}}
+@if(isset($article))
+{{-- Rich Article / BlogPosting Schema for Search Engines --}}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "EducationalOrganization",
-  "name": "{{ $school->name }}",
+  "@type": "{{ ($article['type'] ?? '') === 'news' ? 'NewsArticle' : 'BlogPosting' }}",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{ $canonicalUrl }}"
+  },
+  "headline": "{{ addslashes($article['title'] ?? $pageTitle) }}",
+  "description": "{{ addslashes($seoDesc) }}",
+  "image": [
+    "{{ $seoImage }}"
+  ],
+  "datePublished": "{{ isset($article['created_at']) ? date('c', strtotime($article['created_at'])) : now()->toIso8601String() }}",
+  "dateModified": "{{ isset($article['updated_at']) ? date('c', strtotime($article['updated_at'])) : now()->toIso8601String() }}",
+  "author": {
+    "@type": "Person",
+    "name": "{{ addslashes($article['author_name'] ?? $school->principal_name_resolved) }}",
+    "jobTitle": "{{ addslashes($article['author_role'] ?? 'Contributor') }}"
+  },
+  "publisher": {
+    "@type": "School",
+    "name": "{{ addslashes($school->name) }}",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "{{ $schoolLogoUrl }}"
+    }
+  }
+}
+</script>
+@endif
+
+{{-- Primary EducationalOrganization / School Schema --}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "School",
+  "@id": "{{ url('/school/' . $school->slug) }}#school",
+  "name": "{{ addslashes($school->name) }}",
   "url": "{{ $canonicalUrl }}",
   "logo": "{{ $schoolLogoUrl }}",
-  "description": "{{ $seoDesc }}",
+  "image": "{{ $seoImage }}",
+  "description": "{{ addslashes($seoDesc) }}",
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "{{ $school->address ?? '' }}",
-    "addressLocality": "{{ $school->city ?? '' }}",
-    "addressRegion": "{{ $school->province ?? '' }}",
+    "streetAddress": "{{ addslashes($school->address ?? '') }}",
+    "addressLocality": "{{ addslashes($school->city ?? 'Kathmandu') }}",
+    "addressRegion": "{{ addslashes($school->province ?? 'Bagmati') }}",
     "addressCountry": "NP"
   },
   "telephone": "{{ $school->phone ?? '' }}",
   "email": "{{ $school->email ?? '' }}",
+  "foundingDate": "{{ $school->established_year ?? '1992' }}",
   "parentOrganization": {
     "@type": "EducationalOrganization",
     "name": "Nepal School Hub (NSH LMS)",
     "url": "https://nshlms.com"
   }
+}
+</script>
+
+{{-- BreadcrumbList Schema for Google Search Snippets --}}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "{{ $pageUrl('') }}"
+    }
+    @if(!empty($pageTitle))
+    ,{
+      "@type": "ListItem",
+      "position": 2,
+      "name": "{{ addslashes($pageTitle) }}",
+      "item": "{{ $canonicalUrl }}"
+    }
+    @endif
+  ]
 }
 </script>
 
@@ -1671,6 +1822,102 @@ body {
     </div>
 </div>
 
+{{-- 7. Interactive Official Notice Reader Modal --}}
+<div id="noticeReaderModal" class="fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5 transition-all duration-300 opacity-0 pointer-events-none" onclick="closeNoticeModal()">
+    <div class="bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-200 max-w-2xl w-full max-h-[90vh] flex flex-col transform transition-all duration-300 scale-95" id="noticeModalCard" onclick="event.stopPropagation()">
+        <!-- Header / Letterhead -->
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-5 sm:p-6 relative border-b border-slate-800 shrink-0">
+            <div class="flex items-start justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <img id="noticeModalLogo" src="{{ $schoolLogoUrl }}" alt="{{ $school->name }}" class="w-12 h-12 rounded-xl object-contain bg-white p-1 border border-white/20 shrink-0 shadow-sm">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1 flex-wrap">
+                            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-orange-500/20 text-[#f36c21] border border-[#f36c21]/30">
+                                Official Notice
+                            </span>
+                            <span id="noticeModalTag" class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-white/10 text-slate-300">
+                                Academic Circular
+                            </span>
+                        </div>
+                        <h4 class="font-extrabold text-sm sm:text-base text-white leading-tight">
+                            {{ $school->name }}
+                        </h4>
+                        <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                            <span>{{ $school->city ?? 'Nepal' }}, {{ $school->district ?? '' }}</span>
+                            @if($school->phone)
+                            <span>&bull;</span>
+                            <span>{{ $school->phone }}</span>
+                            @endif
+                        </p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeNoticeModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition shrink-0" aria-label="Close Notice">
+                    <i class="bi bi-x-lg text-xs"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Scrollable Notice Content -->
+        <div class="p-6 sm:p-8 overflow-y-auto space-y-6 flex-1 text-slate-800" id="noticePrintableArea">
+            <!-- Meta Bar -->
+            <div class="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600">
+                <div class="flex items-center gap-2">
+                    <i class="bi bi-calendar-event text-[#f36c21]"></i>
+                    <span>Published: <strong id="noticeModalDate" class="text-slate-900 font-bold"></strong></span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="bi bi-people text-slate-600"></i>
+                    <span>Audience: <strong id="noticeModalAudience" class="text-slate-900 font-bold">All</strong></span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="bi bi-hash text-slate-500"></i>
+                    <span id="noticeModalRef" class="font-mono text-slate-700 font-semibold"></span>
+                </div>
+            </div>
+
+            <!-- Title -->
+            <h3 id="noticeModalTitle" class="text-xl sm:text-2xl font-black text-slate-900 leading-snug tracking-tight"></h3>
+
+            <!-- Body Content -->
+            <div id="noticeModalBody" class="prose max-w-none text-slate-700 leading-relaxed text-sm sm:text-base break-words font-normal"></div>
+
+            <!-- Attachment Section (if present) -->
+            <div id="noticeModalAttachmentWrapper" class="hidden p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center text-lg shrink-0">
+                        <i class="bi bi-file-earmark-arrow-down-fill"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-xs text-amber-950">Official Attachment Available</div>
+                        <div class="text-[11px] text-amber-800">Download routine, circular PDF, or official document</div>
+                    </div>
+                </div>
+                <a id="noticeModalAttachmentLink" href="#" target="_blank" download class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition flex items-center gap-1.5 shrink-0 shadow-sm">
+                    <i class="bi bi-download"></i>
+                    <span>Download File</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="bg-slate-50 p-4 px-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="printNoticeModal()" class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold border border-slate-300 transition flex items-center gap-1.5 shadow-2xs">
+                    <i class="bi bi-printer"></i>
+                    <span>Print Notice</span>
+                </button>
+                <a id="noticeModalFullPageLink" href="#" class="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold border border-slate-300 transition flex items-center gap-1.5 shadow-2xs hidden">
+                    <i class="bi bi-box-arrow-up-right"></i>
+                    <span>Open Full Page</span>
+                </a>
+            </div>
+            <button type="button" onclick="closeNoticeModal()" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition ml-auto">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- ═════════════════════════════════════════════════════════════════════
      MOBILE FLOATING BOTTOM BAR
 ══════════════════════════════════════════════════════════════════════ -->
@@ -2102,6 +2349,116 @@ function handleCareerSubmit(e) {
     }, 2500);
 }
 
+// Notice Reader Modal Handlers
+function openNoticeModal(data) {
+    if (!data) return;
+    const modal = document.getElementById('noticeReaderModal');
+    const card  = document.getElementById('noticeModalCard');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('noticeModalTitle');
+    const tagEl = document.getElementById('noticeModalTag');
+    const dateEl = document.getElementById('noticeModalDate');
+    const audEl = document.getElementById('noticeModalAudience');
+    const refEl = document.getElementById('noticeModalRef');
+
+    if (titleEl) titleEl.textContent = data.title || 'Official Notice Announcement';
+    if (tagEl) tagEl.textContent = data.tag || 'Academic Circular';
+    if (dateEl) dateEl.textContent = data.date || 'Recent';
+    if (audEl) audEl.textContent = data.audience || 'All Students & Parents';
+    if (refEl) refEl.textContent = data.id ? ('REF #' + data.id) : 'REF #CIRCULAR';
+
+    const bodyEl = document.getElementById('noticeModalBody');
+    if (bodyEl) {
+        if (data.body) {
+            bodyEl.innerHTML = data.body;
+        } else if (data.body_clean) {
+            bodyEl.textContent = data.body_clean;
+        } else {
+            bodyEl.textContent = 'No detailed description provided.';
+        }
+    }
+
+    const attachWrapper = document.getElementById('noticeModalAttachmentWrapper');
+    const attachLink = document.getElementById('noticeModalAttachmentLink');
+    if (attachWrapper && attachLink) {
+        if (data.attachment_url) {
+            attachWrapper.classList.remove('hidden');
+            attachLink.href = data.attachment_url;
+        } else {
+            attachWrapper.classList.add('hidden');
+            attachLink.href = '#';
+        }
+    }
+
+    const fullPageLink = document.getElementById('noticeModalFullPageLink');
+    if (fullPageLink) {
+        if (data.is_db && data.id) {
+            fullPageLink.classList.remove('hidden');
+            const noticesBase = (typeof SCHOOL_CONTEXT !== 'undefined' && SCHOOL_CONTEXT.noticesUrl) ? SCHOOL_CONTEXT.noticesUrl : '{{ $pageUrl("notices") }}';
+            fullPageLink.href = noticesBase.replace(/\/notices$/, '') + '/notice/' + data.id;
+        } else {
+            fullPageLink.classList.add('hidden');
+        }
+    }
+
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    modal.classList.add('opacity-100');
+    if (card) {
+        card.classList.remove('scale-95');
+        card.classList.add('scale-100');
+    }
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeNoticeModal() {
+    const modal = document.getElementById('noticeReaderModal');
+    const card  = document.getElementById('noticeModalCard');
+    if (!modal) return;
+
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    modal.classList.remove('opacity-100');
+    if (card) {
+        card.classList.add('scale-95');
+        card.classList.remove('scale-100');
+    }
+    document.body.classList.remove('overflow-hidden');
+}
+
+function printNoticeModal() {
+    const content = document.getElementById('noticePrintableArea');
+    if (!content) return;
+    const title = document.getElementById('noticeModalTitle')?.textContent || 'Notice';
+    const schoolName = '{{ addslashes($school->name) }}';
+
+    const win = window.open('', '_blank', 'width=800,height=900');
+    win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>${title} - ${schoolName}</title>
+            <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #1e293b; line-height: 1.6; }
+                h1 { font-size: 20px; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 20px; text-transform: uppercase; }
+                .meta { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; font-size: 12px; margin-bottom: 25px; }
+                .content { font-size: 14px; color: #334155; line-height: 1.8; }
+                .footer { margin-top: 50px; border-top: 1px solid #e2e8f0; padding-top: 15px; font-size: 11px; color: #94a3b8; text-align: center; }
+            </style>
+        </head>
+        <body>
+            <div style="text-align: center; margin-bottom: 25px;">
+                <h1>${schoolName}</h1>
+                <div style="font-size: 12px; color: #64748b; font-weight: bold;">Official School Circular / सूचना</div>
+            </div>
+            ${content.innerHTML}
+            <div class="footer">Printed from official school portal • Powered by Nepal School Hub</div>
+            <script>window.print(); setTimeout(() => window.close(), 1000);<\/script>
+        </body>
+        </html>
+    `);
+    win.document.close();
+}
+
 // ══════════════════════════════════════════════════════════════════════════
 // LIVE ADMISSIONS & SUPPORT DESK CHAT LOGIC (100% DIRECT & DETERMINISTIC)
 // ══════════════════════════════════════════════════════════════════════════
@@ -2412,6 +2769,8 @@ document.addEventListener('keydown', function(e) {
         closeFacultyModal();
         closeExamResultModal();
         closeProspectusModal();
+        closeNoticeModal();
+        closeCareerModal();
         const chatBox = document.getElementById('aiChatbotBox');
         if (chatBox && !chatBox.classList.contains('hidden')) {
             toggleAiChatbot();

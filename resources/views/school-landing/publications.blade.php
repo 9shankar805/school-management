@@ -1,6 +1,8 @@
 @extends('school-landing.layout')
 
-@section('title', 'Official Publications, Journals & Magazines — ' . $school->name)
+@section('title', 'Official Publications, Literary Journals & Campus Magazines')
+@section('seo_description', 'Official digital publications archive of ' . $school->name . ' including Cornice annual anthology, The Circle campus magazine, and quarterly newsletters.')
+@section('seo_keywords', 'school magazine Nepal, Cornice literary anthology, The Circle campus journal, quarterly dispatches, ' . $school->name . ' publications')
 
 @section('content')
 

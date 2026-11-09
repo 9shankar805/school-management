@@ -157,6 +157,11 @@
         <span class="sidebar-link-icon"><i class="bi bi-qr-code-scan"></i></span>
         <span class="sidebar-link-text">Payment QR Codes</span>
     </a>
+    <a href="{{ route('school.articles.index') }}" class="sidebar-link {{ request()->is('school/articles*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-journal-richtext text-amber-500"></i></span>
+        <span class="sidebar-link-text">Blogs &amp; Stories</span>
+        <span class="sidebar-badge" style="background:#fef3c7;color:#92400e;font-size:9px;font-weight:700;">NEW</span>
+    </a>
     @endrole
     @role('admin|principal')
     <a href="{{ route('central_analytics.index') }}" class="sidebar-link {{ request()->is('analytics*') ? 'active' : '' }}">
@@ -869,6 +874,11 @@
         <span class="sidebar-link-icon"><i class="bi bi-qr-code-scan"></i></span>
         <span class="sidebar-link-text">Payment QR Codes</span>
     </a>
+    <a href="{{ route('school.articles.index') }}" class="sidebar-link {{ request()->is('school/articles*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-journal-richtext text-amber-500"></i></span>
+        <span class="sidebar-link-text">Blogs &amp; Stories</span>
+        <span class="sidebar-badge" style="background:#fef3c7;color:#92400e;font-size:9px;font-weight:700;">NEW</span>
+    </a>
     <a href="{{ route('finance.bank-accounts.index') }}" class="sidebar-link {{ request()->is('finance/bank-accounts*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-bank2 text-teal-500"></i></span>
         <span class="sidebar-link-text">Bank Master & QR</span>
@@ -1144,6 +1154,10 @@
     <a href="{{ route('notice.index') }}" class="sidebar-link {{ request()->is('notice*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-megaphone-fill"></i></span>
         <span class="sidebar-link-text">Notices</span>
+    </a>
+    <a href="{{ route('school.articles.index') }}" class="sidebar-link {{ request()->is('school/articles*') ? 'active' : '' }}">
+        <span class="sidebar-link-icon"><i class="bi bi-journal-richtext text-amber-500"></i></span>
+        <span class="sidebar-link-text">Blogs &amp; Stories</span>
     </a>
     <a href="{{ route('communication.bulk') }}" class="sidebar-link {{ request()->is('communication/bulk*') ? 'active' : '' }}">
         <span class="sidebar-link-icon"><i class="bi bi-whatsapp"></i></span>

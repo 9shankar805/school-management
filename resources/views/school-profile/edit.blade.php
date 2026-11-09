@@ -2013,7 +2013,7 @@ function toggleTopperModeFields(mode) {
                 <i class="bi bi-cpu-fill"></i> High-Performance Auto-WebP Optimization Engine
             </div>
             <h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-white mb-2">
-                Editable Section Photos & Visual Assets
+                Editable Section Photos &amp; Visual Assets
             </h2>
             <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">
                 Upload photos for your school's landing page sections below. Every image you upload (JPEG, PNG, GIF, BMP) is <strong class="text-amber-300">automatically converted to next-generation WebP format</strong> with lossless quality compression to deliver instant page loads and pristine visual quality.
@@ -2021,6 +2021,37 @@ function toggleTopperModeFields(mode) {
         </div>
         <div class="absolute -right-10 -bottom-10 opacity-10 pointer-events-none text-white text-[180px] leading-none">
             <i class="bi bi-file-earmark-image"></i>
+        </div>
+    </div>
+
+    {{-- Write Blogs & Stories Shortcut Banner --}}
+    <div class="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-2 border-amber-300 dark:border-amber-700/60 rounded-3xl p-6 sm:p-7 mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-5 shadow-sm">
+        <div class="flex items-start gap-4">
+            <span class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-2xl shadow-md shrink-0">
+                <i class="bi bi-pen-fill"></i>
+            </span>
+            <div>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 mb-1.5">
+                    <i class="bi bi-journal-richtext"></i> Content Creator
+                </span>
+                <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
+                    Write &amp; Publish School Blogs, News, Stories &amp; Magazines
+                </h3>
+                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">
+                    Want to publish a new pedagogical essay, campus press bulletin, student poetry, or digital magazine? Use our dedicated <strong>Blogs &amp; Stories Manager</strong> to write, edit, upload photos, and publish live content immediately.
+                </p>
+            </div>
+        </div>
+
+        <div class="shrink-0 flex items-center gap-2.5">
+            <a href="{{ route('school.articles.create') }}"
+               class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#8b151b] to-red-700 hover:from-red-800 hover:to-red-900 text-white text-xs font-extrabold shadow-md shadow-red-900/20 transition flex items-center gap-2 whitespace-nowrap">
+                <i class="bi bi-pencil-square"></i> Write New Blog
+            </a>
+            <a href="{{ route('school.articles.index') }}"
+               class="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 text-slate-700 dark:text-slate-200 text-xs font-bold shadow-xs transition whitespace-nowrap">
+                Manage All Articles
+            </a>
         </div>
     </div>
 

@@ -1,6 +1,8 @@
 @extends('school-landing.layout')
 
-@section('title', 'News, Press Releases & Institutional Updates — ' . $school->name)
+@section('title', 'Campus News, Press Releases & Institutional Updates')
+@section('seo_description', 'Official press releases, academic accolades, championship victories, and milestone announcements from ' . $school->name . ' in ' . ($school->city ?? 'Nepal') . '.')
+@section('seo_keywords', 'school news Nepal, press releases, academic accolades, ' . $school->name . ' circulars, campus updates')
 
 @section('content')
 

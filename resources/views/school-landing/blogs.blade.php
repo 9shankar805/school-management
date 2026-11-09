@@ -1,6 +1,8 @@
 @extends('school-landing.layout')
 
-@section('title', 'School Blogs & Academic Commentary — ' . $school->name)
+@section('title', 'School Blogs, Academic Essays & Educational Inquiry')
+@section('seo_description', 'Read academic research, pedagogical essays, science symposium papers, and classroom reflections authored by ' . $school->name . ' faculty and scholars.')
+@section('seo_keywords', 'school blogs Nepal, academic essays, education inquiry, ' . $school->name . ' research, teacher reflections')
 
 @section('content')
 

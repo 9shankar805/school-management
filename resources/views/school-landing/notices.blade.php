@@ -85,67 +85,50 @@
             @endif
         </div>
 
-        @php
-            $noticesList = [];
-            if(isset($recentNotices) && $recentNotices->count() > 0) {
-                foreach($recentNotices as $rn) {
-                    $noticesList[] = [
-                        'title' => $rn->notice,
-                        'date' => $rn->created_at ? $rn->created_at->format('M d, Y') : 'Recent',
-                        'tag' => 'Academic Notice',
-                    ];
-                }
-            } elseif($school->notice_board && strlen($school->notice_board) > 10) {
-                $lines = array_filter(explode("\n", trim($school->notice_board)));
-                foreach($lines as $idx => $line) {
-                    $tag = 'Official Notice';
-                    if(str_contains(strtoupper($line), 'ADMISSION')) $tag = 'Admissions';
-                    elseif(str_contains(strtoupper($line), 'SCHOLARSHIP')) $tag = 'Scholarship';
-                    elseif(str_contains(strtoupper($line), 'EXAM') || str_contains(strtoupper($line), 'ROUTINE')) $tag = 'Examination';
-                    elseif(str_contains(strtoupper($line), 'SPORT')) $tag = 'Sports & ECA';
-                    $noticesList[] = [
-                        'title' => trim($line),
-                        'date' => date('M d, Y', strtotime('-'.($idx*2).' days')),
-                        'tag' => $tag,
-                    ];
-                }
-            } else {
-                $noticesList = [
-                    ['title' => 'Admissions Open for Academic Session 2026-2027 (+2 Science, Management & Law)', 'date' => date('M d, Y'), 'tag' => 'Admissions'],
-                    ['title' => 'First Term Terminal Examination Routine Published for Grades XI & XII', 'date' => date('M d, Y', strtotime('-3 days')), 'tag' => 'Examination'],
-                    ['title' => 'Annual Inter-House Sports Meet & Athletics Championship Schedule', 'date' => date('M d, Y', strtotime('-7 days')), 'tag' => 'Sports & ECA'],
-                    ['title' => 'National Science Olympiad & Project Exhibition Registrations Active', 'date' => date('M d, Y', strtotime('-12 days')), 'tag' => 'Academic'],
-                    ['title' => 'Parent-Teacher Conference (PTC) for Grade X SEE Candidates', 'date' => date('M d, Y', strtotime('-16 days')), 'tag' => 'Official Notice'],
-                ];
-            }
-        @endphp
-
         <div class="space-y-4" id="noticesListContainer">
-            @forelse($noticesList as $item)
-            <div class="notice-item bg-white hover:bg-slate-50 rounded-2xl p-6 border border-slate-200 transition-all card-lift flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
-                <div class="flex items-start gap-4 flex-1">
-                    <div class="w-14 h-14 rounded-xl bg-slate-100 text-slate-900 flex flex-col items-center justify-center shrink-0 border border-slate-200">
-                        <i class="bi bi-calendar3 text-xs"></i>
-                        <span class="text-[10px] font-bold mt-0.5">{{ explode(' ', $item['date'])[0] }}</span>
-                        <span class="text-[9px] text-slate-500 font-mono">{{ explode(' ', $item['date'])[1] ?? '' }}</span>
+            @forelse($noticesList ?? [] as $item)
+            <div class="notice-item bg-white hover:bg-slate-50 rounded-2xl p-6 border border-slate-200 transition-all card-lift flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm cursor-pointer"
+                 onclick="openNoticeModal({{ json_encode($item) }})">
+                <div class="flex items-start gap-4 flex-1 min-w-0">
+                    <div class="w-14 h-14 rounded-xl bg-slate-100 text-slate-900 flex flex-col items-center justify-center shrink-0 border border-slate-200 shadow-2xs">
+                        <span class="text-[10px] font-extrabold text-[#f36c21] uppercase tracking-wider">{{ $item['date_month'] ?? 'DATE' }}</span>
+                        <span class="text-lg font-black leading-none text-slate-900 mt-0.5">{{ $item['date_day'] ?? '01' }}</span>
                     </div>
-                    <div class="flex-1">
+                    <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 mb-1.5 flex-wrap">
-                            <span class="px-2.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800 uppercase tracking-wider border border-slate-200">
-                                {{ $item['tag'] }}
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border {{ $item['badge_class'] ?? 'bg-slate-100 text-slate-800 border-slate-200' }}">
+                                {{ $item['tag'] ?? 'Academic Notice' }}
                             </span>
                             <span class="text-xs text-slate-500">{{ $item['date'] }}</span>
+                            @if(!empty($item['attachment_url']))
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
+                                <i class="bi bi-paperclip"></i> Attachment Available
+                            </span>
+                            @endif
                         </div>
-                        <h3 class="notice-title font-bold text-base text-slate-900 leading-snug">
+                        <h3 class="notice-title font-bold text-base sm:text-lg text-slate-900 leading-snug hover:text-[#f36c21] transition mb-1">
                             {{ $item['title'] }}
                         </h3>
+                        <p class="notice-desc text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed">
+                            {{ $item['body_snippet'] }}
+                        </p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2 shrink-0">
-                    <a href="{{ url('admissions/apply?school='.$school->slug) }}" class="btn-primary-dark text-xs py-2 px-3.5">
-                        <span>Details</span> &rarr;
+                <div class="flex items-center gap-2 shrink-0 self-end sm:self-center" onclick="event.stopPropagation()">
+                    @if(!empty($item['attachment_url']))
+                    <a href="{{ $item['attachment_url'] }}" target="_blank" download class="btn-secondary-white text-xs py-2 px-3.5 flex items-center gap-1.5 shadow-2xs">
+                        <i class="bi bi-download"></i> <span>Download File</span>
                     </a>
+                    @endif
+                    <button type="button" onclick="openNoticeModal({{ json_encode($item) }})" class="btn-primary-dark text-xs py-2 px-4 flex items-center gap-1.5 shadow-sm">
+                        <span>Read Circular</span> &rarr;
+                    </button>
+                    @if(!empty($item['is_db']))
+                    <a href="{{ $pageUrl('notice/' . $item['id']) }}" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs transition" title="Open full page">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
+                    @endif
                 </div>
             </div>
             @empty

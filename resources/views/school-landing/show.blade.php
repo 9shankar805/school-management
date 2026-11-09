@@ -1168,19 +1168,38 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            @forelse($recentNotices->take(4) as $rn)
-            <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200 shadow-sm card-lift flex items-start gap-4 hover:border-[#f36c21] transition">
-                <div class="w-12 h-12 rounded-xl bg-white text-slate-900 flex flex-col items-center justify-center shrink-0 border border-slate-200 shadow-xs">
-                    <i class="bi bi-calendar3 text-xs text-[#f36c21]"></i>
-                    <span class="text-[10px] font-bold mt-0.5">{{ $rn->created_at ? $rn->created_at->format('M d') : 'Recent' }}</span>
+            @forelse(array_slice($noticesList ?? [], 0, 4) as $item)
+            <div onclick="openNoticeModal({{ json_encode($item) }})"
+                 class="group bg-slate-50 hover:bg-white rounded-2xl p-5 border border-slate-200 shadow-2xs hover:shadow-md card-lift flex items-start gap-4 hover:border-[#f36c21] transition cursor-pointer">
+                <div class="w-14 h-14 rounded-xl bg-white text-slate-900 flex flex-col items-center justify-center shrink-0 border border-slate-200 shadow-2xs group-hover:border-[#f36c21]/40 transition">
+                    <span class="text-[10px] font-extrabold text-[#f36c21] uppercase tracking-wider">{{ $item['date_month'] ?? 'DATE' }}</span>
+                    <span class="text-lg font-black leading-none text-slate-900 mt-0.5">{{ $item['date_day'] ?? '01' }}</span>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-white text-slate-800 uppercase tracking-wider mb-1 inline-block border border-slate-200">
-                        Academic Notice
-                    </span>
-                    <h4 class="font-bold text-sm text-slate-900 line-clamp-2">
-                        {{ $rn->notice }}
+                    <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border {{ $item['badge_class'] ?? 'bg-slate-100 text-slate-800 border-slate-200' }}">
+                            {{ $item['tag'] ?? 'Academic Notice' }}
+                        </span>
+                        @if(!empty($item['attachment_url']))
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
+                            <i class="bi bi-paperclip"></i> File Attached
+                        </span>
+                        @endif
+                    </div>
+                    <h4 class="font-bold text-sm text-slate-900 line-clamp-2 group-hover:text-[#f36c21] transition leading-snug mb-1">
+                        {{ $item['title'] }}
                     </h4>
+                    <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                        {{ $item['body_snippet'] }}
+                    </p>
+                    <div class="mt-3 flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                        <span class="text-[11px] font-semibold text-slate-400">
+                            Audience: {{ $item['audience'] ?? 'All' }}
+                        </span>
+                        <span class="text-xs font-bold text-[#f36c21] group-hover:underline inline-flex items-center gap-1">
+                            <span>Read Notice</span> &rarr;
+                        </span>
+                    </div>
                 </div>
             </div>
             @empty
