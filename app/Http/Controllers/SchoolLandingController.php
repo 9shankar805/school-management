@@ -398,6 +398,49 @@ class SchoolLandingController extends Controller
         return view('school-landing.notices', $this->getSchoolData($school));
     }
 
+    public function noticeDetailBySubdomain(string $subdomain, $noticeId)
+    {
+        $school = $this->resolveSchoolBySubdomain($subdomain);
+        $schoolData = $this->getSchoolData($school);
+
+        $notice = \App\Models\Notice::withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->where('school_id', $school->id)
+            ->where(function($q) {
+                $q->whereNull('audience')->orWhere('audience', '!=', 'teachers');
+            })
+            ->where('id', $noticeId)
+            ->first();
+
+        if (!$notice) {
+            $fallback = collect($schoolData['noticesList'] ?? [])->firstWhere('id', (string)$noticeId);
+            if (!$fallback) {
+                return redirect($schoolData['pageUrl']('notices'));
+            }
+            $notice = (object) [
+                'id'              => $fallback['id'],
+                'title'           => $fallback['title'],
+                'notice'          => $fallback['body'],
+                'priority'        => $fallback['priority'] ?? 'normal',
+                'audience'        => $fallback['audience'] ?? 'all',
+                'attachment_path' => $fallback['attachment_path'] ?? null,
+                'created_at'      => \Carbon\Carbon::parse($fallback['date'] ?? now()),
+                'school'          => $school,
+            ];
+        }
+
+        $relatedNotices = $school->notices()
+            ->withoutGlobalScope(\App\Scopes\TenantScope::class)
+            ->where('id', '!=', $notice->id ?? 0)
+            ->where(function($q) {
+                $q->whereNull('audience')->orWhere('audience', '!=', 'teachers');
+            })
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('school-landing.notice-detail', array_merge($schoolData, compact('notice', 'relatedNotices')));
+    }
+
     public function facilitiesBySubdomain(string $subdomain)
     {
         $school = $this->resolveSchoolBySubdomain($subdomain);
@@ -513,6 +556,11 @@ class SchoolLandingController extends Controller
             abort(404, 'School not found');
         }
 
-        return redirect()->to($school->subdomain_url);
+        $host = strtolower(request()->getHost());
+        if (in_array($host, ['localhost', '127.0.0.1']) || str_contains(config('app.url', ''), 'localhost')) {
+            return redirect()->route('school.landing', ['slug' => $school->slug]);
+        }
+
+        return redirect()->to($school->subdomain_url ?: route('school.landing', ['slug' => $school->slug]));
     }
 }
