@@ -173,11 +173,18 @@ class BillingService
             $fineAmount = round(min(1000.0, max(200.0, $previousDues * 0.05)), 2);
         }
 
-        $monthTitle = Carbon::create($year, $month)->format('F Y') . ' Fee Statement';
+        $monthTitle = ($year > 2050)
+            ? \App\Services\NepaliDateService::formatBsRange($month, $month, $year) . ' Fee Statement'
+            : Carbon::create($year, $month)->format('F Y') . ' Fee Statement';
+
+        // Calculate due date in AD (e.g. 25th of that BS month if BS year, else 10th of AD month)
+        $dueDate = ($year > 2050)
+            ? (\App\Services\NepaliDateService::bsToAD($year, $month, min(25, \App\Services\NepaliDateService::getDaysInBsMonth($year, $month))) ?? today()->addDays(15)->toDateString())
+            : Carbon::create($year, $month, 10)->toDateString();
 
         return DB::transaction(function () use (
             $student, $sessionId, $classId, $structures, $transport, $hostel,
-            $previousDues, $fineAmount, $month, $year, $monthTitle
+            $previousDues, $fineAmount, $month, $year, $monthTitle, $dueDate
         ) {
             return $this->createInvoiceFromStructures(
                 student:      $student,
@@ -187,12 +194,172 @@ class BillingService
                 year:         $year,
                 trigger:      'monthly',
                 title:        $monthTitle,
-                dueDate:      Carbon::create($year, $month, 10)->toDateString(),
+                dueDate:      $dueDate,
                 isAuto:       true,
                 transport:    $transport,
                 hostel:       $hostel,
                 previousDues: $previousDues,
                 fineAmount:   $fineAmount
+            );
+        });
+    }
+
+    /**
+     * Generate multi-month advance fee invoices for ALL active students (e.g. Baisakh to Ashadh, or Baisakh to Chaitra).
+     *
+     * @return array{generated: int, skipped: int, errors: int}
+     */
+    public function generateRangeForAll(int $fromMonth, int $toMonth, int $year, ?int $sessionId = null, float $advanceDiscount = 0.0): array
+    {
+        $sessionId = $sessionId ?? $this->currentSessionId();
+        $counts = ['generated' => 0, 'skipped' => 0, 'errors' => 0];
+
+        $students = Promotion::with('student')
+            ->where('session_id', $sessionId)
+            ->get();
+
+        foreach ($students as $promotion) {
+            $student = $promotion->student;
+            if (! $student || $student->student_status !== 'active') {
+                $counts['skipped']++;
+                continue;
+            }
+
+            try {
+                $result = $this->generateRangeForStudent(
+                    $student, $promotion->class_id, $sessionId, $fromMonth, $toMonth, $year, $advanceDiscount
+                );
+                $counts['generated'] += $result;
+            } catch (\Throwable $e) {
+                $counts['errors']++;
+                Log::error("BillingService: advance range invoice error for student #{$student->id}: " . $e->getMessage());
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Generate multi-month advance fee invoice for a single student (e.g. Baisakh to Ashadh = 3 mos, or Baisakh to Chaitra = 12 mos).
+     */
+    public function generateRangeForStudent(
+        User|int $student,
+        int      $classId,
+        int      $sessionId,
+        int      $fromMonth,
+        int      $toMonth,
+        int      $year,
+        float    $advanceDiscount = 0.0
+    ): int {
+        $student = $student instanceof User ? $student : User::findOrFail($student);
+
+        // Normalize range
+        if ($fromMonth > $toMonth) {
+            [$fromMonth, $toMonth] = [$toMonth, $fromMonth];
+        }
+        $monthsCount = max(1, $toMonth - $fromMonth + 1);
+
+        // Idempotency: skip if already billed for this exact range
+        $existing = Invoice::where('student_id', $student->id)
+            ->where('session_id', $sessionId)
+            ->where('billing_month', $fromMonth)
+            ->where('billing_month_to', $toMonth)
+            ->where('billing_year', $year)
+            ->exists();
+
+        if ($existing) {
+            return 0;
+        }
+
+        // 1. Fee structures
+        $structures = FeeStructure::with(['feeType', 'category'])
+            ->where('is_active', true)
+            ->where(function ($q) use ($sessionId) {
+                $q->where('session_id', $sessionId)->orWhereNull('session_id');
+            })
+            ->where(function ($q) use ($classId) {
+                $q->where('class_id', $classId)->orWhereNull('class_id');
+            })
+            ->whereHas('feeType', function ($q) {
+                $q->whereIn('trigger', ['monthly', 'manual']);
+            })
+            ->get();
+
+        // 2. Transport & Hostel
+        $transport = StudentTransport::with(['route', 'stop'])
+            ->where('student_id', $student->id)
+            ->where('status', 'active')
+            ->first();
+
+        $hostel = HostelAllocation::with(['hostel', 'room', 'bed'])
+            ->where('student_id', $student->id)
+            ->where('status', 'active')
+            ->first();
+
+        // 3. Previous Dues (बक्यौता रकम)
+        $ledgerBalance = max(0, (float) StudentLedger::currentBalance($student->id, $sessionId));
+        $priorInvoicesDue = (float) Invoice::where('student_id', $student->id)
+            ->where('session_id', $sessionId)
+            ->whereIn('status', ['unpaid', 'partial'])
+            ->where(function ($q) use ($year, $fromMonth) {
+                $q->where('billing_year', '<', $year)
+                  ->orWhere(function ($q2) use ($year, $fromMonth) {
+                      $q2->where('billing_year', $year)
+                         ->where('billing_month', '<', $fromMonth);
+                  })
+                  ->orWhereNull('billing_month');
+            })
+            ->get()
+            ->sum(fn($inv) => $inv->amount_due);
+
+        $previousDues = round(max($priorInvoicesDue, $ledgerBalance), 2);
+
+        // 4. Overdue Fine
+        $hasOverdue = Invoice::where('student_id', $student->id)
+            ->where('session_id', $sessionId)
+            ->whereIn('status', ['unpaid', 'partial'])
+            ->whereNotNull('due_date')
+            ->whereDate('due_date', '<', today())
+            ->exists();
+
+        $fineAmount = 0.0;
+        if ($hasOverdue && $previousDues > 0) {
+            $fineAmount = round(min(1000.0, max(200.0, $previousDues * 0.05)), 2);
+        }
+
+        // Title with BS Range (e.g. बैशाख – असार २०८३ or बैशाख – चैत्र २०८३)
+        $rangeTitle = ($year > 2050)
+            ? \App\Services\NepaliDateService::formatBsRange($fromMonth, $toMonth, $year, true)
+            : Carbon::create($year, $fromMonth)->format('M') . ' – ' . Carbon::create($year, $toMonth)->format('M Y');
+
+        $fullTitle = "{$rangeTitle} Fee Statement ({$monthsCount} " . ($monthsCount === 1 ? 'Month' : 'Months') . ')';
+
+        // Due date: 25th of end month
+        $dueDate = ($year > 2050)
+            ? (\App\Services\NepaliDateService::bsToAD($year, $toMonth, min(25, \App\Services\NepaliDateService::getDaysInBsMonth($year, $toMonth))) ?? today()->addDays(15)->toDateString())
+            : Carbon::create($year, $toMonth, 25)->toDateString();
+
+        return DB::transaction(function () use (
+            $student, $sessionId, $classId, $structures, $transport, $hostel,
+            $previousDues, $fineAmount, $fromMonth, $toMonth, $year, $fullTitle, $dueDate,
+            $advanceDiscount, $monthsCount
+        ) {
+            return $this->createInvoiceFromStructures(
+                student:         $student,
+                structures:      $structures,
+                sessionId:       $sessionId,
+                month:           $fromMonth,
+                year:            $year,
+                trigger:         'advance_range',
+                title:           $fullTitle,
+                dueDate:         $dueDate,
+                isAuto:          true,
+                transport:       $transport,
+                hostel:          $hostel,
+                previousDues:    $previousDues,
+                fineAmount:      $fineAmount,
+                monthTo:         $toMonth,
+                advanceDiscount: $advanceDiscount
             );
         });
     }
@@ -328,6 +495,8 @@ class BillingService
         ?HostelAllocation $hostel = null,
         float             $previousDues = 0.0,
         float             $fineAmount = 0.0,
+        ?int              $monthTo = null,
+        float             $advanceDiscount = 0.0,
     ): int {
         // Load student discounts
         $discounts = StudentFeeDiscount::with('discount')
@@ -341,16 +510,29 @@ class BillingService
             })
             ->get();
 
+        $multiplier = max(1, ($monthTo && $month && $monthTo >= $month) ? ($monthTo - $month + 1) : 1);
+
         $items         = [];
         $totalGross    = 0.0;
         $totalDiscount = 0.0;
         $totalTax      = 0.0;
         $totalNet      = 0.0;
-        $monthSuffix   = ($month && $year) ? ' — ' . Carbon::create($year, $month)->format('F Y') : '';
+
+        $monthSuffix = '';
+        if ($month && $year) {
+            $monthSuffix = ($year > 2050)
+                ? ' — ' . \App\Services\NepaliDateService::formatBsRange($month, $monthTo ?: $month, $year)
+                : ' — ' . Carbon::create($year, $month)->format('M Y');
+        }
 
         // 1. Regular academic fee structures
         foreach ($structures as $structure) {
             $basePrice = (float) $structure->amount;
+
+            // Check if fee frequency is recurring monthly
+            $isMonthlyRecurring = in_array(strtolower($structure->frequency ?? 'monthly'), ['monthly', 'term'])
+                || ($structure->feeType && in_array(strtolower($structure->feeType->frequency ?? 'monthly'), ['monthly', 'term']));
+            $qty = $isMonthlyRecurring ? $multiplier : 1;
 
             // Calculate discount for this line
             $discountAmount = 0.0;
@@ -365,23 +547,28 @@ class BillingService
             // Calculate tax
             $taxRate   = $structure->is_taxable ? (float) $structure->tax_rate : 0.0;
             $taxAmount = round($afterDiscount * ($taxRate / 100), 2);
-            $lineTotal = round($afterDiscount + $taxAmount, 2);
+            $lineTotal = round(($afterDiscount + $taxAmount) * $qty, 2);
+
+            $desc = $structure->name . $monthSuffix;
+            if ($qty > 1) {
+                $desc .= " [{$qty} Months]";
+            }
 
             $items[] = [
                 'fee_type_id'      => $structure->fee_type_id,
                 'fee_structure_id' => $structure->id,
-                'description'      => $structure->name . $monthSuffix,
+                'description'      => $desc,
                 'unit_price'       => $basePrice,
-                'quantity'         => 1,
-                'discount_amount'  => $discountAmount,
+                'quantity'         => $qty,
+                'discount_amount'  => round($discountAmount * $qty, 2),
                 'tax_rate'         => $taxRate,
-                'tax_amount'       => $taxAmount,
+                'tax_amount'       => round($taxAmount * $qty, 2),
                 'total'            => $lineTotal,
             ];
 
-            $totalGross    += $basePrice;
-            $totalDiscount += $discountAmount;
-            $totalTax      += $taxAmount;
+            $totalGross    += ($basePrice * $qty);
+            $totalDiscount += ($discountAmount * $qty);
+            $totalTax      += ($taxAmount * $qty);
             $totalNet      += $lineTotal;
         }
 
@@ -391,19 +578,26 @@ class BillingService
             if ($busFare > 0) {
                 $routeName = $transport->route?->name ?? 'Bus Route';
                 $stopName  = $transport->stop?->name ?? 'Designated Stop';
+                $busTotal  = round($busFare * $multiplier, 2);
+
+                $desc = "Transport Service ({$routeName} - {$stopName})" . $monthSuffix;
+                if ($multiplier > 1) {
+                    $desc .= " [{$multiplier} Months]";
+                }
+
                 $items[] = [
                     'fee_type_id'      => null,
                     'fee_structure_id' => null,
-                    'description'      => "Transport Service ({$routeName} - {$stopName})" . $monthSuffix,
+                    'description'      => $desc,
                     'unit_price'       => $busFare,
-                    'quantity'         => 1,
+                    'quantity'         => $multiplier,
                     'discount_amount'  => 0,
                     'tax_rate'         => 0,
                     'tax_amount'       => 0,
-                    'total'            => $busFare,
+                    'total'            => $busTotal,
                 ];
-                $totalGross += $busFare;
-                $totalNet   += $busFare;
+                $totalGross += ($busFare * $multiplier);
+                $totalNet   += $busTotal;
             }
         }
 
@@ -412,19 +606,33 @@ class BillingService
             $hostelFare = (float) $hostel->room->cost_per_bed;
             $hostelName = $hostel->hostel?->name ?? 'Hostel';
             $roomNum    = $hostel->room->room_number ?? 'Room';
+            $hostelTotal = round($hostelFare * $multiplier, 2);
+
+            $desc = "Hostel Accommodation ({$hostelName}, Rm {$roomNum})" . $monthSuffix;
+            if ($multiplier > 1) {
+                $desc .= " [{$multiplier} Months]";
+            }
+
             $items[] = [
                 'fee_type_id'      => null,
                 'fee_structure_id' => null,
-                'description'      => "Hostel Accommodation ({$hostelName}, Rm {$roomNum})" . $monthSuffix,
+                'description'      => $desc,
                 'unit_price'       => $hostelFare,
-                'quantity'         => 1,
+                'quantity'         => $multiplier,
                 'discount_amount'  => 0,
                 'tax_rate'         => 0,
                 'tax_amount'       => 0,
-                'total'            => $hostelFare,
+                'total'            => $hostelTotal,
             ];
-            $totalGross += $hostelFare;
-            $totalNet   += $hostelFare;
+            $totalGross += ($hostelFare * $multiplier);
+            $totalNet   += $hostelTotal;
+        }
+
+        // 4. Advance Multi-Month Payment Concession (if provided)
+        if ($advanceDiscount > 0) {
+            $advanceDiscount = min($advanceDiscount, $totalNet);
+            $totalDiscount  += $advanceDiscount;
+            $totalNet        = max(0, $totalNet - $advanceDiscount);
         }
 
         // If no new charges and no arrears, don't generate empty invoice
@@ -451,6 +659,7 @@ class BillingService
             'status'           => 'unpaid',
             'due_date'         => $dueDate,
             'billing_month'    => $month,
+            'billing_month_to' => $monthTo,
             'billing_year'     => $year,
             'is_auto_generated'=> $isAuto,
         ]);

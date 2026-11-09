@@ -109,6 +109,11 @@
                                     <i class="bi bi-cash-coin text-sm"></i>
                                 </a>
                                 @endif
+                                {{-- Fee Demand Slip --}}
+                                <a href="{{ route('payments.demand-slip', $invoice->id) }}"
+                                   class="text-slate-400 hover:text-teal-600 transition" title="Print Fee Demand Slip (शुल्क माग भौचर)" target="_blank">
+                                    <i class="bi bi-receipt-cutoff text-sm"></i>
+                                </a>
                                 @if($invoice->payments->isNotEmpty())
                                 <a href="{{ route('finance.receipt', $invoice->payments->last()->id) }}"
                                    class="text-slate-400 hover:text-blue-600 transition" title="Receipt" target="_blank">
@@ -133,50 +138,98 @@
     </div>
 </div>
 
-{{-- Bulk Generate Modal --}}
-<div id="bulkModal" class="hidden fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md p-6">
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-base font-bold text-slate-800 dark:text-slate-100">
-                <i class="bi bi-lightning-charge mr-2 text-amber-500"></i> Bulk Invoice Generation
+{{-- Bulk Generate Modal (Nepali Bikram Sambat & Range Capable) --}}
+<div id="bulkModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-800">
+        <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <h2 class="text-base font-extrabold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                <i class="bi bi-calendar-range-fill text-indigo-600"></i> Bulk Fee Generation (नेपाली क्यालेन्डर)
             </h2>
             <button onclick="document.getElementById('bulkModal').classList.add('hidden')"
                     class="text-slate-400 hover:text-slate-600 transition">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
-        <p class="text-xs text-slate-500 mb-4">Generates monthly fee invoices for ALL active students based on their class fee structures. Existing invoices for the same period are skipped.</p>
+        <p class="text-xs text-slate-500 mb-4">Generate fee statements for all active students. Select a single month or multi-month advance period (e.g. Baisakh to Ashadh, or Baisakh to Chaitra yearly).</p>
         <form method="POST" action="{{ route('payments.bulk-generate') }}">
             @csrf
-            <div class="grid grid-cols-2 gap-3 mb-4">
+
+            {{-- BS Year & Months Range --}}
+            <div class="grid grid-cols-3 gap-3 mb-3">
                 <div>
-                    <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Month <span class="text-rose-500">*</span></label>
-                    <select name="month" class="select-modern w-full text-sm" required>
-                        @for($m = 1; $m <= 12; $m++)
-                        <option value="{{ $m }}" {{ $m === now()->month ? 'selected' : '' }}>
-                            {{ \Carbon\Carbon::create()->month($m)->format('F') }}
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">BS Year (वि.सं.) <span class="text-rose-500">*</span></label>
+                    <input type="number" name="year" value="{{ \App\Services\NepaliDateService::currentBsYear() }}" min="2000" max="2100"
+                           class="input-modern w-full text-xs font-bold" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">From Month (देखि) <span class="text-rose-500">*</span></label>
+                    <select name="month" id="bulk_from_month" class="select-modern w-full text-xs font-bold" required>
+                        @foreach(\App\Services\NepaliDateService::getBsMonths(true) as $mNum => $mName)
+                        <option value="{{ $mNum }}" {{ $mNum === \App\Services\NepaliDateService::currentBsMonth() ? 'selected' : '' }}>
+                            {{ $mNum }}. {{ $mName }}
                         </option>
-                        @endfor
+                        @endforeach
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Year <span class="text-rose-500">*</span></label>
-                    <input type="number" name="year" value="{{ now()->year }}" min="2020" max="2100"
-                           class="input-modern w-full text-sm" required>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">To Month (सम्म)</label>
+                    <select name="month_to" id="bulk_to_month" class="select-modern w-full text-xs font-bold">
+                        @foreach(\App\Services\NepaliDateService::getBsMonths(true) as $mNum => $mName)
+                        <option value="{{ $mNum }}" {{ $mNum === \App\Services\NepaliDateService::currentBsMonth() ? 'selected' : '' }}>
+                            {{ $mNum }}. {{ $mName }}
+                        </option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
-            <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 text-xs text-amber-700 dark:text-amber-300 mb-4">
-                <i class="bi bi-exclamation-triangle mr-1"></i>
-                This will generate invoices based on fee structures. This process is idempotent — re-running will not create duplicates.
+
+            {{-- Quick Academic Term Presets --}}
+            <div class="mb-4">
+                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Academic Presets</label>
+                <div class="flex flex-wrap gap-1.5">
+                    <button type="button" onclick="setBulkRange(1, 3)" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300 border border-teal-200 hover:bg-teal-100 transition">
+                        बैशाख – असार (1st Term)
+                    </button>
+                    <button type="button" onclick="setBulkRange(4, 6)" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 hover:bg-indigo-100 transition">
+                        साउन – असोज (2nd Term)
+                    </button>
+                    <button type="button" onclick="setBulkRange(7, 9)" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-purple-50 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 hover:bg-purple-100 transition">
+                        कात्तिक – पुस (3rd Term)
+                    </button>
+                    <button type="button" onclick="setBulkRange(10, 12)" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 hover:bg-amber-100 transition">
+                        माघ – चैत (4th Term)
+                    </button>
+                    <button type="button" onclick="setBulkRange(1, 12)" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-rose-50 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 hover:bg-rose-100 transition">
+                        बैशाख – चैत्र (Full Academic Year / वार्षिक)
+                    </button>
+                </div>
+            </div>
+
+            {{-- Advance Payment Discount/Concession (Optional) --}}
+            <div class="mb-4">
+                <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Advance Concession / Discount per Student (Rs. Optional)</label>
+                <input type="number" step="0.01" name="advance_discount" placeholder="0.00" class="input-modern w-full text-xs font-bold">
+            </div>
+
+            <div class="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-3 text-xs text-amber-800 dark:text-amber-300 mb-4 border border-amber-200 dark:border-amber-800/50">
+                <i class="bi bi-info-circle-fill mr-1"></i>
+                Multi-month selections will multiply recurring monthly fees by the number of months and pull past unpaid arrears into Previous Dues.
             </div>
             <div class="flex gap-3">
-                <button type="submit" class="btn-primary flex-1 py-2.5 text-sm rounded-xl">
-                    <i class="bi bi-lightning-charge mr-1"></i> Generate Invoices
+                <button type="submit" class="btn-primary flex-1 py-2.5 text-xs font-extrabold rounded-xl">
+                    <i class="bi bi-lightning-charge-fill mr-1"></i> Generate Statements
                 </button>
                 <button type="button" onclick="document.getElementById('bulkModal').classList.add('hidden')"
-                        class="btn-secondary px-5 text-sm rounded-xl">Cancel</button>
+                        class="btn-secondary px-5 text-xs font-bold rounded-xl">Cancel</button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+function setBulkRange(from, to) {
+    document.getElementById('bulk_from_month').value = from;
+    document.getElementById('bulk_to_month').value = to;
+}
+</script>
 @endsection

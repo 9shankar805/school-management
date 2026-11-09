@@ -246,9 +246,16 @@ html.dark .student-search-item:hover, html.dark .student-search-item.selected {
                             </div>
                         </div>
 
-                        <button type="button" onclick="resetSelectedStudent()" class="text-xs text-slate-400 hover:text-rose-500 transition px-2 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40">
-                            <i class="bi bi-x-lg"></i> Change
-                        </button>
+                        <div class="flex items-center gap-1.5">
+                            <a id="pos_demand_slip_link" href="#" target="_blank"
+                               class="hidden inline-flex items-center gap-1 text-[11px] font-bold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 px-2.5 py-1 rounded-lg hover:bg-teal-100 transition shadow-xs"
+                               title="Print Fee Demand Slip (शुल्क माग भौचर - 4 copies)">
+                                <i class="bi bi-receipt-cutoff"></i> Demand Slip
+                            </a>
+                            <button type="button" onclick="resetSelectedStudent()" class="text-xs text-slate-400 hover:text-rose-500 transition px-2 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40">
+                                <i class="bi bi-x-lg"></i> Change
+                            </button>
+                        </div>
                     </div>
 
                     {{-- Student Wallet & Outstanding Dues Metrics Bar --}}
@@ -321,6 +328,33 @@ html.dark .student-search-item:hover, html.dark .student-search-item.selected {
                     <button type="button" onclick="addCustomFeeRow('', 0)" class="text-xs font-bold text-[#0D7C66] dark:text-teal-400 hover:underline flex items-center gap-1 bg-[#D3F8EE] dark:bg-teal-950/60 px-3 py-1.5 rounded-xl border border-[#A7F3D0] dark:border-teal-900 transition">
                         <i class="bi bi-plus-circle"></i> Add Item
                     </button>
+                </div>
+
+                {{-- Quick Multi-Month Advance Billing Range Chips --}}
+                <div class="p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+                            📅 Multi-Month Advance Billing (Baisakh to Ashad / Chaitra Yearly)
+                        </span>
+                        <span class="text-[10px] text-teal-600 font-bold">Auto Multiplies Monthly Tuition</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button type="button" onclick="applyAdvanceMonthsPreset('Baisakh to Ashad (1st Term)', 3)" class="px-2.5 py-1 bg-teal-50 hover:bg-teal-100 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300 border border-teal-200 text-xs font-bold rounded-lg transition">
+                            बैशाख – असार (3 Mos)
+                        </button>
+                        <button type="button" onclick="applyAdvanceMonthsPreset('Shrawan to Ashwin (2nd Term)', 3)" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 text-xs font-bold rounded-lg transition">
+                            साउन – असोज (3 Mos)
+                        </button>
+                        <button type="button" onclick="applyAdvanceMonthsPreset('Kartik to Poush (3rd Term)', 3)" class="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 text-xs font-bold rounded-lg transition">
+                            कात्तिक – पुस (3 Mos)
+                        </button>
+                        <button type="button" onclick="applyAdvanceMonthsPreset('Magh to Chaitra (4th Term)', 3)" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 text-xs font-bold rounded-lg transition">
+                            माघ – चैत (3 Mos)
+                        </button>
+                        <button type="button" onclick="applyAdvanceMonthsPreset('Baisakh to Chaitra (Full Academic Year / Yearly Direct)', 12, 10)" class="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 text-xs font-bold rounded-lg transition">
+                            ⭐ बैशाख – चैत्र पूरा वर्ष (12 Mos / 10% Off)
+                        </button>
+                    </div>
                 </div>
 
                 {{-- Quick 1-Click Preset Chips for Private Schools --}}
@@ -1012,16 +1046,48 @@ html.dark .student-search-item:hover, html.dark .student-search-item.selected {
 
         const btnApplyWallet = document.getElementById('btn_apply_wallet');
         btnApplyWallet.classList.toggle('hidden', walletCredit <= 0);
+
+        const demandSlipBtn = document.getElementById('pos_demand_slip_link');
+        if (demandSlipBtn) {
+            demandSlipBtn.href = '/payments/student/' + student.id + '/demand-slip';
+            demandSlipBtn.classList.remove('hidden');
+        }
     }
 
     window.resetSelectedStudent = function() {
         currentStudent = null;
         loadedInvoices = [];
         profileBox.classList.add('hidden');
+        const demandSlipBtn = document.getElementById('pos_demand_slip_link');
+        if (demandSlipBtn) demandSlipBtn.classList.add('hidden');
         searchInput.value = '';
         clearSearchBtn.classList.add('hidden');
         invoicesContainer.innerHTML = '<div class="text-center py-6 text-slate-400 text-xs"><i class="bi bi-person-bounding-box text-2xl block mb-1 text-slate-300 dark:text-slate-700"></i> Please select a student above to load outstanding dues and fee records.</div>';
         searchInput.focus();
+    };
+
+    window.applyAdvanceMonthsPreset = function(label, months, discountPercent = 0) {
+        const firstRowInput = document.querySelector('.fee-amount-input');
+        const baseMonthlyTuition = (firstRowInput && parseFloat(firstRowInput.value) > 0) ? parseFloat(firstRowInput.value) : 3500;
+        const totalTuition = baseMonthlyTuition * months;
+
+        const container = document.getElementById('pos_items_container');
+        if (container) {
+            container.innerHTML = '';
+            addCustomFeeRow(`Tuition Fee — ${label} [${months} Months]`, totalTuition);
+        }
+
+        if (discountPercent > 0) {
+            const discountAmt = Math.round(totalTuition * (discountPercent / 100));
+            const waiverInput = document.getElementById('input_fine_waiver');
+            const waiverReason = document.getElementById('input_waiver_reason');
+            const waiverBox = document.getElementById('fine_waiver_box');
+            if (waiverInput) waiverInput.value = discountAmt;
+            if (waiverReason) waiverReason.value = `Annual advance payment discount (${discountPercent}%)`;
+            if (waiverBox) waiverBox.classList.remove('hidden');
+        }
+
+        recomputePOSTotals();
     };
 
     // ── 2. INVOICES RENDERING & SELECTION ──

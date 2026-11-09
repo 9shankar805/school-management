@@ -24,6 +24,13 @@
 
         {{-- Top Action Group --}}
         <div class="flex flex-wrap items-center gap-2.5">
+            {{-- Print Fee Demand Slips (४-६ प्रति/पाना) --}}
+            <button type="button" onclick="document.getElementById('demandSlipModal').classList.remove('hidden')"
+                class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition active:scale-[0.98]">
+                <i class="bi bi-receipt-cutoff"></i>
+                <span>Print Fee Demand Slips (४-६ प्रति/पाना)</span>
+            </button>
+
             {{-- Go to POS Counter --}}
             <a href="{{ route('finance.pos') }}"
                 class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-sm transition active:scale-[0.98]">
@@ -417,6 +424,13 @@
                                     <i class="bi bi-terminal text-[11px]"></i> Pay
                                 </a>
 
+                                {{-- Fee Demand Slip --}}
+                                <a href="{{ route('payments.student-demand-slip', $d['student_id']) }}" target="_blank"
+                                    class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition"
+                                    title="Print Fee Demand Slip (शुल्क माग भौचर - 4 copies)">
+                                    <i class="bi bi-receipt-cutoff text-sm"></i>
+                                </a>
+
                                 {{-- Student Ledger --}}
                                 <a href="{{ route('payments.student-ledger', $d['student_id']) }}" target="_blank"
                                     class="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
@@ -657,7 +671,112 @@ function openBulkLockModal(action) {
 
     openDuesModal('bulkLockModal');
 }
+
+function setModalRange(from, to) {
+    document.getElementById('modal_from_month').value = from;
+    document.getElementById('modal_to_month').value = to;
+}
 </script>
+
+{{-- BATCH FEE DEMAND SLIP PRINT MODAL (4-6 Per Page) --}}
+<div id="demandSlipModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="bi bi-receipt-cutoff text-indigo-600"></i> Print Fee Demand Slips (शुल्क माग भौचर)
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5">Print 4 to 6 student fee slips per A4 sheet for class distribution</p>
+            </div>
+            <button onclick="document.getElementById('demandSlipModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <form action="{{ route('finance.dues.demand-slips') }}" method="GET" target="_blank" class="mt-4 space-y-4">
+            <input type="hidden" name="session_id" value="{{ request('session_id', $sessionId ?? '') }}">
+            <input type="hidden" name="class_id" value="{{ request('class_id', 'all') }}">
+            <input type="hidden" name="section_id" value="{{ request('section_id', 'all') }}">
+            <input type="hidden" name="min_due" value="{{ request('min_due', 0) }}">
+
+            {{-- Bikram Sambat Academic Year & Months --}}
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">BS Year (वि.सं.)</label>
+                    <input type="number" name="bs_year" value="{{ \App\Services\NepaliDateService::currentBsYear() }}" class="w-full text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">From Month (देखि)</label>
+                    <select name="from_month" id="modal_from_month" class="w-full text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">
+                        @foreach(\App\Services\NepaliDateService::getBsMonths(true) as $mNum => $mName)
+                            <option value="{{ $mNum }}" {{ $mNum === 1 ? 'selected' : '' }}>{{ $mNum }}. {{ $mName }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">To Month (सम्म)</label>
+                    <select name="to_month" id="modal_to_month" class="w-full text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white">
+                        @foreach(\App\Services\NepaliDateService::getBsMonths(true) as $mNum => $mName)
+                            <option value="{{ $mNum }}" {{ $mNum === 3 ? 'selected' : '' }}>{{ $mNum }}. {{ $mName }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            {{-- Quick Term Pills --}}
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Quick Academic Range Presets</label>
+                <div class="flex flex-wrap gap-1.5">
+                    <button type="button" onclick="setModalRange(1, 3)" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-teal-50 text-teal-800 dark:bg-teal-950/60 dark:text-teal-300 border border-teal-200 hover:bg-teal-100 transition">
+                        बैशाख – असार (1st Term)
+                    </button>
+                    <button type="button" onclick="setModalRange(4, 6)" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-800 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 hover:bg-indigo-100 transition">
+                        साउन – असोज (2nd Term)
+                    </button>
+                    <button type="button" onclick="setModalRange(7, 9)" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-purple-50 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 hover:bg-purple-100 transition">
+                        कात्तिक – पुस (3rd Term)
+                    </button>
+                    <button type="button" onclick="setModalRange(10, 12)" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 hover:bg-amber-100 transition">
+                        माघ – चैत (4th Term)
+                    </button>
+                    <button type="button" onclick="setModalRange(1, 12)" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-rose-50 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 hover:bg-rose-100 transition">
+                        बैशाख – चैत्र (Full Academic Year / वार्षिक)
+                    </button>
+                </div>
+            </div>
+
+            {{-- Paper Layout (4 vs 6 per page) --}}
+            <div>
+                <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Print Layout on A4 Paper</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 hover:border-indigo-500 transition">
+                        <input type="radio" name="layout" value="4_per_page" checked class="text-indigo-600 focus:ring-indigo-500">
+                        <div>
+                            <div class="text-xs font-extrabold text-slate-900 dark:text-white">4 Slips / Page (2×2)</div>
+                            <div class="text-[10px] text-slate-400">Standard & Roomy with full particulars</div>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer bg-slate-50/50 dark:bg-slate-800/40 hover:border-indigo-500 transition">
+                        <input type="radio" name="layout" value="6_per_page" class="text-indigo-600 focus:ring-indigo-500">
+                        <div>
+                            <div class="text-xs font-extrabold text-slate-900 dark:text-white">6 Slips / Page (2×3)</div>
+                            <div class="text-[10px] text-slate-400">Compact & Paper Saver for bulk printing</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button type="button" onclick="document.getElementById('demandSlipModal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-slate-900">
+                    Cancel
+                </button>
+                <button type="submit" class="px-5 py-2.5 text-xs font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm flex items-center gap-1.5">
+                    <i class="bi bi-printer-fill"></i> Generate & Print Demand Slips
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <style>
 @keyframes scaleUp {

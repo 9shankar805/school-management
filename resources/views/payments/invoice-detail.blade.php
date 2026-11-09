@@ -10,6 +10,10 @@
         </div>
         <div class="flex flex-wrap gap-2">
             @can('manage finance')
+            <a href="{{ route('payments.demand-slip', $invoice->id) }}" target="_blank"
+               class="btn-secondary text-sm px-4 py-2 rounded-xl text-teal-700 bg-teal-50 dark:bg-teal-950/30 dark:text-teal-300 hover:bg-teal-100 border border-teal-200 dark:border-teal-800 transition" title="Print Fee Demand Slip (शुल्क माग भौचर)">
+                <i class="bi bi-receipt-cutoff mr-1 text-teal-600"></i> Demand Slip
+            </a>
             @if($invoice->status !== 'paid')
             <a href="{{ route('payments.pay', $invoice->id) }}"
                class="btn-primary text-sm px-4 py-2 rounded-xl">

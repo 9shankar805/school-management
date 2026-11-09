@@ -423,6 +423,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/receipt/{paymentId}',          [PaymentController::class, 'receiptPage'])->name('receipt');
         Route::get('/receipt/{paymentId}/page',     [PaymentController::class, 'receiptPage'])->name('receipt.page');
         Route::get('/receipt/{paymentId}/download', [PaymentController::class, 'receipt'])->name('receipt-download');
+        Route::get('/{id}/demand-slip',             [PaymentController::class, 'invoiceDemandSlip'])->name('demand-slip');
+        Route::get('/student/{studentId}/demand-slip', [PaymentController::class, 'studentDemandSlip'])->name('student-demand-slip');
     });
 
     // ── LIBRARY (Module 12) ────────────────────────────────────────────────────
@@ -619,6 +621,7 @@ Route::middleware(['auth'])->group(function () {
         // Class-Wise Dues & Defaulters Recovery Engine
         Route::prefix('dues')->name('dues.')->group(function () {
             Route::get('/',                     [\App\Http\Controllers\DuesController::class, 'index'])->name('index');
+            Route::get('/demand-slips',         [\App\Http\Controllers\DuesController::class, 'demandSlips'])->name('demand-slips');
             Route::post('/bulk-remind',         [\App\Http\Controllers\DuesController::class, 'bulkRemind'])->name('bulk-remind');
             Route::post('/bulk-lock',           [\App\Http\Controllers\DuesController::class, 'bulkLock'])->name('bulk-lock');
             Route::post('/{studentId}/toggle',  [\App\Http\Controllers\DuesController::class, 'toggleLock'])->name('toggle-lock');

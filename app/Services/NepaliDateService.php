@@ -19,8 +19,7 @@ class NepaliDateService
     // ── Days in each BS month for years 2000–2090 BS ──────────────────────────
     // Index 0 = year 2000 BS, each sub-array = 12 months (Baisakh … Chaitra)
     private static array $bsCalendarData = [
-        // 2000
-        [30,32,31,32,31,30,30,30,29,30,29,31],
+        [30,32,31,32,31,30,30,30,29,30,29,31], // 2000
         [31,31,32,31,31,31,30,29,30,29,30,30],
         [31,31,32,32,31,30,30,29,30,29,30,30],
         [31,32,31,32,31,30,30,30,29,29,30,31],
@@ -30,105 +29,96 @@ class NepaliDateService
         [31,32,31,32,31,30,30,30,29,29,30,31],
         [31,31,31,32,31,31,29,30,30,29,29,31],
         [31,31,32,31,31,31,30,29,30,29,30,30],
-        // 2010
-        [31,31,32,32,31,30,30,29,30,29,30,30],
+        [31,31,32,32,31,30,30,29,30,29,30,30], // 2010
         [31,32,31,32,31,30,30,30,29,29,30,31],
         [31,31,31,32,31,31,29,30,30,29,30,30],
         [31,31,32,31,31,31,30,29,30,29,30,30],
         [31,31,32,32,31,30,30,29,30,29,30,30],
-        [31,32,31,32,31,30,30,30,29,29,30,31],
-        [31,31,31,32,31,31,29,30,30,29,30,30],
-        [31,31,32,31,31,31,30,29,30,29,30,30],
-        [31,31,32,32,31,30,30,29,30,29,30,30],
-        [31,32,31,32,31,30,30,30,29,29,30,31],
-        // 2020
-        [31,31,31,32,31,31,29,30,30,29,30,30],
-        [31,31,32,31,31,31,30,29,30,29,30,30],
-        [31,31,32,32,31,30,30,29,30,29,30,30],
-        [31,32,31,32,31,30,30,30,29,29,30,31],
-        [31,31,31,32,31,31,29,30,30,29,30,30],
-        [31,31,32,31,31,31,30,29,30,29,30,30],
-        [31,31,32,32,31,30,30,29,30,29,30,30],
-        [31,32,31,32,31,30,30,30,29,29,30,31],
-        [31,31,31,32,31,31,29,30,30,29,30,30],
-        [31,31,32,31,31,31,30,29,30,29,30,30],
-        // 2030
-        [31,31,32,32,31,30,30,29,30,29,30,30],
-        [31,32,31,32,31,30,30,30,29,29,30,31],
-        [31,31,31,32,31,31,29,30,30,29,30,30],
-        [31,31,32,31,31,31,30,29,30,29,30,30],
-        [31,31,32,32,31,30,30,29,30,29,30,30],
-        [31,32,31,32,31,30,30,30,29,29,30,31],
-        [31,31,31,32,31,31,29,30,30,29,30,30],
-        [31,31,32,31,31,31,30,29,30,29,30,30],
-        [31,31,32,32,31,30,30,29,30,29,30,30],
-        [31,32,31,32,31,30,30,30,29,29,30,31],
-        // 2040
-        [31,31,31,32,31,31,29,30,30,29,30,30],
-        [31,31,32,31,31,31,30,29,30,29,30,30],
-        [31,31,32,32,31,30,30,29,30,29,30,30],
-        [31,32,31,32,31,30,30,30,29,29,30,31],
-        [31,31,31,32,31,31,29,30,30,29,30,30],
-        [31,31,32,31,31,31,30,29,30,29,30,30],
-        [31,31,32,32,31,30,30,29,30,29,30,30],
-        [31,32,31,32,31,30,30,30,29,29,30,31],
-        [31,31,31,32,31,31,29,30,30,29,30,30],
-        [31,31,32,31,31,31,30,29,30,29,30,30],
-        // 2050
-        [31,32,31,32,31,30,30,29,30,29,30,30],
         [31,32,31,32,31,30,30,30,29,29,30,31],
         [31,31,31,32,31,31,29,30,30,29,30,30],
         [31,31,32,31,31,31,30,29,30,29,30,30],
         [31,32,31,32,31,30,30,29,30,29,30,30],
-        [31,32,31,32,31,30,30,30,29,29,30,31],
-        [31,31,31,32,31,31,29,30,30,29,30,30],
-        [31,31,32,31,31,31,30,29,30,29,30,30],
-        [31,32,31,32,31,30,30,29,30,29,30,30],
-        [31,32,31,32,31,30,30,30,29,29,30,31],
-        // 2060
-        [31,31,31,32,31,31,29,30,30,29,30,30],
+        [31,32,31,32,31,30,30,30,29,30,29,31],
+        [31,31,31,32,31,31,30,29,30,29,30,30], // 2020
         [31,31,32,31,31,31,30,29,30,29,30,30],
         [31,32,31,32,31,30,30,30,29,29,30,30],
         [31,32,31,32,31,30,30,30,29,30,29,31],
+        [31,31,31,32,31,31,30,29,30,29,30,30],
+        [31,31,32,31,31,31,30,29,30,29,30,30],
+        [31,32,31,32,31,30,30,30,29,29,30,31],
+        [30,32,31,32,31,30,30,30,29,30,29,31],
+        [31,31,32,31,31,31,30,29,30,29,30,30],
+        [31,31,32,31,32,30,30,29,30,29,30,30],
+        [31,32,31,32,31,30,30,30,29,29,30,31], // 2030
         [30,32,31,32,31,30,30,30,29,30,29,31],
         [31,31,32,31,31,31,30,29,30,29,30,30],
         [31,31,32,32,31,30,30,29,30,29,30,30],
         [31,32,31,32,31,30,30,30,29,29,30,31],
-        [31,31,31,32,31,31,29,30,30,29,30,30],
-        [31,31,32,31,31,31,30,29,30,29,30,30],
-        // 2070
-        [31,31,32,32,31,30,30,29,30,29,30,30],
-        [31,32,31,32,31,30,30,30,29,29,30,31],
-        [31,31,31,32,31,31,29,30,30,29,30,30],
+        [30,32,31,32,31,31,29,30,30,29,29,31],
         [31,31,32,31,31,31,30,29,30,29,30,30],
         [31,31,32,32,31,30,30,29,30,29,30,30],
         [31,32,31,32,31,30,30,30,29,29,30,31],
         [31,31,31,32,31,31,29,30,30,29,30,30],
-        [31,31,32,31,31,31,30,29,30,29,30,30],
-        [31,31,32,32,31,30,30,29,30,29,30,30],
-        [31,32,31,32,31,30,30,30,29,29,30,31],
-        // 2080
-        [31,31,31,32,31,31,29,30,30,29,30,30],
-        [31,31,32,31,31,31,30,29,30,29,30,30],
+        [31,31,32,31,31,31,30,29,30,29,30,30], // 2040
         [31,31,32,32,31,30,30,29,30,29,30,30],
         [31,32,31,32,31,30,30,30,29,29,30,31],
         [31,31,31,32,31,31,29,30,30,29,30,30],
         [31,31,32,31,31,31,30,29,30,29,30,30],
+        [31,32,31,32,31,30,30,29,30,29,30,30],
+        [31,32,31,32,31,30,30,30,29,29,30,31],
+        [31,31,31,32,31,31,30,29,30,29,30,30],
+        [31,31,32,31,31,31,30,29,30,29,30,30],
+        [31,32,31,32,31,30,30,30,29,29,30,30],
+        [31,32,31,32,31,30,30,30,29,30,29,31], // 2050
+        [31,31,31,32,31,31,30,29,30,29,30,30],
+        [31,31,32,31,31,31,30,29,30,29,30,30],
+        [31,32,31,32,31,30,30,30,29,29,30,30],
+        [31,32,31,32,31,30,30,30,29,30,29,31],
+        [31,31,32,31,31,31,30,29,30,29,30,30],
+        [31,31,32,31,32,30,30,29,30,29,30,30],
+        [31,32,31,32,31,30,30,30,29,29,30,31],
+        [30,32,31,32,31,30,30,30,29,30,29,31],
+        [31,31,32,31,31,31,30,29,30,29,30,30],
+        [31,31,32,32,31,30,30,29,30,29,30,30], // 2060
+        [31,32,31,32,31,30,30,30,29,29,30,31],
+        [30,32,31,32,31,31,29,30,29,30,29,31],
+        [31,31,32,31,31,31,30,29,30,29,30,30],
         [31,31,32,32,31,30,30,29,30,29,30,30],
         [31,32,31,32,31,30,30,30,29,29,30,31],
-        [31,31,31,32,31,31,29,30,30,29,30,30],
+        [31,31,31,32,31,31,29,30,30,29,29,31],
         [31,31,32,31,31,31,30,29,30,29,30,30],
-        // 2090
         [31,31,32,32,31,30,30,29,30,29,30,30],
+        [31,32,31,32,31,30,30,30,29,29,30,31],
+        [31,31,31,32,31,31,29,30,30,29,30,30], // 2070
+        [31,31,32,31,31,31,30,29,30,29,30,30],
+        [31,32,31,32,31,30,30,29,30,29,30,30],
+        [31,32,31,32,31,30,30,30,29,29,30,31],
+        [31,31,31,32,31,31,30,29,30,29,30,30],
+        [31,31,32,31,31,31,30,29,30,29,30,30],
+        [31,32,31,32,31,30,30,30,29,29,30,30],
+        [31,32,31,32,31,30,30,30,29,30,29,31],
+        [31,31,31,32,31,31,30,29,30,29,30,30],
+        [31,31,32,31,31,31,30,29,30,29,30,30],
+        [31,32,31,32,31,30,30,30,29,29,30,30], // 2080
+        [31,32,31,32,31,30,30,30,29,30,29,31], // 2081
+        [31,31,32,31,31,31,30,29,30,29,30,30],
+        [31,31,32,31,31,31,30,29,30,29,30,30],
+        [31,31,32,31,31,30,30,30,29,30,30,30],
+        [31,32,31,32,30,31,30,30,29,30,30,30],
+        [30,32,31,32,31,30,30,30,29,30,30,30],
+        [31,31,32,31,31,31,30,30,29,30,30,30],
+        [30,31,32,32,30,31,30,30,29,30,30,30],
+        [30,32,31,32,31,30,30,30,29,30,30,30],
+        [30,32,31,32,31,30,30,30,29,30,30,30], // 2090
     ];
 
-    // Reference point: 1944-01-01 AD = 2000-09-17 BS
-    private const REFERENCE_AD_YEAR  = 1944;
-    private const REFERENCE_AD_MONTH = 1;
-    private const REFERENCE_AD_DAY   = 1;
+    // Reference point: 1943-04-14 AD = 2000-01-01 BS (Baisakh 1, 2000 BS)
+    private const REFERENCE_AD_YEAR  = 1943;
+    private const REFERENCE_AD_MONTH = 4;
+    private const REFERENCE_AD_DAY   = 14;
     private const REFERENCE_BS_YEAR  = 2000;
-    private const REFERENCE_BS_MONTH = 9;
-    private const REFERENCE_BS_DAY   = 17;
+    private const REFERENCE_BS_MONTH = 1;
+    private const REFERENCE_BS_DAY   = 1;
 
     private static array $monthsEn = [
         'Baisakh','Jestha','Ashadh','Shrawan',
@@ -148,20 +138,19 @@ class NepaliDateService
 
     /**
      * Convert an AD date string (YYYY-MM-DD) to a BS date string (YYYY-MM-DD).
-     * Returns null if the date is outside supported range (1944–2033 AD).
+     * Returns null if the date is outside supported range (1943–2033 AD / 2000–2090 BS).
      */
     public static function adToBS(string $adDate): ?string
     {
         try {
             [$adY, $adM, $adD] = array_map('intval', explode('-', $adDate));
+            $ref = new \DateTimeImmutable('1943-04-14');
+            $cur = new \DateTimeImmutable(sprintf('%04d-%02d-%02d', $adY, $adM, $adD));
         } catch (\Throwable $e) {
             return null;
         }
 
-        // Count total AD days from reference date
-        $adRef = mktime(0, 0, 0, self::REFERENCE_AD_MONTH, self::REFERENCE_AD_DAY, self::REFERENCE_AD_YEAR);
-        $adCur = mktime(0, 0, 0, $adM, $adD, $adY);
-        $totalDays = (int) round(($adCur - $adRef) / 86400);
+        $totalDays = (int) $ref->diff($cur)->format('%r%a');
 
         if ($totalDays < 0) {
             return null; // Before reference date
@@ -208,20 +197,11 @@ class NepaliDateService
             return null;
         }
 
-        // Count total BS days from reference point
+        // Count total BS days from reference point (1943-04-14 AD = 2000-01-01 BS)
         $totalDays = 0;
 
-        // Days remaining in reference BS month
-        $refYearIdx = self::REFERENCE_BS_YEAR - 2000;
-        $totalDays += self::$bsCalendarData[$refYearIdx][self::REFERENCE_BS_MONTH - 1] - self::REFERENCE_BS_DAY;
-
-        // Full months after reference month in reference year
-        for ($m = self::REFERENCE_BS_MONTH + 1; $m <= 12; $m++) {
-            $totalDays += self::$bsCalendarData[$refYearIdx][$m - 1];
-        }
-
-        // Full BS years from (reference year + 1) up to (target year - 1)
-        for ($y = self::REFERENCE_BS_YEAR + 1; $y < $bsY; $y++) {
+        // Full BS years from 2000 up to (bsY - 1)
+        for ($y = 2000; $y < $bsY; $y++) {
             $yIdx = $y - 2000;
             if (! isset(self::$bsCalendarData[$yIdx])) return null;
             foreach (self::$bsCalendarData[$yIdx] as $days) {
@@ -229,22 +209,18 @@ class NepaliDateService
             }
         }
 
-        if ($bsY > self::REFERENCE_BS_YEAR) {
-            // Full months in target year up to target month - 1
-            $tYIdx = $bsY - 2000;
-            for ($m = 1; $m < $bsM; $m++) {
-                $totalDays += self::$bsCalendarData[$tYIdx][$m - 1];
-            }
-            // Days in target month
-            $totalDays += $bsD;
-        } else {
-            // Same year as reference — just count days within reference month
-            $totalDays = $bsD - self::REFERENCE_BS_DAY;
+        // Full months in target year up to bsM - 1
+        $tYIdx = $bsY - 2000;
+        for ($m = 1; $m < $bsM; $m++) {
+            $totalDays += self::$bsCalendarData[$tYIdx][$m - 1];
         }
 
-        // Add total days to reference AD date
-        $adTimestamp = mktime(0, 0, 0, self::REFERENCE_AD_MONTH, self::REFERENCE_AD_DAY + $totalDays, self::REFERENCE_AD_YEAR);
-        return date('Y-m-d', $adTimestamp);
+        // Days in target month (0-indexed offset from day 1)
+        $totalDays += ($bsD - 1);
+
+        // Add total days to reference AD date (1943-04-14)
+        $ref = new \DateTimeImmutable('1943-04-14');
+        return $ref->modify("+{$totalDays} days")->format('Y-m-d');
     }
 
     // ── Formatting ────────────────────────────────────────────────────────────
@@ -346,6 +322,139 @@ class NepaliDateService
         return $nepali
             ? (self::$monthsNp[$m - 1] ?? '')
             : (self::$monthsEn[$m - 1] ?? '');
+    }
+
+    /**
+     * Get all 12 Bikram Sambat months as key => value array (1 => 'Baisakh' / 'बैशाख').
+     */
+    public static function getBsMonths(bool $nepali = true): array
+    {
+        $months = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $months[$i] = $nepali ? self::$monthsNp[$i - 1] : self::$monthsEn[$i - 1];
+        }
+        return $months;
+    }
+
+    /**
+     * Get single month name by 1-based index (1 = Baisakh, 12 = Chaitra).
+     */
+    public static function getMonthName(int $monthNum, bool $nepali = true): string
+    {
+        if ($monthNum < 1 || $monthNum > 12) return '';
+        return $nepali ? (self::$monthsNp[$monthNum - 1] ?? '') : (self::$monthsEn[$monthNum - 1] ?? '');
+    }
+
+    /**
+     * Get current Bikram Sambat year (e.g. 2083).
+     */
+    public static function currentBsYear(): int
+    {
+        $today = date('Y-m-d');
+        $bs = self::adToBS($today);
+        return $bs ? (int) explode('-', $bs)[0] : ((int) date('Y') + 57);
+    }
+
+    /**
+     * Get current Bikram Sambat month (1-12).
+     */
+    public static function currentBsMonth(): int
+    {
+        $today = date('Y-m-d');
+        $bs = self::adToBS($today);
+        return $bs ? (int) explode('-', $bs)[1] : 1;
+    }
+
+    /**
+     * Format a Bikram Sambat month range label (e.g. "बैशाख – असार २०८३" or "Baisakh – Ashadh 2083").
+     */
+    public static function formatBsRange(int $fromMonth, int $toMonth, ?int $bsYear = null, bool $nepali = true): string
+    {
+        $year = $bsYear ?: self::currentBsYear();
+        $yearStr = $nepali ? self::toNepaliDigits($year) : (string) $year;
+
+        $fromName = self::getMonthName($fromMonth, $nepali);
+        $toName   = self::getMonthName($toMonth, $nepali);
+
+        if ($fromMonth === $toMonth) {
+            return "{$fromName} {$yearStr}";
+        }
+
+        // Special term labels
+        $termSuffix = '';
+        if ($fromMonth === 1 && $toMonth === 3) {
+            $termSuffix = $nepali ? ' (प्रथम त्रैमासिक / 1st Term)' : ' (1st Term)';
+        } elseif ($fromMonth === 4 && $toMonth === 6) {
+            $termSuffix = $nepali ? ' (दोस्रो त्रैमासिक / 2nd Term)' : ' (2nd Term)';
+        } elseif ($fromMonth === 7 && $toMonth === 9) {
+            $termSuffix = $nepali ? ' (तेस्रो त्रैमासिक / 3rd Term)' : ' (3rd Term)';
+        } elseif ($fromMonth === 10 && $toMonth === 12) {
+            $termSuffix = $nepali ? ' (चौथो त्रैमासिक / 4th Term)' : ' (4th Term)';
+        } elseif ($fromMonth === 1 && $toMonth === 12) {
+            $termSuffix = $nepali ? ' (वार्षिक / Full Academic Year)' : ' (Annual / Full Session)';
+        }
+
+        return "{$fromName} – {$toName} {$yearStr}{$termSuffix}";
+    }
+
+    /**
+     * Get predefined academic terms for a Bikram Sambat academic session.
+     */
+    public static function getAcademicTerms(?int $bsYear = null): array
+    {
+        $y = $bsYear ?: self::currentBsYear();
+        return [
+            [
+                'id'         => 'term_1',
+                'name_np'    => 'प्रथम त्रैमासिक (1st Term)',
+                'name_en'    => 'First Term (Baisakh – Ashadh)',
+                'from_month' => 1,
+                'to_month'   => 3,
+                'months_cnt' => 3,
+                'year'       => $y,
+                'label'      => self::formatBsRange(1, 3, $y, true),
+            ],
+            [
+                'id'         => 'term_2',
+                'name_np'    => 'दोस्रो त्रैमासिक (2nd Term)',
+                'name_en'    => 'Second Term (Shrawan – Ashwin)',
+                'from_month' => 4,
+                'to_month'   => 6,
+                'months_cnt' => 3,
+                'year'       => $y,
+                'label'      => self::formatBsRange(4, 6, $y, true),
+            ],
+            [
+                'id'         => 'term_3',
+                'name_np'    => 'तेस्रो त्रैमासिक (3rd Term)',
+                'name_en'    => 'Third Term (Kartik – Poush)',
+                'from_month' => 7,
+                'to_month'   => 9,
+                'months_cnt' => 3,
+                'year'       => $y,
+                'label'      => self::formatBsRange(7, 9, $y, true),
+            ],
+            [
+                'id'         => 'term_4',
+                'name_np'    => 'चौथो त्रैमासिक (4th Term)',
+                'name_en'    => 'Fourth Term (Magh – Chaitra)',
+                'from_month' => 10,
+                'to_month'   => 12,
+                'months_cnt' => 3,
+                'year'       => $y,
+                'label'      => self::formatBsRange(10, 12, $y, true),
+            ],
+            [
+                'id'         => 'yearly',
+                'name_np'    => 'पूरा शैक्षिक सत्र (Full Year)',
+                'name_en'    => 'Full Academic Year (Baisakh – Chaitra)',
+                'from_month' => 1,
+                'to_month'   => 12,
+                'months_cnt' => 12,
+                'year'       => $y,
+                'label'      => self::formatBsRange(1, 12, $y, true),
+            ],
+        ];
     }
 
     /**

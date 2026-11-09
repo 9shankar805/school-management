@@ -435,4 +435,160 @@ class DuesController extends Controller
 
         return $pdf->stream('class-dues-defaulters-report.pdf');
     }
+
+    /**
+     * Batch printable Fee Demand Slips (४ देखि ६ प्रति प्रति पाना A4 format).
+     */
+    public function demandSlips(Request $request)
+    {
+        $sessionId = (int) $request->input('session_id', $this->getSchoolCurrentSession());
+        $classId   = $request->input('class_id', 'all');
+        $sectionId = $request->input('section_id', 'all');
+        $minDue    = (float) $request->input('min_due', 0);
+        $layout    = $request->input('layout', '4_per_page'); // '4_per_page' or '6_per_page'
+        $bsYear    = (int) $request->input('bs_year', \App\Services\NepaliDateService::currentBsYear());
+        $fromMonth = (int) $request->input('from_month', 1); // 1 = Baisakh
+        $toMonth   = (int) $request->input('to_month', 3);   // 3 = Ashadh
+
+        $query = Promotion::with([
+            'student.parent_info',
+            'student.parents',
+            'schoolClass',
+            'section',
+        ])->where('session_id', $sessionId);
+
+        if ($classId !== 'all' && is_numeric($classId)) {
+            $query->where('class_id', $classId);
+        }
+        if ($sectionId !== 'all' && is_numeric($sectionId)) {
+            $query->where('section_id', $sectionId);
+        }
+
+        if ($studentIds = $request->input('student_ids')) {
+            if (is_array($studentIds)) {
+                $query->whereIn('student_id', $studentIds);
+            } elseif (is_string($studentIds)) {
+                $query->whereIn('student_id', explode(',', $studentIds));
+            }
+        }
+
+        $promotions = $query->get();
+        $class   = ($classId !== 'all' && is_numeric($classId)) ? SchoolClass::find($classId) : null;
+        $section = ($sectionId !== 'all' && is_numeric($sectionId)) ? Section::find($sectionId) : null;
+        $school  = config('tenant.school') ?? School::first();
+
+        // Bank Account for QR code & deposit guidance
+        \App\Http\Controllers\SchoolBankAccountController::ensureDefaultBanksExist();
+        $bankAccount = \App\Models\SchoolBankAccount::active()->defaultFirst()->first();
+
+        $periodLabelNp = \App\Services\NepaliDateService::formatBsRange($fromMonth, $toMonth, $bsYear, true);
+        $periodLabelEn = \App\Services\NepaliDateService::formatBsRange($fromMonth, $toMonth, $bsYear, false);
+
+        // Due date: 25th of to_month in Bikram Sambat
+        $daysInToMonth = \App\Services\NepaliDateService::getDaysInBsMonth($bsYear, $toMonth);
+        $dueDay = min(25, $daysInToMonth);
+        $dueDateAd = \App\Services\NepaliDateService::bsToAD($bsYear, $toMonth, $dueDay) ?? today()->addDays(15)->toDateString();
+        $dueDateBs = \App\Services\NepaliDateService::formatBS($dueDateAd, true, 'long');
+
+        $slips = [];
+
+        foreach ($promotions as $promo) {
+            $student = $promo->student;
+            if (!$student) continue;
+
+            // Student running ledger balance
+            $totalOutstanding = round(max(
+                (float) StudentLedger::currentBalance($student->id, $sessionId),
+                (float) StudentLedger::currentBalance($student->id)
+            ), 2);
+
+            // Fetch any existing invoices for this student in this period
+            $invoices = Invoice::where('student_id', $student->id)
+                ->where('session_id', $sessionId)
+                ->where(function ($q) use ($fromMonth, $toMonth, $bsYear) {
+                    $q->whereBetween('billing_month', [$fromMonth, $toMonth])
+                      ->orWhere(function ($q2) use ($fromMonth, $toMonth) {
+                          $q2->where('billing_month', '<=', $fromMonth)
+                             ->where('billing_month_to', '>=', $toMonth);
+                      });
+                })
+                ->with('items')
+                ->get();
+
+            $currentFee = 0.0;
+            $itemsList = [];
+
+            if ($invoices->isNotEmpty()) {
+                foreach ($invoices as $inv) {
+                    foreach ($inv->items as $it) {
+                        $itemsList[] = [
+                            'name'   => $it->description,
+                            'amount' => (float) $it->total,
+                        ];
+                        $currentFee += (float) $it->total;
+                    }
+                }
+            } else {
+                // If invoices not generated yet, calculate from fee structures
+                $classStructures = \App\Models\FeeStructure::where(fn($q) => $q->where('class_id', $promo->class_id)->orWhereNull('class_id'))
+                    ->where('is_active', true)
+                    ->get();
+
+                $monthsCount = max(1, $toMonth - $fromMonth + 1);
+
+                foreach ($classStructures as $cs) {
+                    $isMonthly = in_array(strtolower($cs->frequency ?? 'monthly'), ['monthly', 'term']);
+                    $itemAmount = (float) $cs->amount * ($isMonthly ? $monthsCount : 1);
+                    $itemsList[] = [
+                        'name'   => $cs->name . ($isMonthly && $monthsCount > 1 ? " ({$monthsCount} Mo)" : ''),
+                        'amount' => $itemAmount,
+                    ];
+                    $currentFee += $itemAmount;
+                }
+            }
+
+            // Previous dues (old unpaid arrears)
+            $previousDue = max(0, round($totalOutstanding - $currentFee, 2));
+
+            // Grand Total Payable
+            $totalPayable = max(0, round($currentFee + $previousDue, 2));
+
+            if ($minDue > 0 && $totalPayable < $minDue) {
+                continue;
+            }
+
+            // Guardian resolution
+            $guardian = $student->parents->first();
+            $guardianName = $guardian?->full_name
+                ?: ($student->parent_info?->father_name ?: ($student->parent_info?->mother_name ?: ($student->parent_info?->guardian_name ?: 'Guardian')));
+            $guardianPhone = $guardian?->phone
+                ?: ($student->parent_info?->phone ?: ($student->parent_info?->father_mobile ?: ($student->phone ?: '')));
+
+            $slips[] = [
+                'student_id'       => $student->id,
+                'student_name'     => $student->full_name,
+                'admission_no'     => $student->admission_no ?: 'ADM-' . $student->id,
+                'roll_no'          => $promo->roll_no ?: ($student->roll_no ?: '-'),
+                'class_name'       => $promo->schoolClass?->class_name ?? 'N/A',
+                'section_name'     => $promo->section?->section_name ?? '',
+                'guardian_name'    => $guardianName,
+                'guardian_phone'   => $guardianPhone,
+                'items'            => $itemsList,
+                'current_fee'      => $currentFee,
+                'previous_due'     => $previousDue,
+                'total_payable'    => $totalPayable,
+                'total_words'      => nprWords($totalPayable),
+                'due_date_bs'      => $dueDateBs,
+                'due_date_ad'      => \Carbon\Carbon::parse($dueDateAd)->format('d M, Y'),
+                'period_label_np'  => $periodLabelNp,
+                'period_label_en'  => $periodLabelEn,
+            ];
+        }
+
+        return view('finance.dues.demand-slips', compact(
+            'slips', 'school', 'bankAccount', 'class', 'section', 'layout',
+            'periodLabelNp', 'periodLabelEn', 'dueDateBs', 'dueDateAd',
+            'fromMonth', 'toMonth', 'bsYear', 'sessionId'
+        ));
+    }
 }

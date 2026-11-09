@@ -32,6 +32,7 @@ class Invoice extends Model
         'status',           // unpaid | partial | paid
         'due_date',
         'billing_month',
+        'billing_month_to', // optional end month for multi-month advance ranges (e.g. Baisakh=1 to Ashad=3 or Chaitra=12)
         'billing_year',
         'is_auto_generated',
     ];
@@ -45,6 +46,9 @@ class Invoice extends Model
         'fine_amount'       => 'decimal:2',
         'paid_amount'       => 'decimal:2',
         'due_date'          => 'date',
+        'billing_month'     => 'integer',
+        'billing_month_to'  => 'integer',
+        'billing_year'      => 'integer',
         'is_auto_generated' => 'boolean',
     ];
 
@@ -167,6 +171,36 @@ class Invoice extends Model
     public function getIsOverdueAttribute(): bool
     {
         return $this->status !== 'paid' && $this->due_date && $this->due_date->isPast();
+    }
+
+    /**
+     * Human-friendly statement period in Bikram Sambat (e.g. "बैशाख – असार २०८३" or "2083 Baisakh").
+     */
+    public function getPeriodLabelAttribute(): string
+    {
+        if (!$this->billing_month && !$this->billing_year) {
+            return $this->created_at ? $this->created_at->format('M Y') : '—';
+        }
+        $from = (int) ($this->billing_month ?: 1);
+        $to   = (int) ($this->billing_month_to ?: $from);
+        $year = (int) ($this->billing_year ?: \App\Services\NepaliDateService::currentBsYear());
+        return \App\Services\NepaliDateService::formatBsRange($from, $to, $year, true);
+    }
+
+    public function getPeriodLabelEnAttribute(): string
+    {
+        if (!$this->billing_month && !$this->billing_year) {
+            return $this->created_at ? $this->created_at->format('M Y') : '—';
+        }
+        $from = (int) ($this->billing_month ?: 1);
+        $to   = (int) ($this->billing_month_to ?: $from);
+        $year = (int) ($this->billing_year ?: \App\Services\NepaliDateService::currentBsYear());
+        return \App\Services\NepaliDateService::formatBsRange($from, $to, $year, false);
+    }
+
+    public function getTotalPayableWordsAttribute(): string
+    {
+        return nprWords($this->total_payable);
     }
 
     /**
