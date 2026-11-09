@@ -119,6 +119,10 @@ Auth::routes();
 // QR attendance scan — public endpoint (auth enforced inside controller)
 Route::get('/attendance/scan/{token}', [QrAttendanceController::class, 'scan'])->name('attendance.qr.scan');
 
+// Notice hybrid endpoints (redirects to public portal when guest, opens management dashboard when authenticated)
+Route::get('/notices',         [NoticeController::class, 'index'])->name('notice.index');
+Route::get('/notice/{notice}', [NoticeController::class, 'show'])->name('notice.show');
+
 // Public Online Admission Application Routes (no auth required — rate limited to prevent spam)
 Route::get('/admissions/apply',  [\App\Http\Controllers\PublicAdmissionController::class, 'create'])->name('admissions.public.apply');
 Route::post('/admissions/apply', [\App\Http\Controllers\PublicAdmissionController::class, 'store'])->middleware('throttle:10,1')->name('admissions.public.store');
@@ -364,11 +368,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/syllabus/create', [SyllabusController::class, 'store'])->name('syllabus.store');
     Route::get('/syllabus/index', [SyllabusController::class, 'index'])->name('course.syllabus.index');
 
-    // Notices & Circulars
-    Route::get('/notices',               [NoticeController::class, 'index'])->name('notice.index');
+    // Notices & Circulars (Admin management actions - index and show handled hybridly above)
     Route::get('/notice/create',         [NoticeController::class, 'create'])->name('notice.create');
     Route::post('/notice/create',        [NoticeController::class, 'store'])->name('notice.store');
-    Route::get('/notice/{notice}',       [NoticeController::class, 'show'])->name('notice.show');
     Route::get('/notice/{notice}/edit',  [NoticeController::class, 'edit'])->name('notice.edit');
     Route::put('/notice/{notice}',       [NoticeController::class, 'update'])->name('notice.update');
     Route::delete('/notice/{notice}',    [NoticeController::class, 'destroy'])->name('notice.destroy');
